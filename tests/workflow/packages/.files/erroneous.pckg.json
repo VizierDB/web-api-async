@@ -1,0 +1,26 @@
+{
+    "python": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "type": "var",
+                        "value": "source"
+                    }
+                ],
+                "name": "Python Script",
+                "parameter": [
+                    {
+                        "datatype": "pyCode",
+                        "hidden": false,
+                        "id": "source",
+                        "index": 0,
+                        "name": "Python Code",
+                        "required": true
+                    }
+                ]
+            }
+        ],
+        "id": "python"
+    }
+}

@@ -1,0 +1,33 @@
+packages:
+    - '../data/packages/mimir.pckg.json'
+    - '../data/packages/pycell.pckg.json'
+settings:
+    api:
+        server.url: 'http://vizier-db.info'
+        server.port: 80
+        app.path: '/vizier-db/api/v2'
+        doc.url: 'http://vizier-db.info/doc/api/v1'
+    envs:
+        - identifier: 'MIMIR'
+          name: 'Mimir Config'
+          description: 'Mimir Engine'
+          datastore:
+              properties:
+                  directory: 'mimir-directory'
+              type: 'MIMIR'
+          packages: ['python', 'vizual', 'mimir']
+        - identifier: 'DEFAULT'
+          name: 'Default Config'
+          description: 'Default Engine'
+          datastore:
+              properties:
+                  directory: 'default-directory'
+              type: 'DEFAULT'
+          packages: ['python', 'vizual', '_sys']
+    viztrails:
+        directory: 'wf-directory'
+    fileserver:
+        directory: 'fs-directory'
+        maxFileSize: 1024
+    name: 'Alternate Vizier Web API'
+    debug: False

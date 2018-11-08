@@ -1,0 +1,616 @@
+{
+    "mimir": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "DOMAIN"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FOR"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "column"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }
+                ], 
+                "id": "domain", 
+                "name": "Domain Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 2, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "GEOCODE"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "COLUMNS"
+                    }, 
+                    {
+                        "prefix": "HOUSE_NUMBER=", 
+                        "type": "opt", 
+                        "value": "strnumber"
+                    }, 
+                    {
+                        "prefix": "STREET=", 
+                        "type": "opt", 
+                        "value": "strname"
+                    }, 
+                    {
+                        "prefix": "CITY=", 
+                        "type": "opt", 
+                        "value": "city"
+                    }, 
+                    {
+                        "prefix": "STATE=", 
+                        "type": "opt", 
+                        "value": "state"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "USING"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "geocoder"
+                    }
+                ], 
+                "id": "geocode", 
+                "name": "Geocode Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "strnumber", 
+                        "index": 1, 
+                        "name": "House Nr.", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "strname", 
+                        "index": 2, 
+                        "name": "Street", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "city", 
+                        "index": 3, 
+                        "name": "City", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "state", 
+                        "index": 4, 
+                        "name": "State", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "enum": [
+                            {
+                                "is_default": false, 
+                                "text": "GOOGLE"
+                            }, 
+                            {
+                                "is_default": false, 
+                                "text": "OSM"
+                            }
+                        ], 
+                        "hidden": false, 
+                        "id": "geocoder", 
+                        "index": 5, 
+                        "name": "Geocoder", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 6, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "KEY"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "REPAIR"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FOR"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "column"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }
+                ], 
+                "id": "key_repair", 
+                "name": "Key Repair Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 2, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "MISSING"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "VALUES"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FOR"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "column"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "prefix": "WITH CONSTRAINT ", 
+                        "type": "opt", 
+                        "value": "constraint"
+                    }
+                ], 
+                "id": "missing_value", 
+                "name": "Missing Value Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "constraint", 
+                        "index": 2, 
+                        "name": "Constraint", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 3, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "MISSING"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "KEYS"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FOR"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "column"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }
+                ], 
+                "id": "missing_key", 
+                "name": "Missing Key Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 2, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "PICK"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FROM"
+                    }, 
+                    {
+                        "format": [
+                            {
+                                "type": "var", 
+                                "value": "pickFrom"
+                            }
+                        ], 
+                        "type": "var", 
+                        "value": "schema"
+                    }, 
+                    {
+                        "prefix": "AS ", 
+                        "type": "opt", 
+                        "value": "pickAs"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }
+                ], 
+                "id": "picker", 
+                "name": "Picker Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "schema", 
+                        "index": 1, 
+                        "name": "Columns", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "pickFrom", 
+                        "index": 2, 
+                        "name": "Pick From", 
+                        "parent": "schema", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "pickAs", 
+                        "index": 3, 
+                        "name": "Pick As", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 4, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "SCHEMA"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "MATCHING"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "("
+                    }, 
+                    {
+                        "format": [
+                            {
+                                "type": "var", 
+                                "value": "column"
+                            }, 
+                            {
+                                "type": "var", 
+                                "value": "type"
+                            }
+                        ], 
+                        "type": "var", 
+                        "value": "schema"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": ")"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "resultName"
+                    }
+                ], 
+                "id": "schema_matching", 
+                "name": "Schema Matching Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "schema", 
+                        "index": 1, 
+                        "name": "Schema", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 2, 
+                        "name": "Column Name", 
+                        "parent": "schema", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "enum": [
+                            {
+                                "is_default": false, 
+                                "text": "int"
+                            }, 
+                            {
+                                "is_default": false, 
+                                "text": "varchar"
+                            }
+                        ], 
+                        "hidden": false, 
+                        "id": "type", 
+                        "index": 3, 
+                        "name": "Data Type", 
+                        "parent": "schema", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "resultName", 
+                        "index": 4, 
+                        "name": "Store Result As ...", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 5, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "type": "const", 
+                        "value": "TYPE"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "INFERENCE"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "FOR"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "COLUMNS"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "WITH"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "percent_conform"
+                    }, 
+                    {
+                        "type": "const", 
+                        "value": "="
+                    }, 
+                    {
+                        "type": "var", 
+                        "value": "percentConform"
+                    }
+                ], 
+                "id": "type_inference", 
+                "name": "Type Inference Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "percentConform", 
+                        "index": 1, 
+                        "name": "Percent Conform", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 2, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
+            }
+        ], 
+        "id": "mimir"
+    }
+}

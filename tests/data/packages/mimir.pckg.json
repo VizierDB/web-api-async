@@ -1,0 +1,361 @@
+{
+    "mimir": {
+        "domain": {
+            "arguments": {
+                "column": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "column", 
+                    "index": 1, 
+                    "label": "column", 
+                    "name": "Column", 
+                    "required": true
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 2, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }
+            }, 
+            "name": "Domain Lens"
+        }, 
+        "geocode": {
+            "arguments": {
+                "city": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "city", 
+                    "index": 3, 
+                    "label": "city", 
+                    "name": "City", 
+                    "required": false
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "geocoder": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "geocoder", 
+                    "index": 5, 
+                    "label": "geocoder", 
+                    "name": "Geocoder", 
+                    "required": true, 
+                    "values": [
+                        "GOOGLE", 
+                        "OSM"
+                    ]
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 6, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }, 
+                "state": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "state", 
+                    "index": 4, 
+                    "label": "state", 
+                    "name": "State", 
+                    "required": false
+                }, 
+                "strname": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "strname", 
+                    "index": 2, 
+                    "label": "strname", 
+                    "name": "Street", 
+                    "required": false
+                }, 
+                "strnumber": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "strnumber", 
+                    "index": 1, 
+                    "label": "strnumber", 
+                    "name": "House Nr.", 
+                    "required": false
+                }
+            }, 
+            "name": "Geocode Lens"
+        }, 
+        "key_repair": {
+            "arguments": {
+                "column": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "column", 
+                    "index": 1, 
+                    "label": "column", 
+                    "name": "Column", 
+                    "required": true
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 2, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }
+            }, 
+            "name": "Key Repair Lens"
+        }, 
+        "missing_key": {
+            "arguments": {
+                "column": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "column", 
+                    "index": 1, 
+                    "label": "column", 
+                    "name": "Column", 
+                    "required": true
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 2, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }
+            }, 
+            "name": "Missing Key Lens"
+        }, 
+        "missing_value": {
+            "arguments": {
+                "column": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "column", 
+                    "index": 1, 
+                    "label": "column", 
+                    "name": "Column", 
+                    "required": true
+                }, 
+                "constraint": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "constraint", 
+                    "index": 2, 
+                    "label": "constraint", 
+                    "name": "Constraint", 
+                    "required": false
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 3, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }
+            }, 
+            "name": "Missing Value Lens"
+        }, 
+        "picker": {
+            "arguments": {
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 4, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }, 
+                "pickAs": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "pickAs", 
+                    "index": 3, 
+                    "label": "pickAs", 
+                    "name": "Pick As", 
+                    "required": false
+                }, 
+                "pickFrom": {
+                    "datatype": "colid", 
+                    "hidden": false, 
+                    "id": "pickFrom", 
+                    "index": 2, 
+                    "label": "pickFrom", 
+                    "name": "Pick From", 
+                    "parent": "schema", 
+                    "required": true
+                }, 
+                "schema": {
+                    "datatype": "group", 
+                    "hidden": false, 
+                    "id": "schema", 
+                    "index": 1, 
+                    "label": "schema", 
+                    "name": "Columns", 
+                    "required": true
+                }
+            }, 
+            "name": "Picker Lens"
+        }, 
+        "schema_matching": {
+            "arguments": {
+                "column": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "column", 
+                    "index": 2, 
+                    "label": "column", 
+                    "name": "Column Name", 
+                    "parent": "schema", 
+                    "required": true
+                }, 
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 5, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }, 
+                "resultName": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "resultName", 
+                    "index": 4, 
+                    "label": "resultName", 
+                    "name": "Store Result As ...", 
+                    "required": true
+                }, 
+                "schema": {
+                    "datatype": "group", 
+                    "hidden": false, 
+                    "id": "schema", 
+                    "index": 1, 
+                    "label": "schema", 
+                    "name": "Schema", 
+                    "required": true
+                }, 
+                "type": {
+                    "datatype": "string", 
+                    "hidden": false, 
+                    "id": "type", 
+                    "index": 3, 
+                    "label": "type", 
+                    "name": "Data Type", 
+                    "parent": "schema", 
+                    "required": true, 
+                    "values": [
+                        "int", 
+                        "varchar"
+                    ]
+                }
+            }, 
+            "name": "Schema Matching Lens"
+        }, 
+        "type_inference": {
+            "arguments": {
+                "dataset": {
+                    "datatype": "dataset", 
+                    "hidden": false, 
+                    "id": "dataset", 
+                    "index": 0, 
+                    "label": "dataset", 
+                    "name": "Dataset", 
+                    "required": true
+                }, 
+                "makeInputCertain": {
+                    "datatype": "bool", 
+                    "hidden": false, 
+                    "id": "makeInputCertain", 
+                    "index": 2, 
+                    "label": "makeInputCertain", 
+                    "name": "Make Input Certain", 
+                    "required": false
+                }, 
+                "percentConform": {
+                    "datatype": "decimal", 
+                    "hidden": false, 
+                    "id": "percentConform", 
+                    "index": 1, 
+                    "label": "percentConform", 
+                    "name": "Percent Conform", 
+                    "required": true
+                }
+            }, 
+            "name": "Type Inference Lens"
+        }
+    }
+}

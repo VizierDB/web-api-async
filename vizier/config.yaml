@@ -1,0 +1,30 @@
+api:
+    server_url: 'http://localhost'
+    server_port: 5000
+    server_local_port: 5000
+    app_path: '/vizier-db/api/v1'
+    doc_url: 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
+envs:
+    - id: 'DEFAULT'
+      name: 'Vizier (Light)'
+      description: 'Curation workflow with basic functionality'
+      datastore:
+          directory: '../.vizierdb/datastore/default'
+      packages: ['vizual', 'python', 'plot']
+    - id: 'MIMIR'
+      name: 'Vizier (Mimir)'
+      description: 'Curation workflow with advanced Mimir functionality'
+      default: true
+      datastore:
+          directory: '../.vizierdb/datastore/mimir'
+      packages: ['vizual', 'python', 'plot', 'mimir']
+viztrails:
+    directory: '../.vizierdb/viztrails'
+fileserver:
+    directory: '../.vizierdb/filestore'
+    max_file_size: 16777216
+settings:
+    log_engine: false
+name: 'Vizier Web API'
+debug: True
+logs: '../.vizierdb/logs'

@@ -1,0 +1,25 @@
+packages:
+    - './plot.pckg.json'
+    - './pycell.pckg.json'
+settings:
+    api:
+        server_url: 'http://localhost'
+        server_port: 5000
+        server_local_port: 5000
+        app_path: '/vizier-db/api/v1'
+        doc_url: 'http://cds-swg1.cims.nyu.edu/vizier-db/doc/api/v1'
+    envs:
+        - id: 'DEFAULT'
+          name: 'Vizier (Light)'
+          description: 'Workflow engine with basic functionality'
+          datastore:
+              directory: '../.env/ds/default'
+          default: true
+    viztrails:
+        directory: '../.env/wf'
+    fileserver:
+        directory: '../.env/fs'
+        max_file_size: 16777216
+    name: 'Vizier Web API'
+    debug: True
+    logs: '../.env/logs'
