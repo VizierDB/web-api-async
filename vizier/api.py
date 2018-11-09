@@ -100,7 +100,7 @@ class VizierWebService(object):
     # --------------------------------------------------------------------------
     # Files
     # --------------------------------------------------------------------------
-    def upload_file(self, filename, provenance=None):
+    def upload_file(self, filename):
         """Upload a given file to the file server. Expects either a CSV or TSV
         file. The file type is determined by the file suffix.
 
@@ -108,17 +108,12 @@ class VizierWebService(object):
         ----------
         filename : string
             path to file on local disk
-        provenance: dict, optional
-            Optional file provenance information
 
         Returns
         -------
-        dict
-            Dictionary for dataset descriptor
+        vizier.filestore.base.FileHandle
         """
-        # Parse file and add to datastore
-        f_handle = self.fileserver.upload_file(filename, provenance=provenance)
-        return serialize.FILE_HANDLE(f_handle, self.urls)
+        return self.fileserver.upload_file(filename)
 
 
     # --------------------------------------------------------------------------

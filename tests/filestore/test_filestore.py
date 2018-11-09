@@ -104,6 +104,7 @@ class TestDefaultFileStore(unittest.TestCase):
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, METADATA_FILE_NAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
+        self.assertEquals(fh.uri, 'file://' + fh.identifier)
         self.assertEquals(fh.identifier, self.db.get_file(fh.identifier).identifier)
         fh = self.db.upload_file(CSV_FILE)
         self.assertFalse(fh.compressed)
