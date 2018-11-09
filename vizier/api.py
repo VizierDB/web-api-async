@@ -23,14 +23,7 @@ between different components such as the notbook repository that manages
 noretbook metadata and the VizTrails module.
 """
 
-from vizier.hateoas import UrlFactory
-from vizier.plot.view import ChartViewHandle
-from vizier.workflow.base import DEFAULT_BRANCH
-
-import vizier.serialize as serialize
-
-
-class VizierWebService(object):
+class VizierApi(object):
     """The Web Service API implements the methods that correspond to the Http
     requests that are handled by the Web server.
 
@@ -38,7 +31,7 @@ class VizierWebService(object):
     that are necessary for the Web Service (i.e., viztrail repository, data
     store, and file server).
     """
-    def __init__(self, viztrail_repository, datastore, fileserver, config):
+    def __init__(self, filestore):
         """Initialize the API from a dictionary. Expects the following keys to
         be present in the dictionary:
         - APP_NAME : Application (short) name for the service description
@@ -53,21 +46,12 @@ class VizierWebService(object):
             Repository for viztrails (aka projects)
         datastore : database.DataStore
             Backend store for datasets
-        fileserver: database.fileserver.FileServer
+        filestore: vizier.filestore.base.FileStore
             Backend store for uploaded CSV files
         config : vizier.config.AppConfig
             Application configuration parameters
         """
-        self.config = config
-        self.viztrails = viztrail_repository
-        self.datastore = datastore
-        self.fileserver = fileserver
-        # Cache for dataset descriptors
-        self.datasets = dict()
-        # Initialize the factory for API resource Urls
-        self.urls = UrlFactory(config)
-        # Initialize the service description dictionary
-        self.service_descriptor = serialize.SERVICE_DESCRIPTOR(config, self.urls)
+        self.filestore = filestore
 
     # --------------------------------------------------------------------------
     # Service
@@ -93,7 +77,7 @@ class VizierWebService(object):
         """
         components = list()
         components.extend(self.datastore.components())
-        components.extend(self.fileserver.components())
+        components.extend(self.filestore.components())
         components.extend(self.viztrails.components())
         return serialize.SERVICE_BUILD(components, self.urls)
 
@@ -113,7 +97,7 @@ class VizierWebService(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        return self.fileserver.upload_file(filename)
+        return self.filestore.upload_file(filename)
 
 
     # --------------------------------------------------------------------------

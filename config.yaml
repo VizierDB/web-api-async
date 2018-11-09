@@ -1,0 +1,12 @@
+settings:
+    api:
+        server_url: 'http://localhost'
+        server_port: 80
+        app_path: '/vizier-db/api/v2'
+        doc_url: 'http://vizier-db.info/doc/api/v1'
+    fileserver:
+        directory: '.vizierdb/fs'
+        max_file_size: 1024*1024*16
+    debug: True
+    logs:
+        server: '.vizierdb/logs'

@@ -197,6 +197,8 @@ class AppConfig(object):
                 if not config_file is None and os.path.isfile(config_file):
                     doc = read_object_from_file(config_file)
                     break
+        if doc is None:
+            raise RuntimeError('no configuration file found')
         # Registry of available packages. By default, only the system package
         # and the VizUAL package are supported. Additional packages are loaded
         # from files specified in the 'packages' element (optional)

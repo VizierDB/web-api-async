@@ -37,6 +37,8 @@ nosetests.xml
 # NPM
 node_modules
 
+./config.yaml
+
 tests/env/
 
 .env/

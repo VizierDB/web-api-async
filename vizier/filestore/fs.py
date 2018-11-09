@@ -281,7 +281,7 @@ def write_index_file(filename, files):
     """
     with open(filename, 'w') as f:
         for fh in files:
-            line = fh.identifier
+            line = fh.identifier + '\t' + fh.file_name
             if not fh.file_format is None:
                 line += '\t' + fh.file_format
-            f.write(line + '\t')
+            f.write(line + '\n')

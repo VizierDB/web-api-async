@@ -65,7 +65,6 @@ class FileHandle(object):
         self.file_name = file_name
         self.file_format = file_format
 
-    @property
     def compressed(self):
         """Flag indicating whether the file is in gzip format. This is currently
         determined by the file format value. If the file format is unknown the
@@ -79,7 +78,6 @@ class FileHandle(object):
             return self.file_format in [FORMAT_CSV_GZIP, FORMAT_TSV_GZIP]
         return False
 
-    @property
     def delimiter(self):
         """Determine the column delimiter for a CSV/TSV file based on the file
         format information. If the file format is unknown the result is None
@@ -95,6 +93,15 @@ class FileHandle(object):
                 return '\t'
         return None
 
+    def name(self):
+        """Alternative to access the file name.
+
+        Returns
+        -------
+        string
+        """
+        return self.file_name
+
     def open(self):
         """Get open file object for associated file.
 
@@ -103,12 +110,11 @@ class FileHandle(object):
         FileObject
         """
         # The open method depends on the compressed flag
-        if self.compressed:
+        if self.compressed():
             return gzip.open(self.filepath, 'rb')
         else:
             return open(self.filepath, 'r')
 
-    @property
     def uri(self):
         """Unique file resource identifier. Currently we use file:// as the
         identifier scheme.
