@@ -8,6 +8,8 @@ import sys
 import time
 import unittest
 
+from werkzeug.datastructures import FileStorage
+
 from vizier.filestore.fs import DefaultFileStore, METADATA_FILE_NAME
 import vizier.filestore.base as fs
 
@@ -101,6 +103,7 @@ class TestDefaultFileStore(unittest.TestCase):
     def test_upload_file(self):
         """Test file upload."""
         fh = self.db.upload_file(CSV_FILE)
+        self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, METADATA_FILE_NAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
@@ -118,6 +121,16 @@ class TestDefaultFileStore(unittest.TestCase):
         fh = self.db.upload_file(GZIP_TSV_FILE)
         self.assertTrue(fh.compressed)
         self.assertEquals(fh.delimiter, '\t')
+
+    def test_upload_stream(self):
+        """Test file upload from an open file object."""
+        file = FileStorage(filename=CSV_FILE)
+        fh = self.db.upload_stream(file=file, file_name=os.path.basename(CSV_FILE))
+        self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
+        self.assertEquals(fh.file_format, fs.FORMAT_CSV)
+        self.assertTrue(os.path.isfile(fh.filepath))
+        self.assertEquals(fh.uri, 'file://' + fh.identifier)
+        self.assertEquals(fh.identifier, self.db.get_file(fh.identifier).identifier)
 
 if __name__ == '__main__':
     unittest.main()

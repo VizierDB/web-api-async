@@ -43,9 +43,9 @@ class DefaultFileStore(fs.FileServer):
     .dat for convenience). File metadata is kept in a tab-delimited file
     index.tsv in the same folder.
 
-    The index file has two columns: the file identifier and an optional column
-    with the file format. For files with unknown format the second column is
-    omitted.
+    The index file has three columns: the file identifier, the original file
+    name and an optional column with the file format. For files with unknown
+    format the third column is omitted.
     """
     def __init__(self, base_directory):
         """Initialize the base directory that is used for file storage. The base
@@ -72,12 +72,14 @@ class DefaultFileStore(fs.FileServer):
                     tokens = line.strip().split('\t')
                     file_id = tokens[0]
                     filepath = get_filepath(self.base_directory, file_id)
+                    file_name = tokens[1]
                     file_format = None
-                    if len(tokens) == 2:
-                        file_format = tokens[1]
+                    if len(tokens) == 3:
+                        file_format = tokens[2]
                     self.files[file_id] = fs.FileHandle(
                         file_id,
                         filepath=filepath,
+                        file_name=file_name,
                         file_format=file_format
                     )
 
@@ -161,6 +163,8 @@ class DefaultFileStore(fs.FileServer):
         """Create a new entry from a given local file. Will make a copy of the
         given file.
 
+        Raises ValueError if the given file does not exist.
+
         Parameters
         ----------
         filename: string
@@ -170,17 +174,10 @@ class DefaultFileStore(fs.FileServer):
         -------
         vizier.filestore.base.FileHandle
         """
-        # Determine the file type based on the file name suffix. If the suffix
-        # is unknown the file format remains None.
-        file_format = None
-        if filename.endswith('.csv'):
-            file_format = fs.FORMAT_CSV
-        elif filename.endswith('.csv.gz'):
-            file_format = fs.FORMAT_CSV_GZIP
-        elif filename.endswith('.tsv'):
-            file_format = fs.FORMAT_TSV
-        elif filename.endswith('.tsv.gz'):
-            file_format = fs.FORMAT_TSV_GZIP
+        # Ensure that the given file exists
+        if not os.path.isfile(filename):
+            raise ValueError('invalid file path \'' + str(filename) + '\'')
+        name = name = os.path.basename(filename)
         # Create a new unique identifier for the file.
         identifier = get_unique_identifier()
         output_file = get_filepath(self.base_directory, identifier)
@@ -190,7 +187,38 @@ class DefaultFileStore(fs.FileServer):
         f_handle = fs.FileHandle(
             identifier,
             filepath=output_file,
-            file_format=file_format
+            file_name=name,
+            file_format=get_fileformat(filename)
+        )
+        self.files[identifier] = f_handle
+        write_index_file(self.index_file, self.files.values())
+        return f_handle
+
+    def upload_stream(self, file, file_name):
+        """Create a new entry from a given file stream. Will copy the given
+        file to a file in the base directory.
+
+        Parameters
+        ----------
+        file: werkzeug.datastructures.FileStorage
+            File object (e.g., uploaded via HTTP request)
+        file_name: string
+            Name of the file
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        # Create a new unique identifier for the file.
+        identifier = get_unique_identifier()
+        output_file = get_filepath(self.base_directory, identifier)
+        # Save the file object to the new file path
+        file.save(output_file)
+        f_handle = fs.FileHandle(
+            identifier,
+            filepath=output_file,
+            file_name=file_name,
+            file_format=get_fileformat(file_name)
         )
         self.files[identifier] = f_handle
         write_index_file(self.index_file, self.files.values())
@@ -200,6 +228,30 @@ class DefaultFileStore(fs.FileServer):
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
+
+def get_fileformat(filename):
+    """Determine the file type based on the file name suffix. If the suffix
+    is unknown the result is None.
+
+    Parameters
+    ----------
+    filename: string
+        File name
+
+    Returns
+    -------
+    string
+    """
+    if filename.endswith('.csv'):
+        return fs.FORMAT_CSV
+    elif filename.endswith('.csv.gz'):
+        return fs.FORMAT_CSV_GZIP
+    elif filename.endswith('.tsv'):
+        return fs.FORMAT_TSV
+    elif filename.endswith('.tsv.gz'):
+        return fs.FORMAT_TSV_GZIP
+    return None
+
 
 def get_filepath(base_dir, file_id):
     """Get the absolute path for the file with the given identifier.

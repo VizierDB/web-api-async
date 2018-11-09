@@ -1,4 +1,4 @@
-# Copyright (C) 2018 New York University
+# Copyright (C) 2018 New York University,
 #                    University at Buffalo,
 #                    Illinois Institute of Technology.
 #
@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Abstract class for viztrail handles. Defines and implements the base methods
-for viztrail objects.
+"""Abstract class for viztrails. Viztrails are Vizier's adoption of VisTrails.
+Defines and implements the base classes for viztrail objects.
 """
 
 from abc import abstractmethod
@@ -23,7 +23,84 @@ from abc import abstractmethod
 from vizier.core.timestamp import get_current_time
 
 
-class ViztrailHandle(object):
+"""Key's for default viztrail properties."""
+# Human readable viztrail name
+PROPERTY_NAME = 'name'
+
+
+class ViztrailDescriptor(object):
+    """Descriptor for a viztrail. The descriptor contains the essential
+    information of the viztrail. It is primarily intended for viztrail listings
+    that do not need access to the full information and functionality of a
+    viztrail.
+
+    Each viztrail descriptor contains the unique viztrail identifier, timestamp
+    information, and the viztrail properties set.
+
+    A viztrail is expected to have a name property. If the property is missing
+    the viztrail name is None.
+
+    Attributes
+    ----------
+    identifier : string
+        Unique viztrail identifier
+    created_at : datetime.datetime
+        Timestamp of viztrail creation (UTC)
+    last_modified_at : datetime.datetime
+        Timestamp when viztrail was last modified (UTC)
+    name: string
+        Human readable viztrail name
+    properties: vizier.core.properties.ObjectPropertiesHandler
+        Handler for user-defined properties that are associated with this
+        viztrail
+    """
+    def __init__(
+        self, identifier, properties, created_at=None, last_modified_at=None
+    ):
+        """Initialize the viztrail descriptor.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique viztrail identifier
+        properties: vizier.core.properties.ObjectPropertiesHandler
+            Handler for user-defined properties that are associated with this
+            viztrail
+        created_at : datetime.datetime, optional
+            Timestamp of project creation (UTC)
+        last_modified_at : datetime.datetime, optional
+            Timestamp when project was last modified (UTC)
+        """
+        self.identifier = identifier
+        self.properties = properties
+        # If created_at timestamp is None the viztrail is expected to be a newly
+        # created viztrail. For new viztrails the last_modified timestamp is
+        # expected to be None. For existing viztrails the last_modified
+        # timestamp should not be None.
+        if not created_at is None:
+            if last_modified_at is None:
+                raise ValueError('unexpected value for \'last_modified\'')
+            self.created_at = created_at
+            self.last_modified_at = last_modified_at
+        else:
+            if not last_modified_at is None:
+                raise ValueError('missing value for \'last_modified\'')
+            self.created_at = get_current_time()
+            self.last_modified_at = self.created_at
+
+    @property
+    def name(self):
+        """Get the value of the object property with key 'name'. The result is
+        None if no such property exists.
+
+        Returns
+        -------
+        string
+        """
+        return self.properties.get_property(PROPERTY_NAME, None)
+
+
+class ViztrailHandle(ViztrailDescriptor):
     """Handle for a Vizier viztrail. Each viztrail has a unique identifier and
     a dictionary of branches keyed by their name. Branches are sequence of
     workflow version identifiers representing the history of the workflow for

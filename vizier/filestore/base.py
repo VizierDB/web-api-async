@@ -37,7 +37,7 @@ FILE_FORMATS = [FORMAT_CSV, FORMAT_CSV_GZIP, FORMAT_TSV, FORMAT_TSV_GZIP]
 
 class FileHandle(object):
     """File handle for an uploaded file."""
-    def __init__(self, identifier, filepath, file_format=None):
+    def __init__(self, identifier, filepath, file_name, file_format=None):
         """Initialize the file identifier, the (full) file path, the file
         format, and the file creation timestamp.
 
@@ -50,6 +50,8 @@ class FileHandle(object):
             Unique file identifier
         filepath: string
             Absolute path to file on disk
+        file_name: string
+            Base name of the original file
         file_format: string, optional
             File format identifier or None if unknown
         """
@@ -60,6 +62,7 @@ class FileHandle(object):
         # Initialize the class variables
         self.identifier = identifier
         self.filepath = filepath
+        self.file_name = file_name
         self.file_format = file_format
 
     @property
@@ -162,10 +165,29 @@ class FileServer(VizierSystemComponent):
         """Create a new entry from a given local file. Will make a copy of the
         given file.
 
+        Raises ValueError if the given file does not exist.
+
         Parameters
         ----------
         filename: string
             Path to file on disk
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def upload_stream(self, file, file_name):
+        """Create a new entry from a given file stream.
+
+        Parameters
+        ----------
+        file: werkzeug.datastructures.FileStorage
+            File object (e.g., uploaded via HTTP request)
+        file_name: string
+            Name of the file
 
         Returns
         -------
