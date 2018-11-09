@@ -119,7 +119,7 @@ class ViztrailHandle(object):
         workflow_version: int, optional
             Version number of the workflow that is being modified. If negative
             the branch head is being used.
-        command : vizier.workflow.module.ModuleSpecification, optional
+        command : vizier.workflow.module.ModuleCommand, optional
             Specification of the command that is to be evaluated
         before_id : int, optional
             Insert new module before module with given identifier. Append at end

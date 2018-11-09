@@ -136,7 +136,7 @@ class WorkflowEngine(object):
 
         Parameters
         ----------
-        command : vizier.workflow.module.ModuleSpecification
+        command : vizier.workflow.module.ModuleCommand
             Specification of the command that is to be evaluated
         """
         validate_command(self.module_repository, command)

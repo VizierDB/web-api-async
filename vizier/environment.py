@@ -19,7 +19,6 @@
 from vizier.datastore.base import DATASTORE_DEFAULT, DATASTORE_MIMIR
 from vizier.datastore.fs import FileSystemDataStore
 from vizier.datastore.mimir import MimirDataStore
-from vizier.workflow.packages.base import validate_command
 
 
 class ExecEnv(object):
@@ -70,14 +69,3 @@ class ExecEnv(object):
         self.packages = dict()
         for pckg_id in config.packages:
             self.packages[pckg_id] = packages[pckg_id]
-
-    def validate_command(self, command):
-    """Validate the given command specification. Raises ValueError if an
-    invalid specification is given.
-
-    Parameters
-    ----------
-    command : vizier.workflow.module.ModuleSpecification
-        Specification of the command that is to be evaluated
-    """
-        validate_command(self.packages, command)

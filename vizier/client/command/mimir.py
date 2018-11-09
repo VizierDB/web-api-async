@@ -37,7 +37,7 @@ def mimir_domain(dataset_name, column, make_input_certain=False, validate=False)
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,
@@ -70,7 +70,7 @@ def mimir_geocode(
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
@@ -110,7 +110,7 @@ def mimir_key_repair(dataset_name, column, make_input_certain=False, validate=Fa
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,
@@ -142,7 +142,7 @@ def mimir_missing_key(dataset_name, column, make_input_certain=False, validate=F
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,
@@ -177,7 +177,7 @@ def mimir_missing_value(
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
@@ -215,7 +215,7 @@ def mimir_picker(
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     elements = list()
     for col in schema:
@@ -257,7 +257,7 @@ def mimir_schema_matching(
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     elements = list()
     for col in schema:
@@ -296,7 +296,7 @@ def mimir_type_inference(
 
     Returns
     -------
-    vizier.workflow.module.ModuleSpecification
+    vizier.workflow.module.ModuleCommand
     """
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,

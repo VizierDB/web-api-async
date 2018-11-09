@@ -100,80 +100,6 @@ class VizierWebService(object):
     # --------------------------------------------------------------------------
     # Files
     # --------------------------------------------------------------------------
-    def delete_file(self, file_id):
-        """Delete a file from the file server.
-
-        Parameters
-        ----------
-        file_id: string
-            Unique file identifier
-
-        Returns
-        -------
-        bool
-        """
-        return self.fileserver.delete_file(file_id)
-
-    def get_file(self, file_id):
-        """Get handle for file resource on file server. Returns None if no file
-        with the given identifier exists.
-
-        Parameters
-        ----------
-        file_id: string
-            Unique file identifier
-
-        Returns
-        -------
-        dict
-        """
-        f_handle = self.fileserver.get_file(file_id)
-        if not f_handle is None:
-            return serialize.FILE_HANDLE(f_handle, self.urls)
-
-    def get_file_handle(self, file_id):
-        """Get handle for the file with the given identifier. The result is None
-        if no such file exists.
-
-        Parameters
-        ----------
-        file_id: string
-            Unique file identifier
-
-        Returns
-        -------
-        vizier.filestore.base.FileHandle
-        """
-        return self.fileserver.get_file(file_id)
-
-    def list_files(self):
-        """Get list of file resources currently available from the file server.
-
-        Returns
-        -------
-        dict
-        """
-        return serialize.FILE_LISTING(self.fileserver.list_files(), self.urls)
-
-    def rename_file(self, file_id, name):
-        """Rename file with given identifier. Raises ValueError if a file with
-        the given name already exists.
-
-        Parameters
-        ----------
-        file_id: string
-            Unique file identifier
-        name: string
-            New file name
-
-        Returns
-        -------
-        dict
-        """
-        f_handle = self.fileserver.rename_file(file_id, name)
-        if not f_handle is None:
-            return serialize.FILE_HANDLE(f_handle, self.urls)
-
     def upload_file(self, filename, provenance=None):
         """Upload a given file to the file server. Expects either a CSV or TSV
         file. The file type is determined by the file suffix.
@@ -483,7 +409,7 @@ class VizierWebService(object):
     # --------------------------------------------------------------------------
     # Workflows
     # --------------------------------------------------------------------------
-    def append_module(self, project_id, branch_id, workflow_version, module_spec, before_id=-1, includeDataset=None):
+    def append_module(self, project_id, branch_id, workflow_version, command, before_id=-1, includeDataset=None):
         """Insert module to existing workflow and execute the resulting
         workflow. If before_id is equal or greater than zero the module will be
         inserted at the specified position in the workflow otherwise it is
@@ -503,7 +429,7 @@ class VizierWebService(object):
             Unique branch identifier
         workflow_version: int
             Version number of the modified workflow
-        module_spec : vizier.workflow.module.ModuleSpecification
+        command : vizier.workflow.module.ModuleCommand
             Specification of the workflow module
         before_id : int, optional
             Insert new module before module with given identifier. Append at end
@@ -524,7 +450,7 @@ class VizierWebService(object):
             viztrail_id=project_id,
             branch_id=branch_id,
             workflow_version=workflow_version,
-            command=module_spec,
+            command=command,
             before_id=before_id
         )
         if viztrail is None:
@@ -847,7 +773,7 @@ class VizierWebService(object):
         if not viztrail is None:
             return serialize.BRANCH_LISTING(viztrail, self.urls)
 
-    def replace_module(self, project_id, branch_id, workflow_version, module_id, module_spec, includeDataset=None):
+    def replace_module(self, project_id, branch_id, workflow_version, module_id, command, includeDataset=None):
         """Replace a module in a project workflow and execute the result.
 
         Raise a ValueError if the given command does not specify a valid
@@ -866,7 +792,7 @@ class VizierWebService(object):
             Version number of the modified workflow
         module_id : int
             Module identifier
-        module_spec : vizier.workflow.module.ModuleSpecification
+        command : vizier.workflow.module.ModuleCommand
             Specification of the workflow module
         includeDataset: dict, optional
             If included the result will contain the modified dataset rows
@@ -885,7 +811,7 @@ class VizierWebService(object):
             branch_id=branch_id,
             workflow_version=workflow_version,
             module_id=module_id,
-            command=module_spec
+            command=command
         )
         if viztrail is None:
             return None

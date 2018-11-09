@@ -76,7 +76,7 @@ class ViztrailRepository(VizierSystemComponent):
         workflow_version: int, optional
             Version number of the workflow that is being modified. If negative
             the branch head is being used.
-        command : vizier.workflow.module.ModuleSpecification, optional
+        command : vizier.workflow.module.ModuleCommand, optional
             Specification of the command that is to be evaluated
         before_id : int, optional
             Insert new module before module with given identifier. Append at end
@@ -405,7 +405,7 @@ class ViztrailRepository(VizierSystemComponent):
             the branch head is returned.
         module_id : int, optional
             Identifier of the module that is being replaced
-        command : vizier.workflow.module.ModuleSpecification
+        command : vizier.workflow.module.ModuleCommand
             Specification of the command that is to be evaluated
 
         Returns

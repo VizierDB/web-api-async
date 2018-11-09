@@ -306,7 +306,7 @@ def create_mimir_cell(module_id, command, context):
     ----------
     module_id: int
         Module identifier
-    command: vizier.worktrail.module.ModuleSpecification
+    command: vizier.workflow.module.ModuleCommand
         Command specification
     context: dict
         Workflow execution context
@@ -338,7 +338,7 @@ def create_plot_cell(module_id, command, context):
     ----------
     module_id: int
         Module identifier
-    command: vizier.worktrail.module.ModuleSpecification
+    command: vizier.workflow.module.ModuleCommand
         Command specification
     context: dict
         Workflow execution context
@@ -368,7 +368,7 @@ def create_python_cell(module_id, command, context):
     ----------
     module_id: int
         Module identifier
-    command: vizier.worktrail.module.ModuleSpecification
+    command: vizier.workflow.module.ModuleCommand
         Command specification
     context: dict
         Workflow execution context
@@ -396,7 +396,7 @@ def create_vizual_cell(module_id, command, context):
     ----------
     module_id: int
         Module identifier
-    command: vizier.worktrail.module.ModuleSpecification
+    command: vizier.workflow.module.ModuleCommand
         Command specification
     context: dict
         Workflow execution context

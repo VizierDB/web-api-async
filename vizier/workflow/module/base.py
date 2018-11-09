@@ -54,7 +54,7 @@ class ModuleHandle(object):
     ----------
     identifier : int
         Unique module number (within a worktrail)
-    command : vizier.workflow.module.ModuleSpecification
+    command : vizier.workflow.module.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
     datasets : dict(string)
         Dictionary of resulting datasets. the user-specified name is the key
@@ -82,7 +82,7 @@ class ModuleHandle(object):
         ----------
         identifier : int
             Unique module number (within a worktrail)
-        command : ModuleSpecification
+        command : vizier.workflow.module.ModuleCommand
             Specification of the module (i.e., package, name, and arguments)
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
