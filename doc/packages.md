@@ -80,7 +80,7 @@ list: List of records
 pyCode: Multi-line text string (Python Code)
 record: Grouping of components
 rowid: Positive integer referencing a row in a dataset
-scalar: Either string or int
+scalar: Either string, int or float
 string: Arbitrary character sequence
 ```
 

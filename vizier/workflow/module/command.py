@@ -144,7 +144,13 @@ class ModuleArguments(object):
                 if not isinstance(arg_value, float):
                     raise ValueError('expected float for \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_SCALAR:
-                if not isinstance(arg_value, float) and not isinstance(arg_value, int):
+                if isinstance(arg_value, float):
+                    continue
+                elif not isinstance(arg_value, int):
+                    continue
+                elif not isinstance(arg_value, float):
+                    continue
+                else:
                     raise ValueError('expected scalar for \'' + str(arg_id) + '\'')
             elif datatype in pckg.INT_TYPES:
                 if not isinstance(arg_value, int):

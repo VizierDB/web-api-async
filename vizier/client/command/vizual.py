@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Create instances of plot package commands."""
+"""Create instances of vizual package commands."""
 
 import vizier.workflow.module.command as md
 import vizier.workflow.packages.base as pckg
@@ -101,10 +101,8 @@ def drop_dataset(dataset_name, validate=False):
     )
 
 
-
-
-def insert_column(dataset_name, position, name):
-    """Insert a column into a dataset. Primarily intended for unit tests.
+def insert_column(dataset_name, position, name, validate=False):
+    """Create instance of insert column command.
 
     Parameters
     ----------
@@ -114,24 +112,27 @@ def insert_column(dataset_name, position, name):
         Index position where column is inserted
     name: string
         New column name
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_INS_COL,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            PARA_POSITION: position,
-            pckg.PARA_NAME: name
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_INS_COL,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=vizual.PARA_POSITION, value=position),
+            md.ARG(id=pckg.PARA_NAME, value=name)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def insert_row(dataset_name, position):
-    """Insert a row into a dataset. Primarily intended for unit tests.
+def insert_row(dataset_name, position, validate=False):
+    """Create instance of insert row command.
 
     Parameters
     ----------
@@ -139,57 +140,53 @@ def insert_row(dataset_name, position):
         Name of the dataset
     position: int
         Index position where row is inserted
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_INS_ROW,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            PARA_POSITION: position
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_INS_ROW,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=vizual.PARA_POSITION, value=position)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def load_dataset(file_id, dataset_name, filename=None, url=None):
-    """Load dataset from file. Expects file identifier and new dataset name.
-    Primarily intended for unit tests.
+def load_dataset(file_uri, dataset_name, validate=False):
+    """Create instance of load dataset command.
 
     Parameters
     ----------
-    file_id: string
-        Unique file identifier
+    file_uri: string
+        File resource identifier.
     dataset_name: string
         Name for the new dataset
-    filename: string, optional
-        Optional name of the source file
-    url: string, optional
-        Optional Url of the source file
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    file = {'fileid': file_id}
-    if not filename is None:
-        file['filename'] = filename
-    if not url is None:
-        file['url'] = url
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_LOAD,
-        {
-            PARA_FILE : file,
-            pckg.PARA_NAME: dataset_name
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_LOAD,
+        arguments =[
+            md.ARG(id=vizual.PARA_FILE, value=file_uri),
+            md.ARG(id=pckg.PARA_NAME, value=dataset_name)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def move_column(dataset_name, column, position):
-    """Move a column in a dataset. Primarily intended for unit tests.
+def move_column(dataset_name, column, position, validate=False):
+    """Create instance of move column command.
 
     Parameters
     ----------
@@ -199,24 +196,27 @@ def move_column(dataset_name, column, position):
         Name or index for column that is being moves
     position: int
         Index position where column is moved to
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_MOV_COL,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            pckg.PARA_COLUMN: column,
-            PARA_POSITION: position
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_MOV_COL,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=pckg.PARA_COLUMN, value=column),
+            md.ARG(id=vizual.PARA_POSITION, value=position)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def move_row(dataset_name, row, position):
-    """Move a row in a dataset. Primarily intended for unit tests.
+def move_row(dataset_name, row, position, validate=False):
+    """Create instance of move row command.
 
     Parameters
     ----------
@@ -226,24 +226,64 @@ def move_row(dataset_name, row, position):
         Index of row that is being moved
     position: int
         Index position where row is moved
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_MOV_ROW,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            PARA_ROW: row,
-            PARA_POSITION: position
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_MOV_ROW,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=vizual.PARA_ROW, value=row),
+            md.ARG(id=vizual.PARA_POSITION, value=position)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def rename_column(dataset_name, column, name):
-    """Rename a dataset column. Primarily intended for unit tests.
+def projection(dataset_name, columns, validate=False):
+    """Create instance of projection command.
+
+    Parameters
+    ----------
+    dataset_name: string
+        Name of the dataset
+    columns: list
+        List of column references. Expects a list of dictionaries with two
+        elements 'column' and 'name' (option)
+    validate: bool, optional
+        Validate the created command specification (if true)
+
+    Returns
+    -------
+    vizier.workflow.module.ModuleSpecification
+    """
+    # Create list of projection columns. The output name for each column is
+    # optional
+    elements = list()
+    for col in columns:
+        items = list()
+        items.append(md.ARG(id=vizual.PARA_COLUMNS_COLUMN, value=col['column']))
+        if 'name' in col:
+            items.append(md.ARG(id=vizual.PARA_COLUMNS_RENAME, value=col['name']))
+        elements.append(items)
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_PROJECTION,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=vizual.PARA_COLUMNS, value=elements)
+        ],
+        packages=PACKAGE(validate=validate)
+    )
+
+
+def rename_column(dataset_name, column, name, validate=False):
+    """Create instance of rename dataset column command.
 
     Parameters
     ----------
@@ -253,24 +293,27 @@ def rename_column(dataset_name, column, name):
         Name or index for column that is being renamed
     name: string
         New column name
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_REN_COL,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            pckg.PARA_COLUMN: column,
-            pckg.PARA_NAME: name
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_REN_COL,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=pckg.PARA_COLUMN, value=column),
+            md.ARG(id=pckg.PARA_NAME, value=name)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def rename_dataset(dataset_name, new_name):
-    """Rename a dataset. Primarily intended for unit tests.
+def rename_dataset(dataset_name, new_name, validate=False):
+    """Create instance of rename dataset command.
 
     Parameters
     ----------
@@ -278,23 +321,62 @@ def rename_dataset(dataset_name, new_name):
         Name of the dataset
     new_name: string
         New dataset name
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_REN_DS,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            pckg.PARA_NAME: new_name
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_REN_DS,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=pckg.PARA_NAME, value=new_name)
+        ],
+        packages=PACKAGE(validate=validate)
     )
 
 
-def update_cell(dataset_name, column, row, value):
-    """Update a dataset cell value. Primarily intended for unit tests.
+def sort_dataset(dataset_name, columns, validate=False):
+    """Create instance of sort dataset command.
+
+    Parameters
+    ----------
+    dataset_name: string
+        Name of the dataset
+    columns: list
+        List of column references. Expects a list of dictionaries with two
+        elements 'column' and 'order'
+    validate: bool, optional
+        Validate the created command specification (if true)
+
+    Returns
+    -------
+    vizier.workflow.module.ModuleSpecification
+    """
+    # Create list of projection columns. The output name for each column is
+    # optional
+    elements = list()
+    for col in columns:
+        items = list()
+        items.append(md.ARG(id=vizual.PARA_COLUMNS_COLUMN, value=col['column']))
+        items.append(md.ARG(id=vizual.PARA_COLUMNS_ORDER, value=col['order']))
+        elements.append(items)
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_SORT,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=vizual.PARA_COLUMNS, value=elements)
+        ],
+        packages=PACKAGE(validate=validate)
+    )
+
+
+def update_cell(dataset_name, column, row, value, validate=False):
+    """Create instance of update dataset cell command.
 
     Parameters
     ----------
@@ -306,20 +388,23 @@ def update_cell(dataset_name, column, row, value):
         Cell row index
     value: string
         New cell value
+    validate: bool, optional
+        Validate the created command specification (if true)
 
     Returns
     -------
     vizier.workflow.module.ModuleSpecification
     """
-    return ModuleSpecification(
-        PACKAGE_VIZUAL,
-        VIZUAL_UPD_CELL,
-        {
-            pckg.PARA_DATASET : dataset_name,
-            pckg.PARA_COLUMN: column,
-            PARA_ROW: row,
-            'value': value
-        }
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_UPD_CELL,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=pckg.PARA_COLUMN, value=column),
+            md.ARG(id=vizual.PARA_ROW, value=row),
+            md.ARG(id=vizual.PARA_VALUE, value=value),
+            ],
+        packages=PACKAGE(validate=validate)
     )
 
 
@@ -329,7 +414,7 @@ def update_cell(dataset_name, column, row, value):
 
 def PACKAGE(validate=False):
     """Depending on the validate flag return a package dictionary that contains
-    the VizUAL package declaration or None.
+    the vizual package declaration or None.
 
     Parameters
     ----------
