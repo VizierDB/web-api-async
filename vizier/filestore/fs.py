@@ -34,7 +34,7 @@ FILENAME_SUFFIX = '.dat'
 # Name of the metadata file
 METADATA_FILE_NAME = 'index.tsv'
 # Version information
-VERSION_INFO = '0.2.0'
+VERSION_INFO = '0.2.1'
 
 
 class DefaultFileStore(fs.FileServer):

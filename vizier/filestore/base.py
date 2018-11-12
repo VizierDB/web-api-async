@@ -115,16 +115,6 @@ class FileHandle(object):
         else:
             return open(self.filepath, 'r')
 
-    def uri(self):
-        """Unique file resource identifier. Currently we use file:// as the
-        identifier scheme.
-
-        Returns
-        -------
-        string
-        """
-        return 'file://' + self.identifier
-
 
 class FileServer(VizierSystemComponent):
     """Abstract API to upload and retrieve files."""

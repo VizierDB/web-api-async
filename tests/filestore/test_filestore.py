@@ -108,7 +108,6 @@ class TestDefaultFileStore(unittest.TestCase):
         fh = db.upload_file(CSV_FILE)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
-        self.assertEquals(fh.uri(), 'file://' + fh.identifier)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, METADATA_FILE_NAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
@@ -117,7 +116,6 @@ class TestDefaultFileStore(unittest.TestCase):
         fh = db.get_file(fh.identifier)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
-        self.assertEquals(fh.uri(), 'file://' + fh.identifier)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         # Add files with other valid suffixes
         fh = db.upload_file(CSV_FILE)
@@ -135,7 +133,7 @@ class TestDefaultFileStore(unittest.TestCase):
         # Re-load the repository
         db = DefaultFileStore(SERVER_DIR)
         self.assertEquals(len(db.list_files()), 5)
-        
+
     def test_upload_stream(self):
         """Test file upload from an open file object."""
         db = DefaultFileStore(SERVER_DIR)
@@ -144,7 +142,6 @@ class TestDefaultFileStore(unittest.TestCase):
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
         self.assertTrue(os.path.isfile(fh.filepath))
-        self.assertEquals(fh.uri(), 'file://' + fh.identifier)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
 
 if __name__ == '__main__':
