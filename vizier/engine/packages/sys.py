@@ -16,7 +16,7 @@
 
 """System commands package."""
 
-import vizier.workflow.packages.base as pckg
+import vizier.engine.packages.base as pckg
 
 
 # Package name

@@ -58,9 +58,9 @@ import yaml
 
 from vizier.datastore.base import DATASTORE_DEFAULT
 from vizier.datastore.fs import PARA_DIRECTORY
-from vizier.workflow.packages.base import PackageIndex
-from vizier.workflow.packages.sys import PACKAGE_SYS, SYSTEM_COMMANDS
-from vizier.workflow.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
+from vizier.engine.packages.base import PackageIndex
+from vizier.engine.packages.sys import PACKAGE_SYS, SYSTEM_COMMANDS
+from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
 
 
 """Environment Variable containing path to config file."""

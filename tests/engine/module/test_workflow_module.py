@@ -2,8 +2,8 @@ import time
 import unittest
 
 from vizier.core.timestamp import get_current_time
-from vizier.workflow.module import ModuleHandle, ModuleProvenance, TextObject
-from vizier.workflow.module import OUTPUT_TEXT
+from vizier.engine.module import ModuleHandle, ModuleProvenance, TextObject
+from vizier.engine.module import OUTPUT_TEXT
 
 
 class TestWorkflowModule(unittest.TestCase):

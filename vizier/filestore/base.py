@@ -116,7 +116,7 @@ class FileHandle(object):
             return open(self.filepath, 'r')
 
 
-class FileServer(VizierSystemComponent):
+class FileStore(VizierSystemComponent):
     """Abstract API to upload and retrieve files."""
     def __init__(self, build):
         """Initialize the build information. Expects a dictionary containing two
@@ -129,7 +129,7 @@ class FileServer(VizierSystemComponent):
         build : dict()
             Build information
         """
-        super(FileServer, self).__init__(build)
+        super(FileStore, self).__init__(build)
 
     def components(self):
         """List containing component descriptor.
@@ -138,7 +138,7 @@ class FileServer(VizierSystemComponent):
         -------
         list
         """
-        return [component_descriptor('fileserver', self.system_build())]
+        return [component_descriptor('filestore', self.system_build())]
 
     @abstractmethod
     def get_file(self, identifier):

@@ -3,9 +3,9 @@
 import unittest
 
 from vizier.client.command.pycell import python_cell
-from vizier.workflow.module.command import ModuleCommand, ARG, ARG_ID
-import vizier.workflow.packages.base as pckg
-import vizier.workflow.packages.pycell.base as pycell
+from vizier.engine.module.command import ModuleCommand, ARG, ARG_ID
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.pycell.base as pycell
 
 
 PACKAGES = {pycell.PACKAGE_PYTHON: pckg.PackageIndex(pycell.PYTHON_COMMANDS)}

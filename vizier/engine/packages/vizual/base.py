@@ -16,7 +16,7 @@
 
 """Specification of parameters for VizUAL commands."""
 
-import vizier.workflow.packages.base as pckg
+import vizier.engine.packages.base as pckg
 
 
 """Global constants."""

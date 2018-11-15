@@ -4,13 +4,13 @@
 import unittest
 
 from vizier.config import AppConfig
-from vizier.workflow.module import ModuleSpecification
+from vizier.engine.module import ModuleSpecification
 
-import vizier.workflow.packages.mimir.base as mimir
-import vizier.workflow.packages.plot.base as plot
-import vizier.workflow.packages.pycell.base as pycell
-import vizier.workflow.packages.vizual.base as vizual
-import vizier.workflow.command as cmd
+import vizier.engine.packages.mimir.base as mimir
+import vizier.engine.packages.plot.base as plot
+import vizier.engine.packages.pycell.base as pycell
+import vizier.engine.packages.vizual.base as vizual
+import vizier.engine.command as cmd
 
 
 class TestValidateCommand(unittest.TestCase):

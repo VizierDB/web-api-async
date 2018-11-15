@@ -16,9 +16,9 @@
 
 """Create instances of python package commands."""
 
-import vizier.workflow.module.command as md
-import vizier.workflow.packages.base as pckg
-import vizier.workflow.packages.pycell.base as pycell
+import vizier.engine.module.command as md
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.pycell.base as pycell
 
 
 def python_cell(source, validate=False):
@@ -34,7 +34,7 @@ def python_cell(source, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.command.ModuleCommand
+    vizier.engine.module.command.ModuleCommand
     """
     # If the validate flag is true create a package index that contains the
     # python cell package declaration

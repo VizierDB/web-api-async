@@ -3,12 +3,12 @@
 import unittest
 
 from vizier.config import AppConfig
-from vizier.workflow.packages.mimir.base import MIMIR_LENSES
-from vizier.workflow.packages.plot.base import PLOT_COMMANDS
-from vizier.workflow.packages.base import validate_package
-from vizier.workflow.packages.pycell.base import PYTHON_COMMANDS
-from vizier.workflow.packages.sys import SYSTEM_COMMANDS
-from vizier.workflow.packages.vizual.base import VIZUAL_COMMANDS
+from vizier.engine.packages.mimir.base import MIMIR_LENSES
+from vizier.engine.packages.plot.base import PLOT_COMMANDS
+from vizier.engine.packages.base import validate_package
+from vizier.engine.packages.pycell.base import PYTHON_COMMANDS
+from vizier.engine.packages.sys import SYSTEM_COMMANDS
+from vizier.engine.packages.vizual.base import VIZUAL_COMMANDS
 
 
 class TestValidatePackage(unittest.TestCase):

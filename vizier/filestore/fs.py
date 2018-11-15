@@ -37,7 +37,7 @@ METADATA_FILE_NAME = 'index.tsv'
 VERSION_INFO = '0.2.1'
 
 
-class DefaultFileStore(fs.FileServer):
+class DefaultFileStore(fs.FileStore):
     """Default file server implementation. Keeps all files in a given base
     directory on disk. Files are named by their unique identifier (with suffix
     .dat for convenience). File metadata is kept in a tab-delimited file

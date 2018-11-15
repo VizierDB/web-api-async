@@ -14,7 +14,7 @@ from vizier.filestore.fs import DefaultFileStore, METADATA_FILE_NAME
 import vizier.filestore.base as fs
 
 
-SERVER_DIR = './.files/fs'
+SERVER_DIR = './.tmp'
 
 CSV_FILE = './.files/dataset.csv'
 GZIP_CSV_FILE = './.files/dataset.csv.gz'

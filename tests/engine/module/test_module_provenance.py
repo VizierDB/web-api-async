@@ -1,6 +1,6 @@
 import unittest
 
-from vizier.workflow.module import ModuleProvenance
+from vizier.engine.module import ModuleProvenance
 
 
 class TestModuleProvenance(unittest.TestCase):

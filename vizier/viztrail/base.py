@@ -16,6 +16,9 @@
 
 """Abstract class for viztrails. Viztrails are Vizier's adoption of VisTrails.
 Defines and implements the base classes for viztrail objects.
+
+A viztrail is a set of branches. Each branch has a unique identifier and an
+optional name. Each branch is a sequence of workflow versions.
 """
 
 from abc import abstractmethod
@@ -24,21 +27,202 @@ from vizier.core.timestamp import get_current_time
 
 
 """Key's for default viztrail properties."""
-# Human readable viztrail name
+# Human readable object name for viztrails and viztrail branches
 PROPERTY_NAME = 'name'
 
 
-class ViztrailDescriptor(object):
-    """Descriptor for a viztrail. The descriptor contains the essential
-    information of the viztrail. It is primarily intended for viztrail listings
-    that do not need access to the full information and functionality of a
-    viztrail.
+class NamedObject(object):
+    """Viztrails and branches are named objects. A named object maintains a set
+    of user-defined annotations. The annotations with the key defined in
+    PROPERTY_NAME is interpreted as the human-readable object name.
 
-    Each viztrail descriptor contains the unique viztrail identifier, timestamp
-    information, and the viztrail properties set.
+    This base class provides getter and setter methods to access and manipulate
+    the human-readable object name.
 
-    A viztrail is expected to have a name property. If the property is missing
-    the viztrail name is None.
+    Attributes
+    ----------
+    name: string
+        Human readable viztrail name
+    properties: vizier.core.annotation.base.ObjectAnnotationSet
+        Set of user-defined properties that are associated with this viztrail
+    """
+    def __init__(self, properties):
+        """Initialize the object's properties set.
+
+        Parameters
+        ----------
+        properties: vizier.core.annotation.base.ObjectAnnotationSet
+            Handler for user-defined properties
+        """
+        self.properties = properties
+
+    @property
+    def name(self):
+        """Get the value of the object property with key 'name'. The result is
+        None if no such property exists.
+
+        Returns
+        -------
+        string
+        """
+        return self.properties.find_one(
+            key=PROPERTY_NAME,
+            default_value=None,
+            raise_error_on_multi_value=False
+        )
+
+    @name.setter
+    def name(self, value):
+        """Set the value of the object property with key 'name'.
+
+        Parameters
+        ----------
+        name: string
+            Human-readable name for the viztrail
+        """
+        return self.properties.replace(key=PROPERTY_NAME, value=str(name))
+
+
+# ------------------------------------------------------------------------------
+# Branches
+# ------------------------------------------------------------------------------
+
+class BranchProvenance(object):
+    """Simple object that contains provenance information for each branch. The
+    provenance for a branch includes the source branch identifier, the
+    identifier for the workflow, and the identifier for the module in the source
+    workflow from which the branch was created. The module identifier defines
+    the last module in the source workflow that was copied too the new branch.
+
+    If a branch is not created from a previous branch but from scratch, e.g.,
+    the first branch in a viztrail, the source_branch is None and the other
+    two identifier -1. If the source-branch is not None the workflow and module
+    identifier are greater or equal zero.
+
+    Attributes
+    ----------
+    source_branch : string
+        Unique identifier of source branch
+    workflow_id: int
+        Identifier of source workflow
+    module_id: int
+        Identifier of module at which the new branch started
+
+    """
+    def __init__(self, source_branch=None, workflow_id=-1, module_id=-1):
+        """Initialize the provenance object.
+
+        Raises ValueError if the source branch is not None but the workflow or
+        module identifier are negative.
+
+        Parameters
+        ----------
+        source_branch : string
+            Unique identifier of source branch
+        workflow_id: int
+            Identifier of source workflow
+        module_id: int
+            Identifier of module at which the new branch started
+        """
+        # Raise an exception if the source branch is not None but the workflow
+        # or module identifier are negative
+        if not source_branch is None:
+            if workflow_id < 0:
+                raise ValueError('invalid workflow identifier \'' + str(workflow_id) + '\'')
+            if module_id < 0:
+                raise ValueError('invalid module identifier \'' + str(module_id) + '\'')
+        self.source_branch = source_branch
+        self.workflow_id = workflow_id if not source_branch is None else -1
+        self.module_id = module_id if not source_branch is None else -1
+
+
+class BranchHandle(NamedObject):
+    """Branch in a viztrail. Each branch has a unique identifier, a set of user-
+    defined properties, and a provenance object that defines the branch source.
+
+    Each branch is a list of workflow versions. The sequence of workflows define
+    the history of the branch, i.e., all the previous states and the current
+    state of the branch. The last workflow version in the branch represents the
+    head of the branch and therefore the current state of the branch.
+
+    Attributes
+    ----------
+    identifier: string
+        Unique branch identifier
+    properties: vizier.core.properties.ObjectPropertiesHandler
+        User-defined properties for the branch
+    provenance: vizier.viztrail.base.BranchProvenance
+        Provenance information for this branch
+    """
+    def __init__(self, identifier, properties, provenance):
+        """Initialize the viztrail branch.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique branch identifier
+        properties: vizier.core.annotation.base.ObjectAnnotationSet
+            Handler for user-defined properties
+        provenance: vizier.viztrail.base.BranchProvenance
+            Provenance information for this branch
+        """
+        super(BranchHandle, self).__init__(properties=properties)
+        self.identifier = identifier
+        self.provenance = provenance
+
+    def get_head(self):
+        """Shortcut the get the workflow at the head of the branch. The result
+        is None if the branch is empty.
+
+        Returns
+        -------
+        ???
+        """
+        return self.get_workflow(workflow_id=-1)
+
+    @abstractmethod
+    def get_history(self):
+        """Get the list of workflows for the branch that define the branch
+        history. The result includes the current state of the branch as the
+        last element in the list.
+
+        Returns
+        -------
+        list(???)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_workflow(self, workflow_id=-1):
+        """Get the workflow with the given identifier. If the identifier is
+        negative the head of the branch is returned. The result is None if the
+        branch is empty.
+
+        Parameters
+        ----------
+        workflow_id: int
+            Unique workflow identifier
+
+        Returns
+        -------
+        ???
+        """
+        raise NotImplementedError
+
+
+# ------------------------------------------------------------------------------
+# Viztrails
+# ------------------------------------------------------------------------------
+
+class ViztrailHandle(NamedObject):
+    """Handle for a viztrail. The viztrail handle provides access to all the
+    vviztrail information and branches.
+
+    Each viztrail has a unique viztrail identifier, timestamp information for
+    viztrail creation and the last modification, and the viztrail properties.
+
+    The viztrail properties contain the optional name. If the respective key is
+    not set the viztrail name is None.
 
     Attributes
     ----------
@@ -50,9 +234,8 @@ class ViztrailDescriptor(object):
         Timestamp when viztrail was last modified (UTC)
     name: string
         Human readable viztrail name
-    properties: vizier.core.properties.ObjectPropertiesHandler
-        Handler for user-defined properties that are associated with this
-        viztrail
+    properties: vizier.core.annotation.base.ObjectAnnotationSet
+        Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
         self, identifier, properties, created_at=None, last_modified_at=None
@@ -63,16 +246,15 @@ class ViztrailDescriptor(object):
         ----------
         identifier : string
             Unique viztrail identifier
-        properties: vizier.core.properties.ObjectPropertiesHandler
-            Handler for user-defined properties that are associated with this
-            viztrail
+        properties: vizier.core.annotation.base.ObjectAnnotationSet
+            Handler for user-defined properties
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
         last_modified_at : datetime.datetime, optional
             Timestamp when project was last modified (UTC)
         """
+        super(ViztrailHandle, self).__init__(properties=properties)
         self.identifier = identifier
-        self.properties = properties
         # If created_at timestamp is None the viztrail is expected to be a newly
         # created viztrail. For new viztrails the last_modified timestamp is
         # expected to be None. For existing viztrails the last_modified
@@ -88,16 +270,77 @@ class ViztrailDescriptor(object):
             self.created_at = get_current_time()
             self.last_modified_at = self.created_at
 
-    @property
-    def name(self):
-        """Get the value of the object property with key 'name'. The result is
-        None if no such property exists.
+    @abstractmethod
+    def create_branch(self, branch_id, workflow_id=-1, module_id=-1, properties=None):
+        """Create a new branch. The combination of branch_id, workflow_id and
+        module_id specifies the branching point, i.e., the source of the new
+        branch. The optional properties set may contain the name for the new
+        branch.
+
+        Returns None if the branch source does not exist.
+
+        Parameters
+        ----------
+        branch_id : string
+            Unique identifier for existing branch
+        workflow_id: int, optional
+            Identifier for workflow in source branch that is the source for the
+            branch step.. If negative, the workflow at the branch head is used.
+        module_id: int, optional
+            Start branch from module with given identifier in workflow.
+            The new branch contains all modules from the source workflow up
+            until (including) the identified module. Starts at the end of the
+            workflow if module_id is negative.
+        properties: dict, optional
+            Set of properties for the new branch
 
         Returns
         -------
-        string
+        vizier.viztrail.base.BranchHandle
         """
-        return self.properties.get_property(PROPERTY_NAME, None)
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_branch(self, branch_id):
+        """Delete branch with the given identifier. Returns True if the branch
+        existed and False otherwise.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        bool
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_branch(self, branch_id):
+        """Get handle for the branch with the given identifier. Returns None if
+        no branch with the given identifier exists.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.base.BranchHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_branches(self):
+        """Get a list of branches that are currently defined for the viztrail.
+
+        Returns
+        -------
+        list(vizier.viztrail.base.BranchHandle)
+        """
+        raise NotImplementedError
 
 
 class ViztrailHandle(ViztrailDescriptor):

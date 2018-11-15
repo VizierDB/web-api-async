@@ -24,7 +24,7 @@ contain the parameter id and value as dictionary elements. The structure of the
 va;ue element is dependent on the parameter type.
 """
 
-import vizier.workflow.packages.base as pckg
+import vizier.engine.packages.base as pckg
 
 
 """Element labels for dictionaries that represent command arguments."""
@@ -127,7 +127,7 @@ class ModuleArguments(object):
 
         Parameters
         -----------
-        parameters: vizier.workflow.packages.base.ParameterIndex
+        parameters: vizier.engine.packages.base.ParameterIndex
         """
         # Keep track of the parameter identifier in the argument list
         keys = set()
@@ -188,7 +188,7 @@ class ModuleCommand(object):
         Unique package identifier
     command_id: string
         Package-specific unique command identifier
-    arguments: vizier.workflow.module.command.ModuleArguments
+    arguments: vizier.engine.module.command.ModuleArguments
         Nested structure of arguments for the specified command
     """
     def __init__(self, package_id, command_id, arguments=[], packages=None):
@@ -207,7 +207,7 @@ class ModuleCommand(object):
             Package-specific unique command identifier
         arguments: list, optional
             List of dictionaries that define arguments for command parameters
-        packages: dict(vizier.workflow.package.base.PackageIndex)
+        packages: dict(vizier.engine.package.base.PackageIndex)
             Dictionary of packages
         """
         self.package_id = package_id

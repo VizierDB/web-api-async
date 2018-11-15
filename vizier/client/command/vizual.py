@@ -16,9 +16,9 @@
 
 """Create instances of vizual package commands."""
 
-import vizier.workflow.module.command as md
-import vizier.workflow.packages.base as pckg
-import vizier.workflow.packages.vizual.base as vizual
+import vizier.engine.module.command as md
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.vizual.base as vizual
 
 
 def delete_column(dataset_name, column, validate=False):
@@ -35,7 +35,7 @@ def delete_column(dataset_name, column, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.command.ModuleCommand
+    vizier.engine.module.command.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -64,7 +64,7 @@ def delete_row(dataset_name, row, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.command.ModuleCommand
+    vizier.engine.module.command.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -89,7 +89,7 @@ def drop_dataset(dataset_name, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -117,7 +117,7 @@ def insert_column(dataset_name, position, name, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -145,7 +145,7 @@ def insert_row(dataset_name, position, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -172,7 +172,7 @@ def load_dataset(file_uri, dataset_name, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -201,7 +201,7 @@ def move_column(dataset_name, column, position, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -231,7 +231,7 @@ def move_row(dataset_name, row, position, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -260,7 +260,7 @@ def projection(dataset_name, columns, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     # Create list of projection columns. The output name for each column is
     # optional
@@ -298,7 +298,7 @@ def rename_column(dataset_name, column, name, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -326,7 +326,7 @@ def rename_dataset(dataset_name, new_name, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
@@ -354,7 +354,7 @@ def sort_dataset(dataset_name, columns, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     # Create list of projection columns. The output name for each column is
     # optional
@@ -393,7 +393,7 @@ def update_cell(dataset_name, column, row, value, validate=False):
 
     Returns
     -------
-    vizier.workflow.module.ModuleCommand
+    vizier.engine.module.ModuleCommand
     """
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
