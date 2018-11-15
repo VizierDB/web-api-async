@@ -1,5 +1,5 @@
 packages:
-    - '../data/packages/mimir.pckg.json'
+    - './.files/mimir.pckg.json'
 settings:
     api:
         server.url: 'http://vizier-db.info'

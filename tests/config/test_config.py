@@ -2,18 +2,18 @@ import unittest
 
 from vizier.config import AppConfig
 from vizier.config import DEFAULT_ENV_ID, DEFAULT_ENV_NAME, DEFAULT_ENV_DESC
-from vizier.workflow.packages.base import PACKAGE_SYS
-from vizier.workflow.packages.mimir.base import PACKAGE_MIMIR
-from vizier.workflow.packages.plot.base import PACKAGE_PLOT
-from vizier.workflow.packages.pycell.base import PACKAGE_PYTHON
-from vizier.workflow.packages.vizual.base import PACKAGE_VIZUAL
+from vizier.engine.packages.sys import PACKAGE_SYS
+from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
+from vizier.engine.packages.plot.base import PACKAGE_PLOT
+from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
+from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 
-CONFIG_FILE = './files/config.yaml'
-ALTERNATE_CONFIG_FILE = './files/alternate-config.yaml'
-ERRONEOUS_CONFIG_FILE = './files/erroneous-config.yaml'
-DUPLICATE_ENV_CONFIG_FILE = './files/dup-env-config.yaml'
-MISSING_PACKAGE_CONFIG_FILE = './files/missing-pckg-config.yaml'
-SYS_PACKAGE_CONFIG_FILE = './files/sys-pckg-config.yaml'
+CONFIG_FILE = './.files/config.yaml'
+ALTERNATE_CONFIG_FILE = './.files/alternate-config.yaml'
+ERRONEOUS_CONFIG_FILE = './.files/erroneous-config.yaml'
+DUPLICATE_ENV_CONFIG_FILE = './.files/dup-env-config.yaml'
+MISSING_PACKAGE_CONFIG_FILE = './.files/missing-pckg-config.yaml'
+SYS_PACKAGE_CONFIG_FILE = './.files/sys-pckg-config.yaml'
 
 
 class TestConfig(unittest.TestCase):

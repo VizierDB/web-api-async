@@ -1,6 +1,6 @@
 packages:
-    - '../data/packages/mimir.pckg.json'
-    - '../data/packages/pycell.pckg.json'
+    - './.files/mimir.pckg.json'
+    - './.files/pycell.pckg.json'
 settings:
     api:
         server.url: 'http://vizier-db.info'
@@ -16,7 +16,7 @@ settings:
                   directory: 'mimir-directory'
               type: 'MIMIR'
           packages: ['python', 'vizual', 'mimir']
-        - identifier: 'DEFAULT'
+        - identifier: 'MIMIR'
           name: 'Default Config'
           description: 'Default Engine'
           datastore:

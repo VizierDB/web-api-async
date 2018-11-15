@@ -4,7 +4,7 @@
 import unittest
 
 from vizier.config import AppConfig
-from vizier.engine.module import ModuleSpecification
+from vizier.viztrail.module import ModuleSpecification
 
 import vizier.engine.packages.mimir.base as mimir
 import vizier.engine.packages.plot.base as plot

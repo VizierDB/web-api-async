@@ -1,6 +1,6 @@
 packages:
-    - '../data/packages/mimir.pckg.json'
-    - '../data/packages/pycell.pckg.json'
+    - './.files/mimir.pckg.json'
+    - './.files/pycell.pckg.json'
 settings:
     api:
         server.url: 'http://vizier-db.info'

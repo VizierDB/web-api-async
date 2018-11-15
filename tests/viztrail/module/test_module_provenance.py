@@ -1,6 +1,6 @@
 import unittest
 
-from vizier.engine.module import ModuleProvenance
+from vizier.viztrail.module import ModuleProvenance
 
 
 class TestModuleProvenance(unittest.TestCase):

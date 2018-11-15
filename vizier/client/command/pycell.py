@@ -16,9 +16,9 @@
 
 """Create instances of python package commands."""
 
-import vizier.engine.module.command as md
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as pycell
+import vizier.viztrail.module.command as md
 
 
 def python_cell(source, validate=False):
@@ -34,7 +34,7 @@ def python_cell(source, validate=False):
 
     Returns
     -------
-    vizier.engine.module.command.ModuleCommand
+    vizier.viztrail.module.command.ModuleCommand
     """
     # If the validate flag is true create a package index that contains the
     # python cell package declaration

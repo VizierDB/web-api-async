@@ -16,9 +16,9 @@
 
 """Create instances of plot package commands."""
 
-import vizier.engine.module.command as md
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.plot.base as plot
+import vizier.viztrail.module.command as md
 
 
 def create_plot(
@@ -46,7 +46,7 @@ def create_plot(
 
     Returns
     -------
-    vizier.engine.module.command.ModuleCommand
+    vizier.engine.viztrail.command.ModuleCommand
     """
     # If the validate flag is true create a package index that contains the
     # plot package declaration
