@@ -1,3 +1,7 @@
+"""Test functionality of the module provenance handler. The provenance handler
+is used to determine whether a module requires execution based on provenence
+information from previous module executions.
+"""
 import unittest
 
 from vizier.viztrail.module import ModuleProvenance
@@ -5,7 +9,7 @@ from vizier.viztrail.module import ModuleProvenance
 
 class TestModuleProvenance(unittest.TestCase):
 
-    def test_workflows(self):
+    def test_requires_exec(self):
         """Test .requires_exec() method for the module provenance object."""
         # Current database state
         datasets = {'A': '123', 'B': '345', 'C': '567'}
@@ -14,8 +18,8 @@ class TestModuleProvenance(unittest.TestCase):
         self.assertTrue(ModuleProvenance().requires_exec(datasets))
         self.assertTrue(ModuleProvenance(read={'A':'123'}).requires_exec(datasets))
         self.assertTrue(ModuleProvenance(write={'A':'789'}).requires_exec(datasets))
-        # If the module modifies a dataset that it doesn't read an which
-        # exists the result is True
+        # If the module modifies a dataset that it doesn't read but that does
+        # exist the result is True
         prov = ModuleProvenance(read={'A':'123'}, write={'C':'567'})
         self.assertTrue(prov.requires_exec(datasets))
         # If the input data has changed the module needs to execute

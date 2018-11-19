@@ -27,7 +27,7 @@ class ViztrailRepository(VizierSystemComponent):
     """Repository for viztrails. This is an abstract class that defines all
     necessary methods to maintain and manipulate viztrails.
     """
-    def __init__(self, build):
+    def __init__(self, build, viztrails=None):
         """Initialize the build information. Expects a dictionary containing two
         elements: name and version.
 
@@ -37,21 +37,24 @@ class ViztrailRepository(VizierSystemComponent):
         ---------
         build : dict()
             Build information
+        viztrails: dict(vizier.viztrail.base.ViztrailHandle)
+            Dictionary of viztrails that are maintained by the repository
         """
         super(ViztrailRepository, self).__init__(build)
+        self.viztrails = viztrails if not viztrails is None else dict()
 
     @abstractmethod
-    def create_viztrail(self, exec_env, properties):
+    def create_viztrail(self, exec_env_id, properties=None):
         """Create a new viztrail. Every viztrail is associated with an execution
         environment. The environment is set when the viztrail is created and
         can not change throughout the life-cycle of the viztrail.
 
         Parameters
         ----------
-        exec_env: vizier.environment.ExecEnv
-            Identifier for workflow engine that is used to execute workflows of
-            the new viztrail
-        properties: dict
+        exec_env_id: string
+            Identifier of the execution environment that is used for the
+            viztrail
+        properties: dict, optional
             Set of properties for the new viztrail
 
         Returns
@@ -76,7 +79,26 @@ class ViztrailRepository(VizierSystemComponent):
         """
         raise NotImplementedError
 
-    @abstractmethod
+    def get_branch(self, viztrail_id, branch_id):
+        """This is a shortcut to retrieve a particular branch from a viztrail.
+        The result is None if either the viztrail or the branch does not exist.
+
+        Parameters
+        ----------
+        viztrail_id : string
+            Unique viztrail identifier
+        branch_id : string, optional
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.workflow.WorkflowHandle
+        """
+        vt = self.get_viztrail(viztrail_id)
+        if vt is None:
+            return None
+        return vt.get_branch(branch_id)
+
     def get_viztrail(self, viztrail_id):
         """Retrieve the viztrail with the given identifier. The result is None
         if no viztrail with given identifier exists.
@@ -90,7 +112,10 @@ class ViztrailRepository(VizierSystemComponent):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        raise NotImplementedError
+        if viztrail_id in self.viztrails:
+            return self.viztrails[viztrail_id]
+        else:
+            return None
 
     def get_workflow(self, viztrail_id, branch_id, workflow_id):
         """This is a shortcut to retrieve a particular workflow version from a
@@ -108,7 +133,7 @@ class ViztrailRepository(VizierSystemComponent):
 
         Returns
         -------
-        vizier.viztrail.workflow.base.WorkflowHandle
+        vizier.viztrail.workflow.WorkflowHandle
         """
         vt = self.get_viztrail(viztrail_id)
         if vt is None:
@@ -118,7 +143,6 @@ class ViztrailRepository(VizierSystemComponent):
             return None
         return branch.get_workflow(workflow_id)
 
-    @abstractmethod
     def list_viztrails(self):
         """List handles for all viztrails in the repository.
 
@@ -126,4 +150,4 @@ class ViztrailRepository(VizierSystemComponent):
         -------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        raise NotImplementedError
+        return list(self.viztrails)

@@ -16,7 +16,7 @@
 
 """Create instances of mimir package commands."""
 
-import vizier.viztrail.module.command as md
+import vizier.viztrail.command as md
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as mimir
 

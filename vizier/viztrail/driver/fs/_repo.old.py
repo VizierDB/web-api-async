@@ -1,34 +1,10 @@
-# Copyright (C) 2018 New York University
-#                    University at Buffalo,
-#                    Illinois Institute of Technology.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-"""Vizier DB Workflow API -File System Viztrail Repository.
 
-Implementation of the default viztrail repository class that uses the file
-system to persist viztrail information.
-"""
-
-import os
-import shutil
-import yaml
 
 from vizier.config import ENGINEENV_TEST
 from vizier.core.properties import FilePropertiesHandler
 from vizier.core.system import build_info, component_descriptor
 from vizier.core.timestamp import get_current_time, to_datetime
-from vizier.core.util import Sequence, get_unique_identifier
 from vizier.workflow.branch import ViztrailBranch, BranchProvenance
 from vizier.workflow.base import VersionDescriptor, WorkflowHandle
 from vizier.workflow.base import DEFAULT_BRANCH, DEFAULT_BRANCH_NAME
@@ -44,6 +20,9 @@ from vizier.workflow.viztrail import ViztrailHandle
 PROPERTIES_FILE = 'properties.yaml'
 PROVENANCE_FILE = 'provenance.yaml'
 VIZTRAIL_FILE = 'viztrail.yaml'
+
+
+
 
 
 class FileSystemBranchProvenance(BranchProvenance):
@@ -155,7 +134,7 @@ class FileSystemViztrailHandle(ViztrailHandle):
         self.fs_dir = fs_dir
 
     @staticmethod
-    def create_viztrail(fs_dir, identifier, exec_env, properties=None):
+    def create_viztrail(fs_dir, identifier, exec_env_id, properties=None):
         """Create a new viztrail handle.
 
         Parameters
@@ -164,8 +143,9 @@ class FileSystemViztrailHandle(ViztrailHandle):
             Base directory where all viztrail information is stored
         identifier: string
             Unique viztrail identifier
-        exec_env: vizier.config.ExecEnv
-            Environment for execution of viztrail workflows
+        exec_env_id: string
+            Identifier of the execution environment that is used for the
+            viztrail
         properties: dict, optional
             Optional dictionary of viztrail properties
 

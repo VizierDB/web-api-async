@@ -90,7 +90,7 @@ class BranchHandle(NamedObject):
     provenance: vizier.viztrail.base.BranchProvenance
         Provenance information for this branch
     """
-    def __init__(self, identifier, properties, provenance):
+    def __init__(self, identifier, properties, provenance, workflows=None):
         """Initialize the viztrail branch.
 
         Parameters
@@ -105,6 +105,23 @@ class BranchHandle(NamedObject):
         super(BranchHandle, self).__init__(properties=properties)
         self.identifier = identifier
         self.provenance = provenance
+        self.workflows = workflows if not workflows is None else list()
+        # Maintain an index of workflow positions for fast access
+        self.index = dict()
+        for i in range(len(self.workflows)):
+            self.index[self.workflows[i].identifier] = i
+
+    @abstractmethod
+    def append_workflow(self, workflow):
+        """Append the given workflow handle to the branch. The workflow becomes
+        the new head of the branch.
+
+        Parameters
+        ----------
+        workflow: vizier.viztrail.workflow.WorkflowHandle
+            New branch head
+        """
+        raise NotImplementedError
 
     def get_head(self):
         """Shortcut the get the workflow at the head of the branch. The result
@@ -116,7 +133,6 @@ class BranchHandle(NamedObject):
         """
         return self.get_workflow(workflow_id=None)
 
-    @abstractmethod
     def get_history(self):
         """Get the list of workflows for the branch that define the branch
         history. The result includes the current state of the branch as the
@@ -126,9 +142,8 @@ class BranchHandle(NamedObject):
         -------
         list(vizier.viztrail.workflow.base.WorkflowHandle)
         """
-        raise NotImplementedError
+        return list(self.workflows)
 
-    @abstractmethod
     def get_workflow(self, workflow_id=None):
         """Get the workflow with the given identifier. If the identifier is
         none the head of the branch is returned. The result is None if the
@@ -143,4 +158,11 @@ class BranchHandle(NamedObject):
         -------
         vizier.viztrail.workflow.base.WorkflowHandle
         """
-        raise NotImplementedError
+        if len(self.workflows) == 0:
+            return None
+        if workflow_id is None:
+            return self.worlflows[-1]
+        elif workflow_id in self.index:
+            return self.workflows[self.index[workflow_id]]
+        else:
+            return None

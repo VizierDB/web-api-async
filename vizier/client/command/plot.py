@@ -18,7 +18,7 @@
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.plot.base as plot
-import vizier.viztrail.module.command as md
+import vizier.viztrail.command as md
 
 
 def create_plot(

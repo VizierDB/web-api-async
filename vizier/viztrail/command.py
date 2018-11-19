@@ -188,7 +188,7 @@ class ModuleCommand(object):
         Unique package identifier
     command_id: string
         Package-specific unique command identifier
-    arguments: vizier.viztrail.module.command.ModuleArguments
+    arguments: vizier.viztrail.command.ModuleArguments
         Nested structure of arguments for the specified command
     """
     def __init__(self, package_id, command_id, arguments=[], packages=None):

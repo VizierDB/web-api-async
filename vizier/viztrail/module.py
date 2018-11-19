@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A workflow is a sequence of modules. The module handles that are defined in
-the file contain information for each module in a workflow. The handle maintains
-information about the module command, status and the module outputs.
+"""A workflow is a sequence of modules. Each module is represented by a module
+handle. The handle maintains information about the module command, status, the
+module outputs, and the module state (datasets).
 """
+
+from vizier.core.timestamp import get_current_time
+
 
 """Constants for possible module states."""
 MODULE_PENDING = 0
@@ -52,23 +55,23 @@ class ModuleHandle(object):
 
     Attributes
     ----------
-    identifier : int
-        Unique module number (within a worktrail)
-    command : vizier.workflow.module.ModuleCommand
+    identifier : string
+        Unique module identifier
+    command : vizier.viztrail.command.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
     datasets : dict(string)
         Dictionary of resulting datasets. the user-specified name is the key
         and the unique dataset identifier the value.
     external_form: string
         Printable representation of the module command
-    outputs : vizier.workflow.module.ModuleOutputs
+    outputs : vizier.viztrail.module.ModuleOutputs
         Module output streams STDOUT and STDERR
-    prov: vizier.workflow.module.ModuleProvenance
+    prov: vizier.viztrail.module.ModuleProvenance
         Provenance information about datasets that were read and writen by
         previous execution of the module.
     state: int
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-    timestamp: vizier.workflow.module.ModuleTimestamp
+    timestamp: vizier.viztrail.module.ModuleTimestamp
         Module timestamp
     """
     def __init__(
@@ -80,22 +83,22 @@ class ModuleHandle(object):
 
         Parameters
         ----------
-        identifier : int
-            Unique module number (within a worktrail)
-        command : vizier.workflow.module.ModuleCommand
+        identifier : string
+            Unique module identifier
+        command : vizier.viztrail.command.ModuleCommand
             Specification of the module (i.e., package, name, and arguments)
-        state: int
-            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        timestamp: vizier.workflow.module.ModuleTimestamp
-            Module timestamp
         external_form: string, optional
             Printable representation of module command
+        state: int
+            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
+        timestamp: vizier.viztrail.module.ModuleTimestamp, optional
+            Module timestamp
         datasets : dict(string:string), optional
             Dictionary of resulting datasets. The user-specified name is the key
             and the unique dataset identifier the value.
-        outputs: vizier.workflow.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
-        prov: vizier.workflow.module.ModuleProvenance, optional
+        prov: vizier.viztrail.module.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
@@ -110,24 +113,6 @@ class ModuleHandle(object):
         self.datasets = datasets if not datasets is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.prov = prov if not prov is None else ModuleProvenance()
-
-    def copy_pending(self):
-        """Return a copy of the module handle that is in PENDING state.
-
-        Returns
-        -------
-        vizier.workflow.module.ModuleHandle
-        """
-        return ModuleHandle(
-            identifier=self.identifier,
-            command=self.command,
-            state=MODULE_PENDING,
-            timestamp=ModuleTimestamp(),
-            external_form=self.external_form,
-            datasets=self.datasets,
-            outputs=self.outputs,
-            prov=self.prov
-        )
 
     @property
     def is_canceled(self):
@@ -179,119 +164,30 @@ class ModuleHandle(object):
         """
         return self.state == MODULE_SUCCESS
 
-    def set_canceled(self, finished_at):
-        """Update the internal state to canceled. This will also update the
-        imestamp.
-
-        Parameters
-        ----------
-        finished_at: datetime.datetime
-            Time when execution was canceled
-        """
-        self.state = MODULE_CANCELED
-        self.timestamp = ModuleTimestamp(
-            started_at=self.timestamp.started_at,
-            finished_at=finished_at
-        )
-
-    def set_error(self, finished_at):
-        """Update the internal state to error. This will also update the
-        imestamp.
-
-        Parameters
-        ----------
-        finished_at: datetime.datetime
-            Time when execution was stopped
-        """
-        self.state = MODULE_ERROR
-        self.timestamp = ModuleTimestamp(
-            started_at=self.timestamp.started_at,
-            finished_at=finished_at
-        )
-
-    def set_running(self, started_at):
-        """Update the internal state to running. This will clear the module
-        output streams and update the timestamp.
-
-        Parameters
-        ----------
-        started_at: datetime.datetime
-            Time when execution started
-        """
-        self.state = MODULE_RUNNING
-        self.outputs = ModuleOutputs()
-        self.timestamp = ModuleTimestamp(started_at=started_at)
-
-    def set_success(self, datasets, prov, finished_at):
-        """Update the internal state to success. This will set the mapping of
-         datasets, the provenance information, and update the timestamp.
-
-        Parameters
-        ----------
-        datasets: dict()
-            Dictionary of available dataset identifier after module execution
-            (keyed by the dataset name).
-        prov: vizier.workflow.module.ModuleProvenance
-            Provenance information containing the datasets that were read and
-            written during module execution
-        finished_at: datetime.datetime
-            Time when execution was stopped
-        """
-        self.state = MODULE_SUCCESS
-        self.datasets = datasets
-        self.prov = prov
-        self.timestamp = ModuleTimestamp(
-            started_at=self.timestamp.started_at,
-            finished_at=finished_at
-        )
-
 
 class ModuleOutputs(object):
     """Wrapper for module outputs. Contains the standard output and to standard
     error streams. Each stream is a list of output objects.
+
+    Attributes
+    ----------
+    stderr: list(vizier.viztrail.module.OutputObject)
+        Standard error output stream
+    stdout: list(vizier.viztrail.module.OutputObject)
+        Standard output stream
     """
-    def __init__(self, std_out=None, std_err=None):
-        """Initialize the standard output and error stream."""
-        self.std_out = std_out if not std_out is None else list()
-        self.std_err = std_err if not std_err is None else list()
-
-    def stderr(self, content=None):
-        """Add content to the error output stream for a workflow module. This
-        method is used to update the output stream as well as to retrieve the
-        output stream (when called without content parameter).
+    def __init__(self, stdout=None, stderr=None):
+        """Initialize the standard output and error stream.
 
         Parameters
         ----------
-        content: vizier.workflow.module.OutputObject, optional
-            Output stream object.
-
-        Returns
-        -------
-        list
+        stderr: list(vizier.viztrail.module.OutputObject)
+            Standard error output stream
+        stdout: list(vizier.viztrail.module.OutputObject)
+            Standard output stream
         """
-        # Validate content if given. Will raise ValueError if content is invalid
-        if not content is None:
-            self.std_err.append(content)
-        return self.std_err
-
-    def stdout(self, content=None):
-        """Add content to the regular output stream for a workflow module.  This
-        method is used to update the output stream as well as to retrieve the
-        output stream (when called without content parameter).
-
-        Parameters
-        ----------
-        content: vizier.workflow.module.OutputObject, optional
-            Output stream object.
-
-        Returns
-        -------
-        list
-        """
-        # Validate content if given. Will raise ValueError if content is invalid
-        if not content is None:
-            self.std_out.append(content)
-        return self.std_out
+        self.stdout = stdout if not stdout is None else list()
+        self.stderr = stderr if not stderr is None else list()
 
 
 class ModuleProvenance(object):
@@ -307,7 +203,15 @@ class ModuleProvenance(object):
     database state.
     """
     def __init__(self, read=None, write=None):
-        """
+        """Initialize the datasets that were read and written by a previous
+        module execution.
+
+        Parameters
+        ----------
+        read: dict, optional
+            Dictionary of datasets that the module used as input
+        write: dict, optional
+            Dictionary of datasets that the module modified
         """
         self.read = read
         self.write = write
@@ -355,29 +259,44 @@ class ModuleProvenance(object):
 
 
 class ModuleTimestamp(object):
-    """Each module contains two timestamp components: started_at and
+    """Each module contains three timestamps:created_at, started_at and
     finished_at. The timestamp does not distinguish between the canceled, error,
     and success state. In either case the finished_at timestamp is set when the
     state change occurs.
 
+    The timestamps started_at and finished_at may be None if the module is in
+    PENDING state.
+
     Attributes
     ----------
+    created_at: datatime.datetime
+        Time when module was first created
     started_at: datatime.datetime
         Time when module execution started
     finished_at: datatime.datetime
         Time when module execution finished (either due to cancel, error or
         success state change)
     """
-    def __init__(self, started_at=None, finished_at=None):
-        """Initialize the timestamp components.
+    def __init__(self, created_at=None, started_at=None, finished_at=None):
+        """Initialize the timestamp components. If created_at is None the
+        other two timestamps are expected to be None as well. Will raise
+        ValueError if created_at is None but one of the other two timestamps
+        is not None.
 
         Parameters
         ----------
+        created_at: datatime.datetime
+            Time when module was first created
         started_at: datatime.datetime
             Time when module execution started
         finished_at: datatime.datetime
             Time when module execution finished
         """
+        # Raise ValueError if created_at is None but one of the other two
+        # timestamps is not None
+        if created_at is None and not (started_at is None and finished_at is None):
+            raise ValueError('invalid timestamp information')
+        self.created_at = created_at if not created_at is None else get_current_time()
         self.started_at = started_at
         self.finished_at = finished_at
 
@@ -423,5 +342,12 @@ class OutputObject(object):
 
 class TextObject(OutputObject):
     """Output object where the value is a string."""
-    def __init__(self, text):
-        super(TextObject, self).__init__(type=OUTPUT_TEXT, value=text)
+    def __init__(self, value):
+        """Initialize the output string.
+
+        Parameters
+        ----------
+        value, string
+            Output string
+        """
+        super(TextObject, self).__init__(type=OUTPUT_TEXT, value=value)

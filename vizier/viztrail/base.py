@@ -103,6 +103,8 @@ class ViztrailHandle(NamedObject):
         Unique viztrail identifier
     created_at : datetime.datetime
         Timestamp of viztrail creation (UTC)
+    exec_env_id: string
+        Identifier of the execution environment that is used for the viztrail
     last_modified_at : datetime.datetime
         Timestamp when viztrail was last modified (UTC)
     name: string
@@ -111,7 +113,8 @@ class ViztrailHandle(NamedObject):
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
-        self, identifier, properties, created_at=None, last_modified_at=None
+        self, identifier, exec_env_id, properties, branches=None,
+        created_at=None, last_modified_at=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -119,8 +122,13 @@ class ViztrailHandle(NamedObject):
         ----------
         identifier : string
             Unique viztrail identifier
+        exec_env_id: string
+            Identifier of the execution environment that is used for the
+            viztrail
         properties: vizier.core.annotation.base.ObjectAnnotationSet
             Handler for user-defined properties
+        branches: list(vizier.viztrail.branch.BranchHandle)
+            List of branches in the viztrail
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
         last_modified_at : datetime.datetime, optional
@@ -128,6 +136,8 @@ class ViztrailHandle(NamedObject):
         """
         super(ViztrailHandle, self).__init__(properties=properties)
         self.identifier = identifier
+        self.exec_env_id = exec_env_id
+        self.branches = branches if not branches is None else dict()
         # If created_at timestamp is None the viztrail is expected to be a newly
         # created viztrail. For new viztrails the last_modified timestamp is
         # expected to be None. For existing viztrails the last_modified
@@ -144,32 +154,24 @@ class ViztrailHandle(NamedObject):
             self.last_modified_at = self.created_at
 
     @abstractmethod
-    def create_branch(self, branch_id, workflow_id=None, module_id=None, properties=None):
-        """Create a new branch. The combination of branch_id, workflow_id and
-        module_id specifies the branching point, i.e., the source of the new
-        branch. The optional properties set may contain the name for the new
-        branch.
-
-        Returns None if the branch source does not exist.
+    def add_branch(self, branch_id, provenance, properties=None, workflow=None):
+        """Create a new branch. If the workflow is given the new branch contains
+        exactly this workflow. Otherwise, the branch is empty.
 
         Parameters
         ----------
         branch_id : string
-            Unique identifier for existing branch
-        workflow_id: string, optional
-            Identifier for workflow in source branch that is the source for the
-            branch step. If None, the workflow at the branch head is used.
-        module_id: string, optional
-            Start branch from module with given identifier in workflow.
-            The new branch contains all modules from the source workflow up
-            until (including) the identified module. Starts at the end of the
-            workflow if module_id is None.
+            Unique identifier for the new branch branch
+        provenance: vizier.viztrail.base.BranchProvenance
+            Provenance information for the new branch
         properties: dict, optional
             Set of properties for the new branch
+        workflow: vizier.viztrail.workflow.WorkflowHandle, optional
+            Head of branch
 
         Returns
         -------
-        vizier.viztrail.base.BranchHandle
+        vizier.viztrail.branch.BranchHandle
         """
         raise NotImplementedError
 
@@ -189,7 +191,6 @@ class ViztrailHandle(NamedObject):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def get_branch(self, branch_id):
         """Get handle for the branch with the given identifier. Returns None if
         no branch with the given identifier exists.
@@ -201,16 +202,18 @@ class ViztrailHandle(NamedObject):
 
         Returns
         -------
-        vizier.viztrail.base.BranchHandle
+        vizier.viztrail.branch.BranchHandle
         """
-        raise NotImplementedError
+        if branch_id in self.branches:
+            return self.branches[branch_id]
+        else:
+            return None
 
-    @abstractmethod
     def list_branches(self):
         """Get a list of branches that are currently defined for the viztrail.
 
         Returns
         -------
-        list(vizier.viztrail.base.BranchHandle)
+        list(vizier.viztrail.branch.BranchHandle)
         """
-        raise NotImplementedError
+        return self.branches.values()
