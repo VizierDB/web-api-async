@@ -29,7 +29,7 @@ class PersistentAnnotationStore(AnnotationStore):
     in a file on disk in Json format.
     """
     def __init__(self, filename):
-        """initialize the path to the storage file on disk.
+        """Initialize the path to the storage file on disk.
 
         Parameters
         ----------
@@ -60,25 +60,51 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
     store. This class is a shortcut to instantiate an object annotation store
     with a persistent annotation store defined in this module.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, annotations=None):
         """Initialize the file that maintains the annotations. Annotations are
         read from file (if it exists).
+
+        Provides the option to load an initial set of annotations from a given
+        dictionary. If the file exists and the annotations dictionary is not
+        None an exception is thrown.
 
         Parameters
         ----------
         filename: string
             Path to annotation file
+        annotations: dict, optional
+            Dictionary with initial set of annotations
         """
-        annotations = dict()
-        # Read annotations from disk if the annotation file exists
         abs_path = os.path.abspath(filename)
-        if os.path.isfile(abs_path):
-            with open(abs_path, 'r') as f:
-                obj = json.load(f)
-                for anno in obj:
-                    annotations[anno['key']] = anno['value']
-        # Initialize the default object annotation set
-        super(PersistentAnnotationSet, self).__init__(
-            elements=annotations,
-            writer=PersistentAnnotationStore(filename=abs_path)
-        )
+        if not annotations is None:
+            # Initialize annotations from the given dictionary. The persistent
+            # set can only be initialized once. Is is indicated by the
+            # non-existence of the storage file. Throw an exception if the
+            # file exists.
+            if os.path.isfile(abs_path):
+                raise ValueError('cannot initialize existing annotation set')
+            # Initialize the default object annotation set
+            super(PersistentAnnotationSet, self).__init__(
+                writer=PersistentAnnotationStore(filename=abs_path)
+            )
+            for key in annotations:
+                value = annotations[key]
+                if isinstance(value, list):
+                    for val in value:
+                        self.add(key, val, persist=False)
+                else:
+                    self.add(key, value, persist=False)
+            self.writer.store(self.elements)
+        else:
+            # Read annotations from disk if the annotation file exists
+            elements = dict()
+            if os.path.isfile(abs_path):
+                with open(abs_path, 'r') as f:
+                    obj = json.load(f)
+                    for anno in obj:
+                        elements[anno['key']] = anno['value']
+            # Initialize the default object annotation set
+            super(PersistentAnnotationSet, self).__init__(
+                elements=elements,
+                writer=PersistentAnnotationStore(filename=abs_path)
+            )

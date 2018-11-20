@@ -23,12 +23,9 @@ import os
 from vizier.core.util import get_unique_identifier
 from vizier.core.system import build_info
 from vizier.viztrail.driver.fs import VERSION_INFO
+from vizier.viztrail.driver.fs.io import DefaultObjectStore
 from vizier.viztrail.driver.fs.viztrail import FSViztrailHandle
 from vizier.viztrail.repository import ViztrailRepository
-
-
-"""Name of the index file containing the list of active viztrails."""
-INDEX_FILE = 'index.tsv'
 
 
 class FSViztrailRepository(ViztrailRepository):
@@ -37,10 +34,12 @@ class FSViztrailRepository(ViztrailRepository):
     path to a directory on the local disk that contains the files for all
     managed resources.
 
-    Maintains the identifier of active viztrails in a simple text file
-    containing one identifier per line.
+    Files and Directories
+    ---------------------
+    /viztrails/                 : Directory for viztrails
+    /viztrails/<vt-identifier>/ : Resources for individual viztrail
     """
-    def __init__(self, base_dir):
+    def __init__(self, base_dir, object_store=None):
         """Initialize the repository. Expects the path to a local directory that
         contains all resources.
 
@@ -48,10 +47,12 @@ class FSViztrailRepository(ViztrailRepository):
         ---------
         base_dir: string
             Path to base directory containing all repository resources
+        object_store: vizier.viztrail.driver.fs.io.ObjectStore, optional
+            Object store implementation to read and write Json files
         """
-        # Make sure to initialize the base directory first before loading the
-        # viztrails
-        self.base_dir = base_dir
+        # Initialize the base directory and object store
+        self.base_dir = os.path.abspath(base_dir)
+        self.object_store = object_store if not object_store is None else DefaultObjectStore()
         # Load viztrails and intialize the remaining instance variables by
         # calling the constructor of the super class
         super(FSViztrailRepository, self).__init__(
@@ -59,7 +60,10 @@ class FSViztrailRepository(ViztrailRepository):
                 "vizier.viztrail.driver.fs.repository.FSViztrailRepository",
                 version_info=VERSION_INFO
             ),
-            viztrails=FSViztrailRepository.load(self.index_file())
+            viztrails=FSViztrailRepository.load_repository(
+                repo_dir=DIR_VIZTRAILS(self.base_dir),
+                object_store=self.object_store
+            )
         )
 
     def create_viztrail(self, exec_env_id, properties=None):
@@ -79,26 +83,23 @@ class FSViztrailRepository(ViztrailRepository):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        # Get unique identifier for new viztrail and create viztrail directory.
-        # This will raise a runtime error if the returned identifier is not
-        # unique.
+        # Get unique identifier for new viztrail and viztrail directory. Raise
+        # runtime error if the returned identifier is not unique.
         identifier = get_unique_identifier()
         if identifier in self.viztrails:
             raise RuntimeError('non-unique identifier \'' + str(identifier) + '\'')
-        viztrail_dir = os.path.join(self.base_dir, identifier)
-        os.makedirs(viztrail_dir)
+        viztrail_dir = os.path.join(DIR_VIZTRAILS(self.base_dir), identifier)
         # Create materialized viztrail resource
-        vt = FSViztrailHandle.create(
+        vt = FSViztrailHandle.create_viztrail(
             identifier=identifier,
-            properties=properties,
             exec_env_id=exec_env_id,
-            base_dir=viztrail_dir
+            properties=properties,
+            base_dir=viztrail_dir,
+            object_store=self.object_store
         )
-        # Add the new resource to the viztrails index and write the modified
-        # repository list to disk.
+        # Add the new resource to the viztrails index and return the new
+        # viztrail handle
         self.viztrails[identifier] = vt
-        self.write_index()
-        # Return the handle for the newly created viztrail
         return vt
 
     def delete_viztrail(self, viztrail_id):
@@ -118,63 +119,64 @@ class FSViztrailRepository(ViztrailRepository):
         if viztrail_id in self.viztrails:
             # Call the delete method of the FSViztrailHandle to delete the
             # files that are associated with the viztrail
-            self.viztrails[viztrail_id].delete()
+            self.viztrails[viztrail_id].delete_viztrail()
             del self.viztrails[viztrail_id]
-            # Write modified repository list to disk
-            self.write_index()
             return True
         else:
             return False
 
-    def index_file(self):
-        """Get path to index file containing the list of active viztrails.
-
-        Parameters
-        ----------
-        base_dir: string
-            Path to base directory for the repository
-        Returns
-        -------
-        string
-        """
-        return os.path.join(self.base_dir, INDEX_FILE)
-
     @staticmethod
-    def load(repo_dir):
-        """Load viztrails from disk. Each line in the index file references an
-        active viztrail. The viztrail resources are expected to be in a
-        subfolder in the given reposiroty directory that is named after the
-        viztrail identifier.
+    def load_repository(repo_dir, object_store=None):
+        """Load viztrails from disk. Each subfolder in the given directory
+        references an active viztrail.
 
         If the repository directory does not exist it is created.
 
         Parameter
         ---------
         repo_dir: string
-            Path to the base directory that contains the resource files
+            Path to the base directory that contains the viztrail resources
+        object_store: vizier.viztrail.driver.fs.io.ObjectStore, optional
+            Object store implementation to read and write Json files
 
         Returns
         -------
-        dict(vizier.viztrail.base.ViztrailHandle)
+        list(vizier.viztrail.driver.fs.viztrail.FSViztrailHandle)
         """
-        viztrails = dict()
-        index_file = self.index_file()
+        viztrails = list()
         if not os.path.isdir(repo_dir):
             # Create base directory if it doesn't exist and return an empty
             # dictionary
             os.makedirs(repo_dir)
-        elif os.path.isfile(index_file):
-            # Each line in the index file references a subfolder in the base
-            # directory that is assumed to contain a viztrail resource
-            with open(index_file, 'r') as f:
-                for line in f:
-                    viztrail_dir = os.path.join(repo_dir, line.strip())
-                    vt = FSViztrailHandle.load(viztrail_dir)
-                    viztrails[vt.identifier] = vt
+        else:
+            # Each subfolder in the repository is expected to contain resources
+            # for a viztrail
+            for filename in os.listdir(repo_dir):
+                viztrail_dir = os.path.join(repo_dir, filename)
+                if os.path.isdir(viztrail_dir):
+                    viztrails.append(
+                        FSViztrailHandle.load_viztrail(
+                            base_dir=viztrail_dir,
+                            object_store=object_store
+                        )
+                    )
         return viztrails
 
-    def write_index(self):
-        """Write list of active viztrails to disk."""
-        with open(self.index_file(), 'w') as f:
-            for viztrail_id in self.viztrails:
-                f.write(viztrail_id + '\n')
+
+# ------------------------------------------------------------------------------
+# Files and Directories
+# ------------------------------------------------------------------------------
+
+def DIR_VIZTRAILS(base_dir):
+    """Get the absolute path to the subfolder containing viztrail resources.
+
+    Parameters
+    ----------
+    base_dir: string
+        Path to the base directory for the repository
+
+    Returns
+    -------
+    string
+    """
+    return os.path.join(base_dir, 'viztrails')

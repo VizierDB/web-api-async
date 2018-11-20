@@ -24,6 +24,38 @@ class TestPersistentAnnotationSet(unittest.TestCase):
         """
         shutil.rmtree(PROPERTIES_DIRECTORY)
 
+    def test_annotation_init(self):
+        """Test initializing the persistent annotation set from a given
+        dictionary.
+        """
+        annotations = PersistentAnnotationSet(
+            self.filename,
+            annotations={'A': 1, 'B': ['a', 2, 'c']}
+        )
+        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertTrue('a' in annotations.find_all('B'))
+        self.assertTrue(2 in annotations.find_all('B'))
+        self.assertTrue('c' in annotations.find_all('B'))
+        # Reload annotations to ensure they are persistent
+        annotations = PersistentAnnotationSet(self.filename)
+        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertTrue('a' in annotations.find_all('B'))
+        self.assertTrue(2 in annotations.find_all('B'))
+        self.assertTrue('c' in annotations.find_all('B'))
+        # Error when initializing annotation set twice
+        with self.assertRaises(ValueError):
+            annotations = PersistentAnnotationSet(
+                self.filename,
+                annotations={'A': 1, 'B': ['a', 2, 'c']}
+            )
+        # Error when initalizing with invalid object
+        os.remove(self.filename)
+        with self.assertRaises(ValueError):
+            annotations = PersistentAnnotationSet(
+                self.filename,
+                annotations={'A': 1, 'B': [{'a': 1}, 2, 'c']}
+            )
+
     def test_annotation_read_write(self):
         """Test manipulating annotations from an empty set."""
         # Create an empty properties file

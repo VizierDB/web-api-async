@@ -21,6 +21,7 @@ that represent the history of the branch.
 
 from abc import abstractmethod
 
+from vizier.core.timestamp import get_current_time
 from vizier.viztrail.base import NamedObject
 
 
@@ -38,15 +39,17 @@ class BranchProvenance(object):
 
     Attributes
     ----------
+    created_at: datetime.datetime
+        Timestamp of branch creation (UTC)
+    module_id: string
+        Identifier of module at which the new branch started
     source_branch : string
         Unique identifier of source branch
     workflow_id: string
         Identifier of source workflow
-    module_id: string
-        Identifier of module at which the new branch started
 
     """
-    def __init__(self, source_branch=None, workflow_id=None, module_id=None):
+    def __init__(self, source_branch=None, workflow_id=None, module_id=None, created_at=None):
         """Initialize the provenance object.
 
         Raises ValueError if at least one but not all arguments are None.
@@ -59,6 +62,8 @@ class BranchProvenance(object):
             Identifier of source workflow
         module_id: string
             Identifier of module at which the new branch started
+        created_at: datetime.datetime, optional
+            Timestamp of branch creation (UTC)
         """
         # Raise an exception if one argument is None but not all of them
         if not source_branch is None and not workflow_id is None and not module_id is None:
@@ -70,6 +75,7 @@ class BranchProvenance(object):
         self.source_branch = source_branch
         self.workflow_id = workflow_id
         self.module_id = module_id
+        self.created_at = created_at if not created_at is None else get_current_time()
 
 
 class BranchHandle(NamedObject):

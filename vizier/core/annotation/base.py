@@ -168,11 +168,14 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         self.elements = elements if not elements is None else dict()
         self.writer = writer
 
-    def add(self, key, value, replace=False):
+    def add(self, key, value, replace=False, persist=True):
         """Associate the given key with the given value. If the replace flag is
         True all other values that are currently associated with the key are
         removed. If the replace flag is False the value will be added to the
         set of values that are associated with the key.
+
+        The optional persist flag allows for bulk update without writing changes
+        to disk after each individual update.
 
         Parameters
         ----------
@@ -182,6 +185,8 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             New property value
         replace: bool, optional
             Replace all previously associated values for key if True
+        persist: bool, optional
+            Flag indicating whether the changes are to be persisted immediately
         """
         # Ensure that the value is a scalar value
         if not type(value) in [int, float, str, basestring]:
@@ -215,8 +220,8 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                     # annotation is a list of values
                     self.elements[key] = [el, value]
         # The set of annotations was modified. Persist them if a store is
-        # defined.
-        if not self.writer is None:
+        # defined and the persist flag is True.
+        if not self.writer is None and persist:
             self.writer.store(self.elements)
 
     def delete(self, key, value=None):

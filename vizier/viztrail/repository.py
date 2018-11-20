@@ -37,11 +37,15 @@ class ViztrailRepository(VizierSystemComponent):
         ---------
         build : dict()
             Build information
-        viztrails: dict(vizier.viztrail.base.ViztrailHandle)
-            Dictionary of viztrails that are maintained by the repository
+        viztrails: list(vizier.viztrail.base.ViztrailHandle)
+            List of viztrails that are maintained by the repository
         """
         super(ViztrailRepository, self).__init__(build)
-        self.viztrails = viztrails if not viztrails is None else dict()
+        self.viztrails = dict()
+        # Initialize the viztrail index from the given list
+        if not viztrails is None:
+            for vt in viztrails:
+                self.viztrails[vt.identifier] = vt
 
     @abstractmethod
     def create_viztrail(self, exec_env_id, properties=None):

@@ -80,7 +80,7 @@ class NamedObject(object):
         name: string
             Human-readable name for the viztrail
         """
-        return self.properties.replace(key=PROPERTY_NAME, value=str(name))
+        return self.properties.replace(key=PROPERTY_NAME, value=str(value))
 
 
 # ------------------------------------------------------------------------------
@@ -137,7 +137,11 @@ class ViztrailHandle(NamedObject):
         super(ViztrailHandle, self).__init__(properties=properties)
         self.identifier = identifier
         self.exec_env_id = exec_env_id
-        self.branches = branches if not branches is None else dict()
+        self.branches = dict()
+        # Initialize the branch index from the given list (if present)
+        if not branches is None:
+            for b in branches:
+                self.branches[b.identifier] = b
         # If created_at timestamp is None the viztrail is expected to be a newly
         # created viztrail. For new viztrails the last_modified timestamp is
         # expected to be None. For existing viztrails the last_modified
@@ -154,7 +158,7 @@ class ViztrailHandle(NamedObject):
             self.last_modified_at = self.created_at
 
     @abstractmethod
-    def add_branch(self, branch_id, provenance, properties=None, workflow=None):
+    def create_branch(self, branch_id, provenance, properties=None, workflow=None):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
 
