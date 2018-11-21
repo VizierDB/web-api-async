@@ -14,4 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION_INFO = '0.2.0'
+"""Implementation for module handles that are maintained as an objects in an
+object store.
+"""
+
+from vizier.viztrail.module import ModuleHandle
+
+
+class OSModuleHandle(ModuleHandle):
+    """
+    """
+    def __init__(self):
+        """
+        """

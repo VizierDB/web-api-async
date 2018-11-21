@@ -61,6 +61,33 @@ def get_unique_identifier():
     return str(uuid.uuid4()).replace('-', '')
 
 
+def get_short_identifier():
+    """Create a unique identifier that contains only eigth characters. Uses the
+    prefix of a unique identifier as the result.
+
+    Returns
+    -------
+    string
+    """
+    return get_unique_identifier()[:8]
+    
+
+def init_value(value, default_value):
+    """Returns the value if it is not None. Otherwise, returns the default
+    value.
+
+    Parameters
+    ----------
+    value: any
+    default_value: any
+
+    Returns
+    -------
+    any
+    """
+    return value if not value is None else default_value
+
+
 def is_valid_name(name):
     """Returns Ture if a given string represents a valid name (e.g., for a
     dataset). Valid names contain only letters, digits, hyphen, underline, or

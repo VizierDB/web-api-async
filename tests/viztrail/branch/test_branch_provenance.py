@@ -1,4 +1,4 @@
-"""Test functionality of the BranchProvenance class."""
+"""Test functionality of the branch provenance class."""
 
 import unittest
 

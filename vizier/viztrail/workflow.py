@@ -21,7 +21,9 @@ Viztrails are collections of workflows (branches). A viztrail maintains not
 only the different workflows but also the history for each of them.
 """
 
+from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
+
 
 """Identifier of the default master branch for all viztrails."""
 DEFAULT_BRANCH = 'master'
@@ -36,7 +38,7 @@ ACTION_INSERT = 'ins'
 ACTION_REPLACE = 'upd'
 
 
-class WorkflowProvenance(object):
+class WorkflowDescriptor(object):
     """Simple workflow provenance object that contains the command that created
     a workflow version and the timestamp of workflow creation.
 
@@ -49,15 +51,19 @@ class WorkflowProvenance(object):
         Identifier of the module command
     create_at: datetime.datetime, optional
         Timestamp of workflow creation (UTC)
+    identifier: string
+        Unique workflow identifier
     package_id: string
         Identifier of the package the module command is from
     """
-    def __init__(self, action=None, package_id=None, command_id=None, created_at=None):
+    def __init__(self, identifier, action, package_id, command_id, created_at=None):
         """Initialize the descriptor. If action is None package_id and
         command_id are expected to be None as well.
 
         Parameters
         ----------
+        identifier: string
+            Unique workflow identifier
         action: string
             Identifier of the action that created the workflow version (create,
             insert, delete, or replace)
@@ -68,12 +74,13 @@ class WorkflowProvenance(object):
         create_at: datetime.datetime
             Timestamp of workflow creation (UTC)
         """
-        if action is None and not (package_id is None and command_id is None):
+        if action != ACTION_CREATE or package_id is None or command_id is None:
             raise ValueError('invalid workflow provenance information')
-        self.action = action if not action is None else ACTION_CREATE
+        self.identifier = identifier
+        self.action = action
         self.package_id = package_id
         self.command_id = command_id
-        self.created_at = created_at if not created_at is None else get_current_time()
+        self.created_at = init_value(created_at, get_current_time())
 
 
 class WorkflowHandle(object):
@@ -85,7 +92,7 @@ class WorkflowHandle(object):
     ----------
     branch_id: string
         Unique identifier of the branch the workflow is associated with
-    descriptor: vizier.viztrail.workflow.WorkflowProvenance
+    descriptor: vizier.viztrail.workflow.WorkflowDescriptor
         Provenance information for the workflow version
     identifier: string
         Unique workflow identifier
@@ -93,7 +100,7 @@ class WorkflowHandle(object):
         Sequence of modules that make up the workflow and result in the current
         state of the database after successful workflow execution.
     """
-    def __init__(self, identifier, branch_id, modules, descriptor=None):
+    def __init__(self, identifier, branch_id, modules, descriptor):
         """Initialize the workflow handle.
 
         Parameters
@@ -104,8 +111,10 @@ class WorkflowHandle(object):
             Unique identifier of the branch the workflow is associated with
         modules : list(vizier.workflow.module.ModuleHandle)
             Sequence of modules that make up the workflow.
+        descriptor: vizier.viztrail.workflow.WorkflowDescriptor
+            Provenance information for the workflow version
         """
         self.identifier = identifier
         self.branch_id = branch_id
         self.modules = modules
-        self.descriptor = descriptor if not descriptor is None else WorkflowProvenance()
+        self.descriptor = descriptor

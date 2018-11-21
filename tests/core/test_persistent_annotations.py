@@ -5,7 +5,7 @@ import unittest
 from vizier.core.annotation.fs import PersistentAnnotationSet
 
 
-"""base directory for properties files."""
+"""Base directory for properties files."""
 PROPERTIES_DIRECTORY = './.files/'
 
 

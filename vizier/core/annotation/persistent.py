@@ -14,29 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation for an object properties set that is persistet to disk as a
-file in Json format.
+"""Implementation for an object properties set that is maintained using an
+object store.
 """
 
-import json
-import os
-
 from vizier.core.annotation.base import AnnotationStore, DefaultAnnotationSet
+from vizier.core.io.base import DefaultObjectStore
+from vizier.core.util import init_value
 
 
 class PersistentAnnotationStore(AnnotationStore):
     """Persistent store for object annotations. Materializes object annotations
-    in a file on disk in Json format.
+    using a given object store.
     """
-    def __init__(self, filename):
-        """Initialize the path to the storage file on disk.
+    def __init__(self, object_path, object_store=None):
+        """Initialize the path to the resource in the object store. By default
+        annotation stes are persisted as files on the locak file system.
 
         Parameters
         ----------
-        filename: string
-            Path to file on disk
+        object_path: string
+            Path to the resource
+        object_store: vizier.core.io.base.ObjectStore, optional
+            Object store to materialize annotations
         """
-        self.filename = filename
+        self.object_path = object_path
+        self.object_store = init_value(object_store, DefaultObjectStore())
 
     def store(self, annotations):
         """Persist the given dictionary of object annotations. Each key in the
@@ -46,13 +49,17 @@ class PersistentAnnotationStore(AnnotationStore):
 
         Parameters
         ----------
-        annotations: dict, optional
+        annotations: dict
             Dictionary of object annotations
         """
-        with open(self.filename, 'w') as f:
-            json.dump([{
-                'key': key, 'value': annotations[key]
-                } for key in annotations], f)
+        self.object_store.write_object(
+            object_path=self.object_path,
+            content=[
+                {
+                    'key': key, 'value': annotations[key]
+                } for key in annotations
+            ]
+        )
 
 
 class PersistentAnnotationSet(DefaultAnnotationSet):
@@ -60,7 +67,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
     store. This class is a shortcut to instantiate an object annotation store
     with a persistent annotation store defined in this module.
     """
-    def __init__(self, filename, annotations=None):
+    def __init__(self, object_path, object_store=None, annotations=None):
         """Initialize the file that maintains the annotations. Annotations are
         read from file (if it exists).
 
@@ -70,22 +77,27 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
 
         Parameters
         ----------
-        filename: string
-            Path to annotation file
+        object_path: string
+            Path to resource
+        object_store: vizier.core.io.base.ObjectStore, optional
+            Object store to materialize annotations
         annotations: dict, optional
             Dictionary with initial set of annotations
         """
-        abs_path = os.path.abspath(filename)
+        # Ensure that the object store is not None
+        if object_store is None:
+            object_store = DefaultObjectStore()
         if not annotations is None:
             # Initialize annotations from the given dictionary. The persistent
-            # set can only be initialized once. Is is indicated by the
-            # non-existence of the storage file. Throw an exception if the
-            # file exists.
-            if os.path.isfile(abs_path):
+            # set can only be initialized once.
+            if object_store.exists(object_path):
                 raise ValueError('cannot initialize existing annotation set')
             # Initialize the default object annotation set
             super(PersistentAnnotationSet, self).__init__(
-                writer=PersistentAnnotationStore(filename=abs_path)
+                writer=PersistentAnnotationStore(
+                    object_path=object_path,
+                    object_store=object_store
+                )
             )
             for key in annotations:
                 value = annotations[key]
@@ -98,13 +110,15 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
         else:
             # Read annotations from disk if the annotation file exists
             elements = dict()
-            if os.path.isfile(abs_path):
-                with open(abs_path, 'r') as f:
-                    obj = json.load(f)
-                    for anno in obj:
-                        elements[anno['key']] = anno['value']
+            if  object_store.exists(object_path):
+                obj = object_store.read_object(object_path)
+                for anno in obj:
+                    elements[anno['key']] = anno['value']
             # Initialize the default object annotation set
             super(PersistentAnnotationSet, self).__init__(
                 elements=elements,
-                writer=PersistentAnnotationStore(filename=abs_path)
+                writer=PersistentAnnotationStore(
+                    object_path=object_path,
+                    object_store=object_store
+                )
             )

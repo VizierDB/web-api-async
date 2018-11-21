@@ -96,7 +96,7 @@ class BranchHandle(NamedObject):
     provenance: vizier.viztrail.base.BranchProvenance
         Provenance information for this branch
     """
-    def __init__(self, identifier, properties, provenance, workflows=None):
+    def __init__(self, identifier, properties, provenance):
         """Initialize the viztrail branch.
 
         Parameters
@@ -111,11 +111,6 @@ class BranchHandle(NamedObject):
         super(BranchHandle, self).__init__(properties=properties)
         self.identifier = identifier
         self.provenance = provenance
-        self.workflows = workflows if not workflows is None else list()
-        # Maintain an index of workflow positions for fast access
-        self.index = dict()
-        for i in range(len(self.workflows)):
-            self.index[self.workflows[i].identifier] = i
 
     @abstractmethod
     def append_workflow(self, workflow):
@@ -139,17 +134,17 @@ class BranchHandle(NamedObject):
         """
         return self.get_workflow(workflow_id=None)
 
+    @abstractmethod
     def get_history(self):
-        """Get the list of workflows for the branch that define the branch
-        history. The result includes the current state of the branch as the
-        last element in the list.
+        """Get the list of descriptors for the workflows in the branch history.
 
         Returns
         -------
-        list(vizier.viztrail.workflow.base.WorkflowHandle)
+        list(vizier.viztrail.workflow.base.WorkflowDescriptor)
         """
-        return list(self.workflows)
+        raise NotImplementedError
 
+    @abstractmethod
     def get_workflow(self, workflow_id=None):
         """Get the workflow with the given identifier. If the identifier is
         none the head of the branch is returned. The result is None if the
@@ -164,11 +159,4 @@ class BranchHandle(NamedObject):
         -------
         vizier.viztrail.workflow.base.WorkflowHandle
         """
-        if len(self.workflows) == 0:
-            return None
-        if workflow_id is None:
-            return self.worlflows[-1]
-        elif workflow_id in self.index:
-            return self.workflows[self.index[workflow_id]]
-        else:
-            return None
+        raise NotImplementedError
