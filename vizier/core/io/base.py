@@ -162,6 +162,22 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
+    def list_objects(self, folder_path):
+        """Get a list of all objects in the given folder. Returns a list of
+        resource names.
+
+        Parameters
+        ----------
+        folder_path: string
+            Path to the resource folder
+
+        Returns
+        -------
+        list(string)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def read_object(self, object_path):
         """Read Json document from given path.
 
@@ -268,6 +284,8 @@ class DefaultObjectStore(ObjectStore):
         """
         count = 0
         filename = identifier
+        if not identifier is None and not suffix is None:
+            filename += suffix
         while identifier is None:
             # Allow repeated calls to the identifier factory until an identifier
             # is returned that does not reference an existing folder. The max.
@@ -369,6 +387,26 @@ class DefaultObjectStore(ObjectStore):
         else:
             for filename in os.listdir(parent_folder):
                 if os.path.isdir(os.path.join(parent_folder, filename)):
+                    result.append(filename)
+        return result
+
+    def list_objects(self, folder_path):
+        """Get a list of all files in the given folder. Returns a list of file
+        names.
+
+        Parameters
+        ----------
+        folder_path: string
+            Path to the resource folder
+
+        Returns
+        -------
+        list(string)
+        """
+        result = list()
+        if os.path.exists(folder_path):
+            for filename in os.listdir(folder_path):
+                if os.path.isfile(os.path.join(folder_path, filename)):
                     result.append(filename)
         return result
 

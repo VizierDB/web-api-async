@@ -72,8 +72,28 @@ class TestDefaultObjectStore(unittest.TestCase):
         self.assertFalse(store.exists(store.join(BASE_DIRECTORY, 'A')))
         self.assertFalse(os.path.isdir(os.path.join(BASE_DIRECTORY, 'A')))
 
+    def test_create_object_with_identifier(self):
+        """Test creating a new object with a given identifier and suffix."""
+        store = DefaultObjectStore()
+        store.create_object(BASE_DIRECTORY, identifier='A', suffix='.json')
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A.json')))
+        with self.assertRaises(ValueError):
+            store.read_object(store.join(BASE_DIRECTORY, 'A.json'))
+        store.create_object(BASE_DIRECTORY, identifier='B', suffix='.json', content={'id': 100})
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B.json')))
+        content = store.read_object(store.join(BASE_DIRECTORY, 'B.json'))
+        self.assertEquals(content['id'], 100)
+        store.create_object(BASE_DIRECTORY, identifier='A', suffix='.json', content={'id': 100})
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A.json')))
+        content = store.read_object(store.join(BASE_DIRECTORY, 'A.json'))
+        self.assertEquals(content['id'], 100)
+        store.create_object(BASE_DIRECTORY, identifier='B', suffix='.json')
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B.json')))
+        with self.assertRaises(ValueError):
+            store.read_object(store.join(BASE_DIRECTORY, 'B.json'))
+
     def test_create_file_repeat(self):
-        """Test create folder with identifier factory that not always returns
+        """Test create file with identifier factory that not always returns
         a unique identifier.
         """
         store = DefaultObjectStore(

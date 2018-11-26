@@ -45,4 +45,7 @@ def to_datetime(timestamp):
     datatime.datetime
         Datetime object
     """
-    return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+    try:
+        return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+    except ValueError:
+        return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S')

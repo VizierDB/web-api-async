@@ -5,11 +5,11 @@ import shutil
 import unittest
 
 
-from vizier.viztrail.driver.objectstore.branch import OBJ_METADATA, OBJ_PROPERTIES, OBJ_WORKFLOWS
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
-from vizier.viztrail.driver.objectstore.viztrail import FOLDER_BRANCHES, FOLDER_MODULES
-from vizier.viztrail.driver.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA, OBJ_PROPERTIES
 from vizier.viztrail.base import PROPERTY_NAME
+
+import vizier.viztrail.driver.objectstore.branch as br
+import vizier.viztrail.driver.objectstore.viztrail as viztrail
 
 
 REPO_DIR = './.temp'
@@ -41,16 +41,22 @@ class TestOSViztrail(unittest.TestCase):
         self.assertEquals(len(vt.branches), 0)
         branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
         self.assertEquals(len(vt.branches), 1)
+        self.assertIsNone(branch.head)
+        self.assertEquals(len(branch.workflows), 0)
         vt = OSViztrailHandle.load_viztrail(base_path)
         self.assertEquals(len(vt.branches), 1)
         self.assertTrue(branch.identifier in vt.branches)
         self.assertEquals(vt.get_branch(branch.identifier).name, 'My Branch')
+        branch = vt.get_branch(branch.identifier)
+        self.assertIsNone(branch.head)
+        self.assertEquals(len(branch.workflows), 0)
         # Ensure that all branch files exist
-        branch_path = os.path.join(base_path, FOLDER_BRANCHES, branch.identifier)
+        branch_path = os.path.join(base_path, viztrail.FOLDER_BRANCHES, branch.identifier)
         self.assertTrue(os.path.isdir(branch_path))
-        self.assertTrue(os.path.isfile(os.path.join(branch_path, OBJ_METADATA)))
-        self.assertTrue(os.path.isfile(os.path.join(branch_path, OBJ_PROPERTIES)))
-        self.assertTrue(os.path.isfile(os.path.join(branch_path, OBJ_WORKFLOWS)))
+        for filename in os.listdir(branch_path):
+            print filename
+        self.assertTrue(os.path.isfile(os.path.join(branch_path, br.OBJ_METADATA)))
+        self.assertTrue(os.path.isfile(os.path.join(branch_path, br.OBJ_PROPERTIES)))
         vt.delete_branch(branch.identifier)
         self.assertFalse(os.path.isdir(branch_path))
         self.assertEquals(len(vt.branches), 0)
@@ -84,11 +90,11 @@ class TestOSViztrail(unittest.TestCase):
         # Ensure that all files and subfolders are created
         vt_folder = os.path.join(REPO_DIR, 'ABC')
         self.assertTrue(os.path.isdir(vt_folder))
-        self.assertTrue(os.path.isdir(os.path.join(vt_folder, FOLDER_BRANCHES)))
-        self.assertTrue(os.path.isdir(os.path.join(vt_folder, FOLDER_MODULES)))
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_BRANCHINDEX)))
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_METADATA)))
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
+        self.assertTrue(os.path.isdir(os.path.join(vt_folder, viztrail.FOLDER_BRANCHES)))
+        self.assertTrue(os.path.isdir(os.path.join(vt_folder, viztrail.FOLDER_MODULES)))
+        self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_BRANCHINDEX)))
+        self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_METADATA)))
+        self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_PROPERTIES)))
         # Update name property
         self.assertEquals(vt.identifier, 'DEF')
         self.assertEquals(vt.exec_env_id, 'ENV1')

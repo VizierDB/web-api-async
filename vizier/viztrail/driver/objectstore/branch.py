@@ -31,7 +31,6 @@ from vizier.viztrail.workflow import ACTION_CREATE
 """Resource identifier"""
 OBJ_METADATA = 'branch.json'
 OBJ_PROPERTIES = 'properties.json'
-OBJ_WORKFLOWS = 'workflows.json'
 
 
 """Json object element keys."""
@@ -63,12 +62,13 @@ class OSBranchHandle(BranchHandle):
     properties.json    : Branch annotations
     workflows.json     : Sequence of workflow identifier in branch history
     <workflow-id>.json : Workflow object containing workflow descriptor and
-                         sequence of module identifier
+                         sequence of module identifier. Workflow identifier are
+                         positive integer and the order of identifiers reflects
+                         the order of workflows in the branch history.
     """
     def __init__(
         self, identifier, base_path, modules_folder, provenance, properties,
-        workflow_index=None, workflows=None, head=None,
-        object_store=None
+        workflows=None, head=None, object_store=None
     ):
         """Initialize the branch handle.
 
@@ -84,8 +84,6 @@ class OSBranchHandle(BranchHandle):
             Branch provenance information
         properties: vizier.core.annotation.base.ObjectAnnotationSet
             Branch property set
-        workflow_index: string, optional
-            Path to branch workflow listing object
         workflows: list(vizier.viztrail.workflow.WorkflowDescriptor), optional
             List of descriptors for workflows in branch history
         head: vizier.viztrail.workflow.WorkflowHandle, optional
@@ -101,7 +99,6 @@ class OSBranchHandle(BranchHandle):
         self.base_path = base_path
         self.modules_folder = modules_folder
         self.object_store = init_value(object_store, DefaultObjectStore())
-        self.workflow_index = init_value(workflow_index, self.object_store.join(base_path, OBJ_WORKFLOWS))
         self.workflows = init_value(workflows, list())
         self.head = head
         self.cache = None
@@ -174,6 +171,7 @@ class OSBranchHandle(BranchHandle):
             # Get a new identifier by creating an empty workflow file
             workflow_id = object_store.create_object(
                 parent_folder= base_path,
+                identifier=get_workflow_id(0),
                 suffix='.json'
             )
             # Create the diescriptor and write workflow to store
@@ -200,18 +198,13 @@ class OSBranchHandle(BranchHandle):
                 branch_id=identifier,
                 descriptor=descriptor,
                 modules=[
-                    OSModuleHandle(
-                        identifier=module_id,
-                        module_path=object_store.join(modules_folder, module_id)
+                    OSModuleHandle.load_module(
+                        module_path=object_store.join(modules_folder, module_id),
+                        object_store=object_store
                     ) for module_id in modules
                 ]
             )
-        # Write the workflow index object
-        workflow_index = object_store.join(base_path, OBJ_WORKFLOWS)
-        object_store.write_object(
-            object_path=workflow_index,
-            content=[wf.identifier for wf in workflows]
-        )
+            workflows.append(descriptor)
         # Return handle for new viztrail branch
         return OSBranchHandle(
             identifier=identifier,
@@ -223,7 +216,6 @@ class OSBranchHandle(BranchHandle):
                 object_store=object_store,
                 annotations=properties
             ),
-            workflow_index=workflow_index,
             workflows=workflows,
             head=head,
             object_store=object_store
@@ -269,7 +261,7 @@ class OSBranchHandle(BranchHandle):
             if wf_desc.identifier == workflow_id:
                 # Read the workflow modules and set the workflow as the current
                 # cache element
-                obj = object_store.read_object(
+                obj = self.object_store.read_object(
                     self.object_store.join(
                         self.base_path,
                         workflow_id + '.json'
@@ -278,12 +270,12 @@ class OSBranchHandle(BranchHandle):
                 modules = list()
                 for module_id in obj[KEY_WORKFLOW_MODULES]:
                     modules.append(
-                        OSModuleHandle(
-                            identifier=module_id,
-                            module_path=object_store.join(
+                        OSModuleHandle.load_module(
+                            module_path=self.object_store.join(
                                 self.modules_folder,
                                 module_id
-                            )
+                            ),
+                            object_store=self.object_store
                         )
                     )
                 self.cache = WorkflowHandle(
@@ -338,37 +330,38 @@ class OSBranchHandle(BranchHandle):
             )
         else:
             provenance = BranchProvenance(created_at=created_at)
-        # Read descriptors for all branch workflows. Keep track of the workflow
-        # object that is being read. The variable workflow_obj will contain the
-        # branch head at the end.
-        workflow_index = object_store.join(base_path, OBJ_WORKFLOWS)
+        # Read descriptors for all branch workflows. Workflow descriptors are
+        # objects in the base directory that do no match the name of any of the
+        # predefied branch object.
         workflows = list()
-        workflow_obj = None
-        for workflow_id in object_store.read_object(workflow_index):
-            workflow_path = object_store.join(base_path, workflow_id + '.json')
-            workflow_obj = object_store.read_object(workflow_path)
-            doc = workflow_obj[KEY_WORKFLOW_DESCRIPTOR]
-            workflows.append(
-                WorkflowDescriptor(
-                    identifier=workflow_id,
-                    action=doc[KEY_ACTION],
-                    package_id=doc[KEY_PACKAGE_ID],
-                    command_id=doc[KEY_COMMAND_ID],
-                    created_at=doc[KEY_CREATED_AT]
+        for resource in object_store.list_objects(base_path):
+            if not resource in [OBJ_METADATA, OBJ_PROPERTIES]:
+                resource_path = object_store.join(base_path, resource)
+                obj = object_store.read_object(resource_path)
+                desc = obj[KEY_WORKFLOW_DESCRIPTOR]
+                workflows.append(
+                    WorkflowDescriptor(
+                        identifier=obj[KEY_WORKFLOW_ID],
+                        action=desc[KEY_ACTION],
+                        package_id=desc[KEY_PACKAGE_ID],
+                        command_id=desc[KEY_COMMAND_ID],
+                        created_at=desc[KEY_CREATED_AT]
+                    )
                 )
-            )
+        # Sort workflows in ascending order of their identifier
+        workflows.sort(key=lambda x: x.identifier)
         # Read all modules for the workflow at the branch head (if exists)
         head = None
-        if not workflow_obj is None:
+        if len(workflows) > 0:
             # The workflow descriptor is the last element in the workflows list
             descriptor = workflows[-1]
             modules = list()
             for module_id in workflow_obj[KEY_WORKFLOW_MODULES]:
                 module_path = object_store.join(modules_folder, module_id)
                 modules.append(
-                    OSModuleHandle(
-                        identifier=module_id,
-                        module_path=module_path
+                    OSModuleHandle.load_module(
+                        module_path=module_path,
+                        object_store=object_store
                     )
                 )
             head = WorkflowHandle(
@@ -386,8 +379,27 @@ class OSBranchHandle(BranchHandle):
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store
             ),
-            workflow_index=workflow_index,
             workflows=workflows,
             head=head,
             object_store=object_store
         )
+
+
+# ------------------------------------------------------------------------------
+# Helper Method
+# ------------------------------------------------------------------------------
+
+def get_workflow_id(identifier):
+    """Get a hexadecimal string of eight characters length for the given
+    integer.
+
+    Parameters
+    ----------
+    identifier: int
+        Workflow indentifier
+
+    Returns
+    -------
+    string
+    """
+    return hex(identifier)[2:].zfill(8).upper()

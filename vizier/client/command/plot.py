@@ -41,6 +41,10 @@ def create_plot(
         Identifier for chart type
     chart_grouped: bool
         Group multiple series into a single chart
+    xaxis_range: string, optional
+        Column value range definition
+    xaxis_column: int, optional
+        Column identifier
     validate: bool, optional
         If true, the command is validated
 

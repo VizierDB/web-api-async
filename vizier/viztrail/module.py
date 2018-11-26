@@ -76,7 +76,7 @@ class ModuleHandle(object):
     """
     def __init__(
         self, identifier, command, external_form, state=MODULE_PENDING,
-        timestamp=None, datasets=None, outputs=None, prov=None
+        timestamp=None, datasets=None, outputs=None, provenance=None
     ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
@@ -87,7 +87,7 @@ class ModuleHandle(object):
             Unique module identifier
         command : vizier.viztrail.command.ModuleCommand
             Specification of the module (i.e., package, name, and arguments)
-        external_form: string, optional
+        external_form: string
             Printable representation of module command
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
@@ -98,7 +98,7 @@ class ModuleHandle(object):
             and the unique dataset identifier the value.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
-        prov: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
@@ -112,7 +112,7 @@ class ModuleHandle(object):
         self.timestamp = timestamp if not timestamp is None else ModuleTimestamp()
         self.datasets = datasets if not datasets is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.prov = prov if not prov is None else ModuleProvenance()
+        self.provenance = provenance if not provenance is None else ModuleProvenance()
 
     @property
     def is_canceled(self):
@@ -340,7 +340,7 @@ class OutputObject(object):
         return self.type == OUTPUT_TEXT
 
 
-class TextObject(OutputObject):
+class TextOutput(OutputObject):
     """Output object where the value is a string."""
     def __init__(self, value):
         """Initialize the output string.
@@ -350,4 +350,4 @@ class TextObject(OutputObject):
         value, string
             Output string
         """
-        super(TextObject, self).__init__(type=OUTPUT_TEXT, value=value)
+        super(TextOutput, self).__init__(type=OUTPUT_TEXT, value=value)

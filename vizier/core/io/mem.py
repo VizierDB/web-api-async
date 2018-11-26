@@ -96,6 +96,8 @@ class MemObjectStore(ObjectStore):
         """
         count = 0
         object_path = identifier
+        if not identifier is None and not suffix is None:
+            object_path += suffix
         while identifier is None:
             # Allow repeated calls to the identifier factory until an identifier
             # is returned that does not reference an existing folder. The max.
@@ -209,6 +211,26 @@ class MemObjectStore(ObjectStore):
                     if not '::' in folder_id:
                         result.append(folder_id)
         return result
+
+    def list_objects(self, folder_path):
+        """Get a list of all objects in the given folder. Returns a list of
+        resource names.
+
+        Parameters
+        ----------
+        folder_path: string
+            Path to the resource folder
+
+        Returns
+        -------
+        list(string)
+        """
+        result = list()
+        for object_path in self.store:
+            if object_path.startswith(folder_path + '::'):
+                resource_name = object_path[len(folder_path)+2:]
+                if not '::' in resource_name:
+                    result.add(resource_name)
 
     def read_object(self, object_path):
         """Read Json document from given path.
