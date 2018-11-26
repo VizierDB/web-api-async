@@ -56,9 +56,9 @@ class WorkflowDescriptor(object):
     package_id: string
         Identifier of the package the module command is from
     """
-    def __init__(self, identifier, action, package_id, command_id, created_at=None):
-        """Initialize the descriptor. If action is None package_id and
-        command_id are expected to be None as well.
+    def __init__(self, identifier, action, package_id=None, command_id=None, created_at=None):
+        """Initialize the descriptor. If action is not the branch create action
+        the package_id and command_id are expected to not be None.
 
         Parameters
         ----------
@@ -74,7 +74,7 @@ class WorkflowDescriptor(object):
         create_at: datetime.datetime
             Timestamp of workflow creation (UTC)
         """
-        if action != ACTION_CREATE or package_id is None or command_id is None:
+        if action != ACTION_CREATE and (package_id is None or command_id is None):
             raise ValueError('invalid workflow provenance information')
         self.identifier = identifier
         self.action = action

@@ -46,7 +46,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertTrue(os.path.isdir(vt_folder))
         self.assertTrue(os.path.isdir(os.path.join(vt_folder, FOLDER_BRANCHES)))
         self.assertTrue(os.path.isdir(os.path.join(vt_folder, FOLDER_MODULES)))
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_BRANCHINDEX)))
+        self.assertTrue(os.path.isfile(os.path.join(vt_folder, FOLDER_BRANCHES, OBJ_BRANCHINDEX)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_METADATA)))
         self.assertFalse(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
         vt2 = repo.create_viztrail(

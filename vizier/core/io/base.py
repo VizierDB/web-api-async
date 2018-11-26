@@ -59,12 +59,11 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def create_object(self, parent_folder, identifier=None, suffix=None, content=None):
+    def create_object(self, parent_folder, identifier=None, content=None):
         """Create a new object in the given parent folder. The object path is
         either given as the identifier argument or a new unique identifier is
-        created if the argument is None. in the latter case the object name will
-        be the concatenation of identifier and suffix. Returns the path for the
-        created object.
+        created if the argument is None. Returns the path for the created
+        object.
 
         Parameters
         ----------
@@ -72,8 +71,6 @@ class ObjectStore(object):
             Path to parent folder
         identifier: string, optional
             Folder identifier
-        suffix: string, optional
-            File name suffix
         content: list or dict, optional
             Default content for the new resource
 
@@ -260,12 +257,11 @@ class DefaultObjectStore(ObjectStore):
         os.makedirs(os.path.join(parent_folder, identifier))
         return identifier
 
-    def create_object(self, parent_folder, identifier=None, suffix=None, content=None):
+    def create_object(self, parent_folder, identifier=None, content=None):
         """Create a new object in the given parent folder. The object path is
         either given as the identifier argument or a new unique identifier is
-        created if the argument is None. in the latter case the object name will
-        be the concatenation of identifier and suffix. Returns the path for the
-        created object.
+        created if the argument is None. Returns the path for the created
+        object.
 
         Parameters
         ----------
@@ -273,8 +269,6 @@ class DefaultObjectStore(ObjectStore):
             Path to parent folder
         identifier: string, optional
             Folder identifier
-        suffix: string, optional
-            File name suffix
         content: list or dict, optional
             Default content for the new resource
 
@@ -284,16 +278,12 @@ class DefaultObjectStore(ObjectStore):
         """
         count = 0
         filename = identifier
-        if not identifier is None and not suffix is None:
-            filename += suffix
         while identifier is None:
             # Allow repeated calls to the identifier factory until an identifier
             # is returned that does not reference an existing folder. The max.
             # attemps counter is used to avoid an endless loop.
             candidate = self.identifier_factory()
             filename = candidate
-            if not suffix is None:
-                filename += suffix
             if not os.path.exists(os.path.join(parent_folder, filename)):
                 identifier = candidate
             else:

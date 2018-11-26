@@ -18,13 +18,13 @@ MODULE_DIR = './.temp'
 class TestOSViztrail(unittest.TestCase):
 
     def setUp(self):
-        """Create an empty repository directory."""
+        """Create an empty directory."""
         if os.path.isdir(MODULE_DIR):
             shutil.rmtree(MODULE_DIR)
         os.makedirs(MODULE_DIR)
 
     def tearDown(self):
-        """Delete repository directory.
+        """Delete directory.
         """
         shutil.rmtree(MODULE_DIR)
 

@@ -73,24 +73,24 @@ class TestDefaultObjectStore(unittest.TestCase):
         self.assertFalse(os.path.isdir(os.path.join(BASE_DIRECTORY, 'A')))
 
     def test_create_object_with_identifier(self):
-        """Test creating a new object with a given identifier and suffix."""
+        """Test creating a new object with a given identifier."""
         store = DefaultObjectStore()
-        store.create_object(BASE_DIRECTORY, identifier='A', suffix='.json')
-        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A.json')))
+        store.create_object(BASE_DIRECTORY, identifier='A')
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A')))
         with self.assertRaises(ValueError):
-            store.read_object(store.join(BASE_DIRECTORY, 'A.json'))
-        store.create_object(BASE_DIRECTORY, identifier='B', suffix='.json', content={'id': 100})
-        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B.json')))
-        content = store.read_object(store.join(BASE_DIRECTORY, 'B.json'))
+            store.read_object(store.join(BASE_DIRECTORY, 'A'))
+        store.create_object(BASE_DIRECTORY, identifier='B', content={'id': 100})
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B')))
+        content = store.read_object(store.join(BASE_DIRECTORY, 'B'))
         self.assertEquals(content['id'], 100)
-        store.create_object(BASE_DIRECTORY, identifier='A', suffix='.json', content={'id': 100})
-        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A.json')))
-        content = store.read_object(store.join(BASE_DIRECTORY, 'A.json'))
+        store.create_object(BASE_DIRECTORY, identifier='A', content={'id': 100})
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A')))
+        content = store.read_object(store.join(BASE_DIRECTORY, 'A'))
         self.assertEquals(content['id'], 100)
-        store.create_object(BASE_DIRECTORY, identifier='B', suffix='.json')
-        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B.json')))
+        store.create_object(BASE_DIRECTORY, identifier='B')
+        self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B')))
         with self.assertRaises(ValueError):
-            store.read_object(store.join(BASE_DIRECTORY, 'B.json'))
+            store.read_object(store.join(BASE_DIRECTORY, 'B'))
 
     def test_create_file_repeat(self):
         """Test create file with identifier factory that not always returns
@@ -99,19 +99,19 @@ class TestDefaultObjectStore(unittest.TestCase):
         store = DefaultObjectStore(
             identifier_factory=IdFactory(max_attempts=MAX_ATTEMPS-1)
         )
-        id1 = store.create_object(BASE_DIRECTORY, suffix='.json')
-        id2 = store.create_object(BASE_DIRECTORY, suffix='.json')
+        id1 = store.create_object(BASE_DIRECTORY)
+        id2 = store.create_object(BASE_DIRECTORY)
         self.assertNotEqual(id1, id2)
-        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id1 + '.json')))
-        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id2 + '.json')))
-        store.delete_object(store.join(BASE_DIRECTORY, id1 + '.json'))
-        store.delete_object(store.join(BASE_DIRECTORY, id2 + '.json'))
+        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id1)))
+        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id2)))
+        store.delete_object(store.join(BASE_DIRECTORY, id1))
+        store.delete_object(store.join(BASE_DIRECTORY, id2))
         store = DefaultObjectStore(
             identifier_factory=IdFactory(max_attempts=MAX_ATTEMPS+1)
         )
-        id1 = store.create_object(BASE_DIRECTORY, suffix='.json')
+        id1 = store.create_object(BASE_DIRECTORY)
         with self.assertRaises(RuntimeError):
-            store.create_object(BASE_DIRECTORY, suffix='.json')
+            store.create_object(BASE_DIRECTORY)
 
     def test_create_folder_repeat(self):
         """Test create folder with identifier factory that not always returns

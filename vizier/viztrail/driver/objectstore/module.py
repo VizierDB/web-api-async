@@ -19,11 +19,12 @@ object store.
 """
 
 from vizier.core.io.base import DefaultObjectStore
-from vizier.core.timestamp import to_datetime
+from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.command import ModuleCommand
 from vizier.viztrail.module import ModuleHandle, ModuleOutputs, ModuleProvenance
-from vizier.viztrail.module import ModuleTimestamp, OutputObject
-from vizier.viztrail.module import MODULE_PENDING
+from vizier.viztrail.module import ModuleTimestamp, OutputObject, TextOutput
+from vizier.viztrail.module import MODULE_CANCELED, MODULE_ERROR, MODULE_PENDING
+from vizier.viztrail.module import MODULE_RUNNING, MODULE_SUCCESS
 
 
 """Json labels for serialized object."""
@@ -211,8 +212,114 @@ class OSModuleHandle(ModuleHandle):
             object_store=object_store
         )
 
+    def set_canceled(self, finished_at=None, outputs=None):
+        """Set status of the module to canceled. The finished_at property of the
+        timestamp is set to the given value or the current time (if None). The
+        module outputs are set to the given value. If no outputs are given the
+        module output streams will be empty.
+
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
+            Output streams for module
+        """
+        # Update state, timestamp and output information. Clear database state
+        # and provenance infotmation.
+        self.state = MODULE_CANCELED
+        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
+        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        self.datasets = dict()
+        self.provenance = ModuleProvenance()
+        # Materialize module state
+        self.write_safe()
+
+    def set_error(self, finished_at=None, outputs=None):
+        """Set status of the module to error. The finished_at property of the
+        timestamp is set to the given value or the current time (if None). The
+        module outputs are adjusted to the given value. the output streams are
+        empty if no value is given for the outputs parameter.
+
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
+            Output streams for module
+        """
+        # Update state, timestamp and output information. Clear database state
+        # and provenance infotmation.
+        self.state = MODULE_ERROR
+        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
+        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        self.datasets = dict()
+        self.provenance = ModuleProvenance()
+        # Materialize module state
+        self.write_safe()
+
+    def set_running(self, started_at=None, external_form=None):
+        """Set status of the module to running. The started_at property of the
+        timestamp is set to the given value or the current time (if None).
+
+        Parameters
+        ----------
+        started_at: datetime.datetime, optional
+            Timestamp when module started running
+        external_form: string, optional
+            Adjusted external representation for the module command.
+        """
+        # Update state and timestamp information. Clear outputs, database state,
+        # and provenance infotmation.
+        self.state = MODULE_RUNNING
+        self.timestamp.started_at = started_at if not started_at is None else get_current_time()
+        self.outputs = ModuleOutputs()
+        self.datasets = dict()
+        self.provenance = ModuleProvenance()
+        # Update external command representation if given
+        if not external_form is None:
+            self.external_form = external_form
+        # Materialize module state
+        self.write_safe()
+
+    def set_success(self, finished_at=None, datasets=None, outputs=None, provenance=None):
+        """Set status of the module to success. The finished_at property of the
+        timestamp is set to the given value or the current time (if None).
+
+        If case of a successful module execution the database state and module
+        provenance information are also adjusted together with the module
+        output streams.
+
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        datasets : dict(string:string), optional
+            Dictionary of resulting datasets. The user-specified name is the key
+            and the unique dataset identifier the value.
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
+            Output streams for module
+        provenance: vizier.viztrail.module.ModuleProvenance, optional
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
+        """
+        # Update state, timestamp, database state, outputs and provenance
+        # information.
+        self.state = MODULE_SUCCESS
+        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
+        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        self.datasets = datasets if not datasets is None else dict()
+        self.provenance = provenance if not provenance is None else ModuleProvenance()
+        # Materialize module state
+        self.write_safe()
+
     def write_module(self):
-        """Write current module state to object store."""
+        """Write current module state to object store.
+
+        Returns
+        -------
+        vizier.viztrail.driver.objectstore.module.OSModuleHandle
+        """
         # Create dictionary serialization for module timestamps
         timestamp = {KEY_CREATED_AT: self.timestamp.created_at.isoformat()}
         if not self.timestamp.started_at is None:
@@ -264,6 +371,21 @@ class OSModuleHandle(ModuleHandle):
             object_path=self.module_path,
             content=obj
         )
+        return self
+
+    def write_safe(self):
+        """The write safe method writes the current module state to the object
+        store. It catches any occuring exception and sets the module into error
+        state if an exception occurs. This method is used to ensure that the
+        state of the module is in error (i.e., the workflow cannot further be
+        executed) if a state change fails.
+        """
+        try:
+            self.write_module()
+        except Exception as ex:
+            self.state = MODULE_ERROR
+            self.outputs = ModuleOutputs(stderr=[TextOutput(str(ex))])
+            self.datasets = dict()
 
 
 # ------------------------------------------------------------------------------

@@ -5,6 +5,8 @@ import shutil
 import unittest
 
 
+from vizier.client.command.pycell import python_cell
+from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.base import PROPERTY_NAME
 
@@ -53,8 +55,6 @@ class TestOSViztrail(unittest.TestCase):
         # Ensure that all branch files exist
         branch_path = os.path.join(base_path, viztrail.FOLDER_BRANCHES, branch.identifier)
         self.assertTrue(os.path.isdir(branch_path))
-        for filename in os.listdir(branch_path):
-            print filename
         self.assertTrue(os.path.isfile(os.path.join(branch_path, br.OBJ_METADATA)))
         self.assertTrue(os.path.isfile(os.path.join(branch_path, br.OBJ_PROPERTIES)))
         vt.delete_branch(branch.identifier)
@@ -62,6 +62,45 @@ class TestOSViztrail(unittest.TestCase):
         self.assertEquals(len(vt.branches), 0)
         vt = OSViztrailHandle.load_viztrail(base_path)
         self.assertEquals(len(vt.branches), 0)
+
+    def test_create_and_delete_branch_with_default_workflow(self):
+        """Ensure that creating and loading branches works if the head workflow
+        for the new branch is given.
+        """
+        base_path = os.path.join(os.path.abspath(REPO_DIR), 'ABC')
+        os.makedirs(base_path)
+        vt = OSViztrailHandle.create_viztrail(
+            identifier='DEF',
+            properties={PROPERTY_NAME: 'My Viztrail'},
+            exec_env_id='ENV1',
+            base_path=base_path
+        )
+        # Create five modules
+        modules = list()
+        for i in range(5):
+            identifier = 'MOD' + str(i)
+            modules.append(identifier)
+            OSModuleHandle(
+                identifier=identifier,
+                command=python_cell(source='print ' + str(i)),
+                external_form='TEST MODULE ' + str(i),
+                module_path=vt.object_store.join(vt.modules_folder, identifier)
+            ).write_module()
+        branch = vt.create_branch(
+            properties={PROPERTY_NAME: 'My Branch'},
+            modules=modules
+        )
+        self.assertIsNotNone(branch.head)
+        self.assertEquals(len(branch.workflows), 1)
+        vt = OSViztrailHandle.load_viztrail(base_path)
+        branch = vt.get_branch(branch.identifier)
+        self.assertIsNotNone(branch.head)
+        self.assertEquals(len(branch.workflows), 1)
+        wf = branch.get_workflow(branch.head.identifier)
+        self.assertEquals(len(wf.modules), 5)
+        for i in range(5):
+            self.assertEquals(wf.modules[i].identifier, 'MOD' + str(i))
+            self.assertEquals(wf.modules[i].external_form, 'TEST MODULE ' + str(i))
 
     def test_create_empty_properties(self):
         """Ensure that create without pre-defined properties works."""
@@ -92,7 +131,7 @@ class TestOSViztrail(unittest.TestCase):
         self.assertTrue(os.path.isdir(vt_folder))
         self.assertTrue(os.path.isdir(os.path.join(vt_folder, viztrail.FOLDER_BRANCHES)))
         self.assertTrue(os.path.isdir(os.path.join(vt_folder, viztrail.FOLDER_MODULES)))
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_BRANCHINDEX)))
+        self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.FOLDER_BRANCHES, viztrail.OBJ_BRANCHINDEX)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_METADATA)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_PROPERTIES)))
         # Update name property

@@ -31,7 +31,7 @@ from vizier.viztrail.repository import ViztrailRepository
 
 
 """Resource identifier"""
-OBJ_VIZTRAILINDEX = 'viztrails.json'
+OBJ_VIZTRAILINDEX = 'viztrails'
 
 
 class OSViztrailRepository(ViztrailRepository):
@@ -45,7 +45,7 @@ class OSViztrailRepository(ViztrailRepository):
 
     Folders and Resources
     ---------------------
-    viztrails.json   : List of active viztrails
+    viztrails        : List of active viztrails
     <vt-identifier>/ : Folder with resources for individual viztrail
     """
     def __init__(self, base_path, object_store=None):

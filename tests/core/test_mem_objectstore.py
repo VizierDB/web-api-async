@@ -63,19 +63,19 @@ class TestMemObjectStore(unittest.TestCase):
         store = MemObjectStore(
             identifier_factory=IdFactory(max_attempts=MAX_ATTEMPS-1)
         )
-        id1 = store.create_object(BASE_DIRECTORY, suffix='.json')
-        id2 = store.create_object(BASE_DIRECTORY, suffix='.json')
+        id1 = store.create_object(BASE_DIRECTORY)
+        id2 = store.create_object(BASE_DIRECTORY)
         self.assertNotEqual(id1, id2)
-        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id1 + '.json')))
-        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id2 + '.json')))
-        store.delete_object(store.join(BASE_DIRECTORY, id1 + '.json'))
-        store.delete_object(store.join(BASE_DIRECTORY, id2 + '.json'))
+        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id1)))
+        self.assertTrue(store.exists(store.join(BASE_DIRECTORY, id2)))
+        store.delete_object(store.join(BASE_DIRECTORY, id1))
+        store.delete_object(store.join(BASE_DIRECTORY, id2))
         store = MemObjectStore(
             identifier_factory=IdFactory(max_attempts=MAX_ATTEMPS+1)
         )
-        id1 = store.create_object(BASE_DIRECTORY, suffix='.json')
+        id1 = store.create_object(BASE_DIRECTORY)
         with self.assertRaises(RuntimeError):
-            store.create_object(BASE_DIRECTORY, suffix='.json')
+            store.create_object(BASE_DIRECTORY)
 
     def test_create_folder_repeat(self):
         """Test create folder with identifier factory that not always returns

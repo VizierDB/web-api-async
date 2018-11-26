@@ -29,9 +29,9 @@ from vizier.viztrail.base import ViztrailHandle
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
 FOLDER_MODULES = 'modules'
-OBJ_BRANCHINDEX = 'branches.json'
-OBJ_METADATA = 'viztrail.json'
-OBJ_PROPERTIES = 'properties.json'
+OBJ_BRANCHINDEX = 'active'
+OBJ_METADATA = 'viztrail'
+OBJ_PROPERTIES = 'properties'
 
 
 class OSViztrailHandle(ViztrailHandle):
@@ -45,9 +45,9 @@ class OSViztrailHandle(ViztrailHandle):
 
     Folders and Resources
     ---------------------
-    branches.json   : List of active branches
-    properties.json : Viztrail annotations
-    viztrail.json   : Viztrail metadata (identifier, timestamp, environment)
+    branches/active : List of active branches
+    properties      : Viztrail annotations
+    viztrail        : Viztrail metadata (identifier, timestamp, environment)
     branches/       : Viztrail branches
     modules/        : Modules in viztrail workflows
     """
@@ -94,8 +94,8 @@ class OSViztrailHandle(ViztrailHandle):
         # Initizlize the object store and identifier for all subfolders.
         self.base_path = base_path
         self.object_store = init_value(object_store, DefaultObjectStore())
-        self.branch_index = init_value(branch_index, self.object_store.join(base_path, OBJ_BRANCHINDEX))
         self.branch_folder = init_value(branch_folder, self.object_store.join(base_path, FOLDER_BRANCHES))
+        self.branch_index = init_value(branch_index, self.object_store.join(self.branch_folder, OBJ_BRANCHINDEX))
         self.modules_folder =  init_value(modules_folder, self.object_store.join(base_path, FOLDER_MODULES))
 
     def create_branch(self, provenance=None, properties=None, modules=None):
@@ -171,10 +171,10 @@ class OSViztrailHandle(ViztrailHandle):
             raise ValueError('base path does not exist')
         # Create empty index file and subfolders for branches, workflows, and
         # modules. The base path folder is expected to exist.
-        branch_index = object_store.join(base_path, OBJ_BRANCHINDEX)
-        object_store.write_object(object_path=branch_index, content=list())
         branch_folder = object_store.join(base_path, FOLDER_BRANCHES)
         object_store.create_folder(base_path, identifier=FOLDER_BRANCHES)
+        branch_index = object_store.join(branch_folder, OBJ_BRANCHINDEX)
+        object_store.write_object(object_path=branch_index, content=list())
         modules_folder = object_store.join(base_path, FOLDER_MODULES)
         object_store.create_folder(base_path, identifier=FOLDER_MODULES)
         # Write viztrail metadata to disk
@@ -262,8 +262,8 @@ class OSViztrailHandle(ViztrailHandle):
         exec_env_id = metadata['env']
         # Load active branches. The branch index resource contains a list of
         # active branch identifiers.
-        branch_index = object_store.join(base_path, OBJ_BRANCHINDEX)
         branch_folder = object_store.join(base_path, FOLDER_BRANCHES)
+        branch_index = object_store.join(branch_folder, OBJ_BRANCHINDEX)
         modules_folder = object_store.join(base_path, FOLDER_MODULES)
         branches = list()
         for identifier in object_store.read_object(branch_index):

@@ -74,12 +74,11 @@ class MemObjectStore(ObjectStore):
         self.folders[self.join(parent_folder, identifier)] = None
         return identifier
 
-    def create_object(self, parent_folder, identifier=None, content=None, suffix=None):
+    def create_object(self, parent_folder, identifier=None, content=None):
         """Create a new file in the given parent folder. The file name is
         either given as the identifier argument or a new unique identifier is
-        created if the argument is None. in the latter case the file name will
-        be the concatenation of identifier and suffix. the newReturns the
-        identifier for the created file.
+        created if the argument is None. Returns the identifier for the created
+        object.
 
         Parameters
         ----------
@@ -87,8 +86,6 @@ class MemObjectStore(ObjectStore):
             Path to parent folder
         identifier: string, optional
             Folder identifier
-        suffix: string, optional
-            File name suffix
 
         Returns
         -------
@@ -96,16 +93,12 @@ class MemObjectStore(ObjectStore):
         """
         count = 0
         object_path = identifier
-        if not identifier is None and not suffix is None:
-            object_path += suffix
         while identifier is None:
             # Allow repeated calls to the identifier factory until an identifier
             # is returned that does not reference an existing folder. The max.
             # attemps counter is used to avoid an endless loop.
             candidate = self.identifier_factory()
             object_path = candidate
-            if not suffix is None:
-                object_path += suffix
             if not self.exists(self.join(parent_folder, object_path)):
                 identifier = candidate
             else:

@@ -29,8 +29,8 @@ from vizier.viztrail.workflow import ACTION_CREATE
 
 
 """Resource identifier"""
-OBJ_METADATA = 'branch.json'
-OBJ_PROPERTIES = 'properties.json'
+OBJ_METADATA = 'branch'
+OBJ_PROPERTIES = 'properties'
 
 
 """Json object element keys."""
@@ -58,13 +58,13 @@ class OSBranchHandle(BranchHandle):
 
     Folders and Resources
     ---------------------
-    branch.json        : Branch provenance object
-    properties.json    : Branch annotations
-    workflows.json     : Sequence of workflow identifier in branch history
-    <workflow-id>.json : Workflow object containing workflow descriptor and
-                         sequence of module identifier. Workflow identifier are
-                         positive integer and the order of identifiers reflects
-                         the order of workflows in the branch history.
+    branch.       : Branch provenance object
+    properties    : Branch annotations
+    workflows     : Sequence of workflow identifier in branch history
+    <workflow-id> : Workflow object containing workflow descriptor and
+                    sequence of module identifier. Workflow identifier are
+                    positive integer and the order of identifiers reflects
+                    the order of workflows in the branch history.
     """
     def __init__(
         self, identifier, base_path, modules_folder, provenance, properties,
@@ -171,8 +171,7 @@ class OSBranchHandle(BranchHandle):
             # Get a new identifier by creating an empty workflow file
             workflow_id = object_store.create_object(
                 parent_folder= base_path,
-                identifier=get_workflow_id(0),
-                suffix='.json'
+                identifier=get_workflow_id(0)
             )
             # Create the diescriptor and write workflow to store
             descriptor = WorkflowDescriptor(
@@ -180,7 +179,7 @@ class OSBranchHandle(BranchHandle):
                 action=ACTION_CREATE
             )
             object_store.write_object(
-                object_path=workflow_path,
+                object_path=object_store.join(base_path, workflow_id),
                 content={
                     KEY_WORKFLOW_ID: workflow_id,
                     KEY_WORKFLOW_DESCRIPTOR: {
@@ -194,12 +193,15 @@ class OSBranchHandle(BranchHandle):
                 }
             )
             head = WorkflowHandle(
-                identifier=workflow_identifier,
+                identifier=workflow_id,
                 branch_id=identifier,
                 descriptor=descriptor,
                 modules=[
                     OSModuleHandle.load_module(
-                        module_path=object_store.join(modules_folder, module_id),
+                        module_path=object_store.join(
+                            modules_folder,
+                            module_id
+                        ),
                         object_store=object_store
                     ) for module_id in modules
                 ]
@@ -262,10 +264,7 @@ class OSBranchHandle(BranchHandle):
                 # Read the workflow modules and set the workflow as the current
                 # cache element
                 obj = self.object_store.read_object(
-                    self.object_store.join(
-                        self.base_path,
-                        workflow_id + '.json'
-                    )
+                    self.object_store.join(self.base_path, workflow_id)
                 )
                 modules = list()
                 for module_id in obj[KEY_WORKFLOW_MODULES]:
@@ -356,7 +355,9 @@ class OSBranchHandle(BranchHandle):
             # The workflow descriptor is the last element in the workflows list
             descriptor = workflows[-1]
             modules = list()
-            for module_id in workflow_obj[KEY_WORKFLOW_MODULES]:
+            workflow_path = object_store.join(base_path, descriptor.identifier)
+            obj = object_store.read_object(workflow_path)
+            for module_id in obj[KEY_WORKFLOW_MODULES]:
                 module_path = object_store.join(modules_folder, module_id)
                 modules.append(
                     OSModuleHandle.load_module(

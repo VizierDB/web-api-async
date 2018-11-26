@@ -1,7 +1,7 @@
 """Ensure that the module output object is working properly."""
 import unittest
 
-from vizier.viztrail.module import ModuleOutputs, OutputObject, TextObject
+from vizier.viztrail.module import ModuleOutputs, OutputObject, TextOutput
 
 
 class TestModuleOutput(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestModuleOutput(unittest.TestCase):
         out = ModuleOutputs()
         self.assertEquals(len(out.stderr), 0)
         self.assertEquals(len(out.stdout), 0)
-        out.stdout.append(TextObject(value='Hello World'))
+        out.stdout.append(TextOutput(value='Hello World'))
         out.stderr.append(OutputObject(type='ERROR', value='Some Error'))
         out = ModuleOutputs(stdout=out.stdout, stderr=out.stderr)
         self.assertEquals(len(out.stderr), 1)
