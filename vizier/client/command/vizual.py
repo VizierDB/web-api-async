@@ -254,7 +254,7 @@ def projection(dataset_name, columns, validate=False):
         Name of the dataset
     columns: list
         List of column references. Expects a list of dictionaries with two
-        elements 'column' and 'name' (option)
+        elements 'column' and 'name' (optional)
     validate: bool, optional
         Validate the created command specification (if true)
 

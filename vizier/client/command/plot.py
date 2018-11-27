@@ -22,14 +22,14 @@ import vizier.viztrail.command as md
 
 
 def create_plot(
-    ds_name, chart_name, series, chart_type='bar', chart_grouped=False,
+    dataset_name, chart_name, series, chart_type='bar', chart_grouped=False,
     xaxis_range=None, xaxis_column=None, validate=False
 ):
     """Create an instance of a create plot command.
 
     Parameters
     ----------
-    ds_name: string
+    dataset_name: string
         Dataset name
     chart_name: string
         Name of the chart
@@ -70,7 +70,7 @@ def create_plot(
         series_elements.append(items)
     # Create list of arguments
     arguments= [
-        md.ARG(id=pckg.PARA_DATASET, value=ds_name),
+        md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
         md.ARG(id=pckg.PARA_NAME, value=chart_name),
         md.ARG(id=plot.PARA_SERIES, value=series_elements),
         md.ARG(

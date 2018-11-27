@@ -86,6 +86,27 @@ class ModuleArguments(object):
         """
         return self.arguments[name]
 
+    def get_dataset(self, command):
+        """Return the value of the first arument of type DATASET_ID or None.
+
+        Parameters
+        ----------
+        command: vizier.engine.packages.base.CommandDeclaration
+            Command declaration containing parameters and format declaration
+
+        Returns
+        -------
+        string
+        """
+        for para in command.parameters.values():
+            if para[pckg.LABEL_DATATYPE] == pckg.DT_DATASET_ID:
+                arg = para[pckg.LABEL_ID]
+                if self.has(arg):
+                    return self.get(arg)
+                else:
+                    return None
+        return None
+
     def has(self, name):
         """Test if a value for the parameter with the given name has been
         provided.
@@ -100,6 +121,95 @@ class ModuleArguments(object):
         bool
         """
         return name in self.arguments
+
+    def to_external_form(self, command, datasets=None, filestore=None, format=None, parent_ds_name=None):
+        """Get a string representation for the command based on the internal
+        values for the module arguments.
+        values.
+
+        Parameters
+        ----------
+        command: vizier.engine.packages.base.CommandDeclaration
+            Command declaration containing parameters and format declaration
+        datasets: dict(vizier.datastore.base.DatasetHandle), optional
+            Datasets in the current database state keyed by the dataset name
+        filestore: vizier.filestore.base.FileStore, optional
+            File store to access file handles for uploaded files
+
+        Returns
+        -------
+        string
+        """
+        # Set the dataset name if the command has a dataset parameter
+        ds_name = self.get_dataset(command)
+        if ds_name is None:
+            ds_name = parent_ds_name
+        # Set the format specification if not given
+        if format is None:
+            format = command.format
+        tokens = list()
+        for element in format:
+            token = None
+            var = None
+            if element[pckg.LABEL_TYPE] == pckg.FORMAT_CONST:
+                token = element[pckg.LABEL_VALUE]
+            else:
+                try:
+                    # Get variable declaration
+                    var = command.get(element[pckg.LABEL_VALUE])
+                    arg = var[pckg.LABEL_ID]
+                    if self.has(arg):
+                        value = self.get(arg)
+                        if var[pckg.LABEL_DATATYPE] == pckg.DT_COLUMN_ID:
+                            token = get_column_name(
+                                ds_name=ds_name.lower(),
+                                column_id=value,
+                                datasets=datasets
+                            )
+                        elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
+                            token = get_file_name(
+                                file_uri=value,
+                                filestore=filestore
+                            )
+                        elif var[pckg.LABEL_DATATYPE] == pckg.DT_LIST:
+                            if pckg.LABEL_FORMAT in element:
+                                subcmd = list()
+                                for val in value:
+                                    subtoken = val.to_external_form(
+                                        command=command,
+                                        format=element[pckg.LABEL_FORMAT],
+                                        datasets=datasets,
+                                        filestore=filestore,
+                                        parent_ds_name=ds_name
+                                    )
+                                    if not subtoken is None:
+                                        subcmd.append(subtoken)
+                                if len(subcmd) > 0:
+                                    if pckg.LABEL_DELIMITER in element:
+                                        delimiter = element[pckg.LABEL_DELIMITER]
+                                    else:
+                                        delimiter = ', '
+                                    token = delimiter.join(subcmd)
+                        elif var[pckg.LABEL_DATATYPE] != pckg.DT_PYTHON_CODE:
+                            token = format_str(str(value))
+                        else:
+                            token = str(value)
+                        if pckg.LABEL_PREFIX in element:
+                            token = element[pckg.LABEL_PREFIX] + token
+                        if pckg.LABEL_SUFFIX in element:
+                            token = token + element[pckg.LABEL_SUFFIX]
+                    elif element[pckg.LABEL_TYPE] == pckg.FORMAT_VARIABLE:
+                        token = arg
+                except ValueError as ex:
+                    token = '?' + element[pckg.LABEL_VALUE] + '?'
+            if not token is None:
+                append_token(
+                    tokens,
+                    token,
+                    lspace=element[pckg.LABEL_LEFTSPACE],
+                    rspace=element[pckg.LABEL_RIGHTSPACE]
+                )
+        return concat_tokens(tokens)
 
     def to_list(self):
         """Get list serialization of the arguments listing.
@@ -127,7 +237,7 @@ class ModuleArguments(object):
 
         Parameters
         -----------
-        parameters: vizier.engine.packages.base.ParameterIndex
+        parameters: vizier.engine.packages.base.CommandDeclaration
         """
         # Keep track of the parameter identifier in the argument list
         keys = set()
@@ -223,6 +333,29 @@ class ModuleCommand(object):
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
 
+    def to_external_form(self, command, datasets=None, filestore=None):
+        """Get a string representation for the command based on the current
+        arguments.
+
+        Parameters
+        ----------
+        command: vizier.engine.packages.base.CommandDeclaration
+            Command declaration containing parameters and format declaration
+        datasets: dict(vizier.datastore.base.DatasetHandle), optional
+            Datasets in the current database state keyed by the dataset name
+        filestore: vizier.filestore.base.FileStore, optional
+            File store to access file handles for uploaded files
+
+        Returns
+        -------
+        string
+        """
+        return self.arguments.to_external_form(
+            command=command,
+            datasets=datasets,
+            filestore=filestore
+        )
+
 
 # ------------------------------------------------------------------------------
 # Helper Methods
@@ -243,3 +376,128 @@ def ARG(id, value):
     dict
     """
     return {ARG_ID: id, ARG_VALUE: value}
+
+
+def append_token(tokens, token, lspace=True, rspace=True):
+    """Append the token to the given output token list. Tokens are separated by
+    boolean values that indicate whether there is a space between consecutive
+    tokens or not.
+
+    Parameters
+    ----------
+    tokens: list()
+        List of string and boolean values
+    token: string
+        Next token in output list
+    lspace: bool, optional
+        Left delimiter is space if True
+    rspace: bool, optional
+        Right delimiter is space if True
+    """
+    if len(tokens) > 0:
+        tokens[-1] = tokens[-1] and lspace
+    tokens.append(token)
+    tokens.append(rspace)
+
+
+def concat_tokens(tokens):
+    """Concatenate the tokens in the output list.
+
+    Parameters
+    ----------
+    tokens: list()
+        List of string and boolean values
+
+    Returns
+    -------
+    string
+    """
+    if len(tokens) > 0:
+        result = tokens[0]
+        index = 1
+        while index < len(tokens) - 1:
+            if tokens[index]:
+                result += ' '
+            index += 1
+            result += tokens[index]
+            index += 1
+        return result
+    else:
+        return ''
+
+def format_str(value, default_value='?'):
+    """Format an output string. Simply puts single quotes around the value if
+    it contains a space character. If the given argument is none the default
+    value is returned
+
+    Parameters
+    ----------
+    value: string
+        Given input value. Expected to be of type string
+    default_value: string
+        Default value that is returned in case value is None
+
+    Returns
+    -------
+    string
+    """
+    if value is None:
+        return default_value
+    if ' ' in str(value):
+        return '\'' + str(value) + '\''
+    else:
+        return str(value)
+
+
+def get_column_name(ds_name, column_id, datasets):
+    """Get the name of a column with given id in the dataset with ds_name from
+    the current context. Returns col_id if the respective column is not found.
+
+    Parameters
+    ----------
+    ds_name: string or None
+        Name of the dataset (or None if argument was missing)
+    column_id: str or int or None
+        Identifier of dataset column (may be missing)
+    datasets: dict(vizier.datastore.base.DatasetHandle), optional
+        Datasets in the current database state keyed by the dataset name
+
+    Returns
+    -------
+    string
+    """
+    if not datasets is None:
+        try:
+            # Try to convert col_id to int (as this is not guaranteed)
+            col_id = int(column_id)
+            # Get descriptor for dataset with given name
+            if ds_name in datasets:
+                ds = datasets[ds_name]
+                for col in ds.columns:
+                    if col.identifier == col_id:
+                        return format_str(col.name)
+        except Exception:
+            pass
+    return '?column?'
+
+
+def get_file_name(file_uri, filestore):
+    """Get the name of a load file. If the file uri does not contain a protocol
+    schema prefix it is assumed to be an identifier of an uploaded file.
+
+    Parameters
+    ----------
+    file_uri: string
+        Unique file identifier (either URI or identifier of uploaded file)
+    filestore: vizier.filestore.base.FileStore
+        File store to access file handles for uploaded files
+
+    Returns
+    -------
+    string
+    """
+    if not filestore is None:
+        fh = filestore.get_file(file_uri)
+        if not fh is None:
+            return format_str(fh.name)
+    return format_str(file_uri)

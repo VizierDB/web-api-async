@@ -44,7 +44,96 @@ MODULE_STATE = [
 OUTPUT_TEXT = 'txt'
 
 
-class ModuleHandle(object):
+class ModuleState(object):
+    """Object representing the module (and workflow) state. Implements boolean
+    properties to test the current state.
+    """
+    def __init__(self, state):
+        """Set the state value. Raises ValueError if given state is not a valid
+        value (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS).
+
+        Parameters
+        ----------
+        state: int
+            Module state value.
+        """
+        # Raise ValueError if state is not valid
+        if not state in MODULE_STATE:
+            raise ValueError('invalid module state \'' + str(state) + '\'')
+        self.state = state
+
+    @property
+    def is_active(self):
+        """True if either pending or running.
+
+        Returns
+        -------
+        bool
+        """
+        return self.is_pending or self.is_running
+
+    @property
+    def is_canceled(self):
+        """True, if module is in CANCELED state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.state == MODULE_CANCELED
+
+    @property
+    def is_error(self):
+        """True, if module is in ERROR state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.state == MODULE_ERROR
+
+    @property
+    def is_pending(self):
+        """True, if module is in PENDING state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.state == MODULE_PENDING
+
+    @property
+    def is_running(self):
+        """True, if module is in RUNNING state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.state == MODULE_RUNNING
+
+    @property
+    def is_stopped(self):
+        """True, if either canceled or in error state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.is_canceled or self.is_error
+
+    @property
+    def is_success(self):
+        """True, if module is in SUCCESS state.
+
+        Returns
+        -------
+        bool
+        """
+        return self.state == MODULE_SUCCESS
+
+
+class ModuleHandle(ModuleState):
     """Handle for a module in a curation workflow. Each module has a unique
     identifier, a specification of the executed command, a module state, a
     timestamp, a list of generated outputs to STDOUT and STDERR, a dictionary of
@@ -104,9 +193,7 @@ class ModuleHandle(object):
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
-        # Raise ValueError if state is not valid
-        if not state in MODULE_STATE:
-            raise ValueError('invalid module state \'' + str(state) + '\'')
+        super(ModuleHandle, self).__init__(state)
         self.identifier = identifier
         self.command = command
         self.external_form = external_form
@@ -115,56 +202,6 @@ class ModuleHandle(object):
         self.datasets = datasets if not datasets is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.provenance = provenance if not provenance is None else ModuleProvenance()
-
-    @property
-    def is_canceled(self):
-        """True, if module is in CANCELED state.
-
-        Returns
-        -------
-        bool
-        """
-        return self.state == MODULE_CANCELED
-
-    @property
-    def is_error(self):
-        """True, if module is in ERROR state.
-
-        Returns
-        -------
-        bool
-        """
-        return self.state == MODULE_ERROR
-
-    @property
-    def is_pending(self):
-        """True, if module is in PENDING state.
-
-        Returns
-        -------
-        bool
-        """
-        return self.state == MODULE_PENDING
-
-    @property
-    def is_running(self):
-        """True, if module is in RUNNING state.
-
-        Returns
-        -------
-        bool
-        """
-        return self.state == MODULE_RUNNING
-
-    @property
-    def is_success(self):
-        """True, if module is in SUCCESS state.
-
-        Returns
-        -------
-        bool
-        """
-        return self.state == MODULE_SUCCESS
 
     @abstractmethod
     def set_canceled(self, finished_at=None, outputs=None):

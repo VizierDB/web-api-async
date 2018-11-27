@@ -160,3 +160,19 @@ class BranchHandle(NamedObject):
         vizier.viztrail.workflow.base.WorkflowHandle
         """
         raise NotImplementedError
+
+    @property
+    def last_modified_at(self):
+        """The timestamp of last modification is either the time when the
+        brnach was created or when the branch head was modified.
+
+        Returns
+        -------
+        datatime.datatime
+        """
+        ts = self.provenance.created_at
+        head = self.get_head()
+        if not head is None:
+            if ts < head.descriptor.created_at:
+                ts = head.descriptor.created_at
+        return ts

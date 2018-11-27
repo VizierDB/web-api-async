@@ -270,7 +270,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.constant_format('COLUMNS'),
                 pckg.group_format(
                     PARA_COLUMNS,
-                    format=[pckg.variable_format(pckg.PARA_COLUMN)]
+                    format=[pckg.variable_format(PARA_COLUMNS_COLUMN)]
                 ),
                 pckg.constant_format('FROM'),
                 pckg.variable_format(pckg.PARA_DATASET)
@@ -357,7 +357,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.group_format(
                     PARA_COLUMNS,
                     format=[
-                        pckg.variable_format(pckg.PARA_COLUMN),
+                        pckg.variable_format(PARA_COLUMNS_COLUMN),
                         pckg.optional_format(
                             PARA_COLUMNS_ORDER,
                             prefix='(',
@@ -386,11 +386,11 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.constant_format('UPDATE'),
                 pckg.variable_format(pckg.PARA_DATASET),
                 pckg.constant_format('SET'),
-                pckg.constant_format('['),
+                pckg.constant_format('[', rspace=False),
                 pckg.variable_format(pckg.PARA_COLUMN),
                 pckg.constant_format(','),
                 pckg.variable_format(PARA_ROW),
-                pckg.constant_format(']'),
+                pckg.constant_format(']', lspace=False),
                 pckg.constant_format('='),
                 pckg.variable_format(PARA_VALUE)
             ]

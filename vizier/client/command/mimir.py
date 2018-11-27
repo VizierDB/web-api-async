@@ -204,7 +204,7 @@ def mimir_picker(
     dataset_name: string
         Name of the dataset
     schema: list(dict)
-        List of dictionaries containing 'pickFrom' and 'pickAs' (optional)
+        List of dictionaries containing 'pickFrom'
         elements
     pick_as: string, optional
         Optional output column name
@@ -219,11 +219,7 @@ def mimir_picker(
     """
     elements = list()
     for col in schema:
-        items = list()
-        items.append(md.ARG(id=mimir.PARA_PICKFROM, value=col['pickFrom']))
-        if 'pickAs' in col:
-            items.append(md.ARG(id=mimir.PARA_PICKAS, value=col['pickAs']))
-        elements.append(items)
+        elements.append([md.ARG(id=mimir.PARA_PICKFROM, value=col['pickFrom'])])
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
         md.ARG(id=mimir.PARA_SCHEMA, value=elements),

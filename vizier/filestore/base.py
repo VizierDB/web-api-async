@@ -93,6 +93,7 @@ class FileHandle(object):
                 return '\t'
         return None
 
+    @property
     def name(self):
         """Alternative to access the file name.
 

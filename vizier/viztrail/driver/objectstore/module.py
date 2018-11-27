@@ -411,6 +411,28 @@ def get_dataset_index(datasets):
     return result
 
 
+def get_module_path(modules_folder, module_id, object_store):
+    """Use a single method to get the module path. This should make it easier to
+    change the directory structure for maintaining modules.
+
+    Parameters
+    ----------
+    modules_folder: string
+        path to base folder for module objects
+    module_id: string
+        Unique module identifier
+        object_store: vizier.core.io.base.ObjectStore
+            Object store implementation to access and maintain resources
+
+
+    Returns
+    -------
+    string
+    """
+    # At the moment we maintain all module objects as files in a single folder
+    return object_store.join(modules_folder, module_id)
+
+
 def get_output_stream(items):
     """Convert a list of items in an output stream into a list of output
     objects. The element in list items are expected to be in default

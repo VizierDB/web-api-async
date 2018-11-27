@@ -4,22 +4,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DOMAIN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -56,42 +66,60 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "GEOCODE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMNS"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "HOUSE_NUMBER=", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "strnumber"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "STREET=", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "strname"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "CITY=", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "city"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "STATE=", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "state"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "USING"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "geocoder"
                     }
@@ -170,26 +198,38 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "KEY"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "REPAIR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -226,31 +266,45 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "MISSING"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "VALUES"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "WITH CONSTRAINT ", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "constraint"
                     }
@@ -295,26 +349,38 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "MISSING"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "KEYS"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -351,33 +417,47 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "PICK"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FROM"
                     }, 
                     {
                         "format": [
                             {
+                                "lspace": true, 
+                                "rspace": true, 
                                 "type": "var", 
                                 "value": "pickFrom"
                             }
                         ], 
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "schema"
                     }, 
                     {
+                        "lspace": true, 
                         "prefix": "AS ", 
+                        "rspace": true, 
                         "type": "opt", 
                         "value": "pickAs"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -431,44 +511,64 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "SCHEMA"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "MATCHING"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": false, 
                         "type": "const", 
                         "value": "("
                     }, 
                     {
                         "format": [
                             {
+                                "lspace": true, 
+                                "rspace": true, 
                                 "type": "var", 
                                 "value": "column"
                             }, 
                             {
+                                "lspace": true, 
+                                "rspace": true, 
                                 "type": "var", 
                                 "value": "type"
                             }
                         ], 
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "schema"
                     }, 
                     {
+                        "lspace": false, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": ")"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "AS"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "resultName"
                     }
@@ -541,42 +641,62 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "TYPE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "INFERENCE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMNS"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "WITH"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "percent_conform"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "="
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "percentConform"
                     }

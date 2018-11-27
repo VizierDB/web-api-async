@@ -4,6 +4,8 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "source"
                     }

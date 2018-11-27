@@ -140,7 +140,7 @@ PLOT_COMMANDS = pckg.package_declaration(
                 pckg.constant_format('PLOT'),
                 pckg.variable_format(pckg.PARA_NAME),
                 pckg.constant_format('FOR'),
-                pckg.constant_format(pckg.PARA_DATASET)
+                pckg.variable_format(pckg.PARA_DATASET)
             ]
         )
     ]

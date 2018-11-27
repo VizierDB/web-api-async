@@ -9,6 +9,7 @@ from vizier.client.command.pycell import python_cell
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.module import MODULE_SUCCESS
 
 import vizier.viztrail.driver.objectstore.branch as br
 import vizier.viztrail.driver.objectstore.viztrail as viztrail
@@ -75,6 +76,7 @@ class TestOSViztrail(unittest.TestCase):
             exec_env_id='ENV1',
             base_path=base_path
         )
+        self.assertEquals(vt.created_at, vt.last_modified_at)
         # Create five modules
         modules = list()
         for i in range(5):
@@ -84,6 +86,7 @@ class TestOSViztrail(unittest.TestCase):
                 identifier=identifier,
                 command=python_cell(source='print ' + str(i)),
                 external_form='TEST MODULE ' + str(i),
+                state=MODULE_SUCCESS,
                 module_path=vt.object_store.join(vt.modules_folder, identifier)
             ).write_module()
         branch = vt.create_branch(
@@ -101,6 +104,46 @@ class TestOSViztrail(unittest.TestCase):
         for i in range(5):
             self.assertEquals(wf.modules[i].identifier, 'MOD' + str(i))
             self.assertEquals(wf.modules[i].external_form, 'TEST MODULE ' + str(i))
+        self.assertEquals(vt.last_modified_at, branch.last_modified_at)
+
+    def test_create_branch_of_active_workflow(self):
+        """Ensure thatan exception is raised when attempting to branch of a
+        workflow with active modules. None of the branch resources should be
+        created.
+        """
+        base_path = os.path.join(os.path.abspath(REPO_DIR), 'ABC')
+        os.makedirs(base_path)
+        vt = OSViztrailHandle.create_viztrail(
+            identifier='DEF',
+            properties={PROPERTY_NAME: 'My Viztrail'},
+            exec_env_id='ENV1',
+            base_path=base_path
+        )
+        # Create one branch
+        branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
+        branch_path = os.path.join(base_path, viztrail.FOLDER_BRANCHES, branch.identifier)
+        self.assertTrue(os.path.isdir(branch_path))
+        files = os.listdir(os.path.join(base_path, viztrail.FOLDER_BRANCHES))
+        # Create five modules. The last one is active
+        modules = list()
+        for i in range(5):
+            identifier = 'MOD' + str(i)
+            modules.append(identifier)
+            m = OSModuleHandle(
+                identifier=identifier,
+                command=python_cell(source='print ' + str(i)),
+                external_form='TEST MODULE ' + str(i),
+                state=MODULE_SUCCESS,
+                module_path=vt.object_store.join(vt.modules_folder, identifier)
+            ).write_module()
+        m.set_running()
+        with self.assertRaises(ValueError):
+            vt.create_branch(
+                properties={PROPERTY_NAME: 'My Branch'},
+                modules=modules
+            )
+        # Ensure that no additional entry in the branches folder is created
+        self.assertEquals(len(files), len(os.listdir(os.path.join(base_path, viztrail.FOLDER_BRANCHES))))
 
     def test_create_empty_properties(self):
         """Ensure that create without pre-defined properties works."""

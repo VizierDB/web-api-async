@@ -4,22 +4,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DELETE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FROM"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -48,22 +58,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DELETE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "ROW"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "row"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FROM"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -92,14 +112,20 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DROP"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DATASET"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -120,34 +146,50 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "INSERT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "name"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "INTO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "AT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "POSITION"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "position"
                     }
@@ -184,30 +226,44 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "INSERT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "ROW"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "INTO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "AT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "POSITION"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "position"
                     }
@@ -236,22 +292,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "LOAD"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DATASET"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "name"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FROM"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "file"
                     }
@@ -280,34 +346,50 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "MOVE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "TO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "POSITION"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "position"
                     }
@@ -344,34 +426,50 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "MOVE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "ROW"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "row"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "TO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "POSITION"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "position"
                     }
@@ -408,28 +506,40 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FILTER"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMNS"
                     }, 
                     {
                         "format": [
                             {
+                                "lspace": true, 
+                                "rspace": true, 
                                 "type": "var", 
-                                "value": "column"
+                                "value": "columns_column"
                             }
                         ], 
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "columns"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FROM"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }
@@ -476,30 +586,44 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "RENAME"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "COLUMN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "IN"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "TO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "name"
                     }
@@ -536,22 +660,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "RENAME"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "DATASET"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "TO"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "name"
                     }
@@ -580,30 +714,42 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "SORT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "BY"
                     }, 
                     {
                         "format": [
                             {
+                                "lspace": true, 
+                                "rspace": true, 
                                 "type": "var", 
-                                "value": "column"
+                                "value": "columns_column"
                             }, 
                             {
+                                "lspace": true, 
                                 "prefix": "(", 
+                                "rspace": true, 
                                 "suffix": ")", 
                                 "type": "opt", 
                                 "value": "columns_order"
                             }
                         ], 
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "columns"
                     }
@@ -660,42 +806,62 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "UPDATE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "SET"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": false, 
                         "type": "const", 
                         "value": "["
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "column"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": ","
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "row"
                     }, 
                     {
+                        "lspace": false, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "]"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "="
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "value"
                     }

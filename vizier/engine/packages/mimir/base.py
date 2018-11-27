@@ -283,7 +283,7 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.constant_format('SCHEMA'),
                 pckg.constant_format('MATCHING'),
                 pckg.variable_format(pckg.PARA_DATASET),
-                pckg.constant_format('('),
+                pckg.constant_format('(', rspace=False),
                 pckg.group_format(
                     PARA_SCHEMA,
                     format=[
@@ -291,7 +291,7 @@ MIMIR_LENSES = pckg.package_declaration(
                         pckg.variable_format(PARA_TYPE)
                     ]
                 ),
-                pckg.constant_format(')'),
+                pckg.constant_format(')', lspace=False),
                 pckg.constant_format('AS'),
                 pckg.variable_format(PARA_RESULT_DATASET)
             ]

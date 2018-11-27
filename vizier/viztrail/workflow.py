@@ -23,6 +23,7 @@ only the different workflows but also the history for each of them.
 
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.viztrail.module import ModuleState, MODULE_SUCCESS
 
 
 """Identifier of the default master branch for all viztrails."""
@@ -118,3 +119,16 @@ class WorkflowHandle(object):
         self.branch_id = branch_id
         self.modules = modules
         self.descriptor = descriptor
+
+    def get_state(self):
+        """The workflow state is either SUCCESS or the state of the first module
+        that is not in SUCCESS state.
+
+        Returns
+        -------
+        vizier.viztrail.module.ModuleState
+        """
+        for m in self.modules:
+            if not m.is_success:
+                return ModuleState(m.state)
+        return ModuleState(MODULE_SUCCESS)

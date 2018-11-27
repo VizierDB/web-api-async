@@ -4,22 +4,32 @@
             {
                 "format": [
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "CREATE"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "PLOT"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "var", 
                         "value": "name"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "FOR"
                     }, 
                     {
+                        "lspace": true, 
+                        "rspace": true, 
                         "type": "const", 
                         "value": "dataset"
                     }

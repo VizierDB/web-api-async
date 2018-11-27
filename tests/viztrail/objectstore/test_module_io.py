@@ -166,7 +166,7 @@ class TestOSViztrail(unittest.TestCase):
         OSModuleHandle(
             identifier='MOD0',
             command=create_plot(
-                ds_name='dataset',
+                dataset_name='dataset',
                 chart_name='My Chart',
                 series=[
                     {'column': 1, 'range': '0:50', 'label': 'A'},

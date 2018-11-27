@@ -24,6 +24,7 @@ from vizier.core.util import init_value
 from vizier.core.timestamp import to_datetime
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
+from vizier.viztrail.driver.objectstore.module import get_module_path
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
 from vizier.viztrail.workflow import ACTION_CREATE
 
@@ -45,16 +46,22 @@ KEY_WORKFLOW_ID = 'workflowId'
 KEY_WORKFLOW_MODULES = 'modules'
 
 
+"""Default size of the branch cache."""
+DEFAULT_CACHE_SIZE = 3
+
+
 class OSBranchHandle(BranchHandle):
     """Handle for branches that maintains all resources as object and folders in
     an object store.
 
     A branch is a sequence of workflows. Each workflow is maintained as an
     object in the branch base folder. The object contains the descriptor for
-    each workflow. Only the workflow at the branch head and at most one other
-    workflow are kept in memory together with all their modules at the same
-    time. Access to all other workflow version will require them to be read from
-    the object store.
+    each workflow. Only the workflow at the branch head is kept in memory with\
+    all modules.
+
+    The branch cache allows to keep an additional number of workflows in memory
+    with all their modules loaded. Access to all other workflow version will
+    require them to be read from the object store.
 
     Folders and Resources
     ---------------------
@@ -68,7 +75,7 @@ class OSBranchHandle(BranchHandle):
     """
     def __init__(
         self, identifier, base_path, modules_folder, provenance, properties,
-        workflows=None, head=None, object_store=None
+        workflows=None, head=None, object_store=None, cache_size=None
     ):
         """Initialize the branch handle.
 
@@ -101,7 +108,8 @@ class OSBranchHandle(BranchHandle):
         self.object_store = init_value(object_store, DefaultObjectStore())
         self.workflows = init_value(workflows, list())
         self.head = head
-        self.cache = None
+        self.cache_size = cache_size if not cache_size is None else DEFAULT_CACHE_SIZE
+        self.cache = list()
 
     def append_workflow(self, workflow):
         """Append the given workflow handle to the branch. The workflow becomes
@@ -121,6 +129,9 @@ class OSBranchHandle(BranchHandle):
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
+
+        Raises ValueError if any of the modules in the given list is in an
+        active state.
 
         Parameters
         ----------
@@ -150,6 +161,17 @@ class OSBranchHandle(BranchHandle):
         # If base path does not exist raise an exception
         if not object_store.exists(base_path):
             raise ValueError('base path does not exist')
+        # Read module handles first to ensure that none of the modules is in
+        # an active state
+        if not modules is None:
+            wf_modules = read_workflow_modules(
+                modules_list=modules,
+                modules_folder=modules_folder,
+                object_store=object_store
+            )
+            for m in wf_modules:
+                if m.is_active:
+                    raise ValueError('cannot branch from active workflow')
         # Set provenance object if not given
         if provenance is None:
             provenance = BranchProvenance()
@@ -168,7 +190,7 @@ class OSBranchHandle(BranchHandle):
         workflows = list()
         head = None
         if not modules is None:
-            # Get a new identifier by creating an empty workflow file
+            # Get a new workflow identifier by creating an empty object
             workflow_id = object_store.create_object(
                 parent_folder= base_path,
                 identifier=get_workflow_id(0)
@@ -178,8 +200,9 @@ class OSBranchHandle(BranchHandle):
                 identifier=workflow_id,
                 action=ACTION_CREATE
             )
+            workflow_path = object_store.join(base_path, workflow_id)
             object_store.write_object(
-                object_path=object_store.join(base_path, workflow_id),
+                object_path=workflow_path,
                 content={
                     KEY_WORKFLOW_ID: workflow_id,
                     KEY_WORKFLOW_DESCRIPTOR: {
@@ -192,21 +215,14 @@ class OSBranchHandle(BranchHandle):
                     KEY_WORKFLOW_MODULES: modules
                 }
             )
+            workflows.append(descriptor)
+            # Set the new workflow as the branch head
             head = WorkflowHandle(
                 identifier=workflow_id,
                 branch_id=identifier,
-                descriptor=descriptor,
-                modules=[
-                    OSModuleHandle.load_module(
-                        module_path=object_store.join(
-                            modules_folder,
-                            module_id
-                        ),
-                        object_store=object_store
-                    ) for module_id in modules
-                ]
+                modules=wf_modules,
+                descriptor=descriptor
             )
-            workflows.append(descriptor)
         # Return handle for new viztrail branch
         return OSBranchHandle(
             identifier=identifier,
@@ -255,35 +271,31 @@ class OSBranchHandle(BranchHandle):
         # If identifier is None the head is returned
         if workflow_id is None:
             return self.head
-        elif not self.cache is None:
-            # Check if the currently caches workflow matches the identifier
-            if self.cache.identifier == workflow_id:
-                return self.cache
+        # Check if the workflow is in the internal cache
+        for wf in self.cache:
+            if wf.identifier == workflow_id:
+                return wf
+        # Read the workflow and modules from object store
         for wf_desc in self.workflows:
             if wf_desc.identifier == workflow_id:
-                # Read the workflow modules and set the workflow as the current
-                # cache element
-                obj = self.object_store.read_object(
-                    self.object_store.join(self.base_path, workflow_id)
-                )
-                modules = list()
-                for module_id in obj[KEY_WORKFLOW_MODULES]:
-                    modules.append(
-                        OSModuleHandle.load_module(
-                            module_path=self.object_store.join(
-                                self.modules_folder,
-                                module_id
-                            ),
-                            object_store=self.object_store
-                        )
-                    )
-                self.cache = WorkflowHandle(
-                    identifier=wf_desc.identifier,
+                wf = read_workflow(
                     branch_id=self.identifier,
-                    modules=modules,
-                    descriptor=wf_desc
+                    workflow_descriptor=wf_desc,
+                    workflow_path=self.object_store.join(
+                        self.base_path,
+                        workflow_id
+                    ),
+                    modules_folder=self.modules_folder,
+                    object_store=self.object_store
                 )
-                return self.cache
+                # Add workflow to cache. Remove first element is cache size
+                # exceeds the defined limit. Do not access the cache if the
+                # size limit is not greater than 0.
+                if self.cache_size > 0:
+                    self.cache.append(wf)
+                    if len(self.cache) > self.cache_size:
+                        del self.cache[0]
+                return wf
         # If this point is reached the identifier does not reference a workflow
         # in the brach history
         return None
@@ -344,7 +356,7 @@ class OSBranchHandle(BranchHandle):
                         action=desc[KEY_ACTION],
                         package_id=desc[KEY_PACKAGE_ID],
                         command_id=desc[KEY_COMMAND_ID],
-                        created_at=desc[KEY_CREATED_AT]
+                        created_at=to_datetime(desc[KEY_CREATED_AT])
                     )
                 )
         # Sort workflows in ascending order of their identifier
@@ -354,22 +366,15 @@ class OSBranchHandle(BranchHandle):
         if len(workflows) > 0:
             # The workflow descriptor is the last element in the workflows list
             descriptor = workflows[-1]
-            modules = list()
-            workflow_path = object_store.join(base_path, descriptor.identifier)
-            obj = object_store.read_object(workflow_path)
-            for module_id in obj[KEY_WORKFLOW_MODULES]:
-                module_path = object_store.join(modules_folder, module_id)
-                modules.append(
-                    OSModuleHandle.load_module(
-                        module_path=module_path,
-                        object_store=object_store
-                    )
-                )
-            head = WorkflowHandle(
-                identifier=descriptor.identifier,
+            head = read_workflow(
                 branch_id=identifier,
-                modules=modules,
-                descriptor=descriptor
+                workflow_descriptor=descriptor,
+                workflow_path=object_store.join(
+                    base_path,
+                    descriptor.identifier
+                ),
+                modules_folder=modules_folder,
+                object_store=object_store
             )
         return OSBranchHandle(
             identifier=identifier,
@@ -404,3 +409,81 @@ def get_workflow_id(identifier):
     string
     """
     return hex(identifier)[2:].zfill(8).upper()
+
+
+def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder, object_store):
+    """Read workflow from object store.
+
+    If a module is encountered that is in an active state it will be set to
+    canceled state while reading the workflow. By definition only the branch
+    head should be active and therefore we do not expect to ever read an active
+    workflow from disk. This is an indication that the repository has been
+    shut down and restarted. In this case we cannot be certain whether the
+    process that executes an active task is (or will) still be running.
+
+    Parameters
+    ----------
+    branch_id: string
+        Unique branch identifier
+    workflow_descriptor: vizier.viztrail.workflow.WorkflowDecriptor
+        Workflow descriptor
+    workflow_path: string
+        Path to the workflow resource
+    modules_folder: string
+        Path to the folder containing moudle objects
+    object_store: vizier.core.io.base.ObjectStore
+        Object store implementation to access and maintain resources
+
+    Returns
+    -------
+    vizier.viztrail.workflow.WorkflowHandle
+    """
+    # Read the workflow handle and workflow modules
+    obj = object_store.read_object(workflow_path)
+    modules = read_workflow_modules(
+        modules_list=obj[KEY_WORKFLOW_MODULES],
+        modules_folder=modules_folder,
+        object_store=object_store
+    )
+    # If any of the modules is active we set the module state to canceled
+    for m in modules:
+        if m.is_active:
+            m.set_canceled()
+    # Return workflow handle
+    return WorkflowHandle(
+        identifier=workflow_descriptor.identifier,
+        branch_id=branch_id,
+        modules=modules,
+        descriptor=workflow_descriptor
+    )
+
+
+def read_workflow_modules(modules_list, modules_folder, object_store):
+    """Read workflow modules from object store.
+
+    Parameters
+    ----------
+    modules_list: list(string)
+        List of module identifier
+    modules_folder: string
+        Path to the folder containing moudle objects
+    object_store: vizier.core.io.base.ObjectStore
+        Object store implementation to access and maintain resources
+
+    Returns
+    -------
+    list(vizier.viztrail.driver.objectstore.module.OSModuleHandle)
+    """
+    modules = list()
+    for module_id in modules_list:
+        module_path=get_module_path(
+            modules_folder=modules_folder,
+            module_id=module_id,
+            object_store=object_store
+        )
+        m = OSModuleHandle.load_module(
+            module_path=module_path,
+            object_store=object_store
+        )
+        modules.append(m)
+    return modules

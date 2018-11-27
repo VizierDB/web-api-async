@@ -106,7 +106,8 @@ class ViztrailHandle(NamedObject):
     exec_env_id: string
         Identifier of the execution environment that is used for the viztrail
     last_modified_at : datetime.datetime
-        Timestamp when viztrail was last modified (UTC)
+        Timestamp when viztrail was last modified (UTC). This does not include
+        changes to the viztrail properties but only to branches and workflows.
     name: string
         Human readable viztrail name
     properties: vizier.core.annotation.base.ObjectAnnotationSet
@@ -131,8 +132,6 @@ class ViztrailHandle(NamedObject):
             List of branches in the viztrail
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
-        last_modified_at : datetime.datetime, optional
-            Timestamp when project was last modified (UTC)
         """
         super(ViztrailHandle, self).__init__(properties=properties)
         self.identifier = identifier
@@ -143,19 +142,8 @@ class ViztrailHandle(NamedObject):
             for b in branches:
                 self.branches[b.identifier] = b
         # If created_at timestamp is None the viztrail is expected to be a newly
-        # created viztrail. For new viztrails the last_modified timestamp is
-        # expected to be None. For existing viztrails the last_modified
-        # timestamp should not be None.
-        if not created_at is None:
-            if last_modified_at is None:
-                raise ValueError('unexpected value for \'last_modified\'')
-            self.created_at = created_at
-            self.last_modified_at = last_modified_at
-        else:
-            if not last_modified_at is None:
-                raise ValueError('missing value for \'last_modified\'')
-            self.created_at = get_current_time()
-            self.last_modified_at = self.created_at
+        # created viztrail.
+        self.created_at = created_at if not created_at is None else get_current_time()
 
     @abstractmethod
     def create_branch(self, branch_id, provenance, properties=None, workflow=None):
@@ -212,6 +200,22 @@ class ViztrailHandle(NamedObject):
             return self.branches[branch_id]
         else:
             return None
+
+    @property
+    def last_modified_at(self):
+        """The timestamp of last modification is either the time when the
+        viztrail was created or when any of the viztrail branches was modified.
+
+        Returns
+        -------
+        datatime.datatime
+        """
+        ts = self.created_at
+        for branch in self.branches.values():
+            branch_ts = branch.last_modified_at
+            if ts < branch_ts:
+                ts = branch_ts
+        return ts
 
     def list_branches(self):
         """Get a list of branches that are currently defined for the viztrail.

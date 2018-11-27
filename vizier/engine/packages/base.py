@@ -36,14 +36,17 @@ from jsonschema import validate, ValidationError
 """Components and schema of package declaration."""
 LABEL_COMMAND = 'command'
 LABEL_DATATYPE = 'datatype'
+LABEL_DELIMITER = 'delimiter'
 LABEL_DESCRIPTION = 'description'
 LABEL_FORMAT = 'format'
 LABEL_ID = 'id'
+LABEL_LEFTSPACE = 'lspace'
 LABEL_NAME = 'name'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
 LABEL_PREFIX = 'prefix'
 LABEL_REQUIRED = 'required'
+LABEL_RIGHTSPACE = 'rspace'
 LABEL_SUFFIX = 'suffix'
 LABEL_TYPE = 'type'
 LABEL_VALUE = 'value'
@@ -97,6 +100,8 @@ PACKAGE_SCHEMA = {
                             'properties': {
                                 LABEL_TYPE: {'type': 'string'},
                                 LABEL_VALUE: {'type': 'string'},
+                                LABEL_LEFTSPACE: {'type': 'boolean'},
+                                LABEL_RIGHTSPACE: {'type': 'boolean'},
                                 LABEL_PREFIX: {'type': 'string'},
                                 LABEL_SUFFIX: {'type': 'string'},
                                 LABEL_FORMAT: {
@@ -113,7 +118,7 @@ PACKAGE_SCHEMA = {
                                     }
                                 }
                             },
-                            'required': [LABEL_TYPE, LABEL_VALUE]
+                            'required': [LABEL_TYPE, LABEL_VALUE, LABEL_LEFTSPACE, LABEL_RIGHTSPACE]
                         }
                     }
                 },
@@ -374,7 +379,10 @@ FORMAT_VARIABLE = 'var'
 FORMAT_TYPE = [FORMAT_CONST, FORMAT_OPTION, FORMAT_VARIABLE]
 
 
-def format_element(type, value, nested_format=None, prefix=None, suffix=None):
+def format_element(
+    type, value, nested_format=None, prefix=None, suffix=None, delimiter=None,
+    lspace=True, rspace=True
+):
     """Generic dictionary for elements in a command format declaration.
 
     Parameters
@@ -392,37 +400,59 @@ def format_element(type, value, nested_format=None, prefix=None, suffix=None):
     suffix: string, optional
         Optional suffix for variable format elements that are only output if the
         parameter value is present.
+    delimiter: string, optional
+        Optional delimiter for elements in a nested listing
+    lspace: bool, oprional
+        Space to left of constant if True
+    rspace: bool, optional
+        Space to right of constant if true
 
     Returns
     -------
     dict
     """
-    obj = dict({LABEL_TYPE: type, LABEL_VALUE: value})
+    obj = dict({
+        LABEL_TYPE: type,
+        LABEL_VALUE: value,
+        LABEL_LEFTSPACE: lspace,
+        LABEL_RIGHTSPACE: rspace
+    })
     if not nested_format is None:
         obj[LABEL_FORMAT] = nested_format
     if not prefix is None:
         obj[LABEL_PREFIX] = prefix
     if not suffix is None:
         obj[LABEL_SUFFIX] = suffix
+    if not delimiter is None:
+        obj[LABEL_DELIMITER] = delimiter
     return obj
 
 
-def constant_format(value):
+def constant_format(value, lspace=True, rspace=True):
     """Dictionary for a constant in a format declaration for a package command.
 
     Parameters
     ----------
     value: string
         Constant output value
+    lspace: bool, oprional
+        Space to left of constant if True
+    rspace: bool, optional
+        Space to right of constant if true
 
     Returns
     -------
     dict
     """
-    return format_element(type=FORMAT_CONST, value=value)
+    return format_element(
+        type=FORMAT_CONST,
+        value=value,
+        lspace=lspace,
+        rspace=rspace
+    )
 
 
-def group_format(parameter_id, format):
+def group_format(parameter_id, format, delimiter=None):
     """Dictionary for a variable value in a format declaration for a package
     command that references a list of values. Creates a nested format element.
 
@@ -432,6 +462,8 @@ def group_format(parameter_id, format):
         Identifier of the referenced parameter
     format: list
         Format for list elements
+    delimiter: string, optional
+        Optional delimiter for concatenated list elements
 
     Returns
     -------
@@ -440,7 +472,8 @@ def group_format(parameter_id, format):
     return format_element(
         type=FORMAT_VARIABLE,
         value=parameter_id,
-        nested_format=format
+        nested_format=format,
+        delimiter=delimiter
     )
 
 
@@ -508,7 +541,10 @@ class PackageIndex(object):
         validate_package(package)
         self.commands = dict()
         for cmd in package[LABEL_COMMAND]:
-            self.commands[cmd[LABEL_ID]] = ParameterIndex(cmd[LABEL_PARAMETER])
+            self.commands[cmd[LABEL_ID]] = CommandDeclaration(
+                paramaters=cmd[LABEL_PARAMETER],
+                format=cmd[LABEL_FORMAT] if LABEL_FORMAT in cmd else list()
+            )
 
     def get(self, command_id):
         """Get the parameter declarations for the given command.
@@ -522,26 +558,32 @@ class PackageIndex(object):
 
         Returns
         -------
-        vizier.workflow.packages.base.ParameterIndex
+        vizier.workflow.packages.base.CommandDeclaration
         """
         if not command_id in self.commands:
             raise ValueError('unknown command \'' + str(command_id) + '\'')
         return self.commands[command_id]
 
 
-class ParameterIndex(object):
-    """Index of command parameter declarations."""
-    def __init__(self, paramaters):
+class CommandDeclaration(object):
+    """Command declaration contains an index of command parameter declarations
+    and the command format declaration.
+    """
+    def __init__(self, paramaters, format):
         """Initialize the index from a given list of paramater declarations.
 
         Parameters
         ----------
         parameters: list
-            list of parameter declarations
+            List of parameter declarations
+        format: list
+            List of format specifications for tokens in the external form of the
+            command
         """
         self.parameters = dict()
         for para in paramaters:
             self.parameters[para[LABEL_ID]] = para
+        self.format = format
 
     def get(self, parameter_id):
         """Get declaration for parameter with given identifier.

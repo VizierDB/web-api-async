@@ -120,16 +120,25 @@ class OSViztrailHandle(ViztrailHandle):
         # will contain branch resources
         identifier = self.object_store.create_folder(self.branch_folder)
         branch_path = self.object_store.join(self.branch_folder, identifier)
-        # Create materialized branch resource
-        branch = OSBranchHandle.create_branch(
-            identifier=identifier,
-            provenance=provenance,
-            properties=properties,
-            modules_folder=self.modules_folder,
-            modules=modules,
-            base_path=branch_path,
-            object_store=self.object_store
-        )
+        # Create materialized branch resource. This will raise an exception if
+        # the list of modules contains an active module.
+        try:
+            branch = OSBranchHandle.create_branch(
+                identifier=identifier,
+                provenance=provenance,
+                properties=properties,
+                modules_folder=self.modules_folder,
+                modules=modules,
+                base_path=branch_path,
+                object_store=self.object_store
+            )
+        except ValueError as ex:
+            # Remove the created folder
+            self.object_store.delete_folder(
+                folder_path=branch_path,
+                force_delete=True
+            )
+            raise ex
         # Add the new branch to index and materialize the updated index
         # information
         self.branches[branch.identifier] = branch
