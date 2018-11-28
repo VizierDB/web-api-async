@@ -56,8 +56,8 @@ class OSViztrailHandle(ViztrailHandle):
     modules/        : Modules in viztrail workflows
     """
     def __init__(
-        self, identifier, exec_env_id, properties, base_path, object_store=None,
-        branches, default_branch, created_at=None, branch_index=None,
+        self, identifier, exec_env_id, properties, base_path, branches,
+        default_branch, object_store=None, created_at=None, branch_index=None,
         branch_folder=None, modules_folder=None
     ):
         """Initialize the viztrail descriptor.
@@ -94,8 +94,7 @@ class OSViztrailHandle(ViztrailHandle):
             properties=properties,
             branches=branches,
             default_branch=default_branch,
-            created_at=created_at,
-            last_modified_at=created_at
+            created_at=created_at
         )
         # Initizlize the object store and identifier for all subfolders.
         self.base_path = base_path
@@ -136,7 +135,7 @@ class OSViztrailHandle(ViztrailHandle):
         write_branch_index(
             branches=self.branches,
             object_path=self.branch_index,
-            object_store=object_store
+            object_store=self.object_store
         )
         return branch
 
@@ -197,12 +196,12 @@ class OSViztrailHandle(ViztrailHandle):
         )
         # Materialize the updated branch index
         write_branch_index(
-            branches={branch.identifier: branch},
+            branches={default_branch.identifier: default_branch},
             object_path=branch_index,
             object_store=object_store
         )
         # Return handle for new viztrail
-        vt = OSViztrailHandle(
+        return OSViztrailHandle(
             identifier=identifier,
             exec_env_id=exec_env_id,
             properties=PersistentAnnotationSet(
@@ -210,7 +209,7 @@ class OSViztrailHandle(ViztrailHandle):
                 object_store=object_store,
                 annotations=properties
             ),
-            branches=[branch],
+            branches=[default_branch],
             default_branch=default_branch,
             created_at=created_at,
             base_path=base_path,
@@ -251,7 +250,7 @@ class OSViztrailHandle(ViztrailHandle):
             write_branch_index(
                 branches=self.branches,
                 object_path=self.branch_index,
-                object_store=object_store
+                object_store=self.object_store
             )
             return True
         else:
@@ -290,13 +289,13 @@ class OSViztrailHandle(ViztrailHandle):
         branches = list()
         default_branch = None
         for b in object_store.read_object(branch_index):
-            identifier = b[KEY_IDENTIFIER]
+            branch_id = b[KEY_IDENTIFIER]
             is_default = b[KEY_DEFAULT]
             branches.append(
                 OSBranchHandle.load_branch(
-                    identifier=identifier,
+                    identifier=branch_id,
                     is_default=is_default,
-                    base_path=object_store.join(branch_folder, identifier),
+                    base_path=object_store.join(branch_folder, branch_id),
                     modules_folder=modules_folder,
                     object_store=object_store
                 )
@@ -337,7 +336,7 @@ class OSViztrailHandle(ViztrailHandle):
         vizier.viztrail.branch.BranchHandle
         """
         if not branch_id in self.branches:
-            raise ValueError('unknown branch \'' + str(branch_id) + '\')
+            raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         branch = self.branches[branch_id]
         # Replace the current default branch
         self.default_branch.is_default = False
@@ -347,7 +346,7 @@ class OSViztrailHandle(ViztrailHandle):
         write_branch_index(
             branches=self.branches,
             object_path=self.branch_index,
-            object_store=object_store
+            object_store=self.object_store
         )
         return branch
 

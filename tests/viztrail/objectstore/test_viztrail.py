@@ -76,7 +76,7 @@ class TestOSViztrail(unittest.TestCase):
             exec_env_id='ENV1',
             base_path=base_path
         )
-        self.assertEquals(vt.created_at, vt.last_modified_at)
+        self.assertEquals(vt.last_modified_at, vt.default_branch.last_modified_at)
         # Create five modules
         modules = list()
         for i in range(5):
@@ -104,6 +104,7 @@ class TestOSViztrail(unittest.TestCase):
         for i in range(5):
             self.assertEquals(wf.modules[i].identifier, 'MOD' + str(i))
             self.assertEquals(wf.modules[i].external_form, 'TEST MODULE ' + str(i))
+        self.assertEquals(vt.last_modified_at, branch.last_modified_at)
         self.assertEquals(vt.last_modified_at, branch.last_modified_at)
 
     def test_create_branch_of_active_workflow(self):
@@ -210,7 +211,7 @@ class TestOSViztrail(unittest.TestCase):
             vt.delete_branch(branch.identifier)
         # Attempt to delete the default branch folder should raise runtime error
         self.assertTrue(branch.is_default)
-        with self.asserRaises(RuntimeError):
+        with self.assertRaises(RuntimeError):
             branch.delete_branch()
         # Reload viztrail to ensure that default branch information is persisted
         vt = OSViztrailHandle.load_viztrail(base_path)
@@ -222,7 +223,7 @@ class TestOSViztrail(unittest.TestCase):
             vt.delete_branch(branch.identifier)
         # Attempt to delete the default branch folder should raise runtime error
         self.assertTrue(branch.is_default)
-        with self.asserRaises(RuntimeError):
+        with self.assertRaises(RuntimeError):
             branch.delete_branch()
         # Add a new branch
         second_branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})

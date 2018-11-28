@@ -24,7 +24,6 @@ class TestValidatePyCell(unittest.TestCase):
         ).to_external_form(
             command=PACKAGE.get(pycell.PYTHON_CODE)
         )
-        print cmd
         self.assertEquals(cmd, 'print 2+2')
 
 

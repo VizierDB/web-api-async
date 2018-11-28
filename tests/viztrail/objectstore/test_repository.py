@@ -49,6 +49,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, FOLDER_BRANCHES, OBJ_BRANCHINDEX)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_METADATA)))
         self.assertFalse(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
+        self.assertIsNotNone(repo.get_viztrail(vt1.identifier))
         vt2 = repo.create_viztrail(
             exec_env_id='ENV2',
             properties={PROPERTY_NAME: 'My Viztrail'}
@@ -63,6 +64,10 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertEquals(vt2.name, 'My Viztrail')
         self.assertEquals(vt1.exec_env_id, 'ENV1')
         self.assertEquals(vt2.exec_env_id, 'ENV2')
+        self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
+        vt_index = repo.object_store.read_object(repo.viztrails_index)
+        self.assertTrue(vt1.identifier in vt_index)
+        self.assertTrue(vt2.identifier in vt_index)
         # Reload the repository
         repo = OSViztrailRepository(REPO_DIR)
         self.assertEquals(len(repo.list_viztrails()), 2)
