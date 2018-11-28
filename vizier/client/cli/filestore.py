@@ -46,7 +46,7 @@ class FileStoreCommands(Command):
             List of tokens in the command line
         """
         if len(tokens) == 2:
-            if tokens[0].lower() == 'list' and tokens[1].lower() == 'files':
+            if tokens[0] == 'list' and tokens[1] == 'files':
                 print 'File store (' + self.filestore.base_directory + ')'
                 files = self.filestore.list_files()
                 for fh in files:
@@ -57,11 +57,11 @@ class FileStoreCommands(Command):
                 print str(len(files)) + ' file(s)'
                 return True
         elif len(tokens) == 3:
-            if tokens[0].lower() == 'upload' and tokens[1].lower() == 'file':
+            if tokens[0] == 'upload' and tokens[1] == 'file':
                 fh = self.filestore.upload_file(tokens[2])
                 print 'Uploaded file ' + fh.name + ' as ' + fh.identifier
                 return True
-            elif tokens[0].lower() == 'cleanup' and tokens[1].lower() == 'file' and tokens[2].lower() == 'store':
+            elif tokens[0] == 'cleanup' and tokens[1] == 'file' and tokens[2] == 'store':
                 count = self.filestore.cleanup(active_files=[])
                 print 'Removed ' + str(count) + ' unused file(s)'
                 return True
@@ -70,6 +70,6 @@ class FileStoreCommands(Command):
     def help(self):
         """Print help statement."""
         print 'File store'
-        print '  CLEANUP FILE STORE'
-        print '  LIST FILES'
-        print '  UPLOAD FILE <file-path>'
+        print '  cleanup file store'
+        print '  list files'
+        print '  upload file <file-path>'

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#export PATH=$PATH:/home/heiko/projects/vizier/vizier-api/tools
+#source activate vapi &&
+python /home/heiko/projects/vizier/vizier-api/vizier $*

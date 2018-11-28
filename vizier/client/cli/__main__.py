@@ -27,33 +27,11 @@ from vizier.filestore.fs import DefaultFileStore
 def main(args):
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
-    # Initialize the vizier Api. If the optional configuration file is not given
-    # as an argument the default configuration file will be used
-    if len(args) == 0:
-        config = AppConfig()
-    elif len(args) == 1:
-        config = AppConfig(configuration_file=args[0])
-    else:
-        print 'Usage: {<config-file>}'
-        return
+    # Initialize the vizier Api.
+    config = AppConfig()
     api = VizierApi(DefaultFileStore(config.settings.fileserver.directory))
-    # Initialize the command interpreter
-    cli = CommandInterpreter(api)
-    # Read user input until quit, exit or Cnrtl-D is read.
-    done = False
-    while not done:
-        try:
-            line = raw_input(cli.prompt())
-            if line.lower() in ['quit', 'exit']:
-                done = True
-            else:
-                cli.eval(line)
-        except EOFError as eof:
-            print
-            done = True
-        except Exception as ex:
-            print str(ex)
-    print 'bye'
+    # Run the command interpreter on the given arguments
+    CommandInterpreter(api).eval(args)
 
 if __name__ == '__main__':
     main(args=sys.argv[1:])

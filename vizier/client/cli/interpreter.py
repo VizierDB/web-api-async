@@ -35,7 +35,7 @@ class CommandInterpreter(object):
             FileStoreCommands(api)
         ]
 
-    def eval(self, line):
+    def eval(self, tokens):
         """Evaluate a command line. Runs through the set of configured commands
         until the first command evaluates to True.
 
@@ -45,20 +45,18 @@ class CommandInterpreter(object):
             Command line
         """
         # Check if the line equals 'help'.
-        if line.lower() == 'help':
+        if len(tokens) == 1 and tokens[0] == 'help':
             print '\nSupported commands'
             print '------------------\n'
             for cmd in self.commands:
                 cmd.help()
             print
         else:
-            print
-            tokens = line.strip().split()
             for cmd in self.commands:
                 if cmd.eval(tokens):
                     print
                     return
-            print 'unknown command'
+            print 'unknown command: ' + ' '.join(tokens)
 
     def prompt(self):
         """The current interpreter prompt.
