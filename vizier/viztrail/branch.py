@@ -25,6 +25,10 @@ from vizier.core.timestamp import get_current_time
 from vizier.viztrail.base import NamedObject
 
 
+"""Initial name for the default branch."""
+DEFAULT_BRANCH = 'Default'
+
+
 class BranchProvenance(object):
     """Simple object that contains provenance information for each branch. The
     provenance for a branch includes the source branch identifier, the

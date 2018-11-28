@@ -26,12 +26,6 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.module import ModuleState, MODULE_SUCCESS
 
 
-"""Identifier of the default master branch for all viztrails."""
-DEFAULT_BRANCH = 'master'
-
-"""Default name for the master branch."""
-DEFAULT_BRANCH_NAME = 'Default'
-
 """Workflow modification action identifier."""
 ACTION_CREATE = 'cre'
 ACTION_DELETE = 'del'

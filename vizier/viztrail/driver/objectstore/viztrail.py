@@ -23,7 +23,8 @@ from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.viztrail.driver.objectstore.branch import OSBranchHandle
-from vizier.viztrail.base import ViztrailHandle
+from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
+from vizier.viztrail.branch import DEFAULT_BRANCH
 
 
 """Resource identifier"""
@@ -33,6 +34,9 @@ OBJ_BRANCHINDEX = 'active'
 OBJ_METADATA = 'viztrail'
 OBJ_PROPERTIES = 'properties'
 
+"""Json labels for serialized object."""
+KEY_DEFAULT = 'isDefault'
+KEY_IDENTIFIER = 'id'
 
 class OSViztrailHandle(ViztrailHandle):
     """Handle for viztrail that maintains resources as folders and objects in
@@ -53,9 +57,8 @@ class OSViztrailHandle(ViztrailHandle):
     """
     def __init__(
         self, identifier, exec_env_id, properties, base_path, object_store=None,
-        branches=None, created_at=None, branch_index=None, branch_folder=None,
-        modules_folder=None
-
+        branches, default_branch, created_at=None, branch_index=None,
+        branch_folder=None, modules_folder=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -74,6 +77,8 @@ class OSViztrailHandle(ViztrailHandle):
             Object store implementation to access and maintain resources
         branches: list(vizier.viztrail.branch.BranchHandle)
             List of branches in the viztrail
+        default_branch: vizier.viztrail.branch.BranchHandle
+            Default branch for the viztrail
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
         branch_index: string, optional
@@ -88,6 +93,7 @@ class OSViztrailHandle(ViztrailHandle):
             exec_env_id=exec_env_id,
             properties=properties,
             branches=branches,
+            default_branch=default_branch,
             created_at=created_at,
             last_modified_at=created_at
         )
@@ -116,45 +122,31 @@ class OSViztrailHandle(ViztrailHandle):
         -------
         vizier.viztrail.driver.objectstore.branch.OSBranchHandle
         """
-        # Get unique identifier for new branch by creating the subfolder that
-        # will contain branch resources
-        identifier = self.object_store.create_folder(self.branch_folder)
-        branch_path = self.object_store.join(self.branch_folder, identifier)
-        # Create materialized branch resource. This will raise an exception if
-        # the list of modules contains an active module.
-        try:
-            branch = OSBranchHandle.create_branch(
-                identifier=identifier,
-                provenance=provenance,
-                properties=properties,
-                modules_folder=self.modules_folder,
-                modules=modules,
-                base_path=branch_path,
-                object_store=self.object_store
-            )
-        except ValueError as ex:
-            # Remove the created folder
-            self.object_store.delete_folder(
-                folder_path=branch_path,
-                force_delete=True
-            )
-            raise ex
+        branch = create_branch(
+            provenance=provenance,
+            properties=properties,
+            modules=modules,
+            branch_folder=self.branch_folder,
+            modules_folder=self.modules_folder,
+            object_store=self.object_store
+        )
         # Add the new branch to index and materialize the updated index
         # information
         self.branches[branch.identifier] = branch
-        self.object_store.write_object(
+        write_branch_index(
+            branches=self.branches,
             object_path=self.branch_index,
-            content=[b for b in self.branches]
+            object_store=object_store
         )
         return branch
 
     @staticmethod
     def create_viztrail(identifier, exec_env_id, base_path, object_store=None, properties=None) :
         """Create a new viztrail resource. Will create the base directory for
-        the viztrail. If the directory exists a ValueError is raised.
+        the viztrail.
 
         Creates subfolders for viztrail resources. Writes viztrail metadata and
-        properties to file.
+        properties to file. Create an empty default branch
 
         Parameters
         ----------
@@ -175,9 +167,6 @@ class OSViztrailHandle(ViztrailHandle):
         # Make sure the object store is not None
         if object_store is None:
             object_store = DefaultObjectStore()
-        # If base path does not exist raise an exception
-        if not object_store.exists(base_path):
-            raise ValueError('base path does not exist')
         # Create empty index file and subfolders for branches, workflows, and
         # modules. The base path folder is expected to exist.
         branch_folder = object_store.join(base_path, FOLDER_BRANCHES)
@@ -196,8 +185,24 @@ class OSViztrailHandle(ViztrailHandle):
                 'createdAt': created_at.isoformat()
             }
         )
+        # Create the default branch for the new viztrail
+        default_branch = create_branch(
+            provenance=None,
+            properties={PROPERTY_NAME: DEFAULT_BRANCH},
+            modules=None,
+            branch_folder=branch_folder,
+            modules_folder=modules_folder,
+            object_store=object_store,
+            is_default=True
+        )
+        # Materialize the updated branch index
+        write_branch_index(
+            branches={branch.identifier: branch},
+            object_path=branch_index,
+            object_store=object_store
+        )
         # Return handle for new viztrail
-        return OSViztrailHandle(
+        vt = OSViztrailHandle(
             identifier=identifier,
             exec_env_id=exec_env_id,
             properties=PersistentAnnotationSet(
@@ -205,6 +210,8 @@ class OSViztrailHandle(ViztrailHandle):
                 object_store=object_store,
                 annotations=properties
             ),
+            branches=[branch],
+            default_branch=default_branch,
             created_at=created_at,
             base_path=base_path,
             object_store=object_store,
@@ -223,6 +230,8 @@ class OSViztrailHandle(ViztrailHandle):
         """Delete branch with the given identifier. Returns True if the branch
         existed and False otherwise.
 
+        Raises ValueError if the given branch is the default branch.
+
         Parameters
         ----------
         branch_id: string
@@ -232,13 +241,17 @@ class OSViztrailHandle(ViztrailHandle):
         -------
         bool
         """
+        # Raise an exception is an attempt is made to delete the default branch
+        if self.default_branch.identifier == branch_id:
+            raise ValueError('cannot delete default branch')
         if branch_id in self.branches:
             # Call the delete method of the branch and update the branch index
             self.branches[branch_id].delete_branch()
             del self.branches[branch_id]
-            self.object_store.write_object(
+            write_branch_index(
+                branches=self.branches,
                 object_path=self.branch_index,
-                content=[b for b in self.branches]
+                object_store=object_store
             )
             return True
         else:
@@ -275,15 +288,21 @@ class OSViztrailHandle(ViztrailHandle):
         branch_index = object_store.join(branch_folder, OBJ_BRANCHINDEX)
         modules_folder = object_store.join(base_path, FOLDER_MODULES)
         branches = list()
-        for identifier in object_store.read_object(branch_index):
+        default_branch = None
+        for b in object_store.read_object(branch_index):
+            identifier = b[KEY_IDENTIFIER]
+            is_default = b[KEY_DEFAULT]
             branches.append(
                 OSBranchHandle.load_branch(
                     identifier=identifier,
+                    is_default=is_default,
                     base_path=object_store.join(branch_folder, identifier),
                     modules_folder=modules_folder,
                     object_store=object_store
                 )
             )
+            if is_default:
+                default_branch = branches[-1]
         # Return handle for new viztrail
         return OSViztrailHandle(
             identifier=identifier,
@@ -293,6 +312,7 @@ class OSViztrailHandle(ViztrailHandle):
                 object_store=object_store
             ),
             branches=branches,
+            default_branch=default_branch,
             created_at=created_at,
             base_path=base_path,
             object_store=object_store,
@@ -300,3 +320,115 @@ class OSViztrailHandle(ViztrailHandle):
             branch_folder=branch_folder,
             modules_folder=modules_folder
         )
+
+    def set_default_branch(self, branch_id):
+        """Set the branch with the given identifier as the default branch.
+        Raises ValueError if no branch with the given identifier exists.
+
+        Return the branch handle for the new default.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.branch.BranchHandle
+        """
+        if not branch_id in self.branches:
+            raise ValueError('unknown branch \'' + str(branch_id) + '\')
+        branch = self.branches[branch_id]
+        # Replace the current default branch
+        self.default_branch.is_default = False
+        branch.is_default = True
+        self.default_branch = branch
+        # Write modified branch index
+        write_branch_index(
+            branches=self.branches,
+            object_path=self.branch_index,
+            object_store=object_store
+        )
+        return branch
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def create_branch(
+    provenance, properties, modules, branch_folder, modules_folder,
+    object_store, is_default=False
+):
+    """Create a new branch. If the list of workflow modules is given the list
+    defines the branch head. Otherwise, the branch is empty.
+
+    Parameters
+    ----------
+    provenance: vizier.viztrail.base.BranchProvenance
+        Provenance information for the new branch
+    properties: dict, optional
+        Set of properties for the new branch
+    modules: list(string), optional
+        List of module identifier for the modules in the workflow at the
+        head of the branch
+    branch_folder: string
+        Path to branches folder
+    modules_folder: string
+        Path to modules folder
+    object_store: vizier.core.io.base.ObjectStore
+        Object store implementation to access and maintain resources
+    is_default: bool, optional
+        True if this is the new default branch for the viztrail
+
+    Returns
+    -------
+    vizier.viztrail.driver.objectstore.branch.OSBranchHandle
+    """
+    # Get unique identifier for new branch by creating the subfolder that
+    # will contain branch resources
+    identifier = object_store.create_folder(branch_folder)
+    branch_path = object_store.join(branch_folder, identifier)
+    # Create materialized branch resource. This will raise an exception if
+    # the list of modules contains an active module.
+    try:
+        branch = OSBranchHandle.create_branch(
+            identifier=identifier,
+            is_default=is_default,
+            provenance=provenance,
+            properties=properties,
+            modules_folder=modules_folder,
+            modules=modules,
+            base_path=branch_path,
+            object_store=object_store
+        )
+    except ValueError as ex:
+        # Remove the created folder
+        object_store.delete_folder(
+            folder_path=branch_path,
+            force_delete=True
+        )
+        raise ex
+    return branch
+
+
+def write_branch_index(branches, object_path, object_store):
+    """Write index file for current branch set.
+
+    Parameters
+    ----------
+    branches: dict(vizier.viztrail.driver.objectstore.branch.OSBranchHandle)
+        Current ser of branches in the viztrail
+    object_path: string
+        Path to branch index list
+    object_store: vizier.core.io.base.ObjectStore
+        Object store implementation to access and maintain resources
+    """
+    object_store.write_object(
+        object_path=object_path,
+        content=[{
+                KEY_IDENTIFIER: b,
+                KEY_DEFAULT: branches[b].is_default
+            } for b in branches
+        ]
+    )

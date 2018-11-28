@@ -41,13 +41,13 @@ class TestOSViztrail(unittest.TestCase):
             exec_env_id='ENV1',
             base_path=base_path
         )
-        self.assertEquals(len(vt.branches), 0)
-        branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
         self.assertEquals(len(vt.branches), 1)
+        branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
+        self.assertEquals(len(vt.branches), 2)
         self.assertIsNone(branch.head)
         self.assertEquals(len(branch.workflows), 0)
         vt = OSViztrailHandle.load_viztrail(base_path)
-        self.assertEquals(len(vt.branches), 1)
+        self.assertEquals(len(vt.branches), 2)
         self.assertTrue(branch.identifier in vt.branches)
         self.assertEquals(vt.get_branch(branch.identifier).name, 'My Branch')
         branch = vt.get_branch(branch.identifier)
@@ -60,9 +60,9 @@ class TestOSViztrail(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(branch_path, br.OBJ_PROPERTIES)))
         vt.delete_branch(branch.identifier)
         self.assertFalse(os.path.isdir(branch_path))
-        self.assertEquals(len(vt.branches), 0)
+        self.assertEquals(len(vt.branches), 1)
         vt = OSViztrailHandle.load_viztrail(base_path)
-        self.assertEquals(len(vt.branches), 0)
+        self.assertEquals(len(vt.branches), 1)
 
     def test_create_and_delete_branch_with_default_workflow(self):
         """Ensure that creating and loading branches works if the head workflow
@@ -191,6 +191,58 @@ class TestOSViztrail(unittest.TestCase):
         # Delete viztrail
         vt.delete_viztrail()
         self.assertFalse(os.path.exists(vt_folder))
+
+    def test_default_branch(self):
+        """Test behaviour of the viztrail default branch."""
+        base_path = os.path.join(os.path.abspath(REPO_DIR), 'ABC')
+        os.makedirs(base_path)
+        vt = OSViztrailHandle.create_viztrail(
+            identifier='ABC',
+            properties=None,
+            exec_env_id='ENV1',
+            base_path=base_path
+        )
+        self.assertEquals(len(vt.branches), 1)
+        branch = vt.get_default_branch()
+        # Attempt to delete the branch that is the default should raise
+        # ValueError
+        with self.assertRaises(ValueError):
+            vt.delete_branch(branch.identifier)
+        # Attempt to delete the default branch folder should raise runtime error
+        self.assertTrue(branch.is_default)
+        with self.asserRaises(RuntimeError):
+            branch.delete_branch()
+        # Reload viztrail to ensure that default branch information is persisted
+        vt = OSViztrailHandle.load_viztrail(base_path)
+        self.assertEquals(len(vt.branches), 1)
+        branch = vt.get_default_branch()
+        # Attempt to delete the branch that is the default should raise
+        # ValueError
+        with self.assertRaises(ValueError):
+            vt.delete_branch(branch.identifier)
+        # Attempt to delete the default branch folder should raise runtime error
+        self.assertTrue(branch.is_default)
+        with self.asserRaises(RuntimeError):
+            branch.delete_branch()
+        # Add a new branch
+        second_branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
+        self.assertFalse(second_branch.is_default)
+        self.assertNotEqual(vt.get_default_branch().identifier, second_branch.identifier)
+        vt = OSViztrailHandle.load_viztrail(base_path)
+        self.assertNotEqual(vt.get_default_branch().identifier, second_branch.identifier)
+        # Set second branch as default branch
+        second_branch = vt.set_default_branch(second_branch.identifier)
+        self.assertTrue(second_branch.is_default)
+        self.assertFalse(vt.get_branch(branch.identifier).is_default)
+        self.assertEquals(vt.get_default_branch().identifier, second_branch.identifier)
+        # It should be possible to delete the first branch now
+        self.assertTrue(vt.delete_branch(branch.identifier))
+        vt = OSViztrailHandle.load_viztrail(base_path)
+        self.assertIsNone(vt.get_branch(branch.identifier))
+        self.assertEquals(vt.get_default_branch().identifier, second_branch.identifier)
+        # Set default branch to unknown branch should raise ValueError
+        with self.assertRaises(ValueError):
+            vt.set_default_branch(branch.identifier)
 
 
 if __name__ == '__main__':
