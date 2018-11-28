@@ -50,7 +50,7 @@ class FileStoreCommands(Command):
                 print 'File store (' + self.filestore.base_directory + ')'
                 files = self.filestore.list_files()
                 for fh in files:
-                    output = [fh.name(), fh.identifier]
+                    output = [fh.name, fh.identifier]
                     if not fh.file_format is None:
                         output.append(fh.file_format)
                     print '\t'.join(output)
@@ -59,7 +59,7 @@ class FileStoreCommands(Command):
         elif len(tokens) == 3:
             if tokens[0].lower() == 'upload' and tokens[1].lower() == 'file':
                 fh = self.filestore.upload_file(tokens[2])
-                print 'Uploaded file ' + fh.name() + ' as ' + fh.identifier
+                print 'Uploaded file ' + fh.name + ' as ' + fh.identifier
                 return True
             elif tokens[0].lower() == 'cleanup' and tokens[1].lower() == 'file' and tokens[2].lower() == 'store':
                 count = self.filestore.cleanup(active_files=[])
