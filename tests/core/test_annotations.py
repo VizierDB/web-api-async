@@ -133,6 +133,21 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         val = annotations.find_one('A')
         self.assertEquals(val, 2)
 
+    def test_update(self):
+        """Test updating an annotation set from a given dictionary."""
+        annotations = DefaultAnnotationSet()
+        annotations.add('A', 1)
+        annotations.add('B', 1)
+        annotations.add('B', 2)
+        annotations.add('C', 3)
+        annotations.update({'A': 4, 'B': [2, 3], 'D': 7})
+        self.assertEquals(annotations.find_one('A'), 4)
+        self.assertEquals(annotations.find_one('C'), 3)
+        self.assertEquals(annotations.find_one('D'), 7)
+        self.assertEquals(len(annotations.find_all('B')), 2)
+        for val in [2, 3]:
+            self.assertTrue(val in annotations.find_all('B'))
+
     def test_update_empty_set(self):
         """Test functionality that adds to an empty annotation set."""
         # Create an empty properties file

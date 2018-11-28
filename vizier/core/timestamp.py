@@ -19,7 +19,7 @@ timestamps.
 """
 
 import datetime
-
+import time
 
 def get_current_time():
     """Return timestamp for current system time in UTC time zone.
@@ -49,3 +49,21 @@ def to_datetime(timestamp):
         return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
     except ValueError:
         return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S')
+
+
+def utc_to_local(utc_datetime):
+    """Convert datatime in UTC time zone to local time.
+
+    Parameters
+    ----------
+    utc_datetime: datatime.datetime
+        Timestamp in UCT time zone
+
+    Returns
+    -------
+    datatime.datetime
+    """
+    # source: https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime-with-python
+    now_timestamp = time.time()
+    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+    return utc_datetime + offset

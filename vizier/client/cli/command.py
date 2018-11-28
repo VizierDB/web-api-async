@@ -48,3 +48,40 @@ class Command(object):
     def help(self):
         """Print a simple help statement for the command."""
         raise NotImplementedError
+
+    def output(self, rows):
+        """Output the given rows in tabular format. Each rows is a list of
+        string values. All rows are expected to have the sam elength. The first
+        row is the table header.
+
+        Parameters
+        ----------
+        rows: list(string)
+            List of rows in the table
+        """
+        # Determine the longest value for each column.
+        columns = [0] * len(rows[0])
+        for row in rows:
+            for col in range(len(columns)):
+                l = len(row[col])
+                if l > columns[col]:
+                    columns[col] = l
+        # Create format string
+        format = None
+        divider = list()
+        for col_len in columns:
+            f = '%-' + str(col_len) + 's'
+            if format is None:
+                format = f
+            else:
+                format += ' | ' + f
+            if len(divider) in [0, len(columns) - 1]:
+                i = 1
+            else:
+                i = 2
+            divider.append('-' * (col_len + i))
+        # Print fomrated rows
+        print format % tuple(rows[0])
+        print '|'.join(divider)
+        for row in rows[1:]:
+            print format % tuple(row)

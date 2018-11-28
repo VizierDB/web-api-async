@@ -151,4 +151,4 @@ class ViztrailRepository(VizierSystemComponent):
         -------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        return list(self.viztrails)
+        return self.viztrails.values()

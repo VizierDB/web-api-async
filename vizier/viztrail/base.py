@@ -141,20 +141,19 @@ class ViztrailHandle(NamedObject):
         self.created_at = created_at if not created_at is None else get_current_time()
 
     @abstractmethod
-    def create_branch(self, branch_id, provenance, properties=None, workflow=None):
-        """Create a new branch. If the workflow is given the new branch contains
-        exactly this workflow. Otherwise, the branch is empty.
+    def create_branch(self, provenance=None, properties=None, modules=None):
+        """Create a new branch. If the list of workflow modules is given this
+        defins the branch head. Otherwise, the branch is empty.
 
         Parameters
         ----------
-        branch_id : string
-            Unique identifier for the new branch branch
         provenance: vizier.viztrail.base.BranchProvenance
             Provenance information for the new branch
         properties: dict, optional
             Set of properties for the new branch
-        workflow: vizier.viztrail.workflow.WorkflowHandle, optional
-            Head of branch
+        modules: list(string), optional
+            List of module identifier for the modules in the workflow at the
+            head of the branch
 
         Returns
         -------

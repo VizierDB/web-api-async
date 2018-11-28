@@ -158,6 +158,16 @@ class FileStore(VizierSystemComponent):
         raise NotImplementedError
 
     @abstractmethod
+    def list_files(self):
+        """Get list of file handles for all uploaded files.
+
+        Returns
+        -------
+        list(vizier.filestore.base.FileHandle)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def upload_file(self, filename):
         """Create a new entry from a given local file. Will make a copy of the
         given file.

@@ -22,6 +22,8 @@ directories and files on the file system. Other implementations might maintain
 the resources as documents in a document store.
 """
 
+import os
+
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.core.system import build_info
@@ -175,6 +177,10 @@ class OSViztrailRepository(ViztrailRepository):
         # Raise an exception if the pase directory argument is not given
         if not PARA_DIRECTORY in properties:
             raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
+        # Create the base directory if it does not exist
+        base_directory = properties[PARA_DIRECTORY]
+        if not os.path.isdir(base_directory):
+            os.makedirs(base_directory)
         # If the keep deleted files argument is given use it. By default all
         # files are deleted and not kept.
         if PARA_KEEP_DELETED in properties:
@@ -187,7 +193,7 @@ class OSViztrailRepository(ViztrailRepository):
         else:
             identifier_factory = get_short_identifier
         return OSViztrailRepository(
-            base_path=properties[PARA_DIRECTORY],
+            base_path=base_directory,
             object_store=DefaultObjectStore(
                 identifier_factory=identifier_factory,
                 keep_deleted_files=keep_deleted

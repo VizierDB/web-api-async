@@ -22,9 +22,9 @@ class FileStoreApi(object):
     """API wrapper around the file store object that manages the file store of
     the vizier instance.
 
-    At this point the only file store method that is visible to the outside is
-    the file upload. All other file store methods are for internal use only and
-    therefore not exposed via the API.
+    At this point the only file store methods that is visible to the outside are
+    file listing and file upload. All other file store methods are for internal
+    use only and therefore not exposed via the API.
     """
     def __init__(self, filestore):
         """Initialize the object that manages the file store of the Vizier
@@ -37,6 +37,15 @@ class FileStoreApi(object):
         """
         self.filestore = filestore
 
+    def list_files(self):
+        """Get list of file handles for all uploaded files.
+
+        Returns
+        -------
+        list(vizier.filestore.base.FileHandle)
+        """
+        return self.filestore.list_files()
+        
     def upload_file(self, filename):
         """Upload a given file to the file store. Does not expect a file of a
         specific type. The base name of the given file will be the name of the

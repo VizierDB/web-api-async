@@ -55,6 +55,9 @@ class TestOSViztrailRepository(unittest.TestCase):
         vt_folder = os.path.join(REPO_DIR, vt2.identifier)
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
         self.assertEquals(len(repo.list_viztrails()), 2)
+        # Ensure that each element in the listing has an identifier
+        for vt in repo.list_viztrails():
+            self.assertIsNotNone(vt.identifier)
         self.assertIsNotNone(repo.get_viztrail(vt1.identifier))
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         self.assertNotEqual(vt1.identifier, vt2.identifier)

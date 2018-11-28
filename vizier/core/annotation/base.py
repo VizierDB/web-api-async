@@ -224,7 +224,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         if not self.writer is None and persist:
             self.writer.store(self.elements)
 
-    def delete(self, key, value=None):
+    def delete(self, key, value=None, persist=True):
         """Delete the annotations for the given key. If the optional value is
         None all annotated values for the given key are removed. If the value is
         not None only the resulting (key,value) pair will be removed.
@@ -237,6 +237,8 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         key: string
             Unique property key
         value: scalar, optional
+        persist: bool, optional
+            Flag indicating whether the changes are to be persisted immediately
 
         Returns
         -------
@@ -270,7 +272,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                 del self.elements[key]
             # This part is only reached if the annotation set has changed. If
             # the annotation store is set we persist the changes
-            if not self.writer is None:
+            if not self.writer is None and persist:
                 self.writer.store(self.elements)
             return True
         return False
@@ -339,3 +341,40 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         else:
             # Unknown key. Return default value
             return default_value
+
+    def update(self, properties):
+        """Update the current properties based on the values in the dictionary.
+
+        The (key, value)-pairs in the properties dictionary define the update
+        operations. Values are expected to be either None, a scalar value (i.e.,
+        int, float, or string) or a list of scalar values. If the value is None
+        the corresponding project property is deleted. Otherwise, the
+        corresponding property will be replaced by the value or the values in a
+        given list of values.
+        """
+        for key in properties:
+            value = properties[key]
+            if value is None:
+                self.delete(key=key, persist=False)
+            elif isinstance(value, list):
+                if len(value) > 0:
+                    self.add(
+                        key=key,
+                        value=value[0],
+                        replace=True,
+                        persist=False
+                    )
+                    for i in range(1, len(value)):
+                        self.add(
+                            key=key,
+                            value=value[i],
+                            replace=False,
+                            persist=False
+                        )
+                else:
+                    self.delete(key=key, persist=False)
+            else:
+                self.add(key=key, value=value, replace=True, persist=False)
+        # Persist changes
+        if not self.writer is None:
+            self.writer.store(self.elements)

@@ -18,6 +18,10 @@
 directly interact with the viztrail repository component of the Vizier instance.
 """
 
+from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.branch import BranchProvenance
+
+
 class ViztrailRepositoryApi(object):
     """API wrapper around the viztrails repository object that manages viztrails
     for the Vizier instance. Note that viztrails are originally referred to as
@@ -81,7 +85,7 @@ class ViztrailRepositoryApi(object):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        return self.viztrails.get_viztrail(viztrail_id=project_id)
+        return self.repository.get_viztrail(viztrail_id=project_id)
 
     def list_projects(self):
         """Returns a list of viztrail handles for all projects that are
@@ -91,7 +95,7 @@ class ViztrailRepositoryApi(object):
         ------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        return self.viztrails.list_viztrails()
+        return self.repository.list_viztrails()
 
     def update_project_properties(self, project_id, properties):
         """Update the set of user-defined properties for a project with given
@@ -120,93 +124,28 @@ class ViztrailRepositoryApi(object):
         vizier.viztrail.base.ViztrailHandle
         """
         # Retrieve project viztrail from repository to ensure that it exists.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Update properties that are associated with the viztrail. Make sure
-        # that a new project name, if given, is not the empty string.
-        if 'name' in properties:
-            project_name = properties['name']
-            if not project_name is None:
-                if project_name == '':
-                    raise ValueError('not a valid project name')
-        viztrail.properties.update_properties(properties)
-        # Return handle for modified viztrail
+        # Ensure that the project name is not set to an empty string
+        if PROPERTY_NAME in properties:
+            name = properties[PROPERTY_NAME]
+            if name is None or name == '':
+                raise ValueError('not a valid project name')
+        viztrail.properties.update(properties)
         return viztrail
 
     # --------------------------------------------------------------------------
-    # Workflows
+    # Branches
     # --------------------------------------------------------------------------
-    def append_module(self, project_id, branch_id, workflow_version, command, before_id=-1, includeDataset=None):
-        """Insert module to existing workflow and execute the resulting
-        workflow. If before_id is equal or greater than zero the module will be
-        inserted at the specified position in the workflow otherwise it is
-        appended at the end of the workflow.
-
-        Raise a ValueError if the given command does not specify a valid
-        workflow command.
-
-        Returns None if no project, branch, or workflow with given identifiers
-        exists.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        branch_id: string
-            Unique branch identifier
-        workflow_version: int
-            Version number of the modified workflow
-        command : vizier.workflow.module.ModuleCommand
-            Specification of the workflow module
-        before_id : int, optional
-            Insert new module before module with given identifier. Append at end
-            of the workflow if negative
-        includeDataset: dict, optional
-            If included the result will contain the modified dataset rows
-            starting at the given offset. Expects a dictionary containing name
-            and offset keys.
-
-        Returns
-        -------
-        dict
-            Serialization of the modified workflow handle.
-        """
-        # Evaluate command against the HEAD of the current work trail branch.
-        # The result is None if the viztrail or branch is unknown
-        viztrail = self.viztrails.append_workflow_module(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=workflow_version,
-            command=command,
-            before_id=before_id
-        )
-        if viztrail is None:
-            return None
-        # Get modified workflow to return workflo handle
-        branch = viztrail.branches[branch_id]
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=branch.workflows[-1].version
-        )
-        return serialize.WORKFLOW_UPDATE_RESULT(
-            viztrail,
-            workflow,
-            config=self.config,
-            dataset_cache=self.get_dataset_handle,
-            urls=self.urls,
-            includeDataset=includeDataset,
-            dataset_serializer=self.get_dataset
-        )
-
-    def create_branch(self, project_id, branch_id, workflow_version, module_id, properties):
-        """Create a new workflow branch for a given project. The version and
-        module identifier specify the parent of the new branch. The new branch
-        will have it's properties set according to the given dictionary.
+    def create_branch(self, project_id, branch_id, workflow_id, module_id, properties=None):
+        """Create a new branch for a given project. The branch_id, workflow_id,
+        and module_id specify the branch point. The values are either all None,
+        in which case an empty branch is created, or all not None.
 
         Returns None if the specified project does not exist. Raises ValueError
-        if the specified branch or module identifier do not exists.
+        if the specified branch point does not exists or if the combination of
+        values is invalid.
 
         Parameters
         ----------
@@ -214,8 +153,8 @@ class ViztrailRepositoryApi(object):
             Unique project identifier
         branch_id: int
             Unique branch identifier
-        workflow_version: int
-            Version number of the modified workflow
+        workflow_id: int
+            Workflow identifier in branch history
         module_id: int
             Module identifier in given workflow version
         properties: dict()
@@ -223,28 +162,52 @@ class ViztrailRepositoryApi(object):
 
         Returns
         -------
-        dict
+        vizier.viztrail.branch.BranchHandle
         """
+        # Ensure that the branch point specified properly
+        if branch_id is None and (not workflow_id is None or not module_id is None):
+            raise ValueError('invalid branch point specification')
+        elif not branch_id is None and (workflow_id is None or module_id is None):
+            raise ValueError('invalid branch point specification')
         # Retrieve project viztrail from repository to ensure that it exists.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Create new branch. The result is None if the project of branch do not
-        # exit.
-        branch = self.viztrails.create_branch(
-            viztrail_id=project_id,
-            source_branch=branch_id,
-            workflow_version=workflow_version,
-            module_id=module_id,
-            properties=properties
-        )
-        if branch is None:
-            return None
-        return serialize.BRANCH_HANDLE(viztrail, branch, self.urls)
+        if branch_id is None:
+            # Create branch and return handle
+            return viztrail.create_branch(properties=properties)
+        else:
+            # Retrieve the branch, workflow and module. If either is None we
+            # raise an exception.
+            branch = viztrail.get_branch(branch_id)
+            if branch is None:
+                raise ValueError('unknown branch \'' + str(branch_id) + '\'')
+            workflow = branch.get_workflow(workflow_id)
+            if workflow is None:
+                raise ValueError('unknown workflow \'' + str(workflow_id) + '\'')
+            # Create list of modules for the new branch. The branch will include
+            # all modules up until (including) the specified module. If the
+            # module is not found we raise an exception
+            modules = list()
+            for m in workflow.modules:
+                modules.append(m)
+                if m.identifier == module_id:
+                    break
+            if len(modules) == 0 or modules[-1].identifier != module_id:
+                raise ValueError('unknown module \'' + str(module_id) + '\'')
+            # Create branch and return handle
+            return viztrail.create_branch(
+                provenance=BranchProvenance(
+                    source_branch=branch_id,
+                    workflow_id=workflow_id,
+                    module_id=module_id
+                ),
+                properties=properties,
+                modules=modules
+            )
 
     def delete_branch(self, project_id, branch_id):
-        """Delete the branch with the given identifier from the given
-        project.
+        """Delete the branch with the given identifier from the given project.
 
         Returns True if the branch existed and False if the project or branch
         are unknown.
@@ -262,64 +225,14 @@ class ViztrailRepositoryApi(object):
         -------
         bool
         """
-        # Delete viztrail branch. The result is None if either the viztrail or
-        # the branch does not exist.
-        viztrail = self.viztrails.delete_branch(
-            viztrail_id=project_id,
-            branch_id=branch_id
-        )
-        return not viztrail is None
-
-    def delete_module(self, project_id, branch_id, workflow_version, module_id):
-        """Delete a module in a project workflow branch and execute the
-        resulting workflow.
-
-        Returns the modified workflow descriptor on success. The result is None
-        if no project, branch, or module with given identifier exists.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        branch_id: string
-            Unique workflow branch identifier
-        workflow_version: int
-            Version number of the modified workflow
-        module_id : int
-            Module identifier
-
-        Returns
-        -------
-        dict
-        """
         # Retrieve project viztrail from repository to ensure that it exists.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Delete module from the viztrail branch. The result is False if the
-        # viztrail branch or module is unknown
-        success = self.viztrails.delete_workflow_module(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=workflow_version,
-            module_id=module_id
-        )
-        if not success:
-            return None
-        # Return workflow handle on success
-        branch = viztrail.branches[branch_id]
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=branch.workflows[-1].version
-        )
-        return serialize.WORKFLOW_UPDATE_RESULT(
-            viztrail,
-            workflow,
-            dataset_cache=self.get_dataset_handle,
-            config=self.config,
-            urls=self.urls
-        )
+        # Delete viztrail branch. The result is True if the branch existed. This
+        # will raise an exception if an attempt is made to delete the default
+        # branch.
+        return viztrail.repository.delete_branch(branch_id=branch_id)
 
     def get_branch(self, project_id, branch_id):
         """Retrieve a branch from a given project.
@@ -335,157 +248,17 @@ class ViztrailRepositoryApi(object):
 
         Returns
         -------
-        dict
-            Serialization of the project workflow
+        vizier.viztrail.branch.BranchHandle
         """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        # Retrieve project viztrail from repository to ensure that it exists.
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Return serialization if branch does exist, otherwise None
-        if branch_id in viztrail.branches:
-            branch = viztrail.branches[branch_id]
-            return serialize.BRANCH_HANDLE(viztrail, branch, self.urls)
-
-    def get_dataset_chart_view(self, project_id, branch_id, version, module_id, view_id):
-        """
-        """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
-            return None
-        # Retrieve workflow from repository. The result is None if the branch
-        # does not exist.
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=version
-        )
-        if workflow is None:
-            return None
-        # Find the workflow module and ensure that the referenced view is
-        # defined for the module.
-        datasets = None
-        v_handle = None
-        for module in workflow.modules:
-            for obj in module.stdout:
-                if obj['type'] == serialize.O_CHARTVIEW:
-                    view = ChartViewHandle.from_dict(obj['data'])
-                    if view.identifier == view_id:
-                        v_handle = view
-            if module.identifier == module_id:
-                datasets = module.datasets
-                break
-        if not datasets is None and not v_handle is None:
-            if not v_handle.dataset_name in datasets:
-                raise ValueError('unknown dataset \'' + v_handle.dataset_name + '\'')
-            dataset_id = datasets[v_handle.dataset_name]
-            rows = self.datastore.get_dataset_chart(dataset_id, v_handle)
-            ref = self.urls.workflow_module_view_url(project_id, branch_id,  version, module_id,  view_id)
-            return serialize.DATASET_CHART_VIEW(
-                view=v_handle,
-                rows=rows,
-                self_ref=self.urls.workflow_module_view_url(
-                    project_id,
-                    branch_id,
-                    version,
-                    module_id,
-                    view_id
-                )
-            )
-
-    def get_workflow(self, project_id, branch_id, workflow_version=-1):
-        """Retrieve a workflow from a given project.
-
-        Returns None if no project, branch, or workflow with given identifiers
-        exists.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        branch_id: string
-            Unique workflow branch identifier
-        workflow_version: int, optional
-            Version number of the modified workflow
-
-        Returns
-        -------
-        dict
-            Serialization of the project workflow
-        """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
-            return None
-        # Retrieve workflow from repository. The result is None if the branch
-        # does not exist.
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=workflow_version
-        )
-        if workflow is None:
-            return None
-        # If an explicit workflow version was requested the workflow will be
-        # marked as read only.
-        return serialize.WORKFLOW_HANDLE(
-            viztrail,
-            workflow,
-            dataset_cache=self.get_dataset_handle,
-            config=self.config,
-            urls=self.urls,
-            read_only=(workflow_version != -1)
-        )
-
-    def get_workflow_modules(self, project_id, branch_id, workflow_version=-1):
-        """Get list of module handles for a workflow from a given project.
-
-        Returns None if no project, branch, or workflow with given identifiers
-        exists.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        branch_id: string
-            Unique workflow branch identifier
-        workflow_version: int, optional
-            Version number of the modified workflow
-
-        Returns
-        -------
-        dict
-            Serialization of the project workflow modules
-        """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
-            return None
-        # Retrieve workflow from repository. The result is None if the branch
-        # does not exist.
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=workflow_version
-        )
-        if workflow is None:
-            return None
-        # If an explicit workflow version was requested the workflow will be
-        # marked as read only.
-        return serialize.WORKFLOW_MODULES(
-            viztrail,
-            workflow,
-            dataset_cache=self.get_dataset_handle,
-            config=self.config,
-            urls=self.urls,
-            read_only=(workflow_version != -1)
-        )
+        return viztrail.get_branch(branch_id)
 
     def list_branches(self, project_id):
-        """Get a list of all branches for a given project. The result contains a
-        list of branch descriptors. The result is None, if the specified project
-        does not exist.
+        """Get a list of all branches for a given project. The result is a list
+        of branch handles or None, if the specified project does not exist.
 
         Parameters
         ----------
@@ -494,76 +267,28 @@ class ViztrailRepositoryApi(object):
 
         Returns
         -------
-        dict
+        list(vizier.viztrail.branch.BranchHandle)
         """
         # Retrieve project viztrail from repository to ensure that it exists.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if not viztrail is None:
-            return serialize.BRANCH_LISTING(viztrail, self.urls)
-
-    def replace_module(self, project_id, branch_id, workflow_version, module_id, command, includeDataset=None):
-        """Replace a module in a project workflow and execute the result.
-
-        Raise a ValueError if the given command does not specify a valid
-        workflow command.
-
-        Returns None if no project with given identifier exists or if the
-        specified module identifier is unknown.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        branch_id: string
-            Unique workflow branch identifier
-        workflow_version: int
-            Version number of the modified workflow
-        module_id : int
-            Module identifier
-        command : vizier.workflow.module.ModuleCommand
-            Specification of the workflow module
-        includeDataset: dict, optional
-            If included the result will contain the modified dataset rows
-            starting at the given offset. Expects a dictionary containing name
-            and offset keys.
-
-        Returns
-        -------
-        dict
-            Serialization of the modified workflow handle.
-        """
-        # Evaluate command against the HEAD of the current work trail branch.
-        # The result is None if the viztrail or branch is unknown
-        viztrail = self.viztrails.replace_workflow_module(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=workflow_version,
-            module_id=module_id,
-            command=command
-        )
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Get modified workflow to return workflow handle
-        branch = viztrail.branches[branch_id]
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=branch.workflows[-1].version
-        )
-        return serialize.WORKFLOW_UPDATE_RESULT(
-            viztrail,
-            workflow,
-            dataset_cache=self.get_dataset_handle,
-            config=self.config,
-            urls=self.urls,
-            includeDataset=includeDataset,
-            dataset_serializer= self.get_dataset
-        )
+        return viztrail.list_branches()
 
-    def update_branch(self, project_id, branch_id, properties):
+    def update_branch_properties(self, project_id, branch_id, properties):
         """Update properties for a given project workflow branch. Returns the
-        handle for the modified workflow or None if the project or branch do not
+        handle for the modified branch or None if the project or branch do not
         exist.
+
+        The (key, value)-pairs in the properties dictionary define the update
+        operations. Values are expected to be either None, a scalar value (i.e.,
+        int, float, or string) or a list of scalar values. If the value is None
+        the corresponding project property is deleted. Otherwise, the
+        corresponding property will be replaced by the value or the values in a
+        given list of values.
+
+        Raises a ValueError if the name property of the viztrail is deleted or
+        updated to an empty string.
 
         Parameters
         ----------
@@ -577,19 +302,19 @@ class ViztrailRepositoryApi(object):
 
         Returns
         -------
-        dict
+        vizier.viztrail.branch.BranchHandle
         """
-        # Get the viztrail to ensure that it exists
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        # Retrieve project viztrail and branch to ensure that both exist
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
             return None
-        # Get the specified branch
-        if not branch_id in viztrail.branches:
+        branch = viztrail.get_branch(branch_id)
+        if branch is None:
             return None
-        # Update properties that are associated with the workflow
-        viztrail.branches[branch_id].properties.update_properties(properties)
-        return serialize.BRANCH_HANDLE(
-            viztrail,
-            viztrail.branches[branch_id],
-            urls=self.urls
-        )
+        # Ensure that the branch name is not set to an empty string
+        if PROPERTY_NAME in properties:
+            name = properties[PROPERTY_NAME]
+            if name is None or name == '':
+                raise ValueError('not a valid branch name')
+        branch.properties.update(properties)
+        return branch

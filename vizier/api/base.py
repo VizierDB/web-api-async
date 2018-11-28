@@ -17,8 +17,7 @@
 """Vizier API - Implements all methods of the API to interact with a running
 Vizier instance.
 
-The API module separates the implementation from the specifics of the Web
-server (e.g., Flask or Tornado). The module orchestrates the interplay
+The API orchestrates the interplay
 between different components such as the viztrail repository that manages
 viztrails and the workflow engine that executes modules in viztrail workflow
 versions.
@@ -28,6 +27,7 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 from vizier.api.filestore import FileStoreApi
+from vizier.api.viztrails import ViztrailRepositoryApi
 
 
 class VizierApi(object):
@@ -39,15 +39,18 @@ class VizierApi(object):
     that are necessary for the Web Service, i.e., file store, data store,
     viztrail repository, and workflow execution engine.
     """
-    def __init__(self, filestore):
+    def __init__(self, filestore, viztrails_repository):
         """Initialize the API components.
 
         Parameters
         ----------
         filestore: vizier.filestore.base.FileStore
             Backend store for uploaded files
+        viztrails_repository: vizier.viztrail.repository.ViztrailRepository
+            Viztrail manager for the API instance
         """
         self.filestore = FileStoreApi(filestore)
+        self.viztrails = ViztrailRepositoryApi(viztrails_repository)
 
     # --------------------------------------------------------------------------
     # Service

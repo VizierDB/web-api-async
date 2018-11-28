@@ -26,7 +26,7 @@ class FileStoreCommands(Command):
 
         Parameters
         ----------
-        api: vizier.api.VizierApi
+        api: vizier.api.base.VizierApi
             Vizier Api instance
         """
         self.filestore = api.filestore
@@ -47,14 +47,19 @@ class FileStoreCommands(Command):
         """
         if len(tokens) == 2:
             if tokens[0] == 'list' and tokens[1] == 'files':
-                print 'File store (' + self.filestore.filestore.base_directory + ')'
-                files = self.filestore.filestore.list_files()
+                files = self.filestore.list_files()
+                rows = list()
+                rows.append(['Name', 'Identifier', 'Format'])
                 for fh in files:
                     output = [fh.name, fh.identifier]
                     if not fh.file_format is None:
                         output.append(fh.file_format)
-                    print '\t'.join(output)
-                print str(len(files)) + ' file(s)'
+                    else:
+                        output.append('?')
+                    rows.append(output)
+                print
+                self.output(rows)
+                print '\n' + str(len(files)) + ' file(s)\n'
                 return True
         elif len(tokens) == 3:
             if tokens[0] == 'upload' and tokens[1] == 'file':
@@ -69,7 +74,7 @@ class FileStoreCommands(Command):
 
     def help(self):
         """Print help statement."""
-        print 'File store'
+        print '\nFile store'
         print '  cleanup file store'
         print '  list files'
         print '  upload file <file-path>'

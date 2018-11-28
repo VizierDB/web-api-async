@@ -17,6 +17,7 @@
 """Simple command line interpreter to test functionality of the vizier Api."""
 
 from vizier.client.cli.filestore import FileStoreCommands
+from vizier.client.cli.viztrails import ViztrailsCommands
 
 
 class CommandInterpreter(object):
@@ -32,7 +33,8 @@ class CommandInterpreter(object):
         """
         self.api = api
         self.commands = [
-            FileStoreCommands(api)
+            FileStoreCommands(api),
+            ViztrailsCommands(api)
         ]
 
     def eval(self, tokens):
@@ -46,15 +48,12 @@ class CommandInterpreter(object):
         """
         # Check if the line equals 'help'.
         if len(tokens) == 1 and tokens[0] == 'help':
-            print '\nSupported commands'
-            print '------------------\n'
+            print 'Vizier Command Line Interface'
             for cmd in self.commands:
                 cmd.help()
-            print
         else:
             for cmd in self.commands:
                 if cmd.eval(tokens):
-                    print
                     return
             print 'unknown command: ' + ' '.join(tokens)
 

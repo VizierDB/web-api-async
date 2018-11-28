@@ -28,7 +28,10 @@ def main(args):
     """
     # Initialize the vizier Api.
     config = AppConfig()
-    api = VizierApi(filestore=config.filestore.create_instance())
+    api = VizierApi(
+        filestore=config.filestore.create_instance(),
+        viztrails_repository=config.viztrails.create_instance()
+    )
     # Run the command interpreter on the given arguments
     CommandInterpreter(api).eval(args)
 
