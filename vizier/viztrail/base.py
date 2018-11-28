@@ -103,8 +103,6 @@ class ViztrailHandle(NamedObject):
         Unique viztrail identifier
     created_at : datetime.datetime
         Timestamp of viztrail creation (UTC)
-    exec_env_id: string
-        Identifier of the execution environment that is used for the viztrail
     last_modified_at : datetime.datetime
         Timestamp when viztrail was last modified (UTC). This does not include
         changes to the viztrail properties but only to branches and workflows.
@@ -114,8 +112,7 @@ class ViztrailHandle(NamedObject):
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
-        self, identifier, exec_env_id, properties, branches, default_branch,
-        created_at=None
+        self, identifier, properties, branches, default_branch, created_at=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -123,9 +120,6 @@ class ViztrailHandle(NamedObject):
         ----------
         identifier : string
             Unique viztrail identifier
-        exec_env_id: string
-            Identifier of the execution environment that is used for the
-            viztrail
         properties: vizier.core.annotation.base.ObjectAnnotationSet
             Handler for user-defined properties
         branches: list(vizier.viztrail.branch.BranchHandle)
@@ -137,7 +131,6 @@ class ViztrailHandle(NamedObject):
         """
         super(ViztrailHandle, self).__init__(properties=properties)
         self.identifier = identifier
-        self.exec_env_id = exec_env_id
         self.branches = dict()
         # Initialize the branch index from the given list (if present)
         for b in branches:

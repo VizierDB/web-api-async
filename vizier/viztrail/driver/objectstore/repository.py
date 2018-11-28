@@ -23,11 +23,18 @@ the resources as documents in a document store.
 """
 
 from vizier.core.io.base import DefaultObjectStore
+from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.core.system import build_info
 from vizier.core.util import init_value
 from vizier.viztrail.driver.objectstore import VERSION_INFO
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.repository import ViztrailRepository
+
+
+"""Configuration parameter."""
+PARA_DIRECTORY = 'directory'
+PARA_KEEP_DELETED = 'keepDeletedFiles'
+PARA_LONG_IDENTIFIER = 'useLongIdentifier'
 
 
 """Resource identifier"""
@@ -77,7 +84,7 @@ class OSViztrailRepository(ViztrailRepository):
         # calling the constructor of the super class
         super(OSViztrailRepository, self).__init__(
             build=build_info(
-                "vizier.viztrail.driver.os.repository.OSViztrailRepository",
+                "vizier.viztrail.driver.objectstore.viztrail.repository.OSViztrailRepository",
                 version_info=VERSION_INFO
             ),
             viztrails=OSViztrailRepository.load_repository(
@@ -87,22 +94,19 @@ class OSViztrailRepository(ViztrailRepository):
             )
         )
 
-    def create_viztrail(self, exec_env_id, properties=None):
-        """Create a new viztrail. Every viztrail is associated with an execution
-        environment. The environment is set when the viztrail is created and
-        can not change throughout the life-cycle of the viztrail.
+    def create_viztrail(self, properties=None):
+        """Create a new viztrail. The initial set of properties is an optional
+        dictionary of (key,value)-pairs where all values are expected to either
+        be scalar values or a list of scalar values.
 
         Parameters
         ----------
-        exec_env_id: string
-            Identifier of the execution environment that is used for the
-            viztrail
         properties: dict, optional
             Set of properties for the new viztrail
 
         Returns
         -------
-        vizier.viztrail.base.ViztrailHandle
+        vizier.viztrail.driver.objectstore.viztrail.OSViztrailHandle
         """
         # Get unique identifier for new viztrail and viztrail directory. Raise
         # runtime error if the returned identifier is not unique.
@@ -111,7 +115,6 @@ class OSViztrailRepository(ViztrailRepository):
         # Create materialized viztrail resource
         vt = OSViztrailHandle.create_viztrail(
             identifier=identifier,
-            exec_env_id=exec_env_id,
             properties=properties,
             base_path=viztrail_path,
             object_store=self.object_store
@@ -155,6 +158,43 @@ class OSViztrailRepository(ViztrailRepository):
             return False
 
     @staticmethod
+    def init(properties):
+        """Create an instance of the viztrails repository from a given
+        dictionary of configuration arguments. At this point only the base
+        directory is expected as to be present in the properties dictionary.
+
+        Parameter
+        ---------
+        properties: dict()
+            Dictionary of configuration arguments
+
+        Returns
+        -------
+        vizier.viztrail.driver.objectstore.repository.OSViztrailRepository
+        """
+        # Raise an exception if the pase directory argument is not given
+        if not PARA_DIRECTORY in properties:
+            raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
+        # If the keep deleted files argument is given use it. By default all
+        # files are deleted and not kept.
+        if PARA_KEEP_DELETED in properties:
+            keep_deleted = properties[PARA_KEEP_DELETED]
+        else:
+            keep_deleted = False
+        # By default a factory for short identifier is used
+        if PARA_LONG_IDENTIFIER in properties and properties[PARA_LONG_IDENTIFIER]:
+            identifier_factory = get_unique_identifier
+        else:
+            identifier_factory = get_short_identifier
+        return OSViztrailRepository(
+            base_path=properties[PARA_DIRECTORY],
+            object_store=DefaultObjectStore(
+                identifier_factory=identifier_factory,
+                keep_deleted_files=keep_deleted
+            )
+        )
+
+    @staticmethod
     def load_repository(base_path, viztrails_index, object_store=None):
         """Load viztrails resources. Each entry in the list identified by the
         viztrails_index argument is expected to identify a subfolder in the
@@ -171,7 +211,7 @@ class OSViztrailRepository(ViztrailRepository):
 
         Returns
         -------
-        list(vizier.viztrail.driver.fs.viztrail.OSViztrailHandle)
+        list(vizier.viztrail.driver.objectstore.viztrail.OSViztrailHandle)
         """
         viztrails = list()
         for identifier in object_store.read_object(viztrails_index):

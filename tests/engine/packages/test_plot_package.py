@@ -16,13 +16,13 @@ class TestPlotCommandValidation(unittest.TestCase):
     def test_create_plot(self):
         """Test validation of the create plot command."""
         create_plot(
-            ds_name='ds',
+            dataset_name='ds',
             chart_name='My Chart',
             series=[{'column': 1}],
             validate=True
         )
         create_plot(
-            ds_name='ds',
+            dataset_name='ds',
             chart_name='My Chart',
             series=[{'column': 1}],
             xaxis_range='0:10',
@@ -31,7 +31,7 @@ class TestPlotCommandValidation(unittest.TestCase):
         # Have an error raised if values of invalid data type are given
         with self.assertRaises(ValueError):
             create_plot(
-                ds_name='ds',
+                dataset_name='ds',
                 chart_name='My Chart',
                 series=[{'column': 'abc'}],
                 xaxis_range='0:10',
@@ -39,7 +39,7 @@ class TestPlotCommandValidation(unittest.TestCase):
             )
         with self.assertRaises(ValueError):
             create_plot(
-                ds_name='ds',
+                dataset_name='ds',
                 chart_name='My Chart',
                 series=[{'column': 1, 'label': [], 'range': '0-10'}],
                 xaxis_range='0:10',
@@ -48,7 +48,7 @@ class TestPlotCommandValidation(unittest.TestCase):
         # Get dictionary serialization of command arguments. Ensure that we
         # can create a valid command instance from the returned result.
         obj = create_plot(
-            ds_name='ds',
+            dataset_name='ds',
             chart_name='My Chart',
             series=[{'column': 1}],
             xaxis_range='0:10',
@@ -77,7 +77,7 @@ class TestPlotCommandValidation(unittest.TestCase):
             )
         # Add an unknown argument to ensure that the validation fails
         obj = create_plot(
-            ds_name='ds',
+            dataset_name='ds',
             chart_name='My Chart',
             series=[{'column': 1}],
             xaxis_range='0:10',

@@ -189,7 +189,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             Flag indicating whether the changes are to be persisted immediately
         """
         # Ensure that the value is a scalar value
-        if not type(value) in [int, float, str, basestring]:
+        if value is None or not type(value) in [int, float, str, basestring]:
             raise ValueError('invalid annotation value')
         # Set the value if the replace flag is True or no prior annotation for
         # the given key exists

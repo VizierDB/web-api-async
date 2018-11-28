@@ -35,6 +35,7 @@ OBJ_METADATA = 'viztrail'
 OBJ_PROPERTIES = 'properties'
 
 """Json labels for serialized object."""
+KEY_CREATED_AT = 'createdAt'
 KEY_DEFAULT = 'isDefault'
 KEY_IDENTIFIER = 'id'
 
@@ -56,8 +57,8 @@ class OSViztrailHandle(ViztrailHandle):
     modules/        : Modules in viztrail workflows
     """
     def __init__(
-        self, identifier, exec_env_id, properties, base_path, branches,
-        default_branch, object_store=None, created_at=None, branch_index=None,
+        self, identifier, properties, base_path, branches, default_branch,
+        object_store=None, created_at=None, branch_index=None,
         branch_folder=None, modules_folder=None
     ):
         """Initialize the viztrail descriptor.
@@ -66,9 +67,6 @@ class OSViztrailHandle(ViztrailHandle):
         ----------
         identifier : string
             Unique viztrail identifier
-        exec_env_id: string
-            Identifier of the execution environment that is used for the
-            viztrail
         properties: vizier.core.annotation.base.ObjectAnnotationSet
             Handler for user-defined properties
         base_path: string
@@ -90,7 +88,6 @@ class OSViztrailHandle(ViztrailHandle):
         """
         super(OSViztrailHandle, self).__init__(
             identifier=identifier,
-            exec_env_id=exec_env_id,
             properties=properties,
             branches=branches,
             default_branch=default_branch,
@@ -140,7 +137,7 @@ class OSViztrailHandle(ViztrailHandle):
         return branch
 
     @staticmethod
-    def create_viztrail(identifier, exec_env_id, base_path, object_store=None, properties=None) :
+    def create_viztrail(identifier, base_path, object_store=None, properties=None) :
         """Create a new viztrail resource. Will create the base directory for
         the viztrail.
 
@@ -151,9 +148,6 @@ class OSViztrailHandle(ViztrailHandle):
         ----------
         properties: dict
             Set of properties for the new viztrail
-        exec_env_id: string
-            Identifier of the execution environment that is used for the
-            viztrail
         base_path: string
             Identifier for folder containing viztrail resources
         object_store: vizier.core.io.base.ObjectStore, optional
@@ -179,9 +173,8 @@ class OSViztrailHandle(ViztrailHandle):
         object_store.write_object(
             object_path=object_store.join(base_path, OBJ_METADATA),
             content={
-                'id': identifier,
-                'env': exec_env_id,
-                'createdAt': created_at.isoformat()
+                KEY_IDENTIFIER: identifier,
+                KEY_CREATED_AT: created_at.isoformat()
             }
         )
         # Create the default branch for the new viztrail
@@ -203,7 +196,6 @@ class OSViztrailHandle(ViztrailHandle):
         # Return handle for new viztrail
         return OSViztrailHandle(
             identifier=identifier,
-            exec_env_id=exec_env_id,
             properties=PersistentAnnotationSet(
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store,
@@ -278,9 +270,8 @@ class OSViztrailHandle(ViztrailHandle):
         metadata = object_store.read_object(
             object_store.join(base_path, OBJ_METADATA)
         )
-        identifier = metadata['id']
-        created_at = to_datetime(metadata['createdAt'])
-        exec_env_id = metadata['env']
+        identifier = metadata[KEY_IDENTIFIER]
+        created_at = to_datetime(metadata[KEY_CREATED_AT])
         # Load active branches. The branch index resource contains a list of
         # active branch identifiers.
         branch_folder = object_store.join(base_path, FOLDER_BRANCHES)
@@ -305,7 +296,6 @@ class OSViztrailHandle(ViztrailHandle):
         # Return handle for new viztrail
         return OSViztrailHandle(
             identifier=identifier,
-            exec_env_id=exec_env_id,
             properties=PersistentAnnotationSet(
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store

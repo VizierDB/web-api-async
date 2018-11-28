@@ -1,53 +1,69 @@
-Web API Configuration
-=====================
+Vizier API Configuration
+========================
 
-The Web API is configured using a configuration object that contains (i) the application settings and (ii) the list of available packages.
-
-
-Packages
---------
-Each package is represented by a dictionary that contains the definition of the commands (i.e., modules) that the package supports. Refer to the [Workflow Modules](https://github.com/VizierDB/web-api/blob/master/doc/workflow-modules.md) document for details on the structure of module definitions.
-
-By default, the API only supports the VizUAL and the system packages. All other packages have to be loaded explicitly when the application configuration object is created (see below). Packages are loaded from files that contain serializations of dictionaries with command definitions (either in Yaml or Json format). For an example have alook at the [Mimir Package Definition](https://github.com/VizierDB/web-api/blob/master/config/mimir.pckg.json).
+The Vizier API is configured using a configuration object that contains (i) API parameters and default settings, (ii) definition of the file store, (iii) definition of the data store, (iv) definition of the viztrails repository, and (v) the list of available packages.
 
 
-Settings
---------
+Configuration Parameters
+------------------------
 
-The application settings are divided into the following parts:
+The Api is configured using a dictionary of configuration parameters. The parameters are divided into the following parts:
 
 ```
-api:
+datastore:
+    module: Name of the Python module containing data store class
+    class: Class name of data store
+    properties: Dictionary of data store specific properties
+debug: Flag indicating whether server is started in debug mode
+filestore:
+    module: Name of the Python module containing file store class
+    class: Class name of file store
+    properties: Dictionary of file store specific properties
+logs:
+    server: Log file for Web Server
+packages: List of files, each containing the declaration of commands for a supported package
+viztrails:
+    module: Name of the Python module containing repository class
+    class: Class name of viztrails repository
+    properties: Dictionary of repository specific properties
+webservice:
     server_url: Url of the server (e.g., http://localhost)
     server_port: Public server port (e.g., 5000)
     server_local_port: Locally bound server port (e.g., 5000)
     app_path: Application path for Web API (e.g., /vizier-db/api/v1)
+    app_base_url: Concatenation of server_url, server_port and app_path
     doc_url: Url to API documentation
-fileserver:
-    directory: Path to base directory for file server
-    max_file_size: Maximum size for file uploads (in byte)
-envs:
-    - identifier: Execution environment identifier (i.e., BASIC or MIMIR)
-      name: Printable name of execution environment (used by UI)
-      description: Descriptive text for execution environment (used by UI)
-      default: Flag indicating if this is the default environment
-      datastore:
-          properties: Data store specific configuration properties
-          type: Data store type ['DEFAULT', 'MIMIR']
-      packages: [list of identifier for supported packages]
-viztrails:
-    directory: Base directory for storing viztrail information and meta-data
-defaults:
-    row_limit: Default row limit for requests that read datasets
-    max_row_limit: Maximum row limit for requests that read datasets (-1 for all)
-name: Web Service name
-debug: Flag indicating whether server is started in debug mode
-logs:
-    server: Log file for Web Server
-    engine: Flag to toggle loggin for workflow engine telemetry
+    name: Web Service name
+    defaults:
+        row_limit: Default row limit for requests that read datasets
+        max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
+        max_file_size: Maximum size for file uploads (in byte)
 ```
 
 The list of elements in the packages list for each execution environment has to correspond to identifier of default packages or packages that have been specified in the packages part of the configuration.
+
+
+Packages of Workflow Commands
+-----------------------------
+
+The commands that are available to be executed by workflow modules are defined in separate packages. Each package is represented by a dictionary that contains the definition of the commands (i.e., modules) that the package supports. Refer to [Workflow Modules](https://github.com/VizierDB/web-api/blob/master/doc/workflow-modules.md) for details on the structure of module definitions.
+
+By default, the API only supports the VizUAL and the system packages. All other packages have to be loaded explicitly when the application configuration object is created (see below). Packages are loaded from files that contain serializations of dictionaries with command definitions (either in Yaml or Json format). For an example have a look at the [Mimir Package Definition](https://github.com/VizierDB/web-api/blob/master/config/mimir.pckg.json).
+
+
+Components of Vizier Instance
+-----------------------------
+
+A running Vizier instance has four main components: (1)) data store, (2) file store, (3) viztrails repository, and (4) workflow execution engine. For each of these components different implementations are possible. When initializing the instance the components that are to be used are loaded based on the respective configuration parameters.
+
+
+## Configure the Default Viztrails Repository
+
+The configuration parameter for the default viztrails repository are:
+
+- *directory*: Path to base directory on file system where viztrails resources are being stored
+- *keepDeletedFiles*: Boolean flag that indicates whether files are being physicaly deleted (False) or kept (True) when a viztrail or branch is deleted. Default is False.
+- *useLongIdentifier*: Use long unique identifier if Ture or short eight character identifier if False. Default is False
 
 
 Initialization

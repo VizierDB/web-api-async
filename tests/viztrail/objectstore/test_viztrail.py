@@ -38,7 +38,6 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
             properties=None,
-            exec_env_id='ENV1',
             base_path=base_path
         )
         self.assertEquals(len(vt.branches), 1)
@@ -73,7 +72,6 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='DEF',
             properties={PROPERTY_NAME: 'My Viztrail'},
-            exec_env_id='ENV1',
             base_path=base_path
         )
         self.assertEquals(vt.last_modified_at, vt.default_branch.last_modified_at)
@@ -117,7 +115,6 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='DEF',
             properties={PROPERTY_NAME: 'My Viztrail'},
-            exec_env_id='ENV1',
             base_path=base_path
         )
         # Create one branch
@@ -153,11 +150,9 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
             properties=None,
-            exec_env_id='ENV1',
             base_path=base_path
         )
         self.assertEquals(vt.identifier, 'ABC')
-        self.assertEquals(vt.exec_env_id, 'ENV1')
         self.assertIsNone(vt.name)
 
     def test_create_load_delete(self):
@@ -167,7 +162,6 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='DEF',
             properties={PROPERTY_NAME: 'My Viztrail'},
-            exec_env_id='ENV1',
             base_path=base_path
         )
         # Ensure that all files and subfolders are created
@@ -180,14 +174,12 @@ class TestOSViztrail(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, viztrail.OBJ_PROPERTIES)))
         # Update name property
         self.assertEquals(vt.identifier, 'DEF')
-        self.assertEquals(vt.exec_env_id, 'ENV1')
         self.assertEquals(vt.name, 'My Viztrail')
         vt.name = 'A Name'
         self.assertEquals(vt.name, 'A Name')
         # Load viztrail from disk
         vt = OSViztrailHandle.load_viztrail(base_path)
         self.assertEquals(vt.identifier, 'DEF')
-        self.assertEquals(vt.exec_env_id, 'ENV1')
         self.assertEquals(vt.name, 'A Name')
         # Delete viztrail
         vt.delete_viztrail()
@@ -200,7 +192,6 @@ class TestOSViztrail(unittest.TestCase):
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
             properties=None,
-            exec_env_id='ENV1',
             base_path=base_path
         )
         self.assertEquals(len(vt.branches), 1)

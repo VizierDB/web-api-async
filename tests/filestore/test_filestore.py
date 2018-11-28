@@ -10,7 +10,7 @@ import unittest
 
 from werkzeug.datastructures import FileStorage
 
-from vizier.filestore.fs import DefaultFileStore, METADATA_FILE_NAME
+from vizier.filestore.fs import DefaultFileStore, METADATA_FILE_NAME, PARA_DIRECTORY
 import vizier.filestore.base as fs
 
 
@@ -85,6 +85,15 @@ class TestDefaultFileStore(unittest.TestCase):
             for row in csv.reader(csvfile, delimiter=fh1.delimiter()):
                 rows += 1
         self.assertEquals(rows, 3)
+
+    def test_init(self):
+        """Test init class method."""
+        with self.assertRaises(ValueError):
+            DefaultFileStore.init({'somekeybutnottheone': SERVER_DIR})
+        db = DefaultFileStore.init({PARA_DIRECTORY: SERVER_DIR})
+        fh1 = db.upload_file(CSV_FILE)
+        fh2 = db.get_file(fh1.identifier)
+        self.assertEquals(fh1.identifier, fh2.identifier)
 
     def test_list_file(self):
         """Test list files method."""

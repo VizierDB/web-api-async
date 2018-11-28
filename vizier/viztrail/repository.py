@@ -48,16 +48,13 @@ class ViztrailRepository(VizierSystemComponent):
                 self.viztrails[vt.identifier] = vt
 
     @abstractmethod
-    def create_viztrail(self, exec_env_id, properties=None):
-        """Create a new viztrail. Every viztrail is associated with an execution
-        environment. The environment is set when the viztrail is created and
-        can not change throughout the life-cycle of the viztrail.
+    def create_viztrail(self, properties=None):
+        """Create a new viztrail. The initial set of properties is an optional
+        dictionary of (key,value)-pairs where all values are expected to either
+        be scalar values or a list of scalar values.
 
         Parameters
         ----------
-        exec_env_id: string
-            Identifier of the execution environment that is used for the
-            viztrail
         properties: dict, optional
             Set of properties for the new viztrail
 

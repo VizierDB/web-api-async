@@ -28,7 +28,7 @@ class CommandInterpreter(object):
 
         Parameters
         ----------
-        api: vizier.api.VizierApi
+        api: vizier.api.base.VizierApi
         """
         self.api = api
         self.commands = [

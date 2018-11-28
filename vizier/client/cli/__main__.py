@@ -18,10 +18,9 @@
 
 import sys
 
-from vizier.api import VizierApi
+from vizier.api.base import VizierApi
 from vizier.client.cli.interpreter import CommandInterpreter
 from vizier.config import AppConfig
-from vizier.filestore.fs import DefaultFileStore
 
 
 def main(args):
@@ -29,7 +28,7 @@ def main(args):
     """
     # Initialize the vizier Api.
     config = AppConfig()
-    api = VizierApi(DefaultFileStore(config.settings.fileserver.directory))
+    api = VizierApi(filestore=config.filestore.create_instance())
     # Run the command interpreter on the given arguments
     CommandInterpreter(api).eval(args)
 

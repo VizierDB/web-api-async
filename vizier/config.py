@@ -21,46 +21,47 @@ The app configuration has three main parts: API and Web service configuration,
 file server, and the workflow execution environment. The structure of the
 configuration object is as follows:
 
-api:
+datastore:
+    module: Name of the Python module containing data store class
+    class: Class name of data store
+    properties: Dictionary of data store specific properties
+debug: Flag indicating whether server is started in debug mode
+filestore:
+    module: Name of the Python module containing file store class
+    class: Class name of file store
+    properties: Dictionary of file store specific properties
+logs:
+    server: Log file for Web Server
+packages: List of files, each containing the declaration of commands for a supported package
+viztrails:
+    module: Name of the Python module containing repository class
+    class: Class name of viztrails repository
+    properties: Dictionary of repository specific properties
+webservice:
     server_url: Url of the server (e.g., http://localhost)
     server_port: Public server port (e.g., 5000)
     server_local_port: Locally bound server port (e.g., 5000)
     app_path: Application path for Web API (e.g., /vizier-db/api/v1)
     app_base_url: Concatenation of server_url, server_port and app_path
     doc_url: Url to API documentation
-fileserver:
-    directory: Path to base directory for file server
-    max_file_size: Maximum size for file uploads (in byte)
-envs:
-    - identifier: Execution environment identifier (i.e., BASIC or MIMIR)
-      name: Printable name of execution environment (used by UI)
-      description: Descriptive text for execution environment (used by UI)
-      default: Flag indicating if this is the default environment
-      datastore:
-          properties: Dictionary of data store specific properties
-          type: Data store type ['DEFAULT', 'MIMIR']
-      packages: [list of identifier for supported packages]
-viztrails:
-    directory: Base directory for storing viztrail information and meta-data
-defaults:
-    row_limit: Default row limit for requests that read datasets
-    max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
-name: Web Service name
-debug: Flag indicating whether server is started in debug mode
-logs:
-    server: Log file for Web Server
-    engine: Flag to toggle loggin for workflow engine telemetry
+    name: Web Service name
+    defaults:
+        row_limit: Default row limit for requests that read datasets
+        max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
+        max_file_size: Maximum size for file uploads (in byte)
 """
 
+import importlib
 import json
 import os
 import yaml
 
-from vizier.datastore.base import DATASTORE_DEFAULT
-from vizier.datastore.fs import PARA_DIRECTORY
 from vizier.engine.packages.base import PackageIndex
-from vizier.engine.packages.sys import PACKAGE_SYS, SYSTEM_COMMANDS
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
+
+import vizier.datastore.fs as ds
+import vizier.filestore.fs as fs
+import vizier.viztrail.driver.objectstore.repository as vt
 
 
 """Environment Variable containing path to config file."""
@@ -70,98 +71,56 @@ ENV_CONFIG = 'VIZIERSERVER_CONFIG'
 ENV_DIRECTORY = '../.env'
 
 """Default execution environment."""
-DEFAULT_ENV_ID = 'BASIC'
-DEFAULT_ENV_NAME = 'Vizier (Lite)'
-DEFAULT_ENV_DESC = 'Curation workflow with basic functionality'
-
-
 DEFAULT_SETTINGS = {
-    'api': {
+    'datastore': {
+        'module': 'vizier.datastore.fs',
+        'class': 'FileSystemDataStore',
+        'properties': {
+            ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
+        }
+    },
+    'debug': True,
+    'filestore': {
+        'module': 'vizier.filestore.fs',
+        'class': 'DefaultFileStore',
+        'properties': {
+            fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
+        }
+    },
+    'logs': {
+        'server': os.path.join(ENV_DIRECTORY, 'logs')
+    },
+    'viztrails': {
+        'module': 'vizier.viztrail.driver.objectstore.repository',
+        'class': 'OSViztrailRepository',
+        'properties': {
+            vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt')
+        }
+    },
+    'webservice': {
         'server_url': 'http://localhost',
         'server_port': 5000,
         'server_local_port': 5000,
         'app_path': '/vizier-db/api/v1',
-        'doc_url': 'http://cds-swg1.cims.nyu.edu/vizier-db/doc/api/v1'
-
-    },
-    'envs': [{
-        'identifier': DEFAULT_ENV_ID,
-        'name': DEFAULT_ENV_NAME,
-        'description': DEFAULT_ENV_DESC,
-        'default': True,
-        'datastore': {
-            'properties': {
-                PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
-            },
-            'type': DATASTORE_DEFAULT
-        },
-        'packages': [PACKAGE_VIZUAL]
-    }],
-    'fileserver': {
-        'directory': os.path.join(ENV_DIRECTORY, 'fs'),
-        'max_file_size': 16 * 1024 * 1024
-    },
-    'viztrails': {
-        'directory': os.path.join(ENV_DIRECTORY, 'vt')
-    },
-    'defaults': {
-        'row_limit': 25,
-        'max_row_limit': -1
-    },
-    'name': 'Vizier Web API',
-    'debug': True,
-    'logs': {
-        'server': os.path.join(ENV_DIRECTORY, 'logs'),
-        'engine': False
+        'doc_url': 'http://cds-swg1.cims.nyu.edu/vizier-db/doc/api/v1',
+        'name': 'Vizier Web API',
+        'defaults': {
+            'row_limit': 25,
+            'max_row_limit': -1,
+            'max_file_size': 16 * 1024 * 1024
+        }
     }
 }
 
 class AppConfig(object):
     """Application configuration object. This object contains all configuration
-    settings for the Vizier DB Web API. The structture is expected to be as
-    follows:
-
-    api:
-        server_url: Url of the server (e.g., http://localhost)
-        server_port: Public server port (e.g., 5000)
-        server_local_port: Locally bound server port (e.g., 5000)
-        app_path: Application path for Web API (e.g., /vizier-db/api/v1)
-        doc_url: Url to API documentation
-    fileserver:
-        directory: Path to base directory for file server
-        max_file_size: Maximum size for file uploads (in byte)
-    envs:
-        - identifier: Execution environment identifier (i.e., BASIC or MIMIR)
-          name: Printable name of execution environment (used by UI)
-          description: Descriptive text for execution environment (used by UI)
-          default: Flag indicating if this is the default environment
-          datastore:
-              properties: Dictionary of data store specific properties
-              type: Data store type ['DEFAULT', 'MIMIR']
-          packages: [list of identifier for supported packages]
-    viztrails:
-        directory: Base directory for storing viztrail information and meta-data
-    defaults:
-        row_limit: Default row limit for requests that read datasets
-        max_row_limit: Maximum row limit for requests that read datasets
-    name: Web Service name
-    debug: Flag indicating whether server is started in debug mode
-    logs:
-        server: Log file for Web Server
-        engine: Log file for workflow engine telemetry
+    settings for the Vizier instance.
 
     Configuration is read from a configuration file (in Yaml or Json format).
-    The file is expected to contain two  objects: packages and settings.
-
-    packages: List of file names that point to package definition files. By
-    default only the ViZUAL and the system package are available to the user.
-
-    settings: Application settings object. The structure of this object is
-    expected to be the same as the structre shown above.
-
-    The configuration file can either be specified using the environment
-    variable VIZIERSERVER_CONFIG or be located (as file config.yaml) in the
-    current working directory.
+    The file is expected to contain follow the structure of the configuration
+    object as described above. The configuration file can either be specified
+    using the environment variable VIZIERSERVER_CONFIG or be located (as file
+    config.yaml) in the current working directory.
     """
     def __init__(self, configuration_file=None):
         """Read configuration parameters from a configuration file. The file is
@@ -199,48 +158,43 @@ class AppConfig(object):
                     break
         if doc is None:
             raise RuntimeError('no configuration file found')
-        # Registry of available packages. By default, only the system package
-        # and the VizUAL package are supported. Additional packages are loaded
-        # from files specified in the 'packages' element (optional)
-        self.packages = {
-            PACKAGE_SYS: PackageIndex(SYSTEM_COMMANDS),
-            PACKAGE_VIZUAL: PackageIndex(VIZUAL_COMMANDS)
-        }
+        # Registry of available packages. By default, only the VizUAL package is
+        # pre-loaded. Additional packages are loaded from files specified in the
+        # 'packages' element (optional). Note that the list may contain a
+        # reference to a VizUAL package which overrides the default package
+        # declaration.
+        self.packages = {PACKAGE_VIZUAL: PackageIndex(VIZUAL_COMMANDS)}
         if 'packages' in doc:
             for pckg_file in doc['packages']:
                 pckg = read_object_from_file(pckg_file)
                 for key in pckg:
                     self.packages[key] = PackageIndex(pckg[key])
-        # Initialize application settings from the settings element. We first
-        # check the schema of all objects in the envs element (if present).
-        if 'envs' in doc['settings']:
-            for env in  doc['settings']['envs']:
-                for key in ['identifier', 'name', 'description', 'datastore', 'packages']:
-                    if not key in env:
-                        raise ValueError('environment specification is missing \'' + key + '\'')
-                # Check for the datastore directory
-                for key in ['properties', 'type']:
-                    if not key in env['datastore']:
-                        raise ValueError('environment datastore is missing \'' + key + '\'')
-        self.settings = ConfigObject(
-            values=doc['settings'],
-            default_values=DEFAULT_SETTINGS
-        )
-        # Create a dictionary of execution environments for convenience. Check
-        # that all identifier are unique. Ensure that referenced packages are
-        # available and that the sys package is not listed in the package list
-        # for any of the user-defined execution environments.
-        self.envs = dict()
-        for exec_env in self.settings.envs:
-            env_id = exec_env.identifier
-            if env_id in self.envs:
-                raise ValueError('duplicate environment definition \'' + env_id + '\'')
-            for pckg_id in exec_env.packages:
-                if pckg_id == PACKAGE_SYS:
-                    raise ValueError('invalid package \'' + PACKAGE_SYS + '\' specified')
-                elif not pckg_id in self.packages:
-                    raise ValueError('unknown package \'' + pckg_id + '\'')
-                self.envs[exec_env.identifier] = exec_env
+        # Create configuration object for system components data store, file
+        # store, viztrail registry, and workflow execution engine.
+        for key in ['datastore', 'filestore', 'viztrails']:
+            if key in doc:
+                obj = ComponentConfig(
+                    values=doc[key],
+                    default_values=DEFAULT_SETTINGS[key]
+                )
+            else:
+                obj = ComponentConfig(values=DEFAULT_SETTINGS[key])
+            setattr(self, key, obj)
+        # Create objects for configuration of log files and web service.
+        for key in ['logs', 'webservice']:
+            if key in doc:
+                obj = ConfigObject(
+                    values=doc[key],
+                    default_values=DEFAULT_SETTINGS[key]
+                )
+            else:
+                obj = ConfigObject(values=DEFAULT_SETTINGS[key])
+            setattr(self, key, obj)
+        # Set debug flag if given
+        if 'debug' in doc:
+            self.debug = doc['debug']
+        else:
+            self.debug = DEFAULT_SETTINGS['debug']
 
     @property
     def app_base_url(self):
@@ -252,11 +206,46 @@ class AppConfig(object):
         -------
         string
         """
-        base_url = self.settings.api.server_url
-        if self.settings.api.server_port != 80:
-            base_url += ':' + str(self.settings.api.server_port)
-        base_url += self.settings.api.app_path
+        base_url = self.webservice.server_url
+        if self.webservice.server_port != 80:
+            base_url += ':' + str(self.webservice.server_port)
+        base_url += self.webservice.app_path
         return base_url
+
+
+class ComponentConfig(object):
+    """Configuration object for system component. All components are specified
+    by the Python module and class. Component initialization is done via a
+    dictionary of configuration arguments (properties).
+    """
+    def __init__(self, values, default_values=dict()):
+        """Set the component module, class and configuration arguments
+        dictionary.
+
+        Parameters
+        ----------
+        values: dict
+            Dictionary containing component specification and arguments.
+        default_values: dict
+            Dictionary of default values.
+        """
+        if 'module' in values:
+            self.module_name = values['module']
+        else:
+            self.module_name = default_values['module']
+        if 'class' in values:
+            self.class_name = values['class']
+        else:
+            self.class_name = default_values['class']
+        if 'properties' in values:
+            self.properties = values['properties']
+        else:
+            self.properties = default_values['properties']
+
+    def create_instance(self):
+        """Create an instance of the specified system component."""
+        module = importlib.import_module(self.module_name)
+        return getattr(module, self.class_name).init(self.properties)
 
 
 class ConfigObject(object):
@@ -264,11 +253,9 @@ class ConfigObject(object):
     a dictionary of default values. Performs a nested merge of dictionaries in
     values and default values.
 
-    For lists the policy is all or nothing. There are currently only two list
-    objects in the configuration: envs and packages. List elements are not
-    merged. thus, if the configuration object contains an envs list all objects
-    in the list are copied to the configuration as is. If no envs element is
-    present the default environments are copied.
+    For lists the policy is all or nothing. List elements are not merged. If the
+    configuration object contains a list value all items in the list are copied
+    to the configuration as is.
     """
     def __init__(self, values, default_values=dict()):
         """Initialize the object from the given dictionary of values and default

@@ -47,8 +47,8 @@ class FileStoreCommands(Command):
         """
         if len(tokens) == 2:
             if tokens[0] == 'list' and tokens[1] == 'files':
-                print 'File store (' + self.filestore.base_directory + ')'
-                files = self.filestore.list_files()
+                print 'File store (' + self.filestore.filestore.base_directory + ')'
+                files = self.filestore.filestore.list_files()
                 for fh in files:
                     output = [fh.name, fh.identifier]
                     if not fh.file_format is None:
@@ -62,7 +62,7 @@ class FileStoreCommands(Command):
                 print 'Uploaded file ' + fh.name + ' as ' + fh.identifier
                 return True
             elif tokens[0] == 'cleanup' and tokens[1] == 'file' and tokens[2] == 'store':
-                count = self.filestore.cleanup(active_files=[])
+                count = self.filestore.filestore.cleanup(active_files=[])
                 print 'Removed ' + str(count) + ' unused file(s)'
                 return True
         return False

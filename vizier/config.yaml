@@ -1,30 +1,31 @@
-api:
+datastore:
+    module: 'vizier.datastore.fs'
+    class: 'FileSystemDataStore'
+    properties:
+        directory: './.vizierdb/datasets'
+debug: True
+filestore:
+    module: 'vizier.filestore.fs'
+    class: 'DefaultFileStore'
+    properties:
+        directory: './.vizierdb/files'
+logs:
+    server: './.vizierdb/logs'
+packages:
+    - './resources/packages/mimir.pckg.json'
+    - './resources/packages/plot.pckg.json'
+    - './resources/packages/python.pckg.json'
+viztrails:
+    module: 'vizier.viztrail.driver.objectstore.repository'
+    class: 'OSViztrailRepository'
+    properties:
+        directory: './.vizierdb/viztrails'
+webservice:
     server_url: 'http://localhost'
     server_port: 5000
     server_local_port: 5000
     app_path: '/vizier-db/api/v1'
+    name: 'Vizier Web API'
     doc_url: 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
-envs:
-    - id: 'DEFAULT'
-      name: 'Vizier (Light)'
-      description: 'Curation workflow with basic functionality'
-      datastore:
-          directory: '../.vizierdb/datastore/default'
-      packages: ['vizual', 'python', 'plot']
-    - id: 'MIMIR'
-      name: 'Vizier (Mimir)'
-      description: 'Curation workflow with advanced Mimir functionality'
-      default: true
-      datastore:
-          directory: '../.vizierdb/datastore/mimir'
-      packages: ['vizual', 'python', 'plot', 'mimir']
-viztrails:
-    directory: '../.vizierdb/viztrails'
-fileserver:
-    directory: '../.vizierdb/filestore'
-    max_file_size: 16777216
-settings:
-    log_engine: false
-name: 'Vizier Web API'
-debug: True
-logs: '../.vizierdb/logs'
+    defaults:
+        max_file_size: 16777216

@@ -37,6 +37,10 @@ METADATA_FILE_NAME = 'index.tsv'
 VERSION_INFO = '0.2.1'
 
 
+"""Configuration parameter."""
+PARA_DIRECTORY = 'directory'
+
+
 class DefaultFileStore(fs.FileStore):
     """Default file server implementation. Keeps all files in a given base
     directory on disk. Files are named by their unique identifier (with suffix
@@ -149,6 +153,26 @@ class DefaultFileStore(fs.FileStore):
         if identifier in self.files:
             return self.files[identifier]
         return None
+
+    @staticmethod
+    def init(properties):
+        """Create an instance of the viztrails repositorfile storey from a given
+        dictionary of configuration arguments. At this point only the base
+        directory is expected as to be present in the properties dictionary.
+
+        Parameter
+        ---------
+        properties: dict()
+            Dictionary of configuration arguments
+
+        Returns
+        -------
+        vizier.filestore.fs.DefaultFileStore
+        """
+        # Raise an exception if the pase directory argument is not given
+        if not PARA_DIRECTORY in properties:
+            raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
+        return DefaultFileStore(base_directory=properties[PARA_DIRECTORY])
 
     def list_files(self):
         """Get list of file handles for all uploaded files.
