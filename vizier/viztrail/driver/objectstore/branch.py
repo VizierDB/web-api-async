@@ -74,8 +74,9 @@ class OSBranchHandle(BranchHandle):
                     the order of workflows in the branch history.
     """
     def __init__(
-        self, identifier, base_path, modules_folder, provenance, properties,
-        workflows=None, head=None, object_store=None, cache_size=None
+        self, identifier, is_default, base_path, modules_folder, provenance,
+        properties, workflows=None, head=None, object_store=None,
+        cache_size=None
     ):
         """Initialize the branch handle.
 
@@ -83,6 +84,8 @@ class OSBranchHandle(BranchHandle):
         ----------
         identifier: string
             Unique branch identifier
+        is_default: bool
+            True if this is the default branch for its viztrail
         base_path: string
             Path to branch resources folder
         modules_folder: string
@@ -103,6 +106,7 @@ class OSBranchHandle(BranchHandle):
             properties=properties,
             provenance=provenance
         )
+        self.is_default = is_default
         self.base_path = base_path
         self.modules_folder = modules_folder
         self.object_store = init_value(object_store, DefaultObjectStore())
@@ -124,8 +128,8 @@ class OSBranchHandle(BranchHandle):
 
     @staticmethod
     def create_branch(
-        identifier, base_path, modules_folder, provenance=None, properties=None,
-        modules=None, object_store=None
+        identifier, base_path, modules_folder, is_default=False, provenance=None,
+        properties=None, modules=None, object_store=None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -141,6 +145,8 @@ class OSBranchHandle(BranchHandle):
             path to the folder for branch resources
         modules_folder: string
             Path to module resources folder
+        is_default: bool, optional
+            True if this is the default branch for its viztrail
         provenance: vizier.viztrail.branch.BranchProvenance, optional
             Branch provenance information
         properties: dict, optional
@@ -226,6 +232,7 @@ class OSBranchHandle(BranchHandle):
         # Return handle for new viztrail branch
         return OSBranchHandle(
             identifier=identifier,
+            is_default=is_default,
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,
@@ -243,6 +250,9 @@ class OSBranchHandle(BranchHandle):
         """Deletes the directory that contains all resoures that are associated
         with this viztrail branch.
         """
+        # Raise an exception if this is the default branch
+        if self.is_default:
+                raise RuntimeError('cannot delete default branch')
         self.object_store.delete_folder(self.base_path)
 
     def get_history(self):
@@ -301,7 +311,7 @@ class OSBranchHandle(BranchHandle):
         return None
 
     @staticmethod
-    def load_branch(identifier, base_path, modules_folder, object_store=None):
+    def load_branch(identifier, is_default, base_path, modules_folder, object_store=None):
         """Load branch from disk. Reads the branch provenance information and
         descriptors for all workflows in the branch history. If the branch
         history is not empty the modules for the workflow at the branch head
@@ -311,6 +321,8 @@ class OSBranchHandle(BranchHandle):
         ----------
         identifier: string
             Unique branch identifier
+        is_default: bool
+            True if this is the default branch for its viztrail
         base_path: string
             Path to folder containing branch resources
         modules_folder: string
@@ -378,6 +390,7 @@ class OSBranchHandle(BranchHandle):
             )
         return OSBranchHandle(
             identifier=identifier,
+            is_default=is_default,
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,

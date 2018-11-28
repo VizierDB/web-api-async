@@ -114,8 +114,8 @@ class ViztrailHandle(NamedObject):
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
-        self, identifier, exec_env_id, properties, branches=None,
-        created_at=None, last_modified_at=None
+        self, identifier, exec_env_id, properties, branches, default_branch,
+        created_at=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -130,6 +130,8 @@ class ViztrailHandle(NamedObject):
             Handler for user-defined properties
         branches: list(vizier.viztrail.branch.BranchHandle)
             List of branches in the viztrail
+        default_branch: vizier.viztrail.branch.BranchHandle
+            Default branch for the viztrail
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
         """
@@ -138,9 +140,9 @@ class ViztrailHandle(NamedObject):
         self.exec_env_id = exec_env_id
         self.branches = dict()
         # Initialize the branch index from the given list (if present)
-        if not branches is None:
-            for b in branches:
-                self.branches[b.identifier] = b
+        for b in branches:
+            self.branches[b.identifier] = b
+        self.default_branch = default_branch
         # If created_at timestamp is None the viztrail is expected to be a newly
         # created viztrail.
         self.created_at = created_at if not created_at is None else get_current_time()
@@ -182,6 +184,15 @@ class ViztrailHandle(NamedObject):
         bool
         """
         raise NotImplementedError
+
+    def get_default_branch(self):
+        """Get the handle for the default branch of the viztrail.
+
+        Returns
+        -------
+        vizier.viztrail.branch.BranchHandle
+        """
+        return self.default_branch
 
     def get_branch(self, branch_id):
         """Get handle for the branch with the given identifier. Returns None if
@@ -225,3 +236,21 @@ class ViztrailHandle(NamedObject):
         list(vizier.viztrail.branch.BranchHandle)
         """
         return self.branches.values()
+
+    @abstractmethod
+    def set_default_branch(self, branch_id):
+        """Set the branch with the given identifier as the default branch.
+        Raises ValueError if no branch with the given identifier exists.
+
+        Return the branch handle for the new default.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.branch.BranchHandle
+        """
+        raise NotImplementedError
