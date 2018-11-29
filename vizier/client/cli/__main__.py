@@ -16,24 +16,39 @@
 
 """Run the vizier command line interpreter."""
 
+import os
 import sys
 
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.api.base import VizierApi
 from vizier.client.cli.interpreter import CommandInterpreter
 from vizier.config import AppConfig
+
+
+def get_base_directory():
+    """Get the directory that contains the vizier configuration files.
+
+    Returns
+    -------
+    string
+    """
+    return os.path.abspath('.vizierdb')
 
 
 def main(args):
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
     # Initialize the vizier Api.
-    config = AppConfig()
+    base_dir = get_base_directory()
+    config = AppConfig(configuration_file=os.path.join(base_dir, 'config.json'))
     api = VizierApi(
         filestore=config.filestore.create_instance(),
         viztrails_repository=config.viztrails.create_instance()
     )
     # Run the command interpreter on the given arguments
-    CommandInterpreter(api).eval(args)
+    defaults_file = os.path.join(base_path, 'defaults.json')
+    defaults = PersistentAnnotationSet(object_path=defaults_file)
+    CommandInterpreter(api=api, defaults=defaults).eval(args)
 
 if __name__ == '__main__':
     main(args=sys.argv[1:])

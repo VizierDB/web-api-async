@@ -24,17 +24,20 @@ class CommandInterpreter(object):
     """The command interpreter allows to run simple commands against an instance
     of the vizier Api.
     """
-    def __init__(self, api):
+    def __init__(self, api, defaults):
         """Initialize the vizier Api instance.
 
         Parameters
         ----------
         api: vizier.api.base.VizierApi
+            API for vizier instance
+        defaults: vizier.core.annotation.base.ObjectAnnotationSet
+            Annotation set for default values
         """
         self.api = api
         self.commands = [
             FileStoreCommands(api),
-            ViztrailsCommands(api)
+            ViztrailsCommands(api=api, defaults=defaults)
         ]
 
     def eval(self, tokens):
