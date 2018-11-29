@@ -39,14 +39,14 @@ def main(args):
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
     # Initialize the vizier Api.
-    base_dir = get_base_directory()
-    config = AppConfig(configuration_file=os.path.join(base_dir, 'config.json'))
+    app_dir = get_base_directory()
+    config = AppConfig(configuration_file=os.path.join(app_dir, 'config.yaml'))
     api = VizierApi(
         filestore=config.filestore.create_instance(),
         viztrails_repository=config.viztrails.create_instance()
     )
     # Run the command interpreter on the given arguments
-    defaults_file = os.path.join(base_path, 'defaults.json')
+    defaults_file = os.path.join(app_dir, 'defaults.json')
     defaults = PersistentAnnotationSet(object_path=defaults_file)
     CommandInterpreter(api=api, defaults=defaults).eval(args)
 

@@ -80,26 +80,6 @@ class ViztrailRepository(VizierSystemComponent):
         """
         raise NotImplementedError
 
-    def get_branch(self, viztrail_id, branch_id):
-        """This is a shortcut to retrieve a particular branch from a viztrail.
-        The result is None if either the viztrail or the branch does not exist.
-
-        Parameters
-        ----------
-        viztrail_id : string
-            Unique viztrail identifier
-        branch_id : string, optional
-            Unique branch identifier
-
-        Returns
-        -------
-        vizier.viztrail.workflow.WorkflowHandle
-        """
-        vt = self.get_viztrail(viztrail_id)
-        if vt is None:
-            return None
-        return vt.get_branch(branch_id)
-
     def get_viztrail(self, viztrail_id):
         """Retrieve the viztrail with the given identifier. The result is None
         if no viztrail with given identifier exists.
@@ -118,31 +98,19 @@ class ViztrailRepository(VizierSystemComponent):
         else:
             return None
 
-    def get_workflow(self, viztrail_id, branch_id, workflow_id):
-        """This is a shortcut to retrieve a particular workflow version from a
-        viztrail branch. The result is None if either of the identified objects
-        does not exist.
+    def has_viztrail(self, viztrail_id):
+        """Returns True if a viztrail with the given identifier exists.
 
         Parameters
         ----------
         viztrail_id : string
             Unique viztrail identifier
-        branch_id : string, optional
-            Unique branch identifier
-        workflow_id: string, optional
-            Unique workflow identifier
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        bool
         """
-        vt = self.get_viztrail(viztrail_id)
-        if vt is None:
-            return None
-        branch = vt.get_branch(branch_id)
-        if branch is None:
-            return None
-        return branch.get_workflow(workflow_id)
+        return viztrail_id in self.viztrails
 
     def list_viztrails(self):
         """List handles for all viztrails in the repository.

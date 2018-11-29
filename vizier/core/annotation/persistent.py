@@ -110,7 +110,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
         else:
             # Read annotations from disk if the annotation file exists
             elements = dict()
-            if  object_store.exists(object_path):
+            if object_store.exists(object_path):
                 obj = object_store.read_object(object_path)
                 for anno in obj:
                     elements[anno['key']] = anno['value']

@@ -49,9 +49,9 @@ class FileStoreCommands(Command):
             if tokens[0] == 'list' and tokens[1] == 'files':
                 files = self.filestore.list_files()
                 rows = list()
-                rows.append(['Name', 'Identifier', 'Format'])
+                rows.append(['Identifier', 'Name', 'Format'])
                 for fh in files:
-                    output = [fh.name, fh.identifier]
+                    output = [fh.identifier, fh.name]
                     if not fh.file_format is None:
                         output.append(fh.file_format)
                     else:

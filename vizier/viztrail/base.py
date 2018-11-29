@@ -204,6 +204,20 @@ class ViztrailHandle(NamedObject):
         else:
             return None
 
+    def has_branch(self, branch_id):
+        """Returns True if a branch with the given identifier exists.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        bool
+        """
+        return branch_id in self.branches
+
     @property
     def last_modified_at(self):
         """The timestamp of last modification is either the time when the
@@ -234,7 +248,7 @@ class ViztrailHandle(NamedObject):
         """Set the branch with the given identifier as the default branch.
         Raises ValueError if no branch with the given identifier exists.
 
-        Return the branch handle for the new default.
+        Returns the branch handle for the new default.
 
         Parameters
         ----------

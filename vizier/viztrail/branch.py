@@ -128,6 +128,17 @@ class BranchHandle(NamedObject):
         """
         raise NotImplementedError
 
+    @property
+    def created_at(self):
+        """Shortcut to get the created_at timestamp from the associated
+        provenance object.
+
+        Returns
+        -------
+        datatime.datatime
+        """
+        return self.provenance.created_at
+
     def get_head(self):
         """Shortcut the get the workflow at the head of the branch. The result
         is None if the branch is empty.

@@ -50,7 +50,7 @@ class VizierApi(object):
             Viztrail manager for the API instance
         """
         self.filestore = FileStoreApi(filestore)
-        self.viztrails = ViztrailRepositoryApi(viztrails_repository)
+        self.projects = ViztrailRepositoryApi(viztrails_repository)
 
     # --------------------------------------------------------------------------
     # Service
@@ -77,5 +77,5 @@ class VizierApi(object):
         components = list()
         components.extend(self.datastore.components())
         components.extend(self.filestore.components())
-        components.extend(self.viztrails.components())
+        components.extend(self.projects.components())
         return serialize.SERVICE_BUILD(components, self.urls)

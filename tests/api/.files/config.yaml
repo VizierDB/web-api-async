@@ -1,0 +1,15 @@
+datastore:
+    module: 'vizier.datastore.fs'
+    class: 'FileSystemDataStore'
+    properties:
+        directory: './.temp/datasets'
+filestore:
+    module: 'vizier.filestore.fs'
+    class: 'DefaultFileStore'
+    properties:
+        directory: './.temp/files'
+viztrails:
+    module: 'vizier.viztrail.driver.objectstore.repository'
+    class: 'OSViztrailRepository'
+    properties:
+        directory: './.temp/viztrails'

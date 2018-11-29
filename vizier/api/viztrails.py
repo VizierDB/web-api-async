@@ -44,6 +44,9 @@ class ViztrailRepositoryApi(object):
         """Create a new project. All the information about a project is
         currently stored as part of the viztrail.
 
+        Raises ValueError if no valid project name is included in the given
+        properties dictionary.
+
         Parameters
         ----------
         properties : dict
@@ -53,6 +56,12 @@ class ViztrailRepositoryApi(object):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
+        if PROPERTY_NAME in properties:
+            name = properties[PROPERTY_NAME]
+            if name is None or name == '':
+                raise ValueError('not a valid project name')
+        else:
+            raise ValueError('missing project name')
         return self.repository.create_viztrail(properties=properties)
 
     def delete_project(self, project_id):
@@ -138,14 +147,15 @@ class ViztrailRepositoryApi(object):
     # --------------------------------------------------------------------------
     # Branches
     # --------------------------------------------------------------------------
-    def create_branch(self, project_id, branch_id, workflow_id, module_id, properties=None):
+    def create_branch(self, project_id, branch_id=None, workflow_id=None, module_id=None, properties=None):
         """Create a new branch for a given project. The branch_id, workflow_id,
         and module_id specify the branch point. The values are either all None,
         in which case an empty branch is created, or all not None.
 
         Returns None if the specified project does not exist. Raises ValueError
         if the specified branch point does not exists or if the combination of
-        values is invalid.
+        values is invalid. Raises ValueError if no valid branch name is given in
+        the properties dictionary.
 
         Parameters
         ----------
@@ -169,6 +179,13 @@ class ViztrailRepositoryApi(object):
             raise ValueError('invalid branch point specification')
         elif not branch_id is None and (workflow_id is None or module_id is None):
             raise ValueError('invalid branch point specification')
+        # Raise error if branch name is missing or invalid
+        if PROPERTY_NAME in properties:
+            name = properties[PROPERTY_NAME]
+            if name is None or name == '':
+                raise ValueError('not a valid project name')
+        else:
+            raise ValueError('missing project name')
         # Retrieve project viztrail from repository to ensure that it exists.
         viztrail = self.repository.get_viztrail(viztrail_id=project_id)
         if viztrail is None:
@@ -232,7 +249,7 @@ class ViztrailRepositoryApi(object):
         # Delete viztrail branch. The result is True if the branch existed. This
         # will raise an exception if an attempt is made to delete the default
         # branch.
-        return viztrail.repository.delete_branch(branch_id=branch_id)
+        return viztrail.delete_branch(branch_id=branch_id)
 
     def get_branch(self, project_id, branch_id):
         """Retrieve a branch from a given project.
@@ -274,6 +291,29 @@ class ViztrailRepositoryApi(object):
         if viztrail is None:
             return None
         return viztrail.list_branches()
+
+    def set_default_branch(self, project_id, branch_id):
+        """Set the default branch for a given project.
+
+        Returns the branch handle for the new default. Raises ValueError if no
+        branch with the given identifier exists.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.branch.BranchHandle
+        """
+        # Retrieve project viztrail from repository to ensure that it exists.
+        viztrail = self.repository.get_viztrail(viztrail_id=project_id)
+        if viztrail is None:
+            return None
+        return viztrail.set_default_branch(branch_id=branch_id)
 
     def update_branch_properties(self, project_id, branch_id, properties):
         """Update properties for a given project workflow branch. Returns the
