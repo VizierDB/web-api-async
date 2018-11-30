@@ -24,7 +24,7 @@ from vizier.viztrail.branch import BranchProvenance
 
 class ViztrailRepositoryApi(object):
     """API wrapper around the viztrails repository object that manages viztrails
-    for the Vizier instance. Note that viztrails are originally referred to as
+    for the Vizier instance. Note that viztrails were originally referred to as
     projects in the API.
     """
     def __init__(self, viztrails_repository):

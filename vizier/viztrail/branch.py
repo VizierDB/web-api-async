@@ -117,14 +117,37 @@ class BranchHandle(NamedObject):
         self.provenance = provenance
 
     @abstractmethod
-    def append_workflow(self, workflow):
-        """Append the given workflow handle to the branch. The workflow becomes
-        the new head of the branch.
+    def append_exec_result(
+        self, command, external_form, state, datasets, outputs, provenance,
+        timestamp
+    ):
+        """Modify the workflow at the branch head by appending the result of
+        an executed workflow module. The modified workflow will be the new head
+        of the branch.
+
+        Raises ValueError if the state of the new module is an active state.
 
         Parameters
         ----------
-        workflow: vizier.viztrail.workflow.WorkflowHandle
-            New branch head
+        command: vizier.viztrail.command.ModuleCommand
+            Specification of the executed command
+        external_form: string
+            Printable representation of the executed command
+        state: int
+            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
+        datasets: dict(string)
+            Dictionary of resulting datasets.
+        outputs: vizier.viztrail.module.ModuleOutputs
+            Module output streams STDOUT and STDERR
+        provenance: vizier.viztrail.module.ModuleProvenance
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
+        timestamp: vizier.viztrail.module.ModuleTimestamp
+            Module timestamp
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
         """
         raise NotImplementedError
 

@@ -25,8 +25,9 @@ from vizier.core.timestamp import to_datetime
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.module import get_module_path
+from vizier.viztrail.module import MODULE_PENDING, MODULE_RUNNING
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
-from vizier.viztrail.workflow import ACTION_CREATE
+from vizier.viztrail.workflow import ACTION_CREATE, ACTION_INSERT
 
 
 """Resource identifier"""
@@ -55,13 +56,29 @@ class OSBranchHandle(BranchHandle):
     an object store.
 
     A branch is a sequence of workflows. Each workflow is maintained as an
-    object in the branch base folder. The object contains the descriptor for
-    each workflow. Only the workflow at the branch head is kept in memory with\
-    all modules.
+    object in the branch folder. The object contains the descriptor for each
+    workflow and the list of identifier for modules in the workflow.
 
-    The branch cache allows to keep an additional number of workflows in memory
-    with all their modules loaded. Access to all other workflow version will
-    require them to be read from the object store.
+    Note that the objectstore driver does not implement a subclass for the
+    WorkflowHandle at this point. Thus, materialization of workflow handles is
+    done by the branch handle. The structure of the materialized object that
+    represents workflow handles is as follows:
+
+    - id: Workflow identifier
+    - descriptor:
+      - action: Identifier for action that created the workflow
+      - packageId: Identifier of package for command that created the workflow
+      - commandId: Identifier for command that created the workflow
+      - createdAt: Timestamp of workflow creation. This is the finished_at time
+                   of the creating command (or created_at if the workflow was
+                   created in an active state).
+    - modules: List of module identifier representing the sequence of modules in
+               the workflow
+
+    The workflow at the branch head is kept in memory with all modules fully
+    loaded. The branch cache allows to keep an additional number of workflows in
+    memory with all their modules loaded. Access to all other workflow version
+    will require them to be read from the object store.
 
     Folders and Resources
     ---------------------
@@ -115,16 +132,107 @@ class OSBranchHandle(BranchHandle):
         self.cache_size = cache_size if not cache_size is None else DEFAULT_CACHE_SIZE
         self.cache = list()
 
-    def append_workflow(self, workflow):
-        """Append the given workflow handle to the branch. The workflow becomes
-        the new head of the branch.
+    def add_to_cache(self, workflow):
+        """Add the given workflow the the internal cache. Returns the given
+        handle for convenience.
 
         Parameters
         ----------
-        workflow: vizier.viztrail.workflow.WorkflowHandle
-            New branch head
+        workflow: vizier.viztrailworkflow.WorkflowHandle
+            Workflow that is added to the cache
+
+        Returns
+        -------
+        vizier.viztrailworkflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Add workflow to cache. Remove first element is cache size
+        # exceeds the defined limit. Do not access the cache if the
+        # size limit is not greater than 0.
+        if self.cache_size > 0:
+            self.cache.append(workflow)
+            if len(self.cache) > self.cache_size:
+                del self.cache[0]
+
+    def append_exec_result(
+        self, command, external_form, state, datasets, outputs, provenance,
+        timestamp
+    ):
+        """Modify the workflow at the branch head by appending the result of
+        an executed workflow module. The modified workflow will be the new head
+        of the branch.
+
+        Raises ValueError if the state of the new module or the branch head is
+        active.
+
+        Parameters
+        ----------
+        command: vizier.viztrail.command.ModuleCommand
+            Specification of the executed command
+        external_form: string
+            Printable representation of the executed command
+        state: int
+            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
+        datasets: dict(string)
+            Dictionary of resulting datasets.
+        outputs: vizier.viztrail.module.ModuleOutputs
+            Module output streams STDOUT and STDERR
+        provenance: vizier.viztrail.module.ModuleProvenance
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
+        timestamp: vizier.viztrail.module.ModuleTimestamp
+            Module timestamp
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
+        """
+        # Raise an exception if the module state is active
+        if state == MODULE_PENDING or state == MODULE_RUNNING:
+            raise ValueError('cannot append result for active module')
+        # Get modules in the workflow that is currently the branch head
+        if head is None:
+            modules = list()
+        else:
+            modules = list(self.head.modules)
+            # Raise exception if the branch head is active (in which case at
+            # least the last module in the workflow is active)
+            if modules[-1].is_active:
+                raise ValueError('cannot append result to active workflow')
+        # Create a new module. At this it is verified that the branch head can
+        # be modified with the given result
+        module = OSModuleHandle.create_module(
+            command=command,
+            external_form=external_form,
+            state=state,
+            timestamp=timestamp,
+            datasets=datasets,
+            outputs=output,
+            provenance=provenance,
+            modules_folder=self.modules_folder,
+            object_store=self.object_store
+        )
+        modules.append(module)
+        # Write handle for workflow at branch head
+        descriptor = write_workflow_handle(
+            modules=[m.identifier for m in modules],
+            workflow_count=len(self.workflows),
+            base_path=base_path,
+            object_store=object_store,
+            action=ACTION_INSERT,
+            command=command
+        )
+        # Get new workflow and replace the branch head. Move the current head
+        # to the cache.
+        workflow = WorkflowHandle(
+            identifier=descriptor.identifier,
+            branch_id=self.identifier,
+            modules=modules,
+            descriptor=descriptor
+        )
+        if not self.head is None:
+            self.add_to_cache(self.head)
+        self.head = workflow
+        return workflow
 
     @staticmethod
     def create_branch(
@@ -196,35 +304,18 @@ class OSBranchHandle(BranchHandle):
         workflows = list()
         head = None
         if not modules is None:
-            # Get a new workflow identifier by creating an empty object
-            workflow_id = object_store.create_object(
-                parent_folder= base_path,
-                identifier=get_workflow_id(0)
-            )
-            # Create the diescriptor and write workflow to store
-            descriptor = WorkflowDescriptor(
-                identifier=workflow_id,
+            # Write handle for workflow at branch head
+            descriptor = write_workflow_handle(
+                modules=modules,
+                workflow_count=0,
+                base_path=base_path,
+                object_store=object_store,
                 action=ACTION_CREATE
-            )
-            workflow_path = object_store.join(base_path, workflow_id)
-            object_store.write_object(
-                object_path=workflow_path,
-                content={
-                    KEY_WORKFLOW_ID: workflow_id,
-                    KEY_WORKFLOW_DESCRIPTOR: {
-                        KEY_ACTION: descriptor.action,
-                        KEY_PACKAGE_ID: descriptor.package_id,
-                        KEY_COMMAND_ID: descriptor.command_id,
-                        KEY_CREATED_AT: descriptor.created_at.isoformat()
-
-                    },
-                    KEY_WORKFLOW_MODULES: modules
-                }
             )
             workflows.append(descriptor)
             # Set the new workflow as the branch head
             head = WorkflowHandle(
-                identifier=workflow_id,
+                identifier=descriptor.identifier,
                 branch_id=identifier,
                 modules=wf_modules,
                 descriptor=descriptor
@@ -298,14 +389,8 @@ class OSBranchHandle(BranchHandle):
                     modules_folder=self.modules_folder,
                     object_store=self.object_store
                 )
-                # Add workflow to cache. Remove first element is cache size
-                # exceeds the defined limit. Do not access the cache if the
-                # size limit is not greater than 0.
-                if self.cache_size > 0:
-                    self.cache.append(wf)
-                    if len(self.cache) > self.cache_size:
-                        del self.cache[0]
-                return wf
+                # Add workflow to cache.
+                return self.add_to_cache(wf)
         # If this point is reached the identifier does not reference a workflow
         # in the brach history
         return None
@@ -438,7 +523,7 @@ def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder,
     ----------
     branch_id: string
         Unique branch identifier
-    workflow_descriptor: vizier.viztrail.workflow.WorkflowDecriptor
+    workflow_descriptor: vizier.viztrail.workflow.WorkflowDescriptor
         Workflow descriptor
     workflow_path: string
         Path to the workflow resource
@@ -500,3 +585,64 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
         )
         modules.append(m)
     return modules
+
+
+def write_workflow_handle(
+    modules, workflow_count, base_path, object_store, action, command=None
+):
+    """Create a handle for a new workflow. Returns the descriptor for the new
+    workflow.
+
+    Parameters
+    ----------
+    modules: list(string)
+        List of identifier for modules in the workflow
+    workflow_count: int
+        Number of workflows in the branch. the count is used to create an unique
+        identifier for the new workflow
+    base_path: string
+        Folder that will contain the new workflow handle
+    object_store: vizier.core.io.base.ObjectStore
+        Object store implementation to access and maintain resources
+    action: string
+        Unique identifier of the action that created the workflow
+    command: vizier.viztrail.command.ModuleCommand
+        Specification of the executed command that created the workflow
+
+    Returns
+    -------
+    vizier.viztrail.workflow.WorkflowDescriptor
+    """
+    # Get a new workflow identifier by creating an empty object
+    workflow_id = object_store.create_object(
+        parent_folder= base_path,
+        identifier=get_workflow_id(workflow_count)
+    )
+    # Create the workflow descriptor depending on whether the module command is
+    # given or not
+    if command is None:
+        descriptor = WorkflowDescriptor(identifier=workflow_id, action=action)
+    else:
+        descriptor = WorkflowDescriptor(
+            identifier=workflow_id,
+            action=action,
+            package_id=command.package_id,
+            command_id=command.command_id,
+            created_at=timestamp.finished_at
+        )
+    # Write the workflow handle to the object store
+    workflow_path = object_store.join(base_path, workflow_id)
+    object_store.write_object(
+        object_path=workflow_path,
+        content={
+            KEY_WORKFLOW_ID: workflow_id,
+            KEY_WORKFLOW_DESCRIPTOR: {
+                KEY_ACTION: descriptor.action,
+                KEY_PACKAGE_ID: descriptor.package_id,
+                KEY_COMMAND_ID: descriptor.command_id,
+                KEY_CREATED_AT: descriptor.created_at.isoformat()
+            },
+            KEY_WORKFLOW_MODULES: modules
+        }
+    )
+    return descriptor

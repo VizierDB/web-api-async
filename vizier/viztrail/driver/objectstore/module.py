@@ -142,6 +142,15 @@ class OSModuleHandle(ModuleHandle):
         self.object_store = object_store if not object_store is None else DefaultObjectStore()
 
     @staticmethod
+    def create_module(
+        command, external_form, state, datasets, outputs, provenance, timestamp,
+        modules_folder, object_store=None
+    ):
+        """
+        """
+        pass
+
+    @staticmethod
     def load_module(module_path, object_store=None):
         """Load module from given object store.
 

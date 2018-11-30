@@ -146,16 +146,16 @@ class ModuleHandle(ModuleState):
 
     Attributes
     ----------
-    identifier : string
+    identifier: string
         Unique module identifier
-    command : vizier.viztrail.command.ModuleCommand
+    command: vizier.viztrail.command.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
-    datasets : dict(string)
-        Dictionary of resulting datasets. the user-specified name is the key
+    datasets: dict(string)
+        Dictionary of resulting datasets. The user-specified name is the key
         and the unique dataset identifier the value.
     external_form: string
         Printable representation of the module command
-    outputs : vizier.viztrail.module.ModuleOutputs
+    outputs: vizier.viztrail.module.ModuleOutputs
         Module output streams STDOUT and STDERR
     prov: vizier.viztrail.module.ModuleProvenance
         Provenance information about datasets that were read and writen by
