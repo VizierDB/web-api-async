@@ -117,7 +117,27 @@ class BranchHandle(NamedObject):
         self.provenance = provenance
 
     @abstractmethod
-    def append_exec_result(
+    def append_completed_workflow(self, modules, action, command):
+        """Append a completed workflow as the new head of the branch. Returns a
+        handle for the new workflow.
+
+        Parameters
+        ----------
+        modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow
+        action: string
+            Identifier of the action that created the workflow
+        command: vizier.viztrail.module.ModuleCommand
+            Specification of the executed command that created the workflow
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def append_module(
         self, command, external_form, state, datasets, outputs, provenance,
         timestamp
     ):
@@ -125,7 +145,8 @@ class BranchHandle(NamedObject):
         an executed workflow module. The modified workflow will be the new head
         of the branch.
 
-        Raises ValueError if the state of the new module is an active state.
+        Raises ValueError if any of the modules in the new workflow is in an
+        active state.
 
         Parameters
         ----------
@@ -144,6 +165,28 @@ class BranchHandle(NamedObject):
             previous execution of the module.
         timestamp: vizier.viztrail.module.ModuleTimestamp
             Module timestamp
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def append_pending_workflow(self, modules, pending_modules, action, command):
+        """Append a completed workflow as the new head of the branch. Returns a
+        handle for the new workflow.
+
+        Parameters
+        ----------
+        modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow that are completed
+        pending_modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow that require execution
+        action: string
+            Identifier of the action that created the workflow
+        command: vizier.viztrail.module.ModuleCommand
+            Specification of the executed command that created the workflow
 
         Returns
         -------

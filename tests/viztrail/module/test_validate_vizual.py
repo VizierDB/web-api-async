@@ -9,7 +9,7 @@ import unittest
 from vizier.client.command.vizual import delete_column, load_dataset
 from vizier.client.command.vizual import projection, sort_dataset, update_cell
 from vizier.datastore.base import DatasetColumn, DatasetHandle
-from vizier.filestore.fs import DefaultFileStore, METADATA_FILE_NAME
+from vizier.filestore.fs import DefaultFilestore, METADATA_FILE_NAME
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual
@@ -60,7 +60,7 @@ class TestValidateVizual(unittest.TestCase):
 
     def test_load_dataset(self):
         """Test validation of load dataset command."""
-        db = DefaultFileStore(SERVER_DIR)
+        db = DefaultFilestore(SERVER_DIR)
         fh = db.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name='ds',

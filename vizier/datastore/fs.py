@@ -28,7 +28,7 @@ import shutil
 
 from vizier.core.system import build_info
 from vizier.core.util import get_unique_identifier
-from vizier.datastore.base import DatasetHandle, DatasetColumn, DataStore
+from vizier.datastore.base import DatasetHandle, DatasetColumn, Datastore
 from vizier.datastore.base import validate_schema
 from vizier.datastore.mem import InMemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
@@ -188,7 +188,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             json.dump(doc, f)
 
 
-class FileSystemDataStore(DataStore):
+class FileSystemDatastore(Datastore):
     """Implementation of Vizier data store. Uses the file system to maintain
     datasets.
     """
@@ -202,8 +202,8 @@ class FileSystemDataStore(DataStore):
             Dictionary with configuration parameters. The only parameter that
             currently is expected is 'directory'
         """
-        super(FileSystemDataStore, self).__init__(
-            build_info('FileSystemDataStore')
+        super(FileSystemDatastore, self).__init__(
+            build_info('FileSystemDatastore')
         )
         if not PARA_DIRECTORY in properties:
             raise ValueError('missing parameter \'' + PARA_DIRECTORY + '\'')

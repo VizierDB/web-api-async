@@ -23,7 +23,7 @@ import csv
 from vizier.core.system import build_info
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DatasetHandle, DatasetColumn, DatasetRow
-from vizier.datastore.base import DataStore, max_column_id, max_row_id
+from vizier.datastore.base import Datastore, max_column_id, max_row_id
 from vizier.datastore.base import validate_schema
 from vizier.datastore.metadata import DatasetMetadata
 from vizier.datastore.reader import InMemDatasetReader
@@ -159,13 +159,13 @@ class InMemDatasetHandle(DatasetHandle):
         return InMemDatasetReader(rows)
 
 
-class InMemDataStore(DataStore):
+class InMemDatastore(Datastore):
     """Non-persistent implementation of data store. Maintains a dictionary of
     datasets in main memory. Data is not stored persistently.
     """
     def __init__(self):
         """Initialize the build information and data store dictionary."""
-        super(InMemDataStore, self).__init__(build_info('InMemDataStore'))
+        super(InMemDatastore, self).__init__(build_info('InMemDatastore'))
         self.datasets = dict()
 
     def create_dataset(
@@ -333,7 +333,7 @@ class InMemDataStore(DataStore):
         return obj_annos.update(identifier=anno_id, key=key, value=value)
 
 
-class VolatileDataStore(DataStore):
+class VolatileDatastore(Datastore):
     """Non-persistent implementation of data store that reads datasets from
     an existing data store.
 
@@ -346,12 +346,12 @@ class VolatileDataStore(DataStore):
 
         Parameters
         ----------
-        datastore: vizier.datastore.base.DataStore
+        datastore: vizier.datastore.base.Datastore
             Existing data store containing the database state.
         """
-        super(VolatileDataStore, self).__init__(build_info('VolatileDataStore'))
+        super(VolatileDatastore, self).__init__(build_info('VolatileDatastore'))
         self.datastore = datastore
-        self.mem_store = InMemDataStore()
+        self.mem_store = InMemDatastore()
         self.deleted_datasets = set()
 
     def create_dataset(

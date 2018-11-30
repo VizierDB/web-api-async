@@ -337,7 +337,7 @@ class DefaultVizualEngine(VizualEngine):
 
         Parameters
         ----------
-        datastore : vizier.datastore.base.DataStore
+        datastore : vizier.datastore.base.Datastore
             Datastore to retireve and update datasets.
         fileserver:  vizier.filestore.base.FileSever
             File server to access uploaded  CSV files

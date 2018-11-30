@@ -18,7 +18,7 @@
 interact with the file store component of the Vizier instance.
 """
 
-class FileStoreApi(object):
+class FilestoreApi(object):
     """API wrapper around the file store object that manages the file store of
     the vizier instance.
 
@@ -32,7 +32,7 @@ class FileStoreApi(object):
 
         Parameters
         ----------
-        filestore: vizier.filestore.base.FileStore
+        filestore: vizier.filestore.base.Filestore
             Backend store for uploaded files
         """
         self.filestore = filestore
@@ -45,7 +45,7 @@ class FileStoreApi(object):
         list(vizier.filestore.base.FileHandle)
         """
         return self.filestore.list_files()
-        
+
     def upload_file(self, filename):
         """Upload a given file to the file store. Does not expect a file of a
         specific type. The base name of the given file will be the name of the

@@ -44,9 +44,9 @@ class VizierApi(object):
         ----------
         viztrail_repository : workflow.ViztrailRepository
             Repository for viztrails (aka projects)
-        datastore : database.DataStore
+        datastore : database.Datastore
             Backend store for datasets
-        filestore: vizier.filestore.base.FileStore
+        filestore: vizier.filestore.base.Filestore
             Backend store for uploaded CSV files
         config : vizier.config.AppConfig
             Application configuration parameters

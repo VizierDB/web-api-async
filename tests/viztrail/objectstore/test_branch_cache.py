@@ -40,7 +40,7 @@ class TestOSBranchCache(unittest.TestCase):
             base_path=base_path
         )
         branch = vt.get_default_branch()
-        wf = branch.append_exec_result(
+        wf = branch.append_module(
             command=python_cell(source='print 2+2'),
             external_form='print 2+2',
             state=MODULE_SUCCESS,
@@ -55,7 +55,7 @@ class TestOSBranchCache(unittest.TestCase):
         )
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
         for i in range(DEFAULT_CACHE_SIZE):
-            branch.append_exec_result(
+            branch.append_module(
                 command=python_cell(source='print 2+2'),
                 external_form='print 2+2',
                 state=MODULE_SUCCESS,
@@ -70,7 +70,7 @@ class TestOSBranchCache(unittest.TestCase):
             )
             self.assertEquals(len(branch.cache), (i + 1))
             self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
-        branch.append_exec_result(
+        branch.append_module(
             command=python_cell(source='print 2+2'),
             external_form='print 2+2',
             state=MODULE_SUCCESS,

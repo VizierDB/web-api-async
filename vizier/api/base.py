@@ -26,7 +26,7 @@ Internally the API is further divided into four parts that deal with the file
 store, data store, viztrail repository and the workflow execution engine.
 """
 
-from vizier.api.filestore import FileStoreApi
+from vizier.api.filestore import FilestoreApi
 from vizier.api.viztrails import ViztrailRepositoryApi
 
 
@@ -44,12 +44,12 @@ class VizierApi(object):
 
         Parameters
         ----------
-        filestore: vizier.filestore.base.FileStore
+        filestore: vizier.filestore.base.Filestore
             Backend store for uploaded files
         viztrails_repository: vizier.viztrail.repository.ViztrailRepository
             Viztrail manager for the API instance
         """
-        self.filestore = FileStoreApi(filestore)
+        self.filestore = FilestoreApi(filestore)
         self.projects = ViztrailRepositoryApi(viztrails_repository)
 
     # --------------------------------------------------------------------------

@@ -133,7 +133,7 @@ class ModuleArguments(object):
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.base.DatasetHandle), optional
             Datasets in the current database state keyed by the dataset name
-        filestore: vizier.filestore.base.FileStore, optional
+        filestore: vizier.filestore.base.Filestore, optional
             File store to access file handles for uploaded files
 
         Returns
@@ -343,7 +343,7 @@ class ModuleCommand(object):
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.base.DatasetHandle), optional
             Datasets in the current database state keyed by the dataset name
-        filestore: vizier.filestore.base.FileStore, optional
+        filestore: vizier.filestore.base.Filestore, optional
             File store to access file handles for uploaded files
 
         Returns
@@ -468,14 +468,11 @@ def get_column_name(ds_name, column_id, datasets):
     """
     if not datasets is None:
         try:
-            # Try to convert col_id to int (as this is not guaranteed)
-            col_id = int(column_id)
             # Get descriptor for dataset with given name
             if ds_name in datasets:
-                ds = datasets[ds_name]
-                for col in ds.columns:
-                    if col.identifier == col_id:
-                        return format_str(col.name)
+                col = datasets[ds_name].column_by_id(int(column_id))
+                if not col is None:
+                    return format_str(col.name)
         except Exception:
             pass
     return '?column?'
@@ -489,7 +486,7 @@ def get_file_name(file_uri, filestore):
     ----------
     file_uri: string
         Unique file identifier (either URI or identifier of uploaded file)
-    filestore: vizier.filestore.base.FileStore
+    filestore: vizier.filestore.base.Filestore
         File store to access file handles for uploaded files
 
     Returns

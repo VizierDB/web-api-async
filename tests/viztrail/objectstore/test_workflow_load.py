@@ -42,7 +42,7 @@ class TestOSWorkflow(unittest.TestCase):
         # Append ten modules
         for i in range(5):
             ts = get_current_time()
-            branch.append_exec_result(
+            branch.append_module(
                 command=python_cell(source='print ' + str(i) + '+' + str(i)),
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,

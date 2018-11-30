@@ -21,10 +21,11 @@ and folders in an object store.
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import init_value
-from vizier.core.timestamp import to_datetime
+from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.module import get_module_path
+from vizier.viztrail.module import ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING, MODULE_RUNNING
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
 from vizier.viztrail.workflow import ACTION_CREATE, ACTION_INSERT
@@ -154,16 +155,63 @@ class OSBranchHandle(BranchHandle):
                 del self.cache[0]
         return workflow
 
-    def append_exec_result(
+    def append_completed_workflow(self, modules, action, command):
+        """Append a completed workflow as the new head of the branch. Returns a
+        handle for the new workflow.
+
+        Raises ValueError if any of the modules in the new workflow is in an
+        active state.
+
+        Parameters
+        ----------
+        modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow
+        action: string
+            Identifier of the action that created the workflow
+        command: vizier.viztrail.module.ModuleCommand
+            Specification of the executed command that created the workflow
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
+        """
+        # Create list of module identifier. Ensure that no module is in active
+        # state
+        module_identifiers = list()
+        for m in modules:
+            if m.is_active:
+                raise ValueError('completed workflow contains active modules')
+            module_identifiers.append(m.identifier)
+        descriptor = write_workflow_handle(
+            modules=module_identifiers,
+            workflow_count=len(self.workflows),
+            base_path=self.base_path,
+            object_store=self.object_store,
+            action=action,
+            command=command,
+            created_at=get_current_time()
+        )
+        # Get new workflow and replace the branch head. Move the current head
+        # to the cache.
+        workflow = WorkflowHandle(
+            identifier=descriptor.identifier,
+            branch_id=self.identifier,
+            modules=modules,
+            descriptor=descriptor
+        )
+        self.workflows.append(workflow)
+        if not self.head is None:
+            self.add_to_cache(self.head)
+        self.head = workflow
+        return workflow
+
+    def append_module(
         self, command, external_form, state, datasets, outputs, provenance,
         timestamp
     ):
         """Modify the workflow at the branch head by appending the result of
         an executed workflow module. The modified workflow will be the new head
         of the branch.
-
-        Raises ValueError if the state of the new module or the branch head is
-        active.
 
         Parameters
         ----------
@@ -187,9 +235,6 @@ class OSBranchHandle(BranchHandle):
         -------
         vizier.viztrail.workflow.base.WorkflowHandle
         """
-        # Raise an exception if the module state is active
-        if state == MODULE_PENDING or state == MODULE_RUNNING:
-            raise ValueError('cannot append result for active module')
         # Get modules in the workflow that is currently the branch head
         if self.head is None:
             modules = list()
@@ -229,6 +274,64 @@ class OSBranchHandle(BranchHandle):
             identifier=descriptor.identifier,
             branch_id=self.identifier,
             modules=modules,
+            descriptor=descriptor
+        )
+        self.workflows.append(workflow)
+        if not self.head is None:
+            self.add_to_cache(self.head)
+        self.head = workflow
+        return workflow
+
+    def append_pending_workflow(self, modules, pending_modules, action, command):
+        """Append a completed workflow as the new head of the branch. Returns a
+        handle for the new workflow.
+
+        Parameters
+        ----------
+        modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow that are completed
+        pending_modules: list(vizier.viztrail.module.ModuleHandle
+            List of modules in the workflow that require execution
+        action: string
+            Identifier of the action that created the workflow
+        command: vizier.viztrail.module.ModuleCommand
+            Specification of the executed command that created the workflow
+
+        Returns
+        -------
+        vizier.viztrail.workflow.base.WorkflowHandle
+        """
+        workflow_modules = list(modules)
+        ts = ModuleTimestamp()
+        for pending_module in pending_modules:
+            module = OSModuleHandle.create_module(
+                command=pending_module.command,
+                external_form=pending_module.external_form,
+                state=pending_module.state,
+                timestamp=ts,
+                datasets=pending_module.datasets,
+                outputs=pending_module.outputs,
+                provenance=pending_module.provenance,
+                module_folder=self.modules_folder,
+                object_store=self.object_store
+            )
+            workflow_modules.append(module)
+        # Write handle for workflow at branch head
+        descriptor = write_workflow_handle(
+            modules=[m.identifier for m in workflow_modules],
+            workflow_count=len(self.workflows),
+            base_path=self.base_path,
+            object_store=self.object_store,
+            action=action,
+            command=command,
+            created_at=ts.created_at
+        )
+        # Get new workflow and replace the branch head. Move the current head
+        # to the cache.
+        workflow = WorkflowHandle(
+            identifier=descriptor.identifier,
+            branch_id=self.identifier,
+            modules=workflow_modules,
             descriptor=descriptor
         )
         self.workflows.append(workflow)

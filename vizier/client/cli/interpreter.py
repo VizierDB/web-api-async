@@ -16,7 +16,7 @@
 
 """Simple command line interpreter to test functionality of the vizier Api."""
 
-from vizier.client.cli.filestore import FileStoreCommands
+from vizier.client.cli.filestore import FilestoreCommands
 from vizier.client.cli.viztrails import ViztrailsCommands
 
 
@@ -36,7 +36,7 @@ class CommandInterpreter(object):
         """
         self.api = api
         self.commands = [
-            FileStoreCommands(api),
+            FilestoreCommands(api),
             ViztrailsCommands(api=api, defaults=defaults)
         ]
 

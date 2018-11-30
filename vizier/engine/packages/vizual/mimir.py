@@ -44,7 +44,7 @@ class MimirVizualEngine(DefaultVizualEngine):
 
         Parameters
         ----------
-        datastore: vizier.datastore.mimir.MimirDataStore
+        datastore: vizier.datastore.mimir.MimirDatastore
             Datastore to retireve and update datasets.
         fileserver:  vizier.filestore.base.FileSever
             File server to access uploaded  CSV files

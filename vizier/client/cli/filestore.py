@@ -19,7 +19,7 @@
 from vizier.client.cli.command import Command
 
 
-class FileStoreCommands(Command):
+class FilestoreCommands(Command):
     """"Collection of commands that interact with the file store."""
     def __init__(self, api):
         """Initialize the file store reference from the Api object.

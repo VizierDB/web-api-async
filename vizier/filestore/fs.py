@@ -41,7 +41,7 @@ VERSION_INFO = '0.2.1'
 PARA_DIRECTORY = 'directory'
 
 
-class DefaultFileStore(fs.FileStore):
+class DefaultFilestore(fs.Filestore):
     """Default file server implementation. Keeps all files in a given base
     directory on disk. Files are named by their unique identifier (with suffix
     .dat for convenience). File metadata is kept in a tab-delimited file
@@ -60,7 +60,7 @@ class DefaultFileStore(fs.FileStore):
         base_directory : string
             Path to the base directory.
         """
-        super(DefaultFileStore, self).__init__(
+        super(DefaultFilestore, self).__init__(
             build_info('Default File Server', version_info=VERSION_INFO)
         )
         # Create the base directory if it does not exist
@@ -167,12 +167,12 @@ class DefaultFileStore(fs.FileStore):
 
         Returns
         -------
-        vizier.filestore.fs.DefaultFileStore
+        vizier.filestore.fs.DefaultFilestore
         """
         # Raise an exception if the pase directory argument is not given
         if not PARA_DIRECTORY in properties:
             raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
-        return DefaultFileStore(base_directory=properties[PARA_DIRECTORY])
+        return DefaultFilestore(base_directory=properties[PARA_DIRECTORY])
 
     def list_files(self):
         """Get list of file handles for all uploaded files.

@@ -146,7 +146,7 @@ class ModuleHandle(ModuleState):
 
     Attributes
     ----------
-    identifier: string
+    identifier: string, optional
         Unique module identifier
     command: vizier.viztrail.command.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
@@ -157,7 +157,7 @@ class ModuleHandle(ModuleState):
         Printable representation of the module command
     outputs: vizier.viztrail.module.ModuleOutputs
         Module output streams STDOUT and STDERR
-    prov: vizier.viztrail.module.ModuleProvenance
+    provenance: vizier.viztrail.module.ModuleProvenance
         Provenance information about datasets that were read and writen by
         previous execution of the module.
     state: int
@@ -166,7 +166,7 @@ class ModuleHandle(ModuleState):
         Module timestamp
     """
     def __init__(
-        self, identifier, command, external_form, state=MODULE_PENDING,
+        self, command, external_form, identifier=None, state=None,
         timestamp=None, datasets=None, outputs=None, provenance=None
     ):
         """Initialize the module handle. For new modules, datasets and outputs
@@ -174,12 +174,12 @@ class ModuleHandle(ModuleState):
 
         Parameters
         ----------
-        identifier : string
-            Unique module identifier
         command : vizier.viztrail.command.ModuleCommand
             Specification of the module (i.e., package, name, and arguments)
         external_form: string
             Printable representation of module command
+        identifier : string, optional
+            Unique module identifier
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.ModuleTimestamp, optional
@@ -193,15 +193,16 @@ class ModuleHandle(ModuleState):
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
-        super(ModuleHandle, self).__init__(state)
+        super(ModuleHandle, self).__init__(
+            state=state if not state is None else MODULE_PENDING
+        )
         self.identifier = identifier
         self.command = command
         self.external_form = external_form
-        self.state = state
-        self.timestamp = timestamp if not timestamp is None else ModuleTimestamp()
         self.datasets = datasets if not datasets is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.provenance = provenance if not provenance is None else ModuleProvenance()
+        self.timestamp = timestamp if not timestamp is None else ModuleTimestamp()
 
     @abstractmethod
     def set_canceled(self, finished_at=None, outputs=None):

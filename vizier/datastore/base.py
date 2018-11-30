@@ -347,7 +347,7 @@ class DatasetRow(object):
 # Datastore
 # ------------------------------------------------------------------------------
 
-class DataStore(VizierSystemComponent):
+class Datastore(VizierSystemComponent):
     """Abstract API to store and retireve Vizier datasets."""
     def __init__(self, build):
         """Initialize the build information. Expects a dictionary containing two
@@ -360,7 +360,7 @@ class DataStore(VizierSystemComponent):
         build : dict()
             Build information
         """
-        super(DataStore, self).__init__(build)
+        super(Datastore, self).__init__(build)
 
     def components(self):
         """List containing component descriptor.

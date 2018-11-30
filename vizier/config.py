@@ -74,7 +74,7 @@ ENV_DIRECTORY = '../.env'
 DEFAULT_SETTINGS = {
     'datastore': {
         'module': 'vizier.datastore.fs',
-        'class': 'FileSystemDataStore',
+        'class': 'FileSystemDatastore',
         'properties': {
             ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
         }
@@ -82,7 +82,7 @@ DEFAULT_SETTINGS = {
     'debug': True,
     'filestore': {
         'module': 'vizier.filestore.fs',
-        'class': 'DefaultFileStore',
+        'class': 'DefaultFilestore',
         'properties': {
             fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
         }

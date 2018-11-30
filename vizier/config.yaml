@@ -1,12 +1,12 @@
 datastore:
     module: 'vizier.datastore.fs'
-    class: 'FileSystemDataStore'
+    class: 'FileSystemDatastore'
     properties:
         directory: './.vizierdb/datasets'
 debug: True
 filestore:
     module: 'vizier.filestore.fs'
-    class: 'DefaultFileStore'
+    class: 'DefaultFilestore'
     properties:
         directory: './.vizierdb/files'
 logs:
