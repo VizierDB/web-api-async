@@ -6,7 +6,7 @@ import unittest
 from vizier.viztrail.driver.objectstore.branch import get_workflow_id
 
 
-class TestOSViztrail(unittest.TestCase):
+class TestOSBranchWorkflowID(unittest.TestCase):
 
     def test_workflow_identifier(self):
         """Ensure that the get_workflow_id function returns unique identifier

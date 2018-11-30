@@ -5,12 +5,13 @@ import unittest
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs, OutputObject, TextOutput
+from vizier.viztrail.module import MODULE_PENDING
 from vizier.client.command.pycell import python_cell
 
 MODULE_DIR = './.temp'
 
 
-class TestModuleWorkflow(unittest.TestCase):
+class TestModuleState(unittest.TestCase):
 
     def setUp(self):
         """Create an empty directory."""
@@ -26,15 +27,16 @@ class TestModuleWorkflow(unittest.TestCase):
     def test_canceled(self):
         """Update module state from pending to running."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
+            timestamp=ModuleTimestamp()
+        )
         module.set_canceled()
         self.assertTrue(module.is_canceled)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -46,7 +48,8 @@ class TestModuleWorkflow(unittest.TestCase):
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_canceled)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -71,7 +74,8 @@ class TestModuleWorkflow(unittest.TestCase):
         self.assertIsNone(module.provenance.read)
         self.assertIsNone(module.provenance.write)
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_canceled)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -86,15 +90,16 @@ class TestModuleWorkflow(unittest.TestCase):
     def test_error(self):
         """Update module state from pending to error."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
+            timestamp=ModuleTimestamp()
+        )
         module.set_error()
         self.assertTrue(module.is_error)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -106,7 +111,8 @@ class TestModuleWorkflow(unittest.TestCase):
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_error)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -131,7 +137,8 @@ class TestModuleWorkflow(unittest.TestCase):
         self.assertIsNone(module.provenance.read)
         self.assertIsNone(module.provenance.write)
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_error)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -146,15 +153,16 @@ class TestModuleWorkflow(unittest.TestCase):
     def test_running(self):
         """Update module state from pending to running."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
+            timestamp=ModuleTimestamp(),
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+        )
         self.assertTrue(module.is_pending)
         module.set_running()
         self.assertTrue(module.is_running)
@@ -167,7 +175,8 @@ class TestModuleWorkflow(unittest.TestCase):
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_running)
         self.assertIsNotNone(module.timestamp.started_at)
@@ -184,7 +193,8 @@ class TestModuleWorkflow(unittest.TestCase):
         self.assertEquals(module.timestamp.started_at, module.timestamp.created_at)
         self.assertEquals(module.external_form, 'Some form')
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertEquals(module.timestamp.started_at, module.timestamp.created_at)
         self.assertEquals(module.external_form, 'Some form')
@@ -192,37 +202,40 @@ class TestModuleWorkflow(unittest.TestCase):
     def test_safe_write(self):
         """Update module state with write error."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
+            timestamp=ModuleTimestamp(),
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+        )
         self.assertTrue(module.is_pending)
         module.set_running()
         self.assertTrue(module.is_running)
         module.set_success(outputs=ModuleOutputs(stderr=[None]))
         self.assertTrue(module.is_error)
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_running)
 
     def test_success(self):
         """Update module state from pending to success."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
+            timestamp=ModuleTimestamp(),
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+        )
         self.assertTrue(module.is_pending)
         module.set_running()
         module.set_success()
@@ -237,7 +250,8 @@ class TestModuleWorkflow(unittest.TestCase):
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_success)
         self.assertIsNotNone(module.timestamp.started_at)
@@ -269,7 +283,8 @@ class TestModuleWorkflow(unittest.TestCase):
         self.assertIsNotNone(module.provenance.write)
         self.assertEquals(module.provenance.write['DS1'], 'ID2')
         module = OSModuleHandle.load_module(
-            module_path=os.path.join(MODULE_DIR, 'MODULE')
+            identifier=module.identifier,
+            module_path=module.module_path
         )
         self.assertTrue(module.is_success)
         self.assertIsNotNone(module.timestamp.started_at)
@@ -288,15 +303,16 @@ class TestModuleWorkflow(unittest.TestCase):
     def test_state(self):
         """Ensure that only one of the state flag is True at the same time."""
         # Create original module
-        module = OSModuleHandle(
-            identifier='MODULE',
+        module = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
-            module_path=os.path.join(MODULE_DIR, 'MODULE'),
+            state=MODULE_PENDING,
+            module_folder=MODULE_DIR,
+            timestamp=ModuleTimestamp(),
             datasets={'DS1': 'ID1'},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
-        ).write_module()
+        )
         # Pending
         self.assertTrue(module.is_pending)
         self.assertFalse(module.is_canceled)

@@ -9,6 +9,7 @@ from vizier.client.command.pycell import python_cell
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs
 from vizier.viztrail.module import MODULE_SUCCESS
 
 import vizier.viztrail.driver.objectstore.branch as br
@@ -78,15 +79,17 @@ class TestOSViztrail(unittest.TestCase):
         # Create five modules
         modules = list()
         for i in range(5):
-            identifier = 'MOD' + str(i)
-            modules.append(identifier)
-            OSModuleHandle(
-                identifier=identifier,
+            identifier = OSModuleHandle.create_module(
                 command=python_cell(source='print ' + str(i)),
                 external_form='TEST MODULE ' + str(i),
                 state=MODULE_SUCCESS,
-                module_path=vt.object_store.join(vt.modules_folder, identifier)
-            ).write_module()
+                outputs=ModuleOutputs(),
+                provenance=ModuleProvenance(),
+                timestamp=ModuleTimestamp(),
+                datasets=dict(),
+                module_folder=vt.modules_folder,
+            ).identifier
+            modules.append(identifier)
         branch = vt.create_branch(
             properties={PROPERTY_NAME: 'My Branch'},
             modules=modules
@@ -100,7 +103,6 @@ class TestOSViztrail(unittest.TestCase):
         wf = branch.get_workflow(branch.head.identifier)
         self.assertEquals(len(wf.modules), 5)
         for i in range(5):
-            self.assertEquals(wf.modules[i].identifier, 'MOD' + str(i))
             self.assertEquals(wf.modules[i].external_form, 'TEST MODULE ' + str(i))
         self.assertEquals(vt.last_modified_at, branch.last_modified_at)
         self.assertEquals(vt.last_modified_at, branch.last_modified_at)
@@ -125,15 +127,17 @@ class TestOSViztrail(unittest.TestCase):
         # Create five modules. The last one is active
         modules = list()
         for i in range(5):
-            identifier = 'MOD' + str(i)
-            modules.append(identifier)
-            m = OSModuleHandle(
-                identifier=identifier,
+            m = OSModuleHandle.create_module(
                 command=python_cell(source='print ' + str(i)),
                 external_form='TEST MODULE ' + str(i),
                 state=MODULE_SUCCESS,
-                module_path=vt.object_store.join(vt.modules_folder, identifier)
-            ).write_module()
+                outputs=ModuleOutputs(),
+                provenance=ModuleProvenance(),
+                timestamp=ModuleTimestamp(),
+                datasets=dict(),
+                module_folder=vt.modules_folder,
+            )
+            modules.append(m.identifier)
         m.set_running()
         with self.assertRaises(ValueError):
             vt.create_branch(

@@ -113,7 +113,7 @@ class OSViztrailHandle(ViztrailHandle):
         modules: list(string), optional
             List of module identifier for the modules in the workflow at the
             head of the branch
-
+            
         Returns
         -------
         vizier.viztrail.driver.objectstore.branch.OSBranchHandle

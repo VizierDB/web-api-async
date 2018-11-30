@@ -37,7 +37,6 @@ KEY_DATASET_ID = 'id'
 KEY_DATASET_NAME = 'name'
 KEY_EXTERNAL_FORM = 'externalForm'
 KEY_FINISHED_AT = 'finishedAt'
-KEY_IDENTIFIER = 'id'
 KEY_STARTED_AT = 'startedAt'
 KEY_OUTPUTS = 'output'
 KEY_OUTPUT_TYPE = 'type'
@@ -143,19 +142,77 @@ class OSModuleHandle(ModuleHandle):
 
     @staticmethod
     def create_module(
-        command, external_form, state, datasets, outputs, provenance, timestamp,
-        modules_folder, object_store=None
+        command, external_form, state, timestamp, datasets, outputs, provenance,
+        module_folder, object_store=None
     ):
+        """Create a new materialized module instance for the given values.
+
+        Parameters
+        ----------
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the module (i.e., package, name, and arguments)
+        external_form: string
+            Printable representation of module command
+        state: int
+            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
+        timestamp: vizier.viztrail.module.ModuleTimestamp
+            Module timestamp
+        datasets : dict(string:string)
+            Dictionary of resulting datasets. The user-specified name is the key
+            and the unique dataset identifier the value.
+        outputs: vizier.viztrail.module.ModuleOutputs
+            Module output streams STDOUT and STDERR
+        provenance: vizier.viztrail.module.ModuleProvenance
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
+        module_folder: string
+            Object store folder containing module resources
+        object_store: vizier.core.io.base.ObjectStore, optional
+            Object store implementation to access and maintain resources
+
+        Returns
+        -------
+        vizier.viztrail.driver.objectstore.module.OSModuleHandle
         """
-        """
-        pass
+        # Make sure the object store is not None
+        if object_store is None:
+            object_store = DefaultObjectStore()
+        # Serialize module components and materialize
+        obj = serialize_module(
+            command=command,
+            external_form=external_form,
+            state=state,
+            timestamp=timestamp,
+            datasets=datasets,
+            outputs=outputs,
+            provenance=provenance
+        )
+        identifier = object_store.create_object(
+            parent_folder=module_folder,
+            content=obj
+        )
+        # Return handle for created module
+        return OSModuleHandle(
+            identifier=identifier,
+            command=command,
+            external_form=external_form,
+            module_path=object_store.join(module_folder, identifier),
+            state=state,
+            timestamp=timestamp,
+            datasets=datasets,
+            outputs=outputs,
+            provenance=provenance,
+            object_store=object_store
+        )
 
     @staticmethod
-    def load_module(module_path, object_store=None):
+    def load_module(identifier, module_path, object_store=None):
         """Load module from given object store.
 
         Parameters
         ----------
+        identifier: string
+            Unique module identifier
         module_path: string
             Resource path for module object
         object_store: vizier.core.io.base.ObjectStore, optional
@@ -209,7 +266,7 @@ class OSModuleHandle(ModuleHandle):
         provenance = ModuleProvenance(read=read_prov, write=write_prov)
         # Return module handle
         return OSModuleHandle(
-            identifier=obj[KEY_IDENTIFIER],
+            identifier=identifier,
             command=command,
             external_form=obj[KEY_EXTERNAL_FORM],
             module_path=module_path,
@@ -323,64 +380,20 @@ class OSModuleHandle(ModuleHandle):
         self.write_safe()
 
     def write_module(self):
-        """Write current module state to object store.
-
-        Returns
-        -------
-        vizier.viztrail.driver.objectstore.module.OSModuleHandle
-        """
-        # Create dictionary serialization for module timestamps
-        timestamp = {KEY_CREATED_AT: self.timestamp.created_at.isoformat()}
-        if not self.timestamp.started_at is None:
-            timestamp[KEY_STARTED_AT] = self.timestamp.started_at.isoformat()
-        if not self.timestamp.finished_at is None:
-            timestamp[KEY_FINISHED_AT] = self.timestamp.finished_at.isoformat()
-        # Create dictionary serialization for module provenance
-        prov = {}
-        if not self.provenance.read is None:
-            prov[KEY_PROVENANCE_READ] = [{
-                    KEY_DATASET_NAME: name,
-                    KEY_DATASET_ID: self.provenance.read[name]
-                } for name in self.provenance.read
-            ]
-        if not self.provenance.write is None:
-            prov[KEY_PROVENANCE_WRITE] = [{
-                    KEY_DATASET_NAME: name,
-                    KEY_DATASET_ID: self.provenance.write[name]
-                } for name in self.provenance.write
-            ]
-        # Create dictionary serialization for the module handle
-        obj = {
-            KEY_IDENTIFIER: self.identifier,
-            KEY_EXTERNAL_FORM: self.external_form,
-            KEY_COMMAND: {
-                KEY_PACKAGE_ID: self.command.package_id,
-                KEY_COMMAND_ID: self.command.command_id,
-                KEY_ARGUMENTS: self.command.arguments.to_list()
-            },
-            KEY_STATE: self.state,
-            KEY_OUTPUTS: {
-                KEY_STDERR: [{
-                        KEY_OUTPUT_TYPE: obj.type,
-                        KEY_OUTPUT_VALUE: obj.value
-                    } for obj in self.outputs.stderr],
-                KEY_STDOUT: [{
-                        KEY_OUTPUT_TYPE: obj.type,
-                        KEY_OUTPUT_VALUE: obj.value
-                    } for obj in self.outputs.stdout]
-            },
-            KEY_TIMESTAMP: timestamp,
-            KEY_DATASETS: [{
-                    KEY_DATASET_NAME: name,
-                    KEY_DATASET_ID: self.datasets[name]
-                } for name in self.datasets],
-            KEY_PROVENANCE: prov
-        }
+        """Write current module state to object store."""
+        obj = serialize_module(
+            command=self.command,
+            external_form=self.external_form,
+            state=self.state,
+            timestamp=self.timestamp,
+            datasets=self.datasets,
+            outputs=self.outputs,
+            provenance=self.provenance
+        )
         self.object_store.write_object(
             object_path=self.module_path,
             content=obj
         )
-        return self
 
     def write_safe(self):
         """The write safe method writes the current module state to the object
@@ -465,3 +478,77 @@ def get_output_stream(items):
             )
         )
     return result
+
+
+def serialize_module(command, external_form, state, timestamp, datasets, outputs, provenance):
+    """Get dictionary serialization of a module.
+
+    Parameters
+    ----------
+    command : vizier.viztrail.command.ModuleCommand
+        Specification of the module (i.e., package, name, and arguments)
+    external_form: string
+        Printable representation of module command
+    state: int
+        Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
+    timestamp: vizier.viztrail.module.ModuleTimestamp
+        Module timestamp
+    datasets : dict(string:string)
+        Dictionary of resulting datasets. The user-specified name is the key
+        and the unique dataset identifier the value.
+    outputs: vizier.viztrail.module.ModuleOutputs
+        Module output streams STDOUT and STDERR
+    provenance: vizier.viztrail.module.ModuleProvenance
+        Provenance information about datasets that were read and writen by
+        previous execution of the module.
+
+    Returns
+    -------
+    dict
+    """
+    # Create dictionary serialization for module timestamps
+    ts = {KEY_CREATED_AT: timestamp.created_at.isoformat()}
+    if not timestamp.started_at is None:
+        ts[KEY_STARTED_AT] = timestamp.started_at.isoformat()
+    if not timestamp.finished_at is None:
+        ts[KEY_FINISHED_AT] = timestamp.finished_at.isoformat()
+    # Create dictionary serialization for module provenance
+    prov = dict()
+    if not provenance.read is None:
+        prov[KEY_PROVENANCE_READ] = [{
+                KEY_DATASET_NAME: name,
+                KEY_DATASET_ID: provenance.read[name]
+            } for name in provenance.read
+        ]
+    if not provenance.write is None:
+        prov[KEY_PROVENANCE_WRITE] = [{
+                KEY_DATASET_NAME: name,
+                KEY_DATASET_ID: provenance.write[name]
+            } for name in provenance.write
+        ]
+    # Create dictionary serialization for the module handle
+    return {
+        KEY_EXTERNAL_FORM: external_form,
+        KEY_COMMAND: {
+            KEY_PACKAGE_ID: command.package_id,
+            KEY_COMMAND_ID: command.command_id,
+            KEY_ARGUMENTS: command.arguments.to_list()
+        },
+        KEY_STATE: state,
+        KEY_OUTPUTS: {
+            KEY_STDERR: [{
+                    KEY_OUTPUT_TYPE: obj.type,
+                    KEY_OUTPUT_VALUE: obj.value
+                } for obj in outputs.stderr],
+            KEY_STDOUT: [{
+                    KEY_OUTPUT_TYPE: obj.type,
+                    KEY_OUTPUT_VALUE: obj.value
+                } for obj in outputs.stdout]
+        },
+        KEY_TIMESTAMP: ts,
+        KEY_DATASETS: [{
+                KEY_DATASET_NAME: name,
+                KEY_DATASET_ID: datasets[name]
+            } for name in datasets],
+        KEY_PROVENANCE: prov
+    }

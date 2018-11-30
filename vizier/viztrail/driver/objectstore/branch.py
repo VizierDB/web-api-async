@@ -152,6 +152,7 @@ class OSBranchHandle(BranchHandle):
             self.cache.append(workflow)
             if len(self.cache) > self.cache_size:
                 del self.cache[0]
+        return workflow
 
     def append_exec_result(
         self, command, external_form, state, datasets, outputs, provenance,
@@ -190,7 +191,7 @@ class OSBranchHandle(BranchHandle):
         if state == MODULE_PENDING or state == MODULE_RUNNING:
             raise ValueError('cannot append result for active module')
         # Get modules in the workflow that is currently the branch head
-        if head is None:
+        if self.head is None:
             modules = list()
         else:
             modules = list(self.head.modules)
@@ -206,9 +207,9 @@ class OSBranchHandle(BranchHandle):
             state=state,
             timestamp=timestamp,
             datasets=datasets,
-            outputs=output,
+            outputs=outputs,
             provenance=provenance,
-            modules_folder=self.modules_folder,
+            module_folder=self.modules_folder,
             object_store=self.object_store
         )
         modules.append(module)
@@ -216,10 +217,11 @@ class OSBranchHandle(BranchHandle):
         descriptor = write_workflow_handle(
             modules=[m.identifier for m in modules],
             workflow_count=len(self.workflows),
-            base_path=base_path,
-            object_store=object_store,
+            base_path=self.base_path,
+            object_store=self.object_store,
             action=ACTION_INSERT,
-            command=command
+            command=command,
+            created_at=timestamp.finished_at
         )
         # Get new workflow and replace the branch head. Move the current head
         # to the cache.
@@ -229,6 +231,7 @@ class OSBranchHandle(BranchHandle):
             modules=modules,
             descriptor=descriptor
         )
+        self.workflows.append(workflow)
         if not self.head is None:
             self.add_to_cache(self.head)
         self.head = workflow
@@ -580,6 +583,7 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
             object_store=object_store
         )
         m = OSModuleHandle.load_module(
+            identifier=module_id,
             module_path=module_path,
             object_store=object_store
         )
@@ -588,7 +592,8 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
 
 
 def write_workflow_handle(
-    modules, workflow_count, base_path, object_store, action, command=None
+    modules, workflow_count, base_path, object_store, action, command=None,
+    created_at=None
 ):
     """Create a handle for a new workflow. Returns the descriptor for the new
     workflow.
@@ -608,6 +613,8 @@ def write_workflow_handle(
         Unique identifier of the action that created the workflow
     command: vizier.viztrail.command.ModuleCommand
         Specification of the executed command that created the workflow
+    created_at: datatime.datetime, optional
+        Timestamp when workflow was created
 
     Returns
     -------
@@ -628,7 +635,7 @@ def write_workflow_handle(
             action=action,
             package_id=command.package_id,
             command_id=command.command_id,
-            created_at=timestamp.finished_at
+            created_at=created_at
         )
     # Write the workflow handle to the object store
     workflow_path = object_store.join(base_path, workflow_id)
