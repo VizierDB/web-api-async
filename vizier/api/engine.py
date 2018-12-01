@@ -22,7 +22,7 @@ from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module import ModuleHandle, ModuleOutputs
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING
-from vizier.viztrail.workflow import ACTION_DELETE
+from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
 
 class WorkflowEngineApi(object):
@@ -206,9 +206,9 @@ class WorkflowEngineApi(object):
                         ModuleHandle(
                             command=m.command,
                             external_for=m.external_form,
-                            datasets=m.external_form,
-                            outputs=m.external_form,
-                            provenance=m.external_form
+                            datasets=m.datasets,
+                            outputs=m.outputs,
+                            provenance=m.provenance
                         )
                     )
                 workflow = branch.append_pending_workflow(
@@ -282,7 +282,57 @@ class WorkflowEngineApi(object):
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the specified branch and the branch head
+        branch = self.get_branch(viztrail_id=viztrail_id, branch_id=branch_id)
+        if branch is None:
+            return None
+        head = branch.get_head()
+        if head is None or len(head.modules) == 0:
+            return None
+        # Get the index of the module at which the new module is inserted
+        module_index = None
+        modules = head.modules
+        for i in range(len(modules)):
+            if modules[i].identifier == before_module_id:
+                module_index = i
+                break
+        if module_index is None:
+            return None
+        # Get handle for the inserted module
+        if module_index > 0:
+            datasets = modules[module_index - 1].datasets
+        else:
+            datasets = dict()
+        inserted_module = ModuleHandle(
+            command=command,
+            external_form=to_external_form(
+                command=command,
+                datasets=datasets,
+                datastore=self.datastore,
+                filestore=self.filestore,
+                packages=self.packages
+            )
+        )
+        # Create list of pending modules for the new workflow
+        pending_modules = [inserted_module]
+        for m in modules[module_index:]:
+            pending_modules.append(
+                ModuleHandle(
+                    command=m.command,
+                    external_for=m.external_form,
+                    datasets=m.datasets,
+                    outputs=m.outputs,
+                    provenance=m.provenance
+                )
+            )
+        workflow = branch.append_pending_workflow(
+            modules=modules[:module_index],
+            pending_modules=pending_modules,
+            action=ACTION_INSERT,
+            command=inserted_module.command
+        )
+        self.backend.execute(command=command, context=datasets)
+        return workflow
 
     def replace_workflow_module(self, viztrail_id, branch_id, module_id, command):
         """Replace an existing module in the workflow at the head of the
@@ -307,7 +357,57 @@ class WorkflowEngineApi(object):
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the specified branch and the branch head
+        branch = self.get_branch(viztrail_id=viztrail_id, branch_id=branch_id)
+        if branch is None:
+            return None
+        head = branch.get_head()
+        if head is None or len(head.modules) == 0:
+            return None
+        # Get the index of the module that is being replaced
+        module_index = None
+        modules = head.modules
+        for i in range(len(modules)):
+            if modules[i].identifier == module_id:
+                module_index = i
+                break
+        if module_index is None:
+            return None
+        # Get handle for the replaced module
+        if module_index > 0:
+            datasets = modules[module_index - 1].datasets
+        else:
+            datasets = dict()
+        replaced_module = ModuleHandle(
+            command=command,
+            external_form=to_external_form(
+                command=command,
+                datasets=datasets,
+                datastore=self.datastore,
+                filestore=self.filestore,
+                packages=self.packages
+            )
+        )
+        # Create list of pending modules for the new workflow
+        pending_modules = [replaced_module]
+        for m in modules[module_index+1:]:
+            pending_modules.append(
+                ModuleHandle(
+                    command=m.command,
+                    external_for=m.external_form,
+                    datasets=m.datasets,
+                    outputs=m.outputs,
+                    provenance=m.provenance
+                )
+            )
+        workflow = branch.append_pending_workflow(
+            modules=modules[:module_index],
+            pending_modules=pending_modules,
+            action=ACTION_REPLACE,
+            command=replaced_module.command
+        )
+        self.backend.execute(command=command, context=datasets)
+        return workflow
 
     def set_canceled(self, viztrail_id, branch_id, finished_at=None, outputs=None):
         """Set status of the first active module at the head of the specified
