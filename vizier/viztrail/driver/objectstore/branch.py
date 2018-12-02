@@ -206,8 +206,8 @@ class OSBranchHandle(BranchHandle):
         return workflow
 
     def append_module(
-        self, command, external_form, state, datasets, outputs, provenance,
-        timestamp
+        self, command, external_form, state, timestamp, datasets=None,
+        outputs=None, provenance=None
     ):
         """Modify the workflow at the branch head by appending the result of
         an executed workflow module. The modified workflow will be the new head
@@ -221,15 +221,15 @@ class OSBranchHandle(BranchHandle):
             Printable representation of the executed command
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        datasets: dict(string)
-            Dictionary of resulting datasets.
-        outputs: vizier.viztrail.module.ModuleOutputs
-            Module output streams STDOUT and STDERR
-        provenance: vizier.viztrail.module.ModuleProvenance
-            Provenance information about datasets that were read and writen by
-            previous execution of the module.
         timestamp: vizier.viztrail.module.ModuleTimestamp
             Module timestamp
+        datasets: dict(string), optional
+            Dictionary of resulting datasets.
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
+            Module output streams STDOUT and STDERR
+        provenance: vizier.viztrail.module.ModuleProvenance, optional
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
 
         Returns
         -------
@@ -240,10 +240,6 @@ class OSBranchHandle(BranchHandle):
             modules = list()
         else:
             modules = list(self.head.modules)
-            # Raise exception if the branch head is active (in which case at
-            # least the last module in the workflow is active)
-            if modules[-1].is_active:
-                raise ValueError('cannot append result to active workflow')
         # Create a new module. At this it is verified that the branch head can
         # be modified with the given result
         module = OSModuleHandle.create_module(

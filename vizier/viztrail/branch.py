@@ -138,8 +138,8 @@ class BranchHandle(NamedObject):
 
     @abstractmethod
     def append_module(
-        self, command, external_form, state, datasets, outputs, provenance,
-        timestamp
+        self, command, external_form, state, timestamp, datasets=None,
+        outputs=None, provenance=None
     ):
         """Modify the workflow at the branch head by appending the result of
         an executed workflow module. The modified workflow will be the new head
@@ -156,15 +156,15 @@ class BranchHandle(NamedObject):
             Printable representation of the executed command
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        datasets: dict(string)
-            Dictionary of resulting datasets.
-        outputs: vizier.viztrail.module.ModuleOutputs
-            Module output streams STDOUT and STDERR
-        provenance: vizier.viztrail.module.ModuleProvenance
-            Provenance information about datasets that were read and writen by
-            previous execution of the module.
         timestamp: vizier.viztrail.module.ModuleTimestamp
             Module timestamp
+        datasets: dict(string), optional
+            Dictionary of resulting datasets.
+        outputs: vizier.viztrail.module.ModuleOutputs, optional
+            Module output streams STDOUT and STDERR
+        provenance: vizier.viztrail.module.ModuleProvenance, optional
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
 
         Returns
         -------

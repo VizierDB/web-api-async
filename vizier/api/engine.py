@@ -19,8 +19,7 @@ orchestrate the execution of data curation workflows.
 """
 
 from vizier.core.timestamp import get_current_time
-from vizier.viztrail.module import ModuleHandle, ModuleOutputs
-from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp
+from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
@@ -116,9 +115,6 @@ class WorkflowEngineApi(object):
                 command=command,
                 external_form=external_form,
                 state=MODULE_PENDING,
-                datasets=dict(),
-                outputs=ModuleOutputs(),
-                provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(
                     created_at=get_current_time()
                 )
@@ -132,7 +128,8 @@ class WorkflowEngineApi(object):
         executed and will be the new head of the branch.
 
         Returns the handle for the modified workflow. The result is None if the
-        viztrail, branch or module do not exist.
+        viztrail, branch or module do not exist. Raises ValueError if the
+        current head of the branch is active.
 
         Parameters
         ----------
@@ -154,6 +151,9 @@ class WorkflowEngineApi(object):
         head = branch.get_head()
         if head is None or len(head.modules) == 0:
             return None
+        # Raise ValueError if the head workflow is active
+        if head.is_active:
+            raise ValueError('cannot delete from active workflow')
         # Get the index of the module that is being deleted
         module_index = None
         for i in range(len(head.modules)):
@@ -264,7 +264,8 @@ class WorkflowEngineApi(object):
         argument.
 
         Returns the handle for the modified workflow. The result is None if
-        the specified viztrail, branch, or module do not exist.
+        the specified viztrail, branch, or module do not exist. Raises
+        ValueError if the current head of the branch is active.
 
         Parameters
         ----------
@@ -289,6 +290,9 @@ class WorkflowEngineApi(object):
         head = branch.get_head()
         if head is None or len(head.modules) == 0:
             return None
+        # Raise ValueError if the head workflow is active
+        if head.is_active:
+            raise ValueError('cannot insert into active workflow')
         # Get the index of the module at which the new module is inserted
         module_index = None
         modules = head.modules
@@ -340,7 +344,8 @@ class WorkflowEngineApi(object):
         result is the new head of the branch.
 
         Returns a handle for the new workflow. Returns None if the specified
-        viztrail, branch, or module do not exist.
+        viztrail, branch, or module do not exist. Raises ValueError if the
+        current head of the branch is active.
 
         Parameters
         ----------
@@ -364,6 +369,9 @@ class WorkflowEngineApi(object):
         head = branch.get_head()
         if head is None or len(head.modules) == 0:
             return None
+        # Raise ValueError if the head workflow is active
+        if head.is_active:
+            raise ValueError('cannot replace in active workflow')
         # Get the index of the module that is being replaced
         module_index = None
         modules = head.modules

@@ -126,3 +126,17 @@ class WorkflowHandle(object):
             if not m.is_success:
                 return ModuleState(m.state)
         return ModuleState(MODULE_SUCCESS)
+
+    @property
+    def is_active(self):
+        """True if the workflow is in an active state. This is indicated by the
+        state of the last module in the workflow.
+
+        Returns
+        -------
+        bool
+        """
+        if len(self.modules) > 0:
+            return self.modules[-1].is_active
+        else:
+            return False
