@@ -31,6 +31,11 @@ import vizier.engine.packages.base as pckg
 ARG_ID = 'id'
 ARG_VALUE = 'value'
 
+"""Constant to represent unknonw package or command identifier in an error
+state.
+"""
+UNKNOWN_ID = 'unknown'
+
 
 class ModuleArguments(object):
     """Nested dictionary of module command arguments."""

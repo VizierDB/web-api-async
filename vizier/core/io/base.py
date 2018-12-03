@@ -178,6 +178,8 @@ class ObjectStore(object):
     def read_object(self, object_path):
         """Read Json document from given path.
 
+        Raises ValueError if no object with given path exists.
+
         Parameters
         ----------
         object_path: string
@@ -412,8 +414,11 @@ class DefaultObjectStore(ObjectStore):
         -------
         dict or list
         """
-        with open(object_path, 'r') as f:
-            return json.load(f)
+        try:
+            with open(object_path, 'r') as f:
+                return json.load(f)
+        except IOError as ex:
+            raise ValueError(ex)
 
     def write_object(self, object_path, content):
         """Write content as Json document to given path.

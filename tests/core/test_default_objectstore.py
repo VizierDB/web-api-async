@@ -134,6 +134,19 @@ class TestDefaultObjectStore(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             store.create_folder(BASE_DIRECTORY)
 
+    def test_error_on_missing(self):
+        """Test that reading a missing object will raise a ValueError."""
+        store = DefaultObjectStore()
+        filename = store.join(BASE_DIRECTORY, 'A.file')
+        store.create_object(BASE_DIRECTORY, identifier='A.file', content={'A': 1})
+        self.assertTrue(store.exists(filename))
+        # Re-create the store to ensure that this has no effect
+        store = DefaultObjectStore()
+        store.read_object(filename)
+        os.remove(filename)
+        with self.assertRaises(ValueError):
+            store.read_object(filename)
+
     def test_exists(self):
         """Test exists method."""
         store = DefaultObjectStore()
@@ -145,7 +158,7 @@ class TestDefaultObjectStore(unittest.TestCase):
         self.assertFalse(store.exists(dirname))
         os.makedirs(dirname)
         self.assertTrue(store.exists(dirname))
-        # Re-create teh store to ensure that this has no effect
+        # Re-create the store to ensure that this has no effect
         store = DefaultObjectStore()
         self.assertTrue(store.exists(filename))
         self.assertTrue(store.exists(dirname))
@@ -180,7 +193,7 @@ class TestDefaultObjectStore(unittest.TestCase):
         self.assertEquals(len(dirs), 2)
         self.assertTrue('A' in dirs)
         self.assertTrue('B' in dirs)
-        # Re-create teh store to ensure that this has no effect
+        # Re-create the store to ensure that this has no effect
         store = DefaultObjectStore()
         dirs = store.list_folders(parent_folder=dirname, create=True)
         self.assertEquals(len(dirs), 2)

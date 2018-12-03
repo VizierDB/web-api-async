@@ -66,7 +66,7 @@ class TestOSWorkflow(unittest.TestCase):
                 command=command
             )
             self.assertEquals(len(branch.get_history()), (i + 1))
-        # This is a hack to similate loading workflows with active modules
+        # This is a hack to simulate loading workflows with active modules
         # Change state of last two modules in branch head to an active state
         m = branch.get_head().modules[-2]
         m.state = MODULE_RUNNING
@@ -90,6 +90,50 @@ class TestOSWorkflow(unittest.TestCase):
         wf = branch.get_workflow(branch.get_history()[1].identifier)
         self.assertTrue(wf.modules[0].is_success)
         self.assertTrue(wf.modules[1].is_canceled)
+
+    def test_load_with_missing_modules(self):
+        """Test loading workflows with active modules."""
+        base_path = os.path.join(os.path.abspath(REPO_DIR), 'ABC')
+        os.makedirs(base_path)
+        vt = OSViztrailHandle.create_viztrail(
+            identifier='ABC',
+            properties=None,
+            base_path=base_path
+        )
+        branch = vt.get_default_branch()
+        # Append ten modules
+        for i in range(5):
+            ts = get_current_time()
+            command = python_cell(source='print ' + str(i) + '+' + str(i))
+            module = OSModuleHandle.create_module(
+                command=command,
+                external_form='print ' + str(i) + '+' + str(i),
+                state=MODULE_SUCCESS,
+                datasets=dict(),
+                outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
+                provenance=ModuleProvenance(),
+                timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            if not branch.head is None:
+                modules = branch.head.modules + [module]
+            else:
+                modules = [module]
+            branch.append_completed_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command
+            )
+            self.assertEquals(len(branch.get_history()), (i + 1))
+        # Delete the file for the third module to simulate an error condition in
+        # which a file wasn't written properly
+        os.remove(branch.head.modules[2].module_path)
+        self.assertFalse(os.path.isfile(branch.head.modules[2].module_path))
+        vt = OSViztrailHandle.load_viztrail(base_path)
+        branch = vt.get_default_branch()
+        self.assertTrue(branch.head.get_state().is_error)
+        self.assertTrue(branch.head.modules[2].is_error)
 
 
 if __name__ == '__main__':

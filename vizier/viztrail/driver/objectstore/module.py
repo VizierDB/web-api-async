@@ -20,11 +20,11 @@ object store.
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
-from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
 from vizier.viztrail.module import ModuleHandle, ModuleOutputs, ModuleProvenance
 from vizier.viztrail.module import ModuleTimestamp, OutputObject, TextOutput
 from vizier.viztrail.module import MODULE_CANCELED, MODULE_ERROR, MODULE_PENDING
-from vizier.viztrail.module import MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.module import MODULE_ERROR, MODULE_RUNNING, MODULE_SUCCESS
 
 
 """Json labels for serialized object."""
@@ -225,8 +225,23 @@ class OSModuleHandle(ModuleHandle):
         # Make sure the object store is not None
         if object_store is None:
             object_store = DefaultObjectStore()
-        # Read object from store
-        obj = object_store.read_object(object_path=module_path)
+        # Read object from store. This may raise a ValueError to indicate that
+        # the module does not exists (in a system error condtion). In this
+        # case we return a new module that is in error state.
+        try:
+            obj = object_store.read_object(object_path=module_path)
+        except ValueError:
+            return OSModuleHandle(
+                identifier=identifier,
+                command=ModuleCommand(
+                    package_id=UNKNOWN_ID,
+                    command_id=UNKNOWN_ID
+                ),
+                external_form='fatal error: object not found',
+                module_path=module_path,
+                state=MODULE_ERROR,
+                object_store=object_store
+            )
         # Create module command
         command = ModuleCommand(
             package_id=obj[KEY_COMMAND][KEY_PACKAGE_ID],
