@@ -44,6 +44,8 @@ PARA_XAXIS_RANGE = PARA_XAXIS + '_' + PARA_RANGE
 # Declaration of plot package commands
 PLOT_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_PLOT,
+    module='',
+    class_name='',
     commands=[
         pckg.command_declaration(
             identifier=PLOT_SIMPLE_CHART,

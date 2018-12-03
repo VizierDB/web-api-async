@@ -7,7 +7,6 @@ from vizier.engine.packages.mimir.base import MIMIR_LENSES
 from vizier.engine.packages.plot.base import PLOT_COMMANDS
 from vizier.engine.packages.base import validate_package
 from vizier.engine.packages.pycell.base import PYTHON_COMMANDS
-from vizier.engine.packages.sys import SYSTEM_COMMANDS
 from vizier.engine.packages.vizual.base import VIZUAL_COMMANDS
 
 
@@ -41,10 +40,6 @@ class TestValidatePackage(unittest.TestCase):
     def test_validate_python(self):
         """Validate declaration of the python package."""
         validate_package(PYTHON_COMMANDS)
-
-    def test_validate_sys(self):
-        """Validate declaration of the system package."""
-        validate_package(SYSTEM_COMMANDS)
 
     def test_validate_vizual(self):
         """Validate declaration of the vizual package."""

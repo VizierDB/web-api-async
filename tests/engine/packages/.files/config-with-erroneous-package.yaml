@@ -1,6 +1,6 @@
 packages:
-    - '../../../resources/packages/mimir.pckg.json'
-    - '../../../resources/packages/plot.pckg.json'
+    - './.files/mimir.pckg.json'
+    - './.files/plot.pckg.json'
     - './.files/erroneous.pckg.json'
 settings:
     api:

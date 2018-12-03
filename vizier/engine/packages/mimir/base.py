@@ -70,6 +70,8 @@ def para_make_input_certain(index):
 
 MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
+    module='',
+    class_name='',
     commands=[
         pckg.command_declaration(
             identifier=MIMIR_DOMAIN,

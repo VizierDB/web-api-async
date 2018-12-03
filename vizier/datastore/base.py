@@ -20,335 +20,13 @@ workflows.
 """
 
 from abc import abstractmethod
-import csv
-import yaml
 
 from vizier.core.system import component_descriptor, VizierSystemComponent
 from vizier.datastore.metadata import DatasetMetadata
-from vizier.datastore.query import DataStreamConsumer
 
-
-"""Unique identifier for datastore types."""
-DATASTORE_DEFAULT = 'DEFAULT'
-DATASTORE_MIMIR = 'MIMIR'
-
-
-# ------------------------------------------------------------------------------
-# Datsets
-# ------------------------------------------------------------------------------
-
-class DatasetHandle(object):
-    """Abstract class to maintain information about a dataset in a Vizier
-    datastore. Contains the unique dataset identifier, the lists of
-    columns in the dataset schema, and a reference to the dataset
-    annotations.
-
-    The dataset reader is dependent on the different datastore
-    implementations.
-
-    Attributes
-    ----------
-    annotations: vizier.datastore.metadata.DatasetMetadata
-        Annotations for dataset components
-    columns: list(DatasetColumns)
-        List of dataset columns
-    column_counter: int
-        Counter to generate unique column identifier
-    row_count: int
-        Number of rows in the dataset
-    row_counter: int
-        Counter to generate unique row identifier
-    identifier: string
-        Unique dataset identifier
-    """
-    def __init__(self, identifier, columns, row_count=0, column_counter=0, row_counter=0, annotations=None):
-        """Initialize the dataset.
-
-        Raises ValueError if dataset columns or rows do not have unique
-        identifiers.
-
-        Parameters
-        ----------
-        identifier: string, optional
-            Unique dataset identifier.
-        columns: list(DatasetColumn), optional
-            List of columns. It is expected that each column has a unique
-            identifier.
-        rows: int, optional
-            Number of rows in the dataset
-        column_counter: int, optional
-            Counter to generate unique column identifier
-        row_counter: int, optional
-            Counter to generate unique row identifier
-        annotations: vizier.datastore.metadata.DatasetMetadata
-            Annotations for dataset components
-        """
-        self.identifier = identifier
-        # Ensure that all columns have a unique identifier
-        ids = set()
-        for col in columns:
-            if col.identifier in ids:
-                raise ValueError('duplicate column identifier \'' + str(col.identifier) + '\'')
-            elif col.identifier < 0:
-                raise ValueError('invalid column identifier \'' + str(col.identifier) + '\'')
-            ids.add(col.identifier)
-        self.columns = columns
-        # Row count
-        self.row_count = row_count
-        # Column and row counter
-        self.column_counter = column_counter
-        self.row_counter = row_counter
-        # Set the dataset annotations. If no annotations were given
-        # create an empty annotation set
-        self.annotations = annotations if not annotations is None else DatasetMetadata()
-        # Create an internal index of columns by identifier
-        self.column_id_index = dict()
-        for col in self.columns:
-            self.column_id_index[col.identifier] = col
-
-    def column_by_id(self, identifier):
-        """Get the column with the given identifier.
-
-        Raises ValueError if no column with the given indentifier exists.
-
-        Parameters
-        ----------
-        identifier: int
-            Unique column identifier
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetColumn
-        """
-        if identifier in self.column_id_index:
-            return self.column_id_index[identifier]
-        else:
-            # The column id index might be out of data. Search for column in
-            # column list
-            for col in self.columns:
-                if col.identifier == identifier:
-                    return col
-        raise ValueError('unknown column \'' + str(identifier) + '\'')
-
-    def column_by_name(self, name, ignore_case=True):
-        """Returns the first column with a matching name. The result is None if
-        no matching column is found.
-
-        Parameters
-        ----------
-        name: string
-            Column name
-        ignore_case: bool, optional
-            Ignore case in name comparison if True
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetColumn
-        """
-        for col in self.columns:
-            if ignore_case:
-                if name.upper() == col.name.upper():
-                    return col
-            elif name == col.name:
-                return col
-
-    def column_index(self, column_id):
-        """Get position of a given column in the dataset schema. The given
-        column identifier could either be of type int (i.e., the index position
-        of the column), or a string (either the column name or column label). If
-        column_id is of type string it is first assumed to be a column name.
-        Only if no column matches the column name or if multiple columns with
-        the given name exist will the value of column_id be interpreted as a
-        label.
-
-        Raises ValueError if column_id does not reference an existing column in
-        the dataset schema.
-
-        Parameters
-        ----------
-        column_id : int or string
-            Column index, name, or label
-
-        Returns
-        -------
-        int
-        """
-        return get_column_index(self.columns, column_id)
-
-    def fetch_rows(self, offset=0, limit=-1):
-        """Get list of dataset rows. The offset and limit parameters are
-        intended for pagination.
-
-        Parameters
-        ----------
-        offset: int, optional
-            Number of rows at the beginning of the list that are skipped.
-        limit: int, optional
-            Limits the number of rows that are returned.
-
-        Result
-        ------
-        list(vizier.dataset.base.DatasetRow)
-        """
-        # Return empty list for special case that limit is 0
-        if limit == 0:
-            return list()
-        # Collect rows in result list. Skip first rows if offset is greater than
-        # zero
-        rows = list()
-        with self.reader(offset=offset, limit=limit) as reader:
-            for row in reader:
-                rows.append(row)
-        return rows
-
-    @abstractmethod
-    def get_annotations(self, column_id=-1, row_id=-1):
-        """Get list of annotations for a dataset component. Expects at least one
-        of the given identifier to be a valid identifier (>= 0).
-
-        Parameters
-        ----------
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optiona
-            Unique row identifier
-
-        Returns
-        -------
-        list(vizier.datastore.metadata.Annotation)
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def reader(self, offset=0, limit=-1):
-        """Get reader for the dataset to access the dataset rows. The optional
-        offset amd limit parameters are used to retrieve only a subset of
-        rows.
-
-        Parameters
-        ----------
-        offset: int, optional
-            Number of rows at the beginning of the list that are skipped.
-        limit: int, optional
-            Limits the number of rows that are returned.
-
-        Returns
-        -------
-        vizier.datastore.reader.DatasetReader
-        """
-        raise NotImplementedError
-
-
-class DatasetColumn(object):
-    """Column in a dataset. Each column has a unique identifier and a
-    column name. Column names are not necessarily unique within a
-    dataset.
-
-    Attributes
-    ----------
-    identifier: int
-        Unique column identifier
-    name: string
-        Column name
-    """
-    def __init__(self, identifier=None, name=None):
-        """Initialize the column object.
-
-        Parameters
-        ----------
-        identifier: int, optional
-            Unique column identifier
-        name: string, optional
-            Column name
-        """
-        self.identifier = identifier if not identifier is None else -1
-        self.name = name
-
-    def __str__(self):
-        """Human-readable string representation for the column.
-
-        Returns
-        -------
-        string
-        """
-        return self.name
-
-    @staticmethod
-    def from_dict(obj):
-        """Create dataset column instance from a given dictionary serialization.
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetColumn
-        """
-        return DatasetColumn(int(obj['id']), obj['name'])
-
-    def to_dict(self):
-        """Dictionary serialization of the dataset column object.
-
-        Returns
-        -------
-        dict
-        """
-        return {'id': self.identifier, 'name': self.name}
-
-
-class DatasetRow(object):
-    """Row in a Vizier DB dataset.
-
-    Attributes
-    ----------
-    identifier: int
-        Unique row identifier
-    values : list(string)
-        List of column values in the row
-    """
-    def __init__(self, identifier=None, values=None, annotations=None):
-        """Initialize the row object.
-
-        Parameters
-        ----------
-        identifier: int, optional
-            Unique row identifier
-        values : list(string), optional
-            List of column values in the row
-        """
-        self.identifier = identifier if not identifier is None else -1
-        self.values = values
-        self.cell_annotations = annotations if not annotations is None else [False] * len(values)
-
-    @staticmethod
-    def from_dict(obj):
-        """Create dataset row instance from a given dictionary serialization.
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetRow
-        """
-        return DatasetRow(
-            int(obj['id']),
-            obj['values']
-        )
-
-    def to_dict(self):
-        """Dictionary serialization of the dataset row object.
-
-        Returns
-        -------
-        dict
-        """
-        return {
-            'id': self.identifier,
-            'values': encode_values(self.values)
-        }
-
-
-# ------------------------------------------------------------------------------
-# Datastore
-# ------------------------------------------------------------------------------
 
 class Datastore(VizierSystemComponent):
-    """Abstract API to store and retireve Vizier datasets."""
+    """Abstract API to store and retireve datasets."""
     def __init__(self, build):
         """Initialize the build information. Expects a dictionary containing two
         elements: name and version.
@@ -372,39 +50,6 @@ class Datastore(VizierSystemComponent):
         return [component_descriptor('datastore', self.system_build())]
 
     @abstractmethod
-    def create_dataset(
-        self, identifier=None, columns=None, rows=None, column_counter=None,
-        row_counter=None, annotations=None
-    ):
-        """Create a new dataset in the data store for the given data.
-
-        Raises ValueError if (1) any of the column or row identifier have a
-        negative value, or (2) if the given column or row counter have value
-        lower or equal to any of the column or row identifier.
-
-        Parameters
-        ----------
-        identifier: string, optional
-            Unique dataset identifier
-        columns: list(vizier.datastore.base.DatasetColumn)
-            List of columns. It is expected that each column has a unique
-            identifier.
-        rows: list(vizier.datastore.base.DatasetRow)
-            List of dataset rows.
-        column_counter: int, optional
-            Counter to generate unique column identifier
-        row_counter: int, optional
-            Counter to generate unique row identifier
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
-            Annotations for dataset components
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def delete_dataset(self, identifier):
         """Delete dataset with given identifier. Returns True if dataset existed
         and False otherwise.
@@ -421,9 +66,26 @@ class Datastore(VizierSystemComponent):
         raise NotImplementedError
 
     @abstractmethod
+    def download_dataset(self, uri, username=None, password=None):
+        """Create a new dataset from a given file.
+
+        Raises ValueError if the given file could not be loaded as a dataset.
+
+        Parameters
+        ----------
+        f_handle : vizier.filestore.base.FileHandle
+            handle for an uploaded file on the associated file server.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_dataset(self, identifier):
-        """Read a full dataset from the data store. Returns None if no dataset
-        with the given identifier exists.
+        """Get the handle for the dataset with given identifier from the data
+        store. Returns None if no dataset with the given identifier exists.
 
         Parameters
         ----------
@@ -453,70 +115,11 @@ class Datastore(VizierSystemComponent):
         """
         raise NotImplementedError
 
-    def get_dataset_chart(self, identifier, view):
-        """Query a given dataset by selecting the columns in the given list.
-        Each row in the result is the result of projecting a tuple in the
-        dataset on the given columns.
-
-        Raises ValueError if any of the specified columns do not exist.
-
-        Parameters
-        ----------
-        identifier: string
-            Unique dataset identifier
-        view: vizier.plot.view.ChartViewHandle
-            Chart view definition handle
-
-        Returns
-        -------
-        list()
-        """
-        dataset = self.get_dataset(identifier)
-        # Get index position for x-axis. Set to negative value if none is given.
-        # the value is used to determine which data series are converted to
-        # numeric values and which are not.
-        x_axis = -1
-        if not view.x_axis is None:
-            x_axis = view.x_axis
-        # Create a list of data consumers, one for each data series
-        consumers = list()
-        for s_idx in range(len(view.data)):
-            s = view.data[s_idx]
-            c_idx = get_index_for_column(dataset, s.column)
-            consumers.append(
-                DataStreamConsumer(
-                    column_index=c_idx,
-                    range_start=s.range_start,
-                    range_end=s.range_end,
-                    cast_to_number=(s_idx != x_axis)
-                )
-            )
-        # Consume all dataset rows
-        rows = dataset.fetch_rows()
-        for row_index in range(len(rows)):
-            row = rows[row_index]
-            for c in consumers:
-                c.consume(row=row, row_index=row_index)
-        # the size of the result set is determined by the longest data series
-        max_values = -1
-        for c in consumers:
-            if len(c.values) > max_values:
-                max_values = len(c.values)
-        # Create result array
-        data = []
-        for idx_row in range(max_values):
-            row = list()
-            for idx_series in range(len(consumers)):
-                consumer = consumers[idx_series]
-                if idx_row < len(consumer.values):
-                    row.append(consumer.values[idx_row])
-                else:
-                    row.append(None)
-            data.append(row)
-        return data
-
     @abstractmethod
-    def update_annotation(self, identifier, column_id=-1, row_id=-1, anno_id=-1, key=None, value=None):
+    def update_annotation(
+        self, identifier, column_id=None, row_id=None, anno_id=None,
+        key=None, value=None
+    ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.

@@ -326,6 +326,29 @@ class ModuleProvenance(object):
         self.read = read
         self.write = write
 
+    def adjust_state(self, datasets):
+        """Adjust a given database state by adding/replacing datasets in the
+        given dictionary with those in the write dependencies of this provenance
+        object.
+
+        Parameters
+        ----------
+        datasets: dict()
+            Dictionary of identifier for datasets in the current state. The key
+            is the dataset name.
+
+        Returns
+        -------
+        dict()
+        """
+        if not self.write is None:
+            result = dict(datasets)
+            for ds_name in self.write:
+                result[ds_name] = self.write[ds_name]
+            return result
+        else:
+            return datasets
+
     def requires_exec(self, datasets):
         """Test if a module requires execution based on the provenance
         information and a given database state. If True, the module needs to be

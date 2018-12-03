@@ -19,6 +19,7 @@ orchestrate the execution of data curation workflows.
 """
 
 from vizier.core.timestamp import get_current_time
+from vizier.engine.base import TaskHandle
 from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
@@ -31,7 +32,7 @@ class WorkflowEngineApi(object):
     Provides methods to add, delete, and replace modules in workflows and to
     update the status of active modules.
     """
-    def __init__(self, datastore, filestore, viztrails_repository, packages):
+    def __init__(self, datastore, filestore, viztrails_repository, backend, packages):
         """Initialize the viztrails repository and the execution backend that
         are used to orchestrate workflow execution.
 
@@ -43,12 +44,15 @@ class WorkflowEngineApi(object):
             Backend store for uploaded files
         viztrails_repository: vizier.viztrail.repository.ViztrailRepository
             The viztrail repository manager for the Vizier instance
+        backend: vizier.engine.backend.base.VizierBackend
+            Backend to execute workflow modules
         packages: dict(vizier.engine.package.base.PackageIndex)
             Dictionary of packages
         """
         self.datastore = datastore
         self.filestore = filestore
         self.repository = viztrails_repository
+        self.backend = backend
         self.packages = packages
 
     def append_workflow_module(self, viztrail_id, branch_id, command):
@@ -108,7 +112,17 @@ class WorkflowEngineApi(object):
             action=ACTION_INSERT,
             command=command
         )
-        self.backend.execute(command=command, context=datasets)
+        self.backend.execute_task(
+            api=self,
+            task=TaskHandle(
+                viztrail_id=viztrail_id,
+                branch_id=branch_id,
+                module_id=workflow.modules[-1].identifier,
+                external_form=external_form
+            ),
+            command=command,
+            context=datasets
+        )
         return workflow
 
     def delete_workflow_module(self, viztrail_id, branch_id, module_id):
@@ -164,11 +178,11 @@ class WorkflowEngineApi(object):
             else:
                 datasets = dict()
             while not modules[module_index].provenance.requires_exec(datasets):
-                module_index += 1
-                if module_index == module_count:
+                if module_index == module_count - 1:
                     break
                 else:
-                    datasets = modules[module_index - 1].datasets
+                    datasets = modules[module_index].provenance.adjust_state(datasets)
+                    module_index += 1
             if module_index < module_count:
                 # The module that module_index points to has to be executed.
                 # Create a workflow that contains pending copies of all modules
@@ -182,7 +196,7 @@ class WorkflowEngineApi(object):
                     packages=self.packages
                 )
                 # Replace original modules with pending modules for those that
-                # need to be executes
+                # need to be executed
                 pending_modules = [
                     ModuleHandle(
                         command=command,
@@ -206,7 +220,17 @@ class WorkflowEngineApi(object):
                     action=ACTION_DELETE,
                     command=deleted_module.command
                 )
-                self.backend.execute(command=command, context=datasets)
+                self.backend.execute_task(
+                    api=self,
+                    task=TaskHandle(
+                        viztrail_id=viztrail_id,
+                        branch_id=branch_id,
+                        module_id=workflow.modules[module_index].identifier,
+                        external_form=external_form
+                    ),
+                    command=command,
+                    context=datasets
+                )
                 return workflow
             else:
                 # None of the module required execution and the workflow is
@@ -242,6 +266,37 @@ class WorkflowEngineApi(object):
         if vt is None:
             return None
         return vt.get_branch(branch_id)
+
+    def get_task(self, task):
+        """Get the workflow and module index for the given task. Returns None
+        and -1 if the workflow or module is undefined.
+
+        Parameters
+        ----------
+        task: vizier.engine.base.TaskHandle
+            Unique task identifier
+
+        Returns
+        -------
+        vizier.viztrail.workflow.WorkflowHandle, int
+        """
+        # Get the handle for the head workflow of the specified branch
+        branch = self.get_branch(
+            viztrail_id=task.viztrail_id,
+            branch_id=task.branch_id
+        )
+        if branch is None:
+            return None, -1
+        head = branch.get_head()
+        if head is None or len(head.modules) == 0:
+            return None, -1
+        # Find module (searching from end of list)
+        i = 0
+        for m in reversed(head.modules):
+            i += 1
+            if m.identifier == task.module_id:
+                return head, len(head.modules) - i
+        return None, -1
 
     def insert_workflow_module(self, viztrail_id, branch_id, before_module_id, command):
         """Insert a new module to the workflow at the head of the given viztrail
@@ -324,7 +379,17 @@ class WorkflowEngineApi(object):
             action=ACTION_INSERT,
             command=inserted_module.command
         )
-        self.backend.execute(command=command, context=datasets)
+        self.backend.execute_task(
+            task=TaskHandle(
+                api=self,
+                viztrail_id=viztrail_id,
+                branch_id=branch_id,
+                module_id=workflow.modules[module_index].identifier,
+                external_form=inserted_module.external_form
+            ),
+            command=command,
+            context=datasets
+        )
         return workflow
 
     def replace_workflow_module(self, viztrail_id, branch_id, module_id, command):
@@ -403,22 +468,34 @@ class WorkflowEngineApi(object):
             action=ACTION_REPLACE,
             command=replaced_module.command
         )
-        self.backend.execute(command=command, context=datasets)
+        self.backend.execute_task(
+            task=TaskHandle(
+                api=self,
+                viztrail_id=viztrail_id,
+                branch_id=branch_id,
+                module_id=workflow.modules[module_index].identifier
+            ),
+            command=command,
+            context=datasets
+        )
         return workflow
 
-    def set_canceled(self, viztrail_id, branch_id, finished_at=None, outputs=None):
-        """Set status of the first active module at the head of the specified
+    def set_canceled(self, task, finished_at=None, outputs=None):
+        """Set status of the identified module at the head of the specified
         viztrail branch to canceled. The finished_at property of the timestamp
         is set to the given value or the current time (if None). The module
         outputs are set to the given value. If no outputs are given the module
         output streams will be empty.
 
+        Cancels all pending modules in the workflow.
+
+        Returns the handle for the modified workflow. If the specified module
+        is not in an active state the result is None.
+
         Parameters
         ----------
-        viztrail_id : string
-            Unique viztrail identifier
-        branch_id : string
-            Unique branch identifier
+        task : vizier.engine.base.TaskHandle
+            Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
         outputs: vizier.viztrail.module.ModuleOutputs, optional
@@ -428,21 +505,37 @@ class WorkflowEngineApi(object):
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the head workflow of the specified branch and the
+        # index for the module matching the identifier in the task.
+        workflow, module_index = self.get_task(task)
+        if workflow is None or module_index == -1:
+            return None
+        module = workflow.modules[module_index]
+        if module.is_active:
+            self.backend.cancel_task(task)
+            module.set_canceled(finished_at=finished_at, outputs=outputs)
+            for m in workflow.modules[module_index+1:]:
+                m.set_canceled()
+            return workflow
+        else:
+            return None
 
-    def set_error(self, viztrail_id, branch_id, finished_at=None, outputs=None):
-        """Set status of the first active module at the head of the specified
+    def set_error(self, task, finished_at=None, outputs=None):
+        """Set status of the identified module at the head of the specified
         viztrail branch to error. The finished_at property of the timestamp is
         set to the given value or the current time (if None). The module outputs
         are adjusted to the given value. the output streams are empty if no
         value is given for the outputs parameter.
 
+        Cancels all pending modules in the workflow.
+
+        Returns the handle for the modified workflow. If the specified module
+        is not in an active state the result is None.
+
         Parameters
         ----------
-        viztrail_id : string
-            Unique viztrail identifier
-        branch_id : string
-            Unique branch identifier
+        task : vizier.engine.base.TaskHandle
+            Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
         outputs: vizier.viztrail.module.ModuleOutputs, optional
@@ -452,45 +545,73 @@ class WorkflowEngineApi(object):
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the head workflow of the specified branch and the
+        # index for the module matching the identifier in the task.
+        workflow, module_index = self.get_task(task)
+        if workflow is None or module_index == -1:
+            return None
+        module = workflow.modules[module_index]
+        if module.is_active:
+            module.set_error(finished_at=finished_at, outputs=outputs)
+            for m in workflow.modules[module_index+1:]:
+                m.set_canceled()
+            return workflow
+        else:
+            return None
 
-    def set_running(self, viztrail_id, branch_id, started_at=None, external_form=None):
-        """Set status of the first active module at the head of the specified
+    def set_running(self, task, external_form, started_at=None):
+        """Set status of the identified module at the head of the specified
         viztrail branch to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
 
+        Returns the handle for the modified workflow. If the specified module
+        is not in pending state the result is None.
+
         Parameters
         ----------
-        viztrail_id : string
-            Unique viztrail identifier
-        branch_id : string
-            Unique branch identifier
+        task : vizier.engine.base.TaskHandle
+            Unique task identifier
+        external_form: string
+            Adjusted external representation for the module command.
         started_at: datetime.datetime, optional
             Timestamp when module started running
-        external_form: string, optional
-            Adjusted external representation for the module command.
 
         Returns
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the head workflow of the specified branch and the
+        # index for the module matching the identifier in the task.
+        workflow, module_index = self.get_task(task)
+        if workflow is None or module_index == -1:
+            return None
+        module = workflow.modules[module_index]
+        if module.is_pending:
+            module.set_running(
+                external_form=external_form,
+                started_at=started_at
+            )
+            return workflow
+        else:
+            return None
 
-    def set_success(self, viztrail_id, branch_id, finished_at=None, datasets=None, outputs=None, provenance=None):
-        """Set status of the first active module at the head of the specified
+    def set_success(self, task, finished_at=None, datasets=None, outputs=None, provenance=None):
+        """Set status of the identified module at the head of the specified
         viztrail branch to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
 
         If case of a successful module execution the database state and module
         provenance information are also adjusted together with the module
-        output streams.
+        output streams. If the workflow has pending modules the first pending
+        module will be executed next.
+
+        Returns the handle for the modified workflow. If the specified module
+        is not in pending state the result is None.
 
         Parameters
         ----------
-        viztrail_id : string
-            Unique viztrail identifier
-        branch_id : string
-            Unique branch identifier
+        task : vizier.engine.base.TaskHandle
+            Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
         datasets : dict(string:string), optional
@@ -506,7 +627,54 @@ class WorkflowEngineApi(object):
         -------
         vizier.viztrail.workflow.WorkflowHandle
         """
-        raise NotImplementedError
+        # Get the handle for the head workflow of the specified branch and the
+        # index for the module matching the identifier in the task.
+        workflow, module_index = self.get_task(task)
+        if workflow is None or module_index == -1:
+            return None
+        module = workflow.modules[module_index]
+        if module.is_running:
+            module.set_success(
+                finished_at=finished_at,
+                datasets=datasets,
+                outputs=outputs,
+                provenance=provenance
+            )
+            context = datasets if not datasets is None else dict()
+            for next_module in workflow.modules[module_index+1:]:
+                if not next_module.is_pending:
+                    return None
+                elif not next_module.requires_exec(context):
+                    context = next_module.provenance.adjust_state(context)
+                    next_module.set_success(
+                        finished_at=finished_at,
+                        datasets=context,
+                        outputs=next_module.outputs,
+                        provenance=next_module.provenance
+                    )
+                else:
+                    command = next_module.command
+                    external_form = to_external_form(
+                        command=command,
+                        datasets=context,
+                        datastore=self.datastore,
+                        filestore=self.filestore,
+                        packages=self.packages
+                    )
+                    self.backend.execute_task(
+                        api=self,
+                        task=TaskHandle(
+                            viztrail_id=task.viztrail_id,
+                            branch_id=task.branch_id,
+                            module_id=next_module.identifier,
+                            external_form=external_form
+                        ),
+                        command=command,
+                        context=context
+                    )
+            return workflow
+        else:
+            return None
 
 
 # ------------------------------------------------------------------------------

@@ -21,6 +21,8 @@
                 ]
             }
         ],
-        "id": "python"
+        "id": "python",
+        "module": "dev.null",
+        "className": "NoName"
     }
 }
