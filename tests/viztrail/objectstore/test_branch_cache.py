@@ -8,10 +8,12 @@ import unittest
 from vizier.client.command.pycell import python_cell
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.driver.objectstore.branch import DEFAULT_CACHE_SIZE
+from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs
 from vizier.viztrail.module import TextOutput
 from vizier.viztrail.module import MODULE_SUCCESS
+from vizier.viztrail.workflow import ACTION_INSERT
 
 
 REPO_DIR = './.temp'
@@ -40,48 +42,70 @@ class TestOSBranchCache(unittest.TestCase):
             base_path=base_path
         )
         branch = vt.get_default_branch()
-        wf = branch.append_module(
-            command=python_cell(source='print 2+2'),
+        command = python_cell(source='print 2+2')
+        module = OSModuleHandle.create_module(
+            command=command,
             external_form='print 2+2',
             state=MODULE_SUCCESS,
-            datasets=dict(),
-            outputs=ModuleOutputs(stdout=[TextOutput('4')]),
-            provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(
                 created_at=get_current_time(),
                 started_at=get_current_time(),
                 finished_at=get_current_time()
-            )
+            ),
+            datasets=dict(),
+            outputs=ModuleOutputs(stdout=[TextOutput('4')]),
+            provenance=ModuleProvenance(),
+            module_folder=vt.modules_folder,
+            object_store=vt.object_store
+        )
+        wf = branch.append_completed_workflow(
+            modules=[module],
+            action=ACTION_INSERT,
+            command=command
         )
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
         for i in range(DEFAULT_CACHE_SIZE):
-            branch.append_module(
-                command=python_cell(source='print 2+2'),
+            module = OSModuleHandle.create_module(
+                command=command,
                 external_form='print 2+2',
                 state=MODULE_SUCCESS,
-                datasets=dict(),
-                outputs=ModuleOutputs(stdout=[TextOutput('4')]),
-                provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(
                     created_at=get_current_time(),
                     started_at=get_current_time(),
                     finished_at=get_current_time()
-                )
+                ),
+                datasets=dict(),
+                outputs=ModuleOutputs(stdout=[TextOutput('4')]),
+                provenance=ModuleProvenance(),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            branch.append_completed_workflow(
+                modules=branch.head.modules + [module],
+                action=ACTION_INSERT,
+                command=command
             )
             self.assertEquals(len(branch.cache), (i + 1))
             self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
-        branch.append_module(
-            command=python_cell(source='print 2+2'),
+        module = OSModuleHandle.create_module(
+            command=command,
             external_form='print 2+2',
             state=MODULE_SUCCESS,
-            datasets=dict(),
-            outputs=ModuleOutputs(stdout=[TextOutput('4')]),
-            provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(
                 created_at=get_current_time(),
                 started_at=get_current_time(),
                 finished_at=get_current_time()
-            )
+            ),
+            datasets=dict(),
+            outputs=ModuleOutputs(stdout=[TextOutput('4')]),
+            provenance=ModuleProvenance(),
+            module_folder=vt.modules_folder,
+            object_store=vt.object_store
+        )
+        branch.append_completed_workflow(
+            modules=branch.head.modules + [module],
+            action=ACTION_INSERT,
+            command=command
         )
         self.assertEquals(len(branch.cache), DEFAULT_CACHE_SIZE)
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])

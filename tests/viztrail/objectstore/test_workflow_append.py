@@ -8,12 +8,13 @@ import unittest
 from vizier.client.command.pycell import python_cell
 from vizier.core.timestamp import get_current_time
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
+from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.module import ModuleHandle, ModuleOutputs
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp
 from vizier.viztrail.module import TextOutput
 from vizier.viztrail.module import MODULE_SUCCESS
-from vizier.viztrail.workflow import ACTION_DELETE
+from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT
 
 
 REPO_DIR = './.temp'
@@ -44,18 +45,26 @@ class TestOSWorkflowAppend(unittest.TestCase):
         branch = vt.get_default_branch()
         for i in range(10):
             ts = get_current_time()
-            branch.append_module(
-                command=python_cell(source='print ' + str(i) + '+' + str(i)),
+            command = python_cell(source='print ' + str(i) + '+' + str(i))
+            module = OSModuleHandle.create_module(
+                command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
                 datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
-                timestamp=ModuleTimestamp(
-                    created_at=ts,
-                    started_at=ts,
-                    finished_at=ts
-                )
+                timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            if not branch.head is None:
+                modules = branch.head.modules + [module]
+            else:
+                modules = [module]
+            branch.append_completed_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command
             )
         head_modules = branch.get_head().modules
         wf = branch.append_completed_workflow(
@@ -103,18 +112,26 @@ class TestOSWorkflowAppend(unittest.TestCase):
         # Append ten modules
         for i in range(10):
             ts = get_current_time()
-            branch.append_module(
-                command=python_cell(source='print ' + str(i) + '+' + str(i)),
+            command = python_cell(source='print ' + str(i) + '+' + str(i))
+            module = OSModuleHandle.create_module(
+                command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
                 datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
-                timestamp=ModuleTimestamp(
-                    created_at=ts,
-                    started_at=ts,
-                    finished_at=ts
-                )
+                timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            if not branch.head is None:
+                modules = branch.head.modules + [module]
+            else:
+                modules = [module]
+            branch.append_completed_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command
             )
             self.assertEquals(len(branch.get_history()), (i + 1))
         vt = OSViztrailHandle.load_viztrail(base_path)
@@ -128,7 +145,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 module = wf.modules[m]
                 self.assertEquals(module.external_form, 'print ' + str(m) + '+' + str(m))
                 self.assertEquals(module.outputs.stdout[-1].value, str(m+m))
-            self.assertEquals(wf.descriptor.created_at, module.timestamp.finished_at)
 
     def test_pending_append(self):
         """Test appending a workflow with pending modules to a branch."""
@@ -142,18 +158,26 @@ class TestOSWorkflowAppend(unittest.TestCase):
         branch = vt.get_default_branch()
         for i in range(10):
             ts = get_current_time()
-            branch.append_module(
-                command=python_cell(source='print ' + str(i) + '+' + str(i)),
+            command = python_cell(source='print ' + str(i) + '+' + str(i))
+            module = OSModuleHandle.create_module(
+                command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
                 datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
-                timestamp=ModuleTimestamp(
-                    created_at=ts,
-                    started_at=ts,
-                    finished_at=ts
-                )
+                timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            if not branch.head is None:
+                modules = branch.head.modules + [module]
+            else:
+                modules = [module]
+            branch.append_completed_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command
             )
         head_modules = branch.get_head().modules
         before_ids = [m.identifier for m in head_modules]
@@ -199,18 +223,23 @@ class TestOSWorkflowAppend(unittest.TestCase):
             base_path=base_path
         )
         branch = vt.get_default_branch()
-        wf = branch.append_module(
-            command=python_cell(source='print 2+2'),
+        command = python_cell(source='print 2+2')
+        ts = get_current_time()
+        module = OSModuleHandle.create_module(
+            command=command,
             external_form='print 2+2',
             state=MODULE_SUCCESS,
             datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
-            timestamp=ModuleTimestamp(
-                created_at=get_current_time(),
-                started_at=get_current_time(),
-                finished_at=get_current_time()
-            )
+            timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+            module_folder=vt.modules_folder,
+            object_store=vt.object_store
+        )
+        wf = branch.append_completed_workflow(
+            modules=[module],
+            action=ACTION_INSERT,
+            command=command
         )
         # We expect that there exists a file for the workflow handle and one for
         # the new module

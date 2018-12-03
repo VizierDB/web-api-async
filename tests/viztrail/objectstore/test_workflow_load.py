@@ -7,10 +7,12 @@ import unittest
 
 from vizier.client.command.pycell import python_cell
 from vizier.core.timestamp import get_current_time
+from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs
 from vizier.viztrail.module import TextOutput
 from vizier.viztrail.module import MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.workflow import ACTION_INSERT
 
 
 REPO_DIR = './.temp'
@@ -42,18 +44,26 @@ class TestOSWorkflow(unittest.TestCase):
         # Append ten modules
         for i in range(5):
             ts = get_current_time()
-            branch.append_module(
-                command=python_cell(source='print ' + str(i) + '+' + str(i)),
+            command = python_cell(source='print ' + str(i) + '+' + str(i))
+            module = OSModuleHandle.create_module(
+                command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
                 datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
-                timestamp=ModuleTimestamp(
-                    created_at=ts,
-                    started_at=ts,
-                    finished_at=ts
-                )
+                timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
+                module_folder=vt.modules_folder,
+                object_store=vt.object_store
+            )
+            if not branch.head is None:
+                modules = branch.head.modules + [module]
+            else:
+                modules = [module]
+            branch.append_completed_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command
             )
             self.assertEquals(len(branch.get_history()), (i + 1))
         # This is a hack to similate loading workflows with active modules

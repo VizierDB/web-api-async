@@ -78,12 +78,15 @@ class WorkflowEngineApi(object):
         if branch is None:
             return None
         # Get the current database state from the last module in the current
-        # branch head
+        # branch head. At the same time we retrieve the list of modules for the
+        # current head of the branch.
         head = branch.get_head()
         if not head is None and len(head.modules) > 0:
             datasets = head.modules[-1].datasets
+            modules = head.modules
         else:
             datasets = dict()
+            modules = list()
         #Get the external representation for the command
         external_form = to_external_form(
             command=command,
@@ -92,34 +95,20 @@ class WorkflowEngineApi(object):
             filestore=self.filestore,
             packages=self.packages
         )
-        # Check if the backend can execute the given command immediately
-        if self.backend.can_execute(command):
-            ts_start = get_current_time()
-            result = self.backend.execute(command=command, context=datasets)
-            ts_finish = get_current_time()
-            workflow = branch.append_module(
-                command=command,
-                external_form=external_form,
-                state=result.state,
-                datasets=result.datasets,
-                outputs=result.outputs,
-                provenance=result.provenance,
-                timestamp=ModuleTimestamp(
-                    created_at=ts_start,
-                    started_at=ts_start,
-                    finished_at=ts_finish
+        # Create new workflow by appending one module to the current head of the
+        # branch
+        workflow = branch.append_pending_workflow(
+            modules=modules,
+            pending_modules=[
+                ModuleHandle(
+                    command=command,
+                    external_for=external_form
                 )
-            )
-        else:
-            workflow = branch.append_module(
-                command=command,
-                external_form=external_form,
-                state=MODULE_PENDING,
-                timestamp=ModuleTimestamp(
-                    created_at=get_current_time()
-                )
-            )
-            self.backend.execute(command=command, context=datasets)
+            ],
+            action=ACTION_INSERT,
+            command=command
+        )
+        self.backend.execute(command=command, context=datasets)
         return workflow
 
     def delete_workflow_module(self, viztrail_id, branch_id, module_id):

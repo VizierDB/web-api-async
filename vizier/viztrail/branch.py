@@ -137,45 +137,9 @@ class BranchHandle(NamedObject):
         raise NotImplementedError
 
     @abstractmethod
-    def append_module(
-        self, command, external_form, state, timestamp, datasets=None,
-        outputs=None, provenance=None
-    ):
-        """Modify the workflow at the branch head by appending the result of
-        an executed workflow module. The modified workflow will be the new head
-        of the branch.
-
-        Raises ValueError if any of the modules in the new workflow is in an
-        active state.
-
-        Parameters
-        ----------
-        command: vizier.viztrail.command.ModuleCommand
-            Specification of the executed command
-        external_form: string
-            Printable representation of the executed command
-        state: int
-            Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        timestamp: vizier.viztrail.module.ModuleTimestamp
-            Module timestamp
-        datasets: dict(string), optional
-            Dictionary of resulting datasets.
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
-            Module output streams STDOUT and STDERR
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
-            Provenance information about datasets that were read and writen by
-            previous execution of the module.
-
-        Returns
-        -------
-        vizier.viztrail.workflow.base.WorkflowHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def append_pending_workflow(self, modules, pending_modules, action, command):
-        """Append a completed workflow as the new head of the branch. Returns a
-        handle for the new workflow.
+        """Append a workflow as the new head of the branch that includes at
+        least one pending module. Returns a handle for the new workflow.
 
         Parameters
         ----------
