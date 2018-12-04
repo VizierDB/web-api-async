@@ -16,8 +16,8 @@
 
 """Create instances of plot package commands."""
 
-import vizier.packages.base as pckg
-import vizier.packages.plot.base as plot
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.plot.base as plot
 import vizier.viztrail.command as md
 
 

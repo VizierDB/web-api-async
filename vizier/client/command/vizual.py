@@ -16,8 +16,8 @@
 
 """Create instances of vizual package commands."""
 
-import vizier.packages.base as pckg
-import vizier.packages.vizual.base as vizual
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.vizual.base as vizual
 import vizier.viztrail.command as md
 
 

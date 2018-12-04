@@ -23,26 +23,26 @@ associated data curetion workflows.
 """
 
 from vizier.core.timestamp import get_current_time
-from vizier.engine.base import TaskHandle
+from vizier.engine.packages.task import TaskHandle
 from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
 
-class ProjectHand;e(object):
+class ProjectHandle(object):
     """The project handle is a wrapper around the main components of a vizier
     data curation project. These components provide all the functionality that
     is required by the project. Each project can therefore run in isolation from
     other projects.
 
-    The idividual components of a project are: the viztrail that maintains the
+    The individual components of a project are: the viztrail that maintains the
     project branches and workflows, the datatore to maintain all generated
     datasets, the filestore for uploaded files, and the backend to execute
     workflow modules.
 
     The project handle orchestrates the execution of curation workflows. This
-    class Provides methods to add, delete, and replace modules in workflows and
-    to update the status of active modules.
+    class provides methods to add, delete, and replace modules in workflows and
+    to update the status of active workflow modules.
     """
     def __init__(self, viztrail, datastore, filestore, backend, packages):
         """Initialize the project components.
@@ -101,12 +101,10 @@ class ProjectHand;e(object):
             datasets = dict()
             modules = list()
         #Get the external representation for the command
-        external_form = to_external_form(
-            command=command,
+        external_form = command.to_external_form(
+            command=self.packages[command.package_id].get(command.command_id)
             datasets=datasets,
-            datastore=self.datastore,
-            filestore=self.filestore,
-            packages=self.packages
+            filestore=self.filestore
         )
         # Create new workflow by appending one module to the current head of the
         # branch
@@ -195,12 +193,10 @@ class ProjectHand;e(object):
                 # Create a workflow that contains pending copies of all modules
                 # that require execution and run the first of these modules.
                 command = modules[module_index].command
-                external_form = to_external_form(
-                    command=command,
+                external_form = command.to_external_form(
+                    command=self.packages[command.package_id].get(command.command_id),
                     datasets=datasets,
-                    datastore=self.datastore,
-                    filestore=self.filestore,
-                    packages=self.packages
+                    filestore=self.filestore
                 )
                 # Replace original modules with pending modules for those that
                 # need to be executed
@@ -260,7 +256,7 @@ class ProjectHand;e(object):
 
         Parameters
         ----------
-        task: vizier.engine.base.TaskHandle
+        task: vizier.engine.packages.task.TaskHandle
             Unique task identifier
 
         Returns
@@ -346,12 +342,10 @@ class ProjectHand;e(object):
             datasets = dict()
         inserted_module = ModuleHandle(
             command=command,
-            external_form=to_external_form(
-                command=command,
+            external_form=command.to_external_form(
+                command=self.packages[command.package_id].get(command.command_id),
                 datasets=datasets,
-                datastore=self.datastore,
-                filestore=self.filestore,
-                packages=self.packages
+                filestore=self.filestore
             )
         )
         # Create list of pending modules for the new workflow
@@ -433,12 +427,10 @@ class ProjectHand;e(object):
             datasets = dict()
         replaced_module = ModuleHandle(
             command=command,
-            external_form=to_external_form(
-                command=command,
+            external_form=command.to_external_form(
+                command=self.packages[command.package_id].get(command.command_id),
                 datasets=datasets,
-                datastore=self.datastore,
-                filestore=self.filestore,
-                packages=self.packages
+                filestore=self.filestore
             )
         )
         # Create list of pending modules for the new workflow
@@ -485,7 +477,7 @@ class ProjectHand;e(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -525,7 +517,7 @@ class ProjectHand;e(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -560,7 +552,7 @@ class ProjectHand;e(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         external_form: string
             Adjusted external representation for the module command.
@@ -601,13 +593,13 @@ class ProjectHand;e(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(string:string), optional
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
+            for the dataset descriptor.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -636,7 +628,10 @@ class ProjectHand;e(object):
                 if not next_module.is_pending:
                     return None
                 elif not next_module.requires_exec(context):
-                    context = next_module.provenance.adjust_state(context)
+                    context = next_module.provenance.adjust_state(
+                        context,
+                        datastore=self.datastore
+                    )
                     next_module.set_success(
                         finished_at=finished_at,
                         datasets=context,
@@ -645,12 +640,10 @@ class ProjectHand;e(object):
                     )
                 else:
                     command = next_module.command
-                    external_form = to_external_form(
-                        command=command,
+                    external_form = command.to_external_form(
+                        command=self.packages[command.package_id].get(command.command_id),
                         datasets=context,
-                        datastore=self.datastore,
-                        filestore=self.filestore,
-                        packages=self.packages
+                        filestore=self.filestore
                     )
                     self.backend.execute_task(
                         api=self,
@@ -666,40 +659,3 @@ class ProjectHand;e(object):
             return workflow
         else:
             return None
-
-
-# ------------------------------------------------------------------------------
-# Helper Methods
-# ------------------------------------------------------------------------------
-
-def to_external_form(command, datasets, datastore, filestore, packages):
-    """Get the external form for a given module command.
-
-    Parameters
-    ----------
-    command: vizier.viztrail.module.ModuleCommand
-        Specification of the command
-    datasets: dict()
-        Available dataset identifiers keyed by the user-defined dataset name
-    datastore: vizier.datastore.base.Datastore
-        Backend store for datasets
-    filestore: vizier.filestore.base.Filestore
-        Backend store for uploaded files
-    packages: dict(vizier.engine.package.base.PackageIndex)
-        Dictionary of packages
-
-    Returns
-    -------
-    string
-    """
-    # To get the external representation for the command we first need to
-    # have a dictionary of dataset handles keyed by the user-defined name.
-    database_state = dict()
-    for ds_name in datasets:
-        ds_id = datasets[ds_name]
-        database_state[ds_name] = datastore.get_dataset(ds_id)
-    return command.to_external_form(
-        command=packages[command.package_id].get(command.command_id),
-        datasets=database_state,
-        filestore=filestore
-    )

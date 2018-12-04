@@ -273,7 +273,7 @@ class WorkflowEngineApi(object):
 
         Parameters
         ----------
-        task: vizier.engine.base.TaskHandle
+        task: vizier.engine.packages.task.TaskHandle
             Unique task identifier
 
         Returns
@@ -494,7 +494,7 @@ class WorkflowEngineApi(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -534,7 +534,7 @@ class WorkflowEngineApi(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -569,7 +569,7 @@ class WorkflowEngineApi(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         external_form: string
             Adjusted external representation for the module command.
@@ -610,7 +610,7 @@ class WorkflowEngineApi(object):
 
         Parameters
         ----------
-        task : vizier.engine.base.TaskHandle
+        task : vizier.engine.packages.task.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running

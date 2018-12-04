@@ -10,8 +10,8 @@ from vizier.client.command.mimir import mimir_missing_value, mimir_picker
 from vizier.client.command.mimir import mimir_schema_matching
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
-import vizier.packages.base as pckg
-import vizier.packages.mimir.base as mimir
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.mimir.base as mimir
 import vizier.viztrail.command as md
 
 

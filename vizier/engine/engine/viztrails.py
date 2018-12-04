@@ -313,7 +313,7 @@ def create_mimir_cell(module_id, command, context):
 
     Returns
     -------
-    vizier.packages.userpackages.vizierpkg.MimirCell
+    vizier.engine.packages.userpackages.vizierpkg.MimirCell
     """
     # Create a new python cell and set the input ports
     cell = vizierpkg.MimirLens()
@@ -345,7 +345,7 @@ def create_plot_cell(module_id, command, context):
 
     Returns
     -------
-    vizier.packages.userpackages.vizierpkg.PlotCell
+    vizier.engine.packages.userpackages.vizierpkg.PlotCell
     """
     # Create a new python cell and set the input ports
     cell = vizierpkg.PlotCell()
@@ -375,7 +375,7 @@ def create_python_cell(module_id, command, context):
 
     Returns
     -------
-    vizier.packages.userpackages.vizierpkg.PythonCell
+    vizier.engine.packages.userpackages.vizierpkg.PythonCell
     """
     # Create a new python cell and set the input ports
     cell = vizierpkg.PythonCell()
@@ -403,7 +403,7 @@ def create_vizual_cell(module_id, command, context):
 
     Returns
     -------
-    vizier.packages.userpackages.vizierpkg.VizualCell
+    vizier.engine.packages.userpackages.vizierpkg.VizualCell
     """
     # Create a new python cell and set the input ports
     cell = vizierpkg.VizualCell()

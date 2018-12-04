@@ -27,10 +27,10 @@ will be used.
 
 import sys
 
-from vizier.packages.mimir.base import export_package as export_mimir
-from vizier.packages.plot.base import export_package as export_plot
-from vizier.packages.pycell.base import export_package as export_python
-from vizier.packages.vizual.base import export_package as export_vizual
+from vizier.engine.packages.mimir.base import export_package as export_mimir
+from vizier.engine.packages.plot.base import export_package as export_plot
+from vizier.engine.packages.pycell.base import export_package as export_python
+from vizier.engine.packages.vizual.base import export_package as export_vizual
 
 
 if __name__ == '__main__':

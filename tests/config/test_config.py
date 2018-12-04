@@ -1,10 +1,10 @@
 import unittest
 
 from vizier.config import AppConfig
-from vizier.packages.mimir.base import PACKAGE_MIMIR
-from vizier.packages.plot.base import PACKAGE_PLOT
-from vizier.packages.pycell.base import PACKAGE_PYTHON
-from vizier.packages.vizual.base import PACKAGE_VIZUAL
+from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
+from vizier.engine.packages.plot.base import PACKAGE_PLOT
+from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
+from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 
 CONFIG_FILE = './.files/config.yaml'
 CONFIG_WITH_ERRORS = '.files/config_with_errors.yaml'

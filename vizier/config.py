@@ -56,8 +56,8 @@ import json
 import os
 import yaml
 
-from vizier.packages.base import PackageIndex
-from vizier.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
+from vizier.engine.packages.base import PackageIndex
+from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
 
 import vizier.datastore.fs.base as ds
 import vizier.filestore.fs.base as fs

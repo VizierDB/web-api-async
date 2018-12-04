@@ -16,7 +16,7 @@
 
 """Declaration of lenses in the Mimir package."""
 
-import vizier.packages.base as pckg
+import vizier.engine.packages.base as pckg
 
 
 """Global constants."""

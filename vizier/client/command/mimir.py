@@ -17,8 +17,8 @@
 """Create instances of mimir package commands."""
 
 import vizier.viztrail.command as md
-import vizier.packages.base as pckg
-import vizier.packages.mimir.base as mimir
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.mimir.base as mimir
 
 
 def mimir_domain(dataset_name, column, make_input_certain=False, validate=False):

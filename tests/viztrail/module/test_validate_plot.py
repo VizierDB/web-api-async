@@ -7,8 +7,8 @@ import unittest
 from vizier.client.command.plot import create_plot
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
-import vizier.packages.base as pckg
-import vizier.packages.plot.base as plot
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.plot.base as plot
 import vizier.viztrail.command as md
 
 

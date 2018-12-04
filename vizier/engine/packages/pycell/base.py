@@ -16,7 +16,7 @@
 
 """Specification of parameters for Python cells."""
 
-import vizier.packages.base as pckg
+import vizier.engine.packages.base as pckg
 
 
 """Global constants."""

@@ -16,8 +16,8 @@
 
 """Create instances of python package commands."""
 
-import vizier.packages.base as pckg
-import vizier.packages.pycell.base as pycell
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.pycell.base as pycell
 import vizier.viztrail.command as md
 
 
