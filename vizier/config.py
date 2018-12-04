@@ -60,7 +60,7 @@ from vizier.engine.packages.base import PackageIndex
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
 
 import vizier.datastore.fs as ds
-import vizier.filestore.fs as fs
+import vizier.filestore.fs.base as fs
 import vizier.viztrail.driver.objectstore.repository as vt
 
 
@@ -81,7 +81,7 @@ DEFAULT_SETTINGS = {
     },
     'debug': True,
     'filestore': {
-        'module': 'vizier.filestore.fs',
+        'module': 'vizier.filestore.fs.base',
         'class': 'DefaultFilestore',
         'properties': {
             fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')

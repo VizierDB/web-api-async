@@ -5,7 +5,7 @@ datastore:
         directory: './.vizierdb/datasets'
 debug: True
 filestore:
-    module: 'vizier.filestore.fs'
+    module: 'vizier.filestore.fs.base'
     class: 'DefaultFilestore'
     properties:
         directory: './.vizierdb/files'

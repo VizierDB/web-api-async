@@ -9,7 +9,7 @@ import unittest
 from vizier.client.command.vizual import delete_column, load_dataset
 from vizier.client.command.vizual import projection, sort_dataset, update_cell
 from vizier.datastore.base import DatasetColumn, DatasetHandle
-from vizier.filestore.fs import DefaultFilestore, METADATA_FILE_NAME
+from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual

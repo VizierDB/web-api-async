@@ -167,7 +167,7 @@ class DefaultFilestore(fs.Filestore):
 
         Returns
         -------
-        vizier.filestore.fs.DefaultFilestore
+        vizier.filestore.fs.base.DefaultFilestore
         """
         # Raise an exception if the pase directory argument is not given
         if not PARA_DIRECTORY in properties:

@@ -4,7 +4,7 @@ datastore:
     properties:
         directory: './.temp/datasets'
 filestore:
-    module: 'vizier.filestore.fs'
+    module: 'vizier.filestore.fs.base'
     class: 'DefaultFilestore'
     properties:
         directory: './.temp/files'
