@@ -192,7 +192,7 @@ class FileSystemDatastore(Datastore):
     """Implementation of Vizier data store. Uses the file system to maintain
     datasets.
     """
-    def __init__(self, properties):
+    def __init__(self, base_dir):
         """Initialize the base directory that contains datasets. Each dataset is
         maintained in a separate sub-folder.
 
@@ -205,9 +205,7 @@ class FileSystemDatastore(Datastore):
         super(FileSystemDatastore, self).__init__(
             build_info('FileSystemDatastore')
         )
-        if not PARA_DIRECTORY in properties:
-            raise ValueError('missing parameter \'' + PARA_DIRECTORY + '\'')
-        self.base_dir = os.path.abspath(properties[PARA_DIRECTORY])
+        self.base_dir = os.path.abspath(base_dir)
         if not os.path.isdir(self.base_dir):
             os.makedirs(self.base_dir)
 

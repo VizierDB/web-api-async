@@ -51,31 +51,31 @@ class DefaultFilestore(fs.Filestore):
     name and an optional column with the file format. For files with unknown
     format the third column is omitted.
     """
-    def __init__(self, base_directory):
+    def __init__(self, base_path):
         """Initialize the base directory that is used for file storage. The base
         directory will be created if they do not exist.
 
         Parameters
         ---------
-        base_directory : string
+        base_path : string
             Path to the base directory.
         """
         super(DefaultFilestore, self).__init__(
             build_info('Default File Server', version_info=VERSION_INFO)
         )
         # Create the base directory if it does not exist
-        if not os.path.isdir(base_directory):
-            os.makedirs(base_directory)
-        self.base_directory = base_directory
+        if not os.path.isdir(base_path):
+            os.makedirs(base_path)
+        self.base_path = base_path
         # Initialize the index file and read the content
-        self.index_file = os.path.join(self.base_directory, METADATA_FILE_NAME)
+        self.index_file = os.path.join(self.base_path, METADATA_FILE_NAME)
         self.files = dict()
         if os.path.isfile(self.index_file):
             with open(self.index_file, 'r') as f:
                 for line in f:
                     tokens = line.strip().split('\t')
                     file_id = tokens[0]
-                    filepath = get_filepath(self.base_directory, file_id)
+                    filepath = get_filepath(self.base_path, file_id)
                     file_name = tokens[1]
                     file_format = None
                     if len(tokens) == 3:
@@ -172,7 +172,7 @@ class DefaultFilestore(fs.Filestore):
         # Raise an exception if the pase directory argument is not given
         if not PARA_DIRECTORY in properties:
             raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
-        return DefaultFilestore(base_directory=properties[PARA_DIRECTORY])
+        return DefaultFilestore(base_path=properties[PARA_DIRECTORY])
 
     def list_files(self):
         """Get list of file handles for all uploaded files.
@@ -204,7 +204,7 @@ class DefaultFilestore(fs.Filestore):
         name = name = os.path.basename(filename)
         # Create a new unique identifier for the file.
         identifier = get_unique_identifier()
-        output_file = get_filepath(self.base_directory, identifier)
+        output_file = get_filepath(self.base_path, identifier)
         # Copy the uploaded file
         shutil.copyfile(filename, output_file)
         # Add file to file index
@@ -235,7 +235,7 @@ class DefaultFilestore(fs.Filestore):
         """
         # Create a new unique identifier for the file.
         identifier = get_unique_identifier()
-        output_file = get_filepath(self.base_directory, identifier)
+        output_file = get_filepath(self.base_path, identifier)
         # Save the file object to the new file path
         file.save(output_file)
         f_handle = fs.FileHandle(

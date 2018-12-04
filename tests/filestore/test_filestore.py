@@ -10,7 +10,7 @@ import unittest
 
 from werkzeug.datastructures import FileStorage
 
-from vizier.filestore.fs import DefaultFilestore, METADATA_FILE_NAME, PARA_DIRECTORY
+from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME, PARA_DIRECTORY
 import vizier.filestore.base as fs
 
 
