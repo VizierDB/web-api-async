@@ -150,9 +150,8 @@ class ModuleHandle(ModuleState):
         Unique module identifier
     command: vizier.viztrail.command.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
-    datasets: dict(string)
-        Dictionary of resulting datasets. The user-specified name is the key
-        and the unique dataset identifier the value.
+    datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
+        Dictionary of resulting datasets. The user-specified name is the key.
     external_form: string
         Printable representation of the module command
     outputs: vizier.viztrail.module.ModuleOutputs
@@ -184,7 +183,7 @@ class ModuleHandle(ModuleState):
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.ModuleTimestamp, optional
             Module timestamp
-        datasets : dict(string:string), optional
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of resulting datasets. The user-specified name is the key
             and the unique dataset identifier the value.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
@@ -263,9 +262,9 @@ class ModuleHandle(ModuleState):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(string:string), optional
-            Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
+            Dictionary of resulting datasets. The user-specified name is the
+            key for the dataset descriptors.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -326,25 +325,27 @@ class ModuleProvenance(object):
         self.read = read
         self.write = write
 
-    def adjust_state(self, datasets):
+    def adjust_state(self, datasets, datastore):
         """Adjust a given database state by adding/replacing datasets in the
         given dictionary with those in the write dependencies of this provenance
         object.
 
         Parameters
         ----------
-        datasets: dict()
+        datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
             Dictionary of identifier for datasets in the current state. The key
             is the dataset name.
+        datastore: vizier.datastore.base.Datastore
+            Datastore to access descriptors for previously generated datasets.
 
         Returns
         -------
-        dict()
+        dict(vizier.datastore.dataset.DatasetDescriptor)
         """
         if not self.write is None:
             result = dict(datasets)
             for ds_name in self.write:
-                result[ds_name] = self.write[ds_name]
+                result[ds_name] = repository.get_descriptor(self.write[ds_name])
             return result
         else:
             return datasets
@@ -362,7 +363,7 @@ class ModuleProvenance(object):
 
         Parameters
         ----------
-        datasets: dict()
+        datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
             Dictionary of identifier for datasets in the current state. The key
             is the dataset name.
 
@@ -383,7 +384,7 @@ class ModuleProvenance(object):
         for name in self.read:
             if not name in datasets:
                 return True
-            elif self.read[name] != datasets[name]:
+            elif self.read[name] != datasets[name].identifier:
                 return True
         # The database state is the same as for the previous execution of the
         # module (with respect to the input dependencies). Thus, the module

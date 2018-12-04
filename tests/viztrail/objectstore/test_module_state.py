@@ -3,12 +3,16 @@ import shutil
 import unittest
 
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module import MODULE_PENDING
 from vizier.client.command.pycell import python_cell
 
 MODULE_DIR = './.temp'
+
+DS1 = DatasetDescriptor(identifier='ID1')
+DS2 = DatasetDescriptor(identifier='ID2')
 
 
 class TestModuleState(unittest.TestCase):
@@ -32,7 +36,7 @@ class TestModuleState(unittest.TestCase):
             external_form='TEST MODULE',
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
             timestamp=ModuleTimestamp()
@@ -95,7 +99,7 @@ class TestModuleState(unittest.TestCase):
             external_form='TEST MODULE',
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
             timestamp=ModuleTimestamp()
@@ -159,12 +163,12 @@ class TestModuleState(unittest.TestCase):
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
             timestamp=ModuleTimestamp(),
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
         )
         self.assertTrue(module.is_pending)
-        module.set_running()
+        module.set_running(external_form='TEST MODULE')
         self.assertTrue(module.is_running)
         self.assertIsNotNone(module.timestamp.started_at)
         self.assertEquals(len(module.datasets), 0)
@@ -208,12 +212,12 @@ class TestModuleState(unittest.TestCase):
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
             timestamp=ModuleTimestamp(),
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
         )
         self.assertTrue(module.is_pending)
-        module.set_running()
+        module.set_running(external_form='TEST MODULE')
         self.assertTrue(module.is_running)
         module.set_success(outputs=ModuleOutputs(stderr=[None]))
         self.assertTrue(module.is_error)
@@ -232,12 +236,12 @@ class TestModuleState(unittest.TestCase):
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
             timestamp=ModuleTimestamp(),
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
         )
         self.assertTrue(module.is_pending)
-        module.set_running()
+        module.set_running(external_form='TEST MODULE')
         module.set_success()
         self.assertTrue(module.is_success)
         self.assertIsNotNone(module.timestamp.started_at)
@@ -265,7 +269,7 @@ class TestModuleState(unittest.TestCase):
         ts = get_current_time()
         module.set_success(
             finished_at=ts,
-            datasets={'DS1': 'ID2'},
+            datasets={'DS1': DS2},
             outputs=ModuleOutputs(stdout=[TextOutput('XYZ')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
         )
@@ -274,7 +278,7 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEquals(module.timestamp.finished_at, ts)
         self.assertEquals(len(module.datasets), 1)
-        self.assertEquals(module.datasets['DS1'], 'ID2')
+        self.assertEquals(module.datasets['DS1'].identifier, 'ID2')
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 1)
         self.assertEquals(module.outputs.stdout[0].value, 'XYZ')
@@ -291,7 +295,7 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEquals(module.timestamp.finished_at, ts)
         self.assertEquals(len(module.datasets), 1)
-        self.assertEquals(module.datasets['DS1'], 'ID2')
+        self.assertEquals(module.datasets['DS1'].identifier, 'ID2')
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 1)
         self.assertEquals(module.outputs.stdout[0].value, 'XYZ')
@@ -309,7 +313,7 @@ class TestModuleState(unittest.TestCase):
             state=MODULE_PENDING,
             module_folder=MODULE_DIR,
             timestamp=ModuleTimestamp(),
-            datasets={'DS1': 'ID1'},
+            datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
         )
@@ -320,7 +324,7 @@ class TestModuleState(unittest.TestCase):
         self.assertFalse(module.is_running)
         self.assertFalse(module.is_success)
         # Running
-        module.set_running()
+        module.set_running(external_form='TEST MODULE')
         self.assertFalse(module.is_pending)
         self.assertFalse(module.is_canceled)
         self.assertFalse(module.is_error)

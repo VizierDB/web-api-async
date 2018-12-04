@@ -20,6 +20,7 @@ object store.
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
 from vizier.viztrail.module import ModuleHandle, ModuleOutputs, ModuleProvenance
 from vizier.viztrail.module import ModuleTimestamp, OutputObject, TextOutput
@@ -29,12 +30,16 @@ from vizier.viztrail.module import MODULE_ERROR, MODULE_RUNNING, MODULE_SUCCESS
 
 """Json labels for serialized object."""
 KEY_ARGUMENTS = 'args'
+KEY_COLUMN_ID = 'id'
+KEY_COLUMN_NAME = 'name'
 KEY_COMMAND = 'command'
 KEY_COMMAND_ID = 'commandId'
 KEY_CREATED_AT = 'createdAt'
 KEY_DATASETS = 'datasets'
+KEY_DATASET_COLUMNS = 'columns'
 KEY_DATASET_ID = 'id'
 KEY_DATASET_NAME = 'name'
+KEY_DATASET_ROWCOUNT = 'rowCount'
 KEY_EXTERNAL_FORM = 'externalForm'
 KEY_FINISHED_AT = 'finishedAt'
 KEY_STARTED_AT = 'startedAt'
@@ -74,6 +79,10 @@ class OSModuleHandle(ModuleHandle):
     - datasets: [
         - id: ...
         - name: ...
+        - columns: [
+          - id: ...
+          - name: ...
+        ]
       ]
     - outputs
       - stderr: [
@@ -116,9 +125,9 @@ class OSModuleHandle(ModuleHandle):
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.ModuleTimestamp, optional
             Module timestamp
-        datasets : dict(string:string), optional
-            Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
+            Dictionary of resulting datasets. Dataset descriptors are keyed by
+            the user-specified dataset name.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -157,9 +166,9 @@ class OSModuleHandle(ModuleHandle):
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.ModuleTimestamp
             Module timestamp
-        datasets : dict(string:string)
-            Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
+            Dictionary of resulting datasets. Dataset descriptors are keyed by
+            the user-specified dataset name.
         outputs: vizier.viztrail.module.ModuleOutputs
             Module output streams STDOUT and STDERR
         provenance: vizier.viztrail.module.ModuleProvenance
@@ -373,9 +382,9 @@ class OSModuleHandle(ModuleHandle):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(string:string), optional
+        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
+            for the dataset descriptor.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -432,8 +441,10 @@ class OSModuleHandle(ModuleHandle):
 # ------------------------------------------------------------------------------
 
 def get_dataset_index(datasets):
-    """Convert a list of dataset object in default serialization format into a
-    dictionary where dataset identifier are keyed by dataset names.
+    """Convert a list of dataset references in default serialization format into
+    a dictionary. The elements of the dictionary are either dataset descriptors
+    or strings representing the dataset identifier. The user-provided dataset
+    name is the key for the dictionary.
 
     Parameters
     ----------
@@ -446,7 +457,22 @@ def get_dataset_index(datasets):
     """
     result = dict()
     for ds in datasets:
-        result[ds[KEY_DATASET_NAME]] = ds[KEY_DATASET_ID]
+        identifier = ds[KEY_DATASET_ID]
+        name = ds[KEY_DATASET_NAME]
+        if KEY_DATASET_COLUMNS in ds or KEY_DATASET_ROWCOUNT in ds:
+            descriptor = DatasetDescriptor(
+                identifier=identifier,
+                columns=[
+                    DatasetColumn(
+                        identifier=col[KEY_COLUMN_ID],
+                        name=col[KEY_COLUMN_NAME]
+                    ) for col in ds[KEY_DATASET_COLUMNS]
+                ],
+                row_count=ds[KEY_DATASET_ROWCOUNT]
+            )
+            result[name] = descriptor
+        else:
+            result[name] = identifier
     return result
 
 
@@ -510,9 +536,8 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
     timestamp: vizier.viztrail.module.ModuleTimestamp
         Module timestamp
-    datasets : dict(string:string)
-        Dictionary of resulting datasets. The user-specified name is the key
-        and the unique dataset identifier the value.
+    datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
+        Dictionary of resulting dataset descriptors.
     outputs: vizier.viztrail.module.ModuleOutputs
         Module output streams STDOUT and STDERR
     provenance: vizier.viztrail.module.ModuleProvenance
@@ -564,8 +589,13 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
         },
         KEY_TIMESTAMP: ts,
         KEY_DATASETS: [{
-                KEY_DATASET_NAME: name,
-                KEY_DATASET_ID: datasets[name]
-            } for name in datasets],
+                KEY_DATASET_NAME: ds,
+                KEY_DATASET_ID: datasets[ds].identifier,
+                KEY_DATASET_COLUMNS: [{
+                    KEY_COLUMN_ID: col.identifier,
+                    KEY_COLUMN_NAME: col.name
+                } for col in datasets[ds].columns],
+                KEY_DATASET_ROWCOUNT: datasets[ds].row_count
+            } for ds in datasets],
         KEY_PROVENANCE: prov
     }

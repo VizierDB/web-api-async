@@ -138,7 +138,7 @@ class TestOSViztrail(unittest.TestCase):
                 module_folder=vt.modules_folder,
             )
             modules.append(m.identifier)
-        m.set_running()
+        m.set_running(external_form='TEST MODULE')
         with self.assertRaises(ValueError):
             vt.create_branch(
                 properties={PROPERTY_NAME: 'My Branch'},

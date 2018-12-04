@@ -4,6 +4,7 @@ information from previous module executions.
 """
 import unittest
 
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.viztrail.module import ModuleProvenance
 
 
@@ -12,7 +13,11 @@ class TestModuleProvenance(unittest.TestCase):
     def test_requires_exec(self):
         """Test .requires_exec() method for the module provenance object."""
         # Current database state
-        datasets = {'A': '123', 'B': '345', 'C': '567'}
+        datasets = {
+            'A': DatasetDescriptor(identifier='123'),
+            'B': DatasetDescriptor(identifier='345'),
+            'C': DatasetDescriptor(identifier='567')
+        }
         # For an empty read or write set the .requires_exec() method should
         # always return True
         self.assertTrue(ModuleProvenance().requires_exec(datasets))

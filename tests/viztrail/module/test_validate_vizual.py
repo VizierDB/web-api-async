@@ -8,7 +8,7 @@ import unittest
 
 from vizier.client.command.vizual import delete_column, load_dataset
 from vizier.client.command.vizual import projection, sort_dataset, update_cell
-from vizier.datastore.base import DatasetColumn, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME
 
 import vizier.engine.packages.base as pckg
@@ -18,7 +18,7 @@ import vizier.viztrail.command as md
 
 
 DATASETS = {
-    'ds': DatasetHandle(
+    'ds': DatasetDescriptor(
         identifier='0000',
         columns=[
             DatasetColumn(identifier=2, name='Some Name'),

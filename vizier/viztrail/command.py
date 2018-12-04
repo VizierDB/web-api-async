@@ -136,7 +136,7 @@ class ModuleArguments(object):
         ----------
         command: vizier.engine.packages.base.CommandDeclaration
             Command declaration containing parameters and format declaration
-        datasets: dict(vizier.datastore.base.DatasetHandle), optional
+        datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name
         filestore: vizier.filestore.base.Filestore, optional
             File store to access file handles for uploaded files
@@ -346,7 +346,7 @@ class ModuleCommand(object):
         ----------
         command: vizier.engine.packages.base.CommandDeclaration
             Command declaration containing parameters and format declaration
-        datasets: dict(vizier.datastore.base.DatasetHandle), optional
+        datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name
         filestore: vizier.filestore.base.Filestore, optional
             File store to access file handles for uploaded files
@@ -464,7 +464,7 @@ def get_column_name(ds_name, column_id, datasets):
         Name of the dataset (or None if argument was missing)
     column_id: str or int or None
         Identifier of dataset column (may be missing)
-    datasets: dict(vizier.datastore.base.DatasetHandle), optional
+    datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
         Datasets in the current database state keyed by the dataset name
 
     Returns

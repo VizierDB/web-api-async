@@ -6,6 +6,7 @@ import unittest
 
 
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs
 from vizier.viztrail.module import OutputObject, TextOutput, MODULE_PENDING
@@ -14,6 +15,19 @@ from vizier.client.command.pycell import python_cell
 
 
 MODULE_DIR = './.temp'
+
+
+DATASETS = {
+    'DS1': DatasetDescriptor(identifier='ID1'),
+    'DS2': DatasetDescriptor(
+        identifier='ID2',
+        columns=[
+            DatasetColumn(identifier=0, name='ABC'),
+            DatasetColumn(identifier=1, name='xyz')
+        ],
+        row_count=100
+    )
+}
 
 
 class TestOModuleIO(unittest.TestCase):
@@ -39,15 +53,23 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
         self.assertEquals(len(m.datasets), 2)
-        self.assertEquals(m.datasets['DS1'], 'ID1')
-        self.assertEquals(m.datasets['DS2'], 'ID2')
+        self.assertEquals(m.datasets['DS1'].identifier, 'ID1')
+        self.assertEquals(len(m.datasets['DS1'].columns), 0)
+        self.assertEquals(m.datasets['DS1'].row_count, 0)
+        self.assertEquals(m.datasets['DS2'].identifier, 'ID2')
+        self.assertEquals(len(m.datasets['DS2'].columns), 2)
+        self.assertEquals(m.datasets['DS2'].columns[0].identifier, 0)
+        self.assertEquals(m.datasets['DS2'].columns[0].name, 'ABC')
+        self.assertEquals(m.datasets['DS2'].columns[1].identifier, 1)
+        self.assertEquals(m.datasets['DS2'].columns[1].name, 'xyz')
+        self.assertEquals(m.datasets['DS2'].row_count, 100)
 
     def test_outputs(self):
         """Test reading and writing modules with output information."""
@@ -59,7 +81,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -76,7 +98,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -95,7 +117,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -119,7 +141,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -138,7 +160,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -157,7 +179,7 @@ class TestOModuleIO(unittest.TestCase):
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -178,7 +200,7 @@ class TestOModuleIO(unittest.TestCase):
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -200,7 +222,7 @@ class TestOModuleIO(unittest.TestCase):
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -237,7 +259,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -257,7 +279,7 @@ class TestOModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -296,7 +318,7 @@ class TestOModuleIO(unittest.TestCase):
                 started_at=started_at
             ),
             module_folder=MODULE_DIR,
-            datasets={'DS1': 'ID1', 'DS2': 'ID2'}
+            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,

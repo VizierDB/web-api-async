@@ -5,7 +5,7 @@ package.
 import unittest
 
 from vizier.client.command.plot import create_plot
-from vizier.datastore.base import DatasetColumn, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.plot.base as plot
@@ -13,7 +13,7 @@ import vizier.viztrail.command as md
 
 
 DATASETS = {
-    'ds': DatasetHandle(
+    'ds': DatasetDescriptor(
         identifier='0000',
         columns=[
             DatasetColumn(identifier=2, name='Some Name'),

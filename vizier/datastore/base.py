@@ -99,6 +99,22 @@ class Datastore(VizierSystemComponent):
         raise NotImplementedError
 
     @abstractmethod
+    def get_descriptor(self, identifier):
+        """Get the descriptor for the dataset with given identifier from the
+        data store. Returns None if no dataset with the given identifier exists.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def load_dataset(self, f_handle):
         """Create a new dataset from a given file.
 

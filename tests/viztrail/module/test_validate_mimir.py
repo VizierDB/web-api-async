@@ -8,7 +8,7 @@ from vizier.client.command.mimir import mimir_domain, mimir_geocode
 from vizier.client.command.mimir import mimir_key_repair, mimir_missing_key
 from vizier.client.command.mimir import mimir_missing_value, mimir_picker
 from vizier.client.command.mimir import mimir_schema_matching
-from vizier.datastore.base import DatasetColumn, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as mimir
@@ -16,7 +16,7 @@ import vizier.viztrail.command as md
 
 
 DATASETS = {
-    'ds': DatasetHandle(
+    'ds': DatasetDescriptor(
         identifier='0000',
         columns=[
             DatasetColumn(identifier=2, name='Some Name'),
