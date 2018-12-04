@@ -1,10 +1,10 @@
 packages:
     - declarations: './.files/mimir.pckg.json'
     - declarations: './.files/plot.pckg.json'
-    - declarations: './.files/pycell.pckg.json'
+    - definitions: './.files/pycell.pckg.json'
       parameters:
           moduleName: 'NoModule'
-          className: 'NoClass'
+          className: 'NoName'
 webservice:
     server_url: 'http://vizier-db.info'
     server_port: 80

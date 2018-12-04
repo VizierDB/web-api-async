@@ -11,8 +11,8 @@ from vizier.client.command.vizual import projection, sort_dataset, update_cell
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME
 
-import vizier.engine.packages.base as pckg
-import vizier.engine.packages.vizual.base as vizual
+import vizier.packages.base as pckg
+import vizier.packages.vizual.base as vizual
 import vizier.filestore.base as fs
 import vizier.viztrail.command as md
 

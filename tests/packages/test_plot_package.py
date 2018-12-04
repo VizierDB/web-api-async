@@ -4,8 +4,8 @@ import unittest
 
 from vizier.client.command.plot import create_plot
 from vizier.viztrail.command import ModuleCommand, ARG, ARG_ID
-import vizier.engine.packages.base as pckg
-import vizier.engine.packages.plot.base as plot
+import vizier.packages.base as pckg
+import vizier.packages.plot.base as plot
 
 
 PACKAGES = {plot.PACKAGE_PLOT: pckg.PackageIndex(plot.PLOT_COMMANDS)}

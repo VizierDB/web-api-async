@@ -1,30 +1,32 @@
 Vizier API Configuration
 ========================
 
-The Vizier API is configured using a configuration object that contains (i) API parameters and default settings, (ii) definition of the file store, (iii) definition of the data store, (iv) definition of the viztrails repository, and (v) the list of available packages.
+The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the file store, (iii) definition of the data store, (iv) definition of the viztrails repository, and (v) the list of available packages and their respective configuration parameters.
 
 
 Configuration Parameters
 ------------------------
 
-The Api is configured using a dictionary of configuration parameters. The parameters are divided into the following parts:
+The API is configured using a dictionary of configuration parameters. The parameters are divided into the following parts:
 
 ```
 datastore:
-    module: Name of the Python module containing data store class
-    class: Class name of data store
+    moduleName: Name of the Python module containing data store class
+    className: Class name of data store
     properties: Dictionary of data store specific properties
 debug: Flag indicating whether server is started in debug mode
 filestore:
-    module: Name of the Python module containing file store class
-    class: Class name of file store
+    moduleName: Name of the Python module containing file store class
+    className: Class name of file store
     properties: Dictionary of file store specific properties
 logs:
     server: Log file for Web Server
-packages: List of files, each containing the declaration of commands for a supported package
+packages: # List of package declarations
+    - declarations: File containing declaration of package commands
+      parameters: Package specific configuration parameters
 viztrails:
-    module: Name of the Python module containing repository class
-    class: Class name of viztrails repository
+    moduleName: Name of the Python module containing repository class
+    className: Class name of viztrails repository
     properties: Dictionary of repository specific properties
 webservice:
     server_url: Url of the server (e.g., http://localhost)
@@ -40,7 +42,7 @@ webservice:
         max_file_size: Maximum size for file uploads (in byte)
 ```
 
-The list of elements in the packages list for each execution environment has to correspond to identifier of default packages or packages that have been specified in the packages part of the configuration.
+Note that a package declaration file can contain multiple packages. The *parameters* that are associated with a *declarations* element in the *packages* list will be passed to the constructor of the package engine for each of the packages in the file.
 
 
 Packages of Workflow Commands

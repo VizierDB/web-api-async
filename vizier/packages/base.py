@@ -42,7 +42,7 @@ LABEL_DESCRIPTION = 'description'
 LABEL_FORMAT = 'format'
 LABEL_ID = 'id'
 LABEL_LEFTSPACE = 'lspace'
-LABEL_MODULE = 'module'
+LABEL_MODULENAME = 'moduleName'
 LABEL_NAME = 'name'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
@@ -165,7 +165,7 @@ INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX]
 STRING_TYPES = [DT_DATASET_ID, DT_FILE_ID, DT_PYTHON_CODE, DT_STRING]
 
 
-def package_declaration(identifier, commands, module, class_name, name=None, description=None):
+def package_declaration(identifier, commands, module_name, class_name, name=None, description=None):
     """Create a dictionary containing a package declaration.
 
     Parameters
@@ -174,7 +174,7 @@ def package_declaration(identifier, commands, module, class_name, name=None, des
         Unique package identifier
     commands: list
         List of package commands
-    module: string
+    module_name: string
         Name of the module containing the class that contains implementation to
         execute package commands
     class_name: string
@@ -191,7 +191,7 @@ def package_declaration(identifier, commands, module, class_name, name=None, des
     """
     obj = dict({LABEL_ID: identifier})
     obj[LABEL_COMMAND] = commands
-    obj[LABEL_MODULE] = module
+    obj[LABEL_MODULENAME] = module_name
     obj[LABEL_CLASSNAME] = class_name
     if not name is None:
         obj[LABEL_NAME] = name
@@ -546,7 +546,7 @@ class PackageIndex(object):
         """
         # Validate the given package specification
         validate_package(package)
-        self.module = package[LABEL_MODULE]
+        self.module_name = package[LABEL_MODULENAME]
         self.class_name = package[LABEL_CLASSNAME]
         self.commands = dict()
         for cmd in package[LABEL_COMMAND]:

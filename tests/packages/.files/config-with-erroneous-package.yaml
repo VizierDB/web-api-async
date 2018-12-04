@@ -1,7 +1,7 @@
 packages:
-    - './.files/mimir.pckg.json'
-    - './.files/plot.pckg.json'
-    - './.files/erroneous.pckg.json'
+    - declarations: './.files/mimir.pckg.json'
+    - declarations: './.files/plot.pckg.json'
+    - declarations: './.files/erroneous.pckg.json'
 settings:
     api:
         server_url: 'http://vizier-db.info'

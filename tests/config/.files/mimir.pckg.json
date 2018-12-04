@@ -1,5 +1,6 @@
 {
     "mimir": {
+        "className": "", 
         "command": [
             {
                 "format": [
@@ -731,6 +732,7 @@
                 ]
             }
         ], 
-        "id": "mimir"
+        "id": "mimir", 
+        "moduleName": ""
     }
 }

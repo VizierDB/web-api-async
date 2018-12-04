@@ -25,7 +25,7 @@ import csv
 import gzip
 import json
 
-from vizier.datastore.base import DatasetHandle, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 
 
 class DatasetReader(object):

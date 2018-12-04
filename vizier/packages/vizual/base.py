@@ -16,7 +16,7 @@
 
 """Specification of parameters for VizUAL commands."""
 
-import vizier.engine.packages.base as pckg
+import vizier.packages.base as pckg
 
 
 """Global constants."""
@@ -91,7 +91,7 @@ def para_row(index):
 
 VIZUAL_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_VIZUAL,
-    module='',
+    module_name='',
     class_name='',
     commands=[
         pckg.command_declaration(

@@ -16,7 +16,7 @@
 
 """Declaration of lenses in the Mimir package."""
 
-import vizier.engine.packages.base as pckg
+import vizier.packages.base as pckg
 
 
 """Global constants."""
@@ -70,7 +70,7 @@ def para_make_input_certain(index):
 
 MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
-    module='',
+    module_name='',
     class_name='',
     commands=[
         pckg.command_declaration(

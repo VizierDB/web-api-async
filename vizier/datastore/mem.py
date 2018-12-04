@@ -22,7 +22,7 @@ import csv
 
 from vizier.core.system import build_info
 from vizier.core.util import cast, get_unique_identifier
-from vizier.datastore.base import DatasetHandle, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 from vizier.datastore.base import Datastore, max_column_id, max_row_id
 from vizier.datastore.base import validate_schema
 from vizier.datastore.metadata import DatasetMetadata

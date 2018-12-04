@@ -24,7 +24,7 @@ contain the parameter id and value as dictionary elements. The structure of the
 va;ue element is dependent on the parameter type.
 """
 
-import vizier.engine.packages.base as pckg
+import vizier.packages.base as pckg
 
 
 """Element labels for dictionaries that represent command arguments."""
@@ -96,7 +96,7 @@ class ModuleArguments(object):
 
         Parameters
         ----------
-        command: vizier.engine.packages.base.CommandDeclaration
+        command: vizier.packages.base.CommandDeclaration
             Command declaration containing parameters and format declaration
 
         Returns
@@ -134,7 +134,7 @@ class ModuleArguments(object):
 
         Parameters
         ----------
-        command: vizier.engine.packages.base.CommandDeclaration
+        command: vizier.packages.base.CommandDeclaration
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name
@@ -242,7 +242,7 @@ class ModuleArguments(object):
 
         Parameters
         -----------
-        parameters: vizier.engine.packages.base.CommandDeclaration
+        parameters: vizier.packages.base.CommandDeclaration
         """
         # Keep track of the parameter identifier in the argument list
         keys = set()
@@ -344,7 +344,7 @@ class ModuleCommand(object):
 
         Parameters
         ----------
-        command: vizier.engine.packages.base.CommandDeclaration
+        command: vizier.packages.base.CommandDeclaration
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name

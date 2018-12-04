@@ -1,12 +1,13 @@
 import unittest
 
 from vizier.config import AppConfig
-from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
-from vizier.engine.packages.plot.base import PACKAGE_PLOT
-from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
+from vizier.packages.mimir.base import PACKAGE_MIMIR
+from vizier.packages.plot.base import PACKAGE_PLOT
+from vizier.packages.pycell.base import PACKAGE_PYTHON
+from vizier.packages.vizual.base import PACKAGE_VIZUAL
 
 CONFIG_FILE = './.files/config.yaml'
+CONFIG_WITH_ERRORS = '.files/config_with_errors.yaml'
 
 
 class TestConfig(unittest.TestCase):
@@ -27,6 +28,11 @@ class TestConfig(unittest.TestCase):
         """
         for pckg in [PACKAGE_MIMIR, PACKAGE_PLOT, PACKAGE_PYTHON, PACKAGE_VIZUAL]:
             self.assertTrue(pckg in settings.packages)
+        self.assertEquals(len(settings.package_parameters), 1)
+        self.assertTrue(PACKAGE_PYTHON in settings.package_parameters)
+        parameters = settings.package_parameters[PACKAGE_PYTHON]
+        self.assertEquals(parameters['moduleName'], 'NoModule')
+        self.assertEquals(parameters['className'], 'NoClass')
         # API
         self.assertEquals(settings.webservice.server_url, 'http://vizier-db.info')
         self.assertEquals(settings.webservice.server_port, 80)
@@ -47,6 +53,11 @@ class TestConfig(unittest.TestCase):
         self.assertEquals(settings.debug, True)
         # Logs
         self.assertEquals(settings.logs.server, 'logs')
+
+    def test_config_with_error(self):
+        """Test loading configuration file with erroneous package specification."""
+        with self.assertRaises(ValueError):
+            AppConfig(configuration_file=CONFIG_WITH_ERRORS)
 
 
 if __name__ == '__main__':

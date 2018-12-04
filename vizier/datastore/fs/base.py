@@ -28,8 +28,8 @@ import shutil
 
 from vizier.core.system import build_info
 from vizier.core.util import get_unique_identifier
-from vizier.datastore.base import DatasetHandle, DatasetColumn, Datastore
-from vizier.datastore.base import validate_schema
+from vizier.datastore.dataset import DatasetHandle, DatasetColumn
+from vizier.datastore.base import Datastore, validate_schema
 from vizier.datastore.mem import InMemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.datastore.metadata import DatasetMetadata

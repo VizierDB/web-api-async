@@ -16,7 +16,7 @@
 
 """Specification of parameters for Python cells."""
 
-import vizier.engine.packages.base as pckg
+import vizier.packages.base as pckg
 
 
 """Global constants."""
@@ -34,7 +34,7 @@ PYTHON_SOURCE = 'source'
 """Define the python cell command structure."""
 PYTHON_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_PYTHON,
-    module='',
+    module_name='',
     class_name='',
     commands=[
         pckg.command_declaration(

@@ -1,5 +1,6 @@
 {
     "plot": {
+        "className": "", 
         "command": [
             {
                 "format": [
@@ -30,7 +31,7 @@
                     {
                         "lspace": true, 
                         "rspace": true, 
-                        "type": "const", 
+                        "type": "var", 
                         "value": "dataset"
                     }
                 ], 
@@ -161,6 +162,7 @@
                 ]
             }
         ], 
-        "id": "plot"
+        "id": "plot", 
+        "moduleName": ""
     }
 }

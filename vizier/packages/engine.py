@@ -17,7 +17,16 @@
 """Package executor."""
 
 
-class PackageExecutor(object):
+class ExecResult(object):
+    """
+    """
+    def __init__(self):
+        """
+        """
+        pass
+
+        
+class PackageEngine(object):
     """
     """
     def compute(self, command_id, arguments, context):

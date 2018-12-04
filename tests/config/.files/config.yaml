@@ -1,7 +1,10 @@
 packages:
-    - './.files/mimir.pckg.json'
-    - './.files/plot.pckg.json'
-    - './.files/pycell.pckg.json'
+    - declarations: './.files/mimir.pckg.json'
+    - declarations: './.files/plot.pckg.json'
+    - declarations: './.files/pycell.pckg.json'
+      parameters:
+          moduleName: 'NoModule'
+          className: 'NoClass'
 webservice:
     server_url: 'http://vizier-db.info'
     server_port: 80
@@ -10,7 +13,7 @@ webservice:
     defaults:
         max_file_size: 1024
 filestore:
-    class: 'NoName'
+    className: 'NoName'
     properties:
         directory: 'fs-directory'
 debug: True

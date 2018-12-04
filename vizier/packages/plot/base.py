@@ -16,7 +16,7 @@
 
 """Specification of parameters for plot cells."""
 
-import vizier.engine.packages.base as pckg
+import vizier.packages.base as pckg
 
 
 """Global constants."""
@@ -44,7 +44,7 @@ PARA_XAXIS_RANGE = PARA_XAXIS + '_' + PARA_RANGE
 # Declaration of plot package commands
 PLOT_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_PLOT,
-    module='',
+    module_name='',
     class_name='',
     commands=[
         pckg.command_declaration(

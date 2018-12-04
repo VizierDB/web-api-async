@@ -1,23 +1,23 @@
 datastore:
-    module: 'vizier.datastore.fs'
-    class: 'FileSystemDatastore'
+    moduleName: 'vizier.datastore.fs'
+    className: 'FileSystemDatastore'
     properties:
         directory: './.vizierdb/datasets'
 debug: True
 filestore:
-    module: 'vizier.filestore.fs.base'
-    class: 'DefaultFilestore'
+    moduleName: 'vizier.filestore.fs.base'
+    className: 'DefaultFilestore'
     properties:
         directory: './.vizierdb/files'
 logs:
     server: './.vizierdb/logs'
 packages:
-    - './resources/packages/mimir.pckg.json'
-    - './resources/packages/plot.pckg.json'
-    - './resources/packages/python.pckg.json'
+    - declarations: './resources/packages/mimir.pckg.json'
+    - declarations: './resources/packages/plot.pckg.json'
+    - declarations: './resources/packages/python.pckg.json'
 viztrails:
-    module: 'vizier.viztrail.driver.objectstore.repository'
-    class: 'OSViztrailRepository'
+    moduleName: 'vizier.viztrail.driver.objectstore.repository'
+    className: 'OSViztrailRepository'
     properties:
         directory: './.vizierdb/viztrails'
 webservice:

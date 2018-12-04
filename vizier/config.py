@@ -56,10 +56,10 @@ import json
 import os
 import yaml
 
-from vizier.engine.packages.base import PackageIndex
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
+from vizier.packages.base import PackageIndex
+from vizier.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
 
-import vizier.datastore.fs as ds
+import vizier.datastore.fs.base as ds
 import vizier.filestore.fs.base as fs
 import vizier.viztrail.driver.objectstore.repository as vt
 
@@ -73,16 +73,16 @@ ENV_DIRECTORY = '../.env'
 """Default execution environment."""
 DEFAULT_SETTINGS = {
     'datastore': {
-        'module': 'vizier.datastore.fs',
-        'class': 'FileSystemDatastore',
+        'moduleName': 'vizier.datastore.fs',
+        'className': 'FileSystemDatastore',
         'properties': {
             ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
         }
     },
     'debug': True,
     'filestore': {
-        'module': 'vizier.filestore.fs.base',
-        'class': 'DefaultFilestore',
+        'moduleName': 'vizier.filestore.fs.base',
+        'className': 'DefaultFilestore',
         'properties': {
             fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
         }
@@ -91,8 +91,8 @@ DEFAULT_SETTINGS = {
         'server': os.path.join(ENV_DIRECTORY, 'logs')
     },
     'viztrails': {
-        'module': 'vizier.viztrail.driver.objectstore.repository',
-        'class': 'OSViztrailRepository',
+        'moduleName': 'vizier.viztrail.driver.objectstore.repository',
+        'className': 'OSViztrailRepository',
         'properties': {
             vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt')
         }
@@ -164,11 +164,16 @@ class AppConfig(object):
         # reference to a VizUAL package which overrides the default package
         # declaration.
         self.packages = {PACKAGE_VIZUAL: PackageIndex(VIZUAL_COMMANDS)}
+        self.package_parameters = dict()
         if 'packages' in doc:
             for pckg_file in doc['packages']:
-                pckg = read_object_from_file(pckg_file)
+                if not 'declarations' in pckg_file:
+                    raise ValueError('missing key \'declarations\' for package')
+                pckg = read_object_from_file(pckg_file['declarations'])
                 for key in pckg:
                     self.packages[key] = PackageIndex(pckg[key])
+                    if 'parameters' in pckg_file:
+                        self.package_parameters[key] = pckg_file['parameters']
         # Create configuration object for system components data store, file
         # store, viztrail registry, and workflow execution engine.
         for key in ['datastore', 'filestore', 'viztrails']:
@@ -229,14 +234,14 @@ class ComponentConfig(object):
         default_values: dict
             Dictionary of default values.
         """
-        if 'module' in values:
-            self.module_name = values['module']
+        if 'moduleName' in values:
+            self.module_name = values['moduleName']
         else:
-            self.module_name = default_values['module']
-        if 'class' in values:
-            self.class_name = values['class']
+            self.module_name = default_values['moduleName']
+        if 'className' in values:
+            self.class_name = values['className']
         else:
-            self.class_name = default_values['class']
+            self.class_name = default_values['className']
         if 'properties' in values:
             self.properties = values['properties']
         else:
