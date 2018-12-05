@@ -51,6 +51,32 @@ def cast(value):
             return value
 
 
+def encode_values(values):
+    """Encode a given list of cell values into utf-8 format.
+
+    Parameters
+    ----------
+    values: list(string)
+
+    Returns
+    -------
+    list(string)
+    """
+    result = list()
+    for val in values:
+        if isinstance(val, basestring):
+            try:
+                result.append(val.encode('utf-8'))
+            except UnicodeDecodeError as ex:
+                try:
+                    result.append(val.decode('cp1252').encode('utf-8'))
+                except UnicodeDecodeError as ex:
+                    result.append(val.decode('latin1').encode('utf-8'))
+        else:
+            result.append(val)
+    return result
+
+
 def get_unique_identifier():
     """Create a new unique identifier.
 
@@ -70,7 +96,7 @@ def get_short_identifier():
     string
     """
     return get_unique_identifier()[:8]
-    
+
 
 def init_value(value, default_value):
     """Returns the value if it is not None. Otherwise, returns the default

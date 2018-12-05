@@ -2,17 +2,18 @@ import os
 import tempfile
 import unittest
 
-from vizier.datastore.base import DatasetRow
+from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.reader import DelimitedFileReader, DefaultJsonDatasetReader
 
 
-CSV_FILE = './data/dataset.csv'
-GZIP_CSV_FILE = './data/dataset.csv.gz'
-TSV_FILE = './data/dataset.tsv'
-GZIP_TSV_FILE = './data/dataset.tsv.gz'
-JSON_FILE = './data/dataset.json'
+CSV_FILE = './.files/dataset.csv'
+GZIP_CSV_FILE = './.files/dataset.csv.gz'
+TSV_FILE = './.files/dataset.tsv'
+GZIP_TSV_FILE = './.files/dataset.tsv.gz'
+JSON_FILE = './.files/dataset.json'
 
-class TestDataset(unittest.TestCase):
+
+class TestDatasetReader(unittest.TestCase):
 
     def test_delimited_file_reader(self):
         """Test functionality of the delimited file dataset reader."""

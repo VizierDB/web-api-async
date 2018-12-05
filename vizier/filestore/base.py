@@ -65,6 +65,7 @@ class FileHandle(object):
         self.file_name = file_name
         self.file_format = file_format
 
+    @property
     def compressed(self):
         """Flag indicating whether the file is in gzip format. This is currently
         determined by the file format value. If the file format is unknown the
@@ -78,6 +79,7 @@ class FileHandle(object):
             return self.file_format in [FORMAT_CSV_GZIP, FORMAT_TSV_GZIP]
         return False
 
+    @property
     def delimiter(self):
         """Determine the column delimiter for a CSV/TSV file based on the file
         format information. If the file format is unknown the result is None
@@ -92,6 +94,17 @@ class FileHandle(object):
             else:
                 return '\t'
         return None
+
+    @property
+    def is_tabular(self):
+        """Returns True if the file suffix indicates that the associated file is
+        in one of the supported tabular data formats (i.e., CSV or TSV).
+
+        Returns
+        -------
+        bool
+        """
+        return not self.file_format is None
 
     @property
     def name(self):
@@ -111,7 +124,7 @@ class FileHandle(object):
         FileObject
         """
         # The open method depends on the compressed flag
-        if self.compressed():
+        if self.compressed:
             return gzip.open(self.filepath, 'rb')
         else:
             return open(self.filepath, 'r')
@@ -201,3 +214,31 @@ class Filestore(VizierSystemComponent):
         vizier.filestore.base.FileHandle
         """
         raise NotImplementedError
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def get_fileformat(filename):
+    """Determine the file type based on the file name suffix. If the suffix
+    is unknown the result is None.
+
+    Parameters
+    ----------
+    filename: string
+        File name
+
+    Returns
+    -------
+    string
+    """
+    if filename.endswith('.csv'):
+        return FORMAT_CSV
+    elif filename.endswith('.csv.gz'):
+        return FORMAT_CSV_GZIP
+    elif filename.endswith('.tsv'):
+        return FORMAT_TSV
+    elif filename.endswith('.tsv.gz'):
+        return FORMAT_TSV_GZIP
+    return None

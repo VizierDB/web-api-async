@@ -20,20 +20,22 @@ CSV_FILE = './.files/dataset.csv'
 GZIP_CSV_FILE = './.files/dataset.csv.gz'
 TSV_FILE = './.files/dataset.tsv'
 GZIP_TSV_FILE = './.files/dataset.tsv.gz'
+TEXT_FILE = './.files/textfile.txt'
 
 
 class TestDefaultFilestore(unittest.TestCase):
 
     def setUp(self):
-        """Create an empty file server repository."""
-        # Drop project descriptor directory
+        """Create an empty filestore directory."""
+        # Delete filestore directory
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
 
     def tearDown(self):
-        """Clean-up by dropping file server directory.
+        """Clean-up by deleting the filestore directory.
         """
-        shutil.rmtree(SERVER_DIR)
+        if os.path.isdir(SERVER_DIR):
+            shutil.rmtree(SERVER_DIR)
 
     def test_cleanup(self):
         """Test clean up function."""
@@ -82,7 +84,7 @@ class TestDefaultFilestore(unittest.TestCase):
         # Ensure that the file parses as a CSV file
         with fh1.open() as csvfile:
             rows = 0
-            for row in csv.reader(csvfile, delimiter=fh1.delimiter()):
+            for row in csv.reader(csvfile, delimiter=fh1.delimiter):
                 rows += 1
         self.assertEquals(rows, 3)
 
@@ -120,6 +122,7 @@ class TestDefaultFilestore(unittest.TestCase):
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, METADATA_FILE_NAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
+        self.assertTrue(fh.is_tabular)
         # Re-load the repository
         db = DefaultFilestore(SERVER_DIR)
         fh = db.get_file(fh.identifier)
@@ -128,20 +131,22 @@ class TestDefaultFilestore(unittest.TestCase):
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         # Add files with other valid suffixes
         fh = db.upload_file(CSV_FILE)
-        self.assertFalse(fh.compressed())
-        self.assertEquals(fh.delimiter(), ',')
+        self.assertFalse(fh.compressed)
+        self.assertEquals(fh.delimiter, ',')
         fh = db.upload_file(GZIP_CSV_FILE)
-        self.assertTrue(fh.compressed())
-        self.assertEquals(fh.delimiter(), ',')
+        self.assertTrue(fh.compressed)
+        self.assertEquals(fh.delimiter, ',')
         fh = db.upload_file(TSV_FILE)
-        self.assertFalse(fh.compressed())
-        self.assertEquals(fh.delimiter(), '\t')
+        self.assertFalse(fh.compressed)
+        self.assertEquals(fh.delimiter, '\t')
         fh = db.upload_file(GZIP_TSV_FILE)
-        self.assertTrue(fh.compressed())
-        self.assertEquals(fh.delimiter(), '\t')
+        self.assertTrue(fh.compressed)
+        self.assertEquals(fh.delimiter, '\t')
         # Re-load the repository
         db = DefaultFilestore(SERVER_DIR)
         self.assertEquals(len(db.list_files()), 5)
+        fh = db.upload_file(TEXT_FILE)
+        self.assertFalse(fh.is_tabular)
 
     def test_upload_stream(self):
         """Test file upload from an open file object."""

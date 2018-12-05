@@ -268,19 +268,18 @@ class DatasetRow(object):
     values : list(string)
         List of column values in the row
     """
-    def __init__(self, identifier=None, values=None, annotations=None):
+    def __init__(self, identifier=None, values=None):
         """Initialize the row object.
 
         Parameters
         ----------
         identifier: int, optional
             Unique row identifier
-        values : list(string), optional
+        values : list(string)
             List of column values in the row
         """
         self.identifier = identifier if not identifier is None else -1
-        self.values = values
-        self.cell_annotations = annotations if not annotations is None else [False] * len(values)
+        self.values = values if not values is None else list()
 
 
 # ------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ import shutil
 from vizier.core.util import get_unique_identifier
 from vizier.core.system import build_info, component_descriptor
 from vizier.core.system import VizierSystemComponent
-import vizier.filestore.base as fs
+from vizier.filestore.base import Filestore, FileHandle, get_fileformat
 
 
 """File store constants."""
@@ -41,7 +41,7 @@ VERSION_INFO = '0.2.1'
 PARA_DIRECTORY = 'directory'
 
 
-class DefaultFilestore(fs.Filestore):
+class DefaultFilestore(Filestore):
     """Default file server implementation. Keeps all files in a given base
     directory on disk. Files are named by their unique identifier (with suffix
     .dat for convenience). File metadata is kept in a tab-delimited file
@@ -80,7 +80,7 @@ class DefaultFilestore(fs.Filestore):
                     file_format = None
                     if len(tokens) == 3:
                         file_format = tokens[2]
-                    self.files[file_id] = fs.FileHandle(
+                    self.files[file_id] = FileHandle(
                         file_id,
                         filepath=filepath,
                         file_name=file_name,
@@ -208,7 +208,7 @@ class DefaultFilestore(fs.Filestore):
         # Copy the uploaded file
         shutil.copyfile(filename, output_file)
         # Add file to file index
-        f_handle = fs.FileHandle(
+        f_handle = FileHandle(
             identifier,
             filepath=output_file,
             file_name=name,
@@ -238,7 +238,7 @@ class DefaultFilestore(fs.Filestore):
         output_file = get_filepath(self.base_path, identifier)
         # Save the file object to the new file path
         file.save(output_file)
-        f_handle = fs.FileHandle(
+        f_handle = FileHandle(
             identifier,
             filepath=output_file,
             file_name=file_name,
@@ -252,30 +252,6 @@ class DefaultFilestore(fs.Filestore):
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
-
-def get_fileformat(filename):
-    """Determine the file type based on the file name suffix. If the suffix
-    is unknown the result is None.
-
-    Parameters
-    ----------
-    filename: string
-        File name
-
-    Returns
-    -------
-    string
-    """
-    if filename.endswith('.csv'):
-        return fs.FORMAT_CSV
-    elif filename.endswith('.csv.gz'):
-        return fs.FORMAT_CSV_GZIP
-    elif filename.endswith('.tsv'):
-        return fs.FORMAT_TSV
-    elif filename.endswith('.tsv.gz'):
-        return fs.FORMAT_TSV_GZIP
-    return None
-
 
 def get_filepath(base_dir, file_id):
     """Get the absolute path for the file with the given identifier.

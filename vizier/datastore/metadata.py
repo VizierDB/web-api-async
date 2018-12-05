@@ -22,6 +22,7 @@ are COLUMN, ROW, and CELL.
 """
 
 import json
+import os
 
 
 # ------------------------------------------------------------------------------
@@ -464,6 +465,9 @@ class DatasetMetadata(object):
         -------
         vizier.database.metadata.DatsetMetadata
         """
+        # Return an empty annotation set if the file does not exist
+        if not os.path.isfile(filename):
+            return DatasetMetadata()
         with open(filename, 'r') as f:
             doc = json.loads(f.read())
         return DatasetMetadata(

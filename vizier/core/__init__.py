@@ -1,4 +1,6 @@
-# Copyright (C) 2018 New York University, University at Buffalo, Illinois Institute of Technology.
+# Copyright (C) 2018 New York University,
+#                    University at Buffalo,
+#                    Illinois Institute of Technology.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,4 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION_INFO = '0.6.0'
+VERSION_INFO = '0.5.0'

@@ -168,32 +168,6 @@ class Datastore(VizierSystemComponent):
 #
 # ------------------------------------------------------------------------------
 
-def encode_values(values):
-    """Encode a given list of cell values into utf-8 format.
-
-    Parameters
-    ----------
-    values: list(string)
-
-    Returns
-    -------
-    list(string)
-    """
-    result = list()
-    for val in values:
-        if isinstance(val, basestring):
-            try:
-                result.append(val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
-                try:
-                    result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
-                    result.append(val.decode('latin1').encode('utf-8'))
-        else:
-            result.append(val)
-    return result
-
-
 def collabel_2_index(label):
     """Convert a column label into a column index (based at 0), e.g., 'A'-> 1,
     'B' -> 2, ..., 'AA' -> 27, etc.

@@ -25,7 +25,13 @@ import csv
 import gzip
 import json
 
+from vizier.core.util import encode_values
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
+
+"""Json element names for default dataset serialization."""
+KEY_ROWS = 'rows'
+KEY_ROW_ID = 'id'
+KEY_ROW_VALUES = 'val'
 
 
 class DatasetReader(object):
@@ -244,7 +250,11 @@ class DefaultJsonDatasetReader(DatasetReader):
         """
         if self.is_open:
             if self.read_index < len(self.rows):
-                row = DatasetRow.from_dict(self.rows[self.read_index])
+                r_dict = self.rows[self.read_index]
+                row = DatasetRow(
+                    identifier=r_dict[KEY_ROW_ID],
+                    values=r_dict[KEY_ROW_VALUES]
+                )
                 # Set the annotation flags in the dataset row
                 if not self.annotations is None:
                     for i in range(len(self.columns)):
@@ -276,7 +286,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             # Read the Json file and get the array of rows. Depending on whether
             # offset or limit arguments were given we may select only a subset
             # of the rows in the file.
-            ds_rows = json.loads(self.fh.read())['rows']
+            ds_rows = json.loads(self.fh.read())[KEY_ROWS]
             if self.offset > 0 or self.limit > 0:
                 self.rows = list()
                 skip = self.offset
@@ -307,7 +317,14 @@ class DefaultJsonDatasetReader(DatasetReader):
         else:
             fh = open(self.filename, 'w')
         # Write dataset rows
-        json.dump({'rows': [row.to_dict() for row in rows]}, fh)
+        json.dump({
+                KEY_ROWS: [{
+                    KEY_ROW_ID: row.identifier,
+                    KEY_ROW_VALUES: encode_values(row.values)
+                } for row in rows]
+            },
+            fh
+        )
         fh.close()
 
 
@@ -365,20 +382,3 @@ class InMemDatasetReader(DatasetReader):
             self.read_index = 0
             self.is_open = True
         return self
-
-    def write(self, rows):
-        """Write the given list of dataset rows to file in default Json format.
-
-        Parameters
-        ----------
-        rows: list(vizier.datastore.base.DatasetRow)
-            List of dataset rows
-        """
-        # Open file handle
-        if self.compressed:
-            fh = gzip.open(self.filename, 'wb')
-        else:
-            fh = open(self.filename, 'w')
-        # Write dataset rows
-        json.dump({'rows': [row.to_dict() for row in rows]}, fh)
-        fh.close()

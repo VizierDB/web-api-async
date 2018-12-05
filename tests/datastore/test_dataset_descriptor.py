@@ -4,8 +4,6 @@ import os
 import shutil
 import unittest
 
-from werkzeug.datastructures import FileStorage
-
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
 
