@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The package task module defines the base classes for executing commands,
-i.e., tasks, that are supported by a given package. Every package declaration
-is accompanied with a package-specific task engine that will be used to execute
-commands that are declared in the package as part of a vizier workflow.
+"""The task module defines the base classes for executing commands, i.e., tasks
+in a workflow, that are supported by a given package. Every package declaration
+is accompanied with a package-specific task processor that is used to execute
+the commands that are declared in the package in a vizier workflow.
 """
 
 from abc import abstractmethod
@@ -42,19 +42,14 @@ class ExecResult(object):
     provenance: vizier.viztrail.module.ModuleProvenance
         Provenance information about datasets that were read and writen during
         task execution.
-    task: vizier.engine.packages.task.TaskHandle
-        Handle for the executed task
     """
     def __init__(
-        self, task, is_success=True, datasets=None, outputs=None,
-        provenance=None
+        self, is_success=True, datasets=None, outputs=None, provenance=None
     ):
         """Initialize the result components.
 
         Parameters
         ----------
-        task: vizier.engine.packages.task.TaskHandle
-            Handle for the executed task
         is_success: bool
             Flag indicating if execution was successful
         datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
@@ -65,7 +60,6 @@ class ExecResult(object):
             Provenance information about datasets that were read and writen
             during task execution.
         """
-        self.task = task
         self.is_success = is_success
         self.datasets = datasets
         self.outputs = outputs
@@ -98,7 +92,7 @@ class TaskContext(object):
     filestore: vizier.filestore.Filestore
         Filestore for the project that executes the task
     """
-    def __init__(self, datastore, filestore, datasets=None):
+    def __init__(self, datastore, filestore, datasets=None, resources=None):
         """Initialize the components of the task context.
 
         Parameters
@@ -107,13 +101,36 @@ class TaskContext(object):
             Datastore for the project that execute the task
         filestore: vizier.filestore.Filestore
             Filestore for the project that executes the task
-        datasets: dict(vizier.datastore.dataset.DatasetDescriptors), optional
-            Descriptors for datasets in the database state agains which a task
+        datasets: dict(), optional
+            Identifier for datasets in the database state agains which a task
             is executed (keyed by user-provided name)
+        resources: dict(), optional
+            Optional information about resources that were generated during a
+            previous execution of the command
         """
         self.datastore = datastore
         self.filestore = filestore
         self.datasets = datasets if not datasets is None else dict()
+        self.resources = resources
+
+    def get_dataset(self, name):
+        """Get the descriptor for the dataset with the given name. Raises
+        ValueError if the dataset does not exist.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+
+        Returns
+        -------
+        vizier.datastore.dataset.DatasetDescriptor
+        """
+        if name in self.datasets:
+            dataset = self.datastore.get_dataset(self.datasets[name])
+            if not dataset is None:
+                return dataset
+        raise ValueError('unknown dataset \'' + str(name) + '\'')
 
 
 class TaskHandle(object):
@@ -142,12 +159,12 @@ class TaskHandle(object):
         self.external_form = external_form
 
 
-class TaskEngine(object):
-    """The task engine is used to execute commands in packages. For each package
-    there has to exists an instance of the task engine class that is able to
-    excute each of the commands that are declared in the package.
+class TaskProcessor(object):
+    """The task processor is used to execute commands in a package. For each
+    package there has to exists an instance of the task processor class that is
+    capable to excute each of the declared package commands.
 
-    The task engine has a single compute method that takes the command
+    The task processor has a single compute method that takes the command
     identifier, user specified command arguments and information about the
     current database state as input. This method is called by the execution
     backend during workflow execution.
@@ -164,11 +181,11 @@ class TaskEngine(object):
             Unique identifier for a command in a package declaration
         arguments: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.task.TaskContext
+        context: vizier.engine.packages.processor.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.task.ExecResult
+        vizier.engine.packages.processor.ExecResult
         """
         raise NotImplementedError

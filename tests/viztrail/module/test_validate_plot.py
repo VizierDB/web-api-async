@@ -26,7 +26,7 @@ PACKAGE = pckg.PackageIndex(plot.PLOT_COMMANDS)
 
 class TestValidatePlot(unittest.TestCase):
 
-    def test_python_cell(self):
+    def test_plot(self):
         """Test validation of create plot command."""
         cmd = create_plot(
             dataset_name='ds',

@@ -23,7 +23,7 @@ execution of individual steps in the associated data curation workflow.
 """
 
 from vizier.core.timestamp import get_current_time
-from vizier.engine.packages.task import TaskHandle
+from vizier.engine.packages.processor import TaskHandle
 from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
 from vizier.viztrail.module import MODULE_PENDING
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
@@ -256,7 +256,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task: vizier.engine.packages.task.TaskHandle
+        task: vizier.engine.packages.processor.TaskHandle
             Unique task identifier
 
         Returns
@@ -481,7 +481,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.task.TaskHandle
+        task : vizier.engine.packages.processor.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -521,7 +521,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.task.TaskHandle
+        task : vizier.engine.packages.processor.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -556,7 +556,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.task.TaskHandle
+        task : vizier.engine.packages.processor.TaskHandle
             Unique task identifier
         external_form: string
             Adjusted external representation for the module command.
@@ -597,7 +597,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.task.TaskHandle
+        task : vizier.engine.packages.processor.TaskHandle
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running

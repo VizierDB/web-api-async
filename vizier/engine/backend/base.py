@@ -34,7 +34,7 @@ class VizierBackend(object):
 
         Parameters
         ----------
-        task: vizier.engine.packages.task.TaskHandle
+        task: vizier.engine.packages.processor.TaskHandle
             Handle for task for which execution is requested to be canceled
         """
         raise NotImplementedError
@@ -51,7 +51,7 @@ class VizierBackend(object):
         ----------
         api: vizier.api.engine.WorkflowEngineApi
             Reference to the engine API instance to modify task states
-        task: vizier.engine.packages.task.TaskHandle
+        task: vizier.engine.packages.processor.TaskHandle
             Handle for task for which execution is requested to be canceled
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed

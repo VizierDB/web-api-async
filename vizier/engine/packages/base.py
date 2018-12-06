@@ -164,11 +164,13 @@ DATA_TYPES = [
 INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX]
 STRING_TYPES = [DT_DATASET_ID, DT_PYTHON_CODE, DT_STRING]
 
+
 """Elements for fileid dictionaries."""
 FILE_ID = 'fileId'
 FILE_URI = 'uri'
 FILE_USERNAME = 'userName'
 FILE_PASSWORD = 'password'
+FILE_RELOAD = 'reload'
 
 
 def package_declaration(identifier, commands, module_name, class_name, name=None, description=None):

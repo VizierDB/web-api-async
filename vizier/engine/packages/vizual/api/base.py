@@ -225,7 +225,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_row(self, identifier, row_id, position):
+    def move_row(self, identifier, row_index, position):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -235,7 +235,7 @@ class VizualApi(object):
         ----------
         identifier: string
             Unique dataset identifier
-        row_id: int
+        row_index: int
             Row index for deleted row
         position: int
             Target position for the row
@@ -299,7 +299,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def update_cell(self, identifier, column_id, row_id, value):
+    def update_cell(self, identifier, column_id, row_index, value):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -311,7 +311,7 @@ class VizualApi(object):
             Unique dataset identifier
         column_id: int
             Unique column identifier for updated cell
-        row_id: int
+        row_index: int
             Row index for updated cell (starting at 0)
         value: string
             New cell value

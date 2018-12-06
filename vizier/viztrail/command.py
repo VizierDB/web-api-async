@@ -112,6 +112,44 @@ class ModuleArguments(object):
                     return None
         return None
 
+    def get_value(self, key, as_int=False, raise_error=True, default_value=None):
+        """Retrieve command argument with given key. Will raise ValueError if no
+        argument with given key is present.
+
+        Parameters
+        ----------
+        key : string
+            Argument name
+        as_int : bool
+            Flag indicating whether the argument should be converted to integer.
+            If the argument value cannot be converted to integer the value is
+            returned as is.
+        raise_error: bool, optional
+            Flag indicating whether to raise a ValueError if the object does not
+            contain an argument for the given key. If False, the default_value
+            will be returned instead. This flag is always  if the default value
+            is not None.
+        default_value: string, optional
+            Default value that is returned if no argument for the given key
+            exists
+
+        Returns
+        -------
+        dict
+        """
+        if not key in self.arguments:
+            if raise_error and default_value is None:
+                raise ValueError('missing argument \'' + key + '\'')
+            else:
+                return default_value
+        val = self.arguments[key]
+        if as_int:
+            try:
+                val = int(val)
+            except ValueError as ex:
+                pass
+        return val
+
     def has(self, name):
         """Test if a value for the parameter with the given name has been
         provided.

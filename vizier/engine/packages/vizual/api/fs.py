@@ -429,7 +429,7 @@ class DefaultVizualApi(VizualApi):
         else:
             return VizualApiResult(dataset)
 
-    def move_row(self, identifier, row_id, position):
+    def move_row(self, identifier, row_index, position):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -439,7 +439,7 @@ class DefaultVizualApi(VizualApi):
         ----------
         identifier: string
             Unique dataset identifier
-        row_id: int
+        row_index: int
             Row index for deleted row
         position: int
             Target position for the row
@@ -453,15 +453,15 @@ class DefaultVizualApi(VizualApi):
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Make sure that row is within dataset bounds
-        if row_id < 0 or row_id >= dataset.row_count:
-            raise ValueError('invalid source row \'' + str(row_id) + '\'')
+        if row_index < 0 or row_index >= dataset.row_count:
+            raise ValueError('invalid source row \'' + str(row_index) + '\'')
         # Make sure that position is a valid row index in the new dataset
         if position < 0 or position > dataset.row_count:
             raise ValueError('invalid target position \'' + str(position) + '\'')
         # No need to do anything if source position equals target position
-        if row_id != position:
+        if row_index != position:
             rows = dataset.fetch_rows()
-            rows.insert(position, rows.pop(row_id))
+            rows.insert(position, rows.pop(row_index))
             # Store updated dataset to get new identifier
             ds = self.datastore.create_dataset(
                 columns=dataset.columns,
@@ -579,7 +579,7 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def update_cell(self, identifier, column_id, row_id, value):
+    def update_cell(self, identifier, column_id, row_index, value):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -591,7 +591,7 @@ class DefaultVizualApi(VizualApi):
             Unique dataset identifier
         column_id: int
             Unique column identifier for updated cell
-        row_id: int
+        row_index: int
             Row index for updated cell (starting at 0)
         value: string
             New cell value
@@ -609,14 +609,14 @@ class DefaultVizualApi(VizualApi):
         if col_idx is None:
             raise ValueError('unknown column identifier \'' + str(column_id) + '\'')
         # Make sure that row refers a valid row in the dataset
-        if row_id < 0 or row_id >= dataset.row_count:
-            raise ValueError('invalid row index \'' + str(row_id) + '\'')
+        if row_index < 0 or row_index >= dataset.row_count:
+            raise ValueError('invalid row index \'' + str(row_index) + '\'')
         # Update the specified cell in the given data array
         rows = dataset.fetch_rows()
-        r = rows[row_id]
+        r = rows[row_index]
         values = list(r.values)
         values[col_idx] = value
-        rows[row_id] = DatasetRow(identifier=r.identifier, values=values)
+        rows[row_index] = DatasetRow(identifier=r.identifier, values=values)
         # Store updated dataset to get new identifier
         ds = self.datastore.create_dataset(
             columns=dataset.columns,

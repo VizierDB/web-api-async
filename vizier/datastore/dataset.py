@@ -193,6 +193,28 @@ class DatasetDescriptor(object):
                 return i
         return None
 
+    def print_schema(self, name):
+        """Print dataset schema as a list of lines.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+
+        Returns
+        -------
+        list(string)
+        """
+        output = [name + ' (']
+        for i in range(len(self.columns)):
+            col = self.columns[i]
+            text = '  ' + col.name + ' ' + col.data_type
+            if i != len(self.columns) - 1:
+                text += ','
+            output.append(text)
+        output.append(')')
+        return output
+        
 
 class DatasetHandle(DatasetDescriptor):
     """Abstract class to maintain information about a dataset in a Vizier

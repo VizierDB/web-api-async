@@ -1,3 +1,5 @@
+"""Test the default implementation for the vizual API."""
+
 import os
 import shutil
 import unittest
@@ -20,8 +22,8 @@ SORT_FILE = './.files/dataset_for_sort.csv'
 URI = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 
-class TestDefaultVizualEngine(unittest.TestCase):
 
+class TestDefaultVizualApi(unittest.TestCase):
     def setUp(self):
         """Create an instance of the default vizier API for an empty server
         directory.
