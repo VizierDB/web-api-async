@@ -310,6 +310,13 @@ class ModuleProvenance(object):
 
     Use method .requires_exec() if a module needs to be executed for a given
     database state.
+
+    The module provenance carries a dictionary of key,value-pairs (resources)
+    that were generated during previous executions of the module. This allows
+    in a limited way to pass some state in between re-executions of the same
+    module. THe main intent is to pass information about downloaded files and
+    the resulting dataset identifier to avoid re-downloading the files but to
+    use the previously generated local copy instead.
     """
     def __init__(self, read=None, write=None, resources=None):
         """Initialize the datasets that were read and written by a previous

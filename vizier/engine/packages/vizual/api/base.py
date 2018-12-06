@@ -28,59 +28,26 @@ from vizier.viztrail.module import ModuleOutputs, TextOutput
 
 class VizualApiResult(object):
     """Each vizual API method returns a result that contains the descriptor for
-    the newly created dataset and the standard error and standard output
-    streams. The result may also contain a dictionary that defines additional
-    resources and other information generated during execution which will become
-    part of the module provenance and available when a task is re-executed. The
-    resources dictionary should represent simple key,value pairs where values
-    are scalars or lists or dictionaries.
-
-    If the dataset descriptor is None it is assumed that the respective command
-    failed and returned an error.
+    the newly created dataset. The result may also contain a dictionary that
+    defines additional resources and other information generated during
+    execution which will become part of the module provenance and will be made
+    available when a task is re-executed. The resources dictionary should
+    represent simple key,value pairs where values are scalars or lists or
+    dictionaries.
     """
-    def __init__(self, dataset=None, stdout=None, stderr=None, resources=None):
+    def __init__(self, dataset, resources=None):
         """Initialize the API result components.
 
         Parameters
         ----------
         dataset: vizier.datastore.dataset.DatasetDescriptor
             Descriptor for the generated dataset (on success)
-        stdout: list(string), optional
-            Lines in the standard output stream
-        stderr: list(string), optional
-            Lines in the standard error stream
         resources: dict, optional
             Resources generated during execution as part of the result
             provenance
         """
         self.dataset = dataset
-        self.outputs = ModuleOutputs(
-            stdout=[TextOutput(line) for line in stdout] if not stdout is None else None,
-            stderr=[TextOutput(line) for line in stderr] if not stderr is None else None
-        )
         self.resources = resources
-
-    @property
-    def _is_error(self):
-        """True if the result was an error (indicated by a missing descriptor
-        for the resulting dataset).
-
-        Returns
-        -------
-        bool
-        """
-        return self.dataset is None
-
-    @property
-    def is_success(self):
-        """True if the result was a success (indicated by a given descriptor
-        for the resulting dataset).
-
-        Returns
-        -------
-        bool
-        """
-        return not self.dataset is None
 
 
 class VizualApi(object):
@@ -109,7 +76,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_row(self, identifier, row):
+    def delete_row(self, identifier, row_index):
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -119,7 +86,7 @@ class VizualApi(object):
         ----------
         identifier: string
             Unique dataset identifier
-        row: int
+        row_index: int
             Row index for deleted row
 
         Returns
@@ -228,7 +195,7 @@ class VizualApi(object):
         reload: bool, optional
             Flag to force download of a remote resource even if it was
             downloaded previously
-            
+
         Returns
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
@@ -236,7 +203,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_column(self, identifier, column, position):
+    def move_column(self, identifier, column_id, position):
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -246,7 +213,7 @@ class VizualApi(object):
         ----------
         identifier: string
             Unique dataset identifier
-        column: int
+        column_id: int
             Unique column identifier
         position: int
             Target position for the column
@@ -258,7 +225,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_row(self, identifier, row, position):
+    def move_row(self, identifier, row_id, position):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -268,7 +235,7 @@ class VizualApi(object):
         ----------
         identifier: string
             Unique dataset identifier
-        row: int
+        row_id: int
             Row index for deleted row
         position: int
             Target position for the row
@@ -280,7 +247,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def rename_column(self, identifier, column, name):
+    def rename_column(self, identifier, column_id, name):
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -290,7 +257,7 @@ class VizualApi(object):
         ----------
         identifier: string
             Unique dataset identifier
-        column: int
+        column_id: int
             Unique column identifier
         name: string
             New column name
@@ -332,7 +299,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def update_cell(self, identifier, column, row, value):
+    def update_cell(self, identifier, column_id, row_id, value):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -342,9 +309,9 @@ class VizualApi(object):
         ----------
         identifier : string
             Unique dataset identifier
-        column: int
+        column_id: int
             Unique column identifier for updated cell
-        row: int
+        row_id: int
             Row index for updated cell (starting at 0)
         value: string
             New cell value

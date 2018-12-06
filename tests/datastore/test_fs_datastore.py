@@ -20,6 +20,10 @@ FILE = FileHandle(
     file_format=FORMAT_TSV
 )
 
+# Note that some tests access an external resource to test download capabilities.
+# The test will fail if the specified resource is not available. Set the URI
+# to an available resource or to None to skip the download tests
+URI = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 class TestFileSystemDatastore(unittest.TestCase):
 
@@ -71,8 +75,12 @@ class TestFileSystemDatastore(unittest.TestCase):
     def test_download_dataset(self):
         """Test loading a dataset from Url. Note that this test depends on the
         accessed web service to be running. It will fail otherwise."""
+        # Skip test if URI is None
+        if URI is None:
+            print 'Skipping download test'
+            return
         store = FileSystemDatastore(STORE_DIR)
-        ds = store.download_dataset(uri='http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download')
+        ds = store.download_dataset(uri=URI)
         dataset_dir = os.path.join(STORE_DIR, ds.identifier)
         self.assertTrue(os.path.isdir(dataset_dir))
         self.assertTrue(os.path.isfile(os.path.join(dataset_dir, DATA_FILE)))
@@ -82,7 +90,7 @@ class TestFileSystemDatastore(unittest.TestCase):
         # Download file into a given filestore
         fs = DefaultFilestore(STORE_DIR)
         ds, fh = store.download_dataset(
-            uri='http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download',
+            uri=URI,
             filestore=fs
         )
         self.validate_class_size_dataset(ds)
@@ -127,6 +135,8 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(dataset_dir, DESCRIPTOR_FILE)))
         self.assertFalse(os.path.isfile(os.path.join(dataset_dir, METADATA_FILE)))
         self.validate_class_size_dataset(ds)
+        with self.assertRaises(ValueError):
+            store.load_dataset(f_handle=None)
 
     def validate_class_size_dataset(self, ds):
         """Validate some features of the loaded class size dataset."""

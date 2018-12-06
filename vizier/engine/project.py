@@ -420,7 +420,8 @@ class ProjectHandle(object):
                 break
         if module_index is None:
             return None
-        # Get handle for the replaced module
+        # Get handle for the replaced module. Keep any resource information from
+        # the provenance object of the previous module execution.
         if module_index > 0:
             datasets = modules[module_index - 1].datasets
         else:
@@ -431,6 +432,9 @@ class ProjectHandle(object):
                 command=self.packages[command.package_id].get(command.command_id),
                 datasets=datasets,
                 filestore=self.filestore
+            ),
+            provenance=ModuleProvenance(
+                resources=modules[module_index].provenance.resources
             )
         )
         # Create list of pending modules for the new workflow

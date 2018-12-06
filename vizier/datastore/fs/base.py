@@ -280,6 +280,9 @@ class FileSystemDatastore(Datastore):
         -------
         vizier.datastore.fs.dataset.FileSystemDatasetHandle
         """
+        # The file handle might be None in which case an exception is raised
+        if f_handle is None:
+            raise ValueError('unknown file')
         # Expects a file in a supported tabular data format.
         if not f_handle.is_tabular:
             raise ValueError('cannot create dataset from file \'' + f_handle.name + '\'')
