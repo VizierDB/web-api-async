@@ -47,11 +47,43 @@ class TestDatasetDescriptor(unittest.TestCase):
         self.assertEquals(ds.column_index('C'), 2)
         self.assertEquals(ds.column_index('D'), 3)
         self.assertEquals(ds.column_index('E'), 4)
+        for i in range(len(ds.columns)):
+            self.assertEquals(ds.get_index(i), i)
         with self.assertRaises(ValueError):
             ds.column_index('ABC')
         with self.assertRaises(ValueError):
             ds.column_index('abc')
-
+        # Create a descriptor when column identifier does not match the index
+        # position in the schema
+        ds = DatasetDescriptor(
+            identifier='0',
+            columns=[
+                DatasetColumn(identifier=4, name='ABC'),
+                DatasetColumn(identifier=2, name='A'),
+                DatasetColumn(identifier=3, name='ABC'),
+                DatasetColumn(identifier=0, name='DEF'),
+                DatasetColumn(identifier=1, name='xyz'),
+            ]
+        )
+        self.assertEquals(ds.column_by_id(0).name, 'DEF')
+        self.assertEquals(ds.column_by_id(1).name, 'xyz')
+        self.assertEquals(ds.column_by_id(2).name, 'A')
+        self.assertEquals(ds.column_by_id(3).name, 'ABC')
+        self.assertEquals(ds.column_by_id(4).name, 'ABC')
+        self.assertEquals(ds.column_index(0), 0)
+        self.assertEquals(ds.column_index(1), 1)
+        self.assertEquals(ds.column_index('DEF'), 3)
+        self.assertEquals(ds.column_index('XYZ'), 4)
+        self.assertEquals(ds.column_index('A'), 1)
+        self.assertEquals(ds.column_index('B'), 1)
+        self.assertEquals(ds.column_index('C'), 2)
+        self.assertEquals(ds.column_index('D'), 3)
+        self.assertEquals(ds.column_index('E'), 4)
+        self.assertEquals(ds.get_index(0), 3)
+        self.assertEquals(ds.get_index(1), 4)
+        self.assertEquals(ds.get_index(2), 1)
+        self.assertEquals(ds.get_index(3), 2)
+        self.assertEquals(ds.get_index(4), 0)
 
 if __name__ == '__main__':
     unittest.main()

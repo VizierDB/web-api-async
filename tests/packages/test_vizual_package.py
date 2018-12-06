@@ -7,6 +7,7 @@ other modules.
 import unittest
 
 import vizier.client.command.vizual as vizual
+import vizier.engine.packages.base as pckg
 
 
 class TestVizualCommandValidation(unittest.TestCase):
@@ -55,7 +56,7 @@ class TestVizualCommandValidation(unittest.TestCase):
         """Test validation of the load dataset command."""
         vizual.load_dataset(
             dataset_name='ABC',
-            file_uri='fileid://493ewkfj485ufjw490feofj',
+            file_id={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
             validate=True
         )
 

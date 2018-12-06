@@ -47,8 +47,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -60,8 +61,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         # Set canceled with timestamp and output information
         ts = get_current_time()
         module.set_canceled(
@@ -75,8 +77,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stderr), 1)
         self.assertEquals(module.outputs.stderr[0].value, 'Some Error')
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         module = OSModuleHandle.load_module(
             identifier=module.identifier,
             module_path=module.module_path
@@ -88,8 +91,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stderr), 1)
         self.assertEquals(module.outputs.stderr[0].value, 'Some Error')
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
 
     def test_error(self):
         """Update module state from pending to error."""
@@ -110,8 +114,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -123,8 +128,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         # Set canceled with timestamp and output information
         ts = get_current_time()
         module.set_error(
@@ -138,8 +144,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stderr), 1)
         self.assertEquals(module.outputs.stderr[0].value, 'Some Error')
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
         module = OSModuleHandle.load_module(
             identifier=module.identifier,
             module_path=module.module_path
@@ -151,8 +158,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stderr), 1)
         self.assertEquals(module.outputs.stderr[0].value, 'Some Error')
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNone(module.provenance.resources)
 
     def test_running(self):
         """Update module state from pending to running."""
@@ -165,7 +173,11 @@ class TestModuleState(unittest.TestCase):
             timestamp=ModuleTimestamp(),
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': 'ID2'},
+                resources={'fileid': '0123456789'}
+            )
         )
         self.assertTrue(module.is_pending)
         module.set_running(external_form='TEST MODULE')
@@ -174,8 +186,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.resources)
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -187,8 +200,9 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.datasets), 0)
         self.assertEquals(len(module.outputs.stderr), 0)
         self.assertEquals(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.read)
+        self.assertIsNotNone(module.provenance.write)
+        self.assertIsNotNone(module.provenance.resources)
         # Set running with all optional parameters
         module.set_running(
             started_at=module.timestamp.created_at,

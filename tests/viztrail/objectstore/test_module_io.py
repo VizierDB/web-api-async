@@ -30,7 +30,7 @@ DATASETS = {
 }
 
 
-class TestOModuleIO(unittest.TestCase):
+class TestOSModuleIO(unittest.TestCase):
 
     def setUp(self):
         """Create an empty directory."""
@@ -175,7 +175,8 @@ class TestOModuleIO(unittest.TestCase):
             state=MODULE_PENDING,
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(
-                read={'DS1': 'ID1'}
+                read={'DS1': 'ID1'},
+                resources={'fileId': '0123456789'}
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
@@ -188,6 +189,7 @@ class TestOModuleIO(unittest.TestCase):
         self.assertIsNotNone(m.provenance.read)
         self.assertEquals(len(m.provenance.read), 1)
         self.assertEquals(m.provenance.read['DS1'], 'ID1')
+        self.assertEquals(m.provenance.resources['fileId'], '0123456789')
         self.assertIsNone(m.provenance.write)
         # Modules that only has write provenance
         mod0 = OSModuleHandle.create_module(

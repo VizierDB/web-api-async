@@ -4,9 +4,11 @@ import os
 import shutil
 import unittest
 
+from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.datastore.fs.base import DATA_FILE, DESCRIPTOR_FILE, METADATA_FILE
-
+from vizier.datastore.fs.base import validate_dataset
+from vizier.filestore.fs.base import DefaultFilestore
 from vizier.filestore.base import FileHandle, FORMAT_TSV
 
 STORE_DIR = './.tmp'
@@ -77,6 +79,16 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(dataset_dir, DESCRIPTOR_FILE)))
         self.assertFalse(os.path.isfile(os.path.join(dataset_dir, METADATA_FILE)))
         self.validate_class_size_dataset(ds)
+        # Download file into a given filestore
+        fs = DefaultFilestore(STORE_DIR)
+        ds, fh = store.download_dataset(
+            uri='http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download',
+            filestore=fs
+        )
+        self.validate_class_size_dataset(ds)
+        self.assertEquals(len(fs.list_files()), 1)
+        self.assertIsNotNone(fh)
+        self.assertIsNotNone(fs.get_file(fh.identifier))
 
     def test_get_dataset(self):
         """Test accessing dataset handle and descriptor."""
@@ -128,6 +140,55 @@ class TestFileSystemDatastore(unittest.TestCase):
         row = ds.fetch_rows(offset=0, limit=1)[0]
         self.assertEquals(row.identifier, 0)
         self.assertTrue(isinstance(row.values[0], float))
+
+    def test_validate_dataset(self):
+        """Test the validate dataset function."""
+        columns = []
+        rows = []
+        # Empty dataset
+        max_col_id, max_row_id = validate_dataset(columns, rows)
+        self.assertEquals(max_col_id, -1)
+        self.assertEquals(max_row_id, -1)
+        max_col_id, max_row_id = validate_dataset(
+            columns,
+            rows,
+            column_counter=10,
+            row_counter=1000
+        )
+        self.assertEquals(max_col_id, -1)
+        self.assertEquals(max_row_id, -1)
+        # Valid set of columns and rows
+        columns = [DatasetColumn(0, 'A'), DatasetColumn(10, 'B')]
+        rows = [DatasetRow(0, [1, 2]), DatasetRow(4, [None, 2]), DatasetRow(2, [0, 0])]
+        max_col_id, max_row_id = validate_dataset(columns, rows)
+        self.assertEquals(max_col_id, 10)
+        self.assertEquals(max_row_id, 4)
+        max_col_id, max_row_id = validate_dataset(
+            columns,
+            rows,
+            column_counter=11,
+            row_counter=5
+        )
+        self.assertEquals(max_col_id, 10)
+        self.assertEquals(max_row_id, 4)
+        # Column errors
+        with self.assertRaises(ValueError):
+            validate_dataset(columns + [DatasetColumn()], [])
+        with self.assertRaises(ValueError):
+            validate_dataset(columns + [DatasetColumn(10, 'C')], [])
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, [], column_counter=10)
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, [], column_counter=5)
+        # Row errors
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, rows + [DatasetRow(1000, [0, 1, 3])])
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, rows + [DatasetRow(-1, [1, 3])])
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, rows + [DatasetRow(0, [1, 3])])
+        with self.assertRaises(ValueError):
+            validate_dataset(columns, rows + [DatasetRow(3, [1, 3])], row_counter=3)
 
 
 if __name__ == '__main__':
