@@ -41,6 +41,7 @@ MODULE_STATE = [
 
 
 """Predefined output types."""
+OUTPUT_CHART = 'chart'
 OUTPUT_TEXT = 'txt'
 
 
@@ -482,6 +483,74 @@ class OutputObject(object):
         bool
         """
         return self.type == OUTPUT_TEXT
+
+
+class ChartOutput(OutputObject):
+    """Output object where the value is a string."""
+    def __init__(self, view, rows):
+        """Initialize the output object.
+
+        Parameters
+        ----------
+        view: vizier.engine.packages.plot.view.ChartViewHandle
+            Handle defining the dataset chart view
+        rows: list()
+            List of rows in the query result
+        """
+        super(ChartOutput, self).__init__(
+            type=OUTPUT_CHART,
+            value={
+                'data': view.to_dict(),
+                'result': CHART_VIEW_DATA(view=view, rows=rows)
+            }
+        )
+
+
+def CHART_VIEW_DATA(view, rows):
+    """Create a dictionary serialization of daraset chart view results. The
+    output is a dictionary with the following format (the xAxis element is
+    optional):
+
+    {
+        "series": [{
+            "label": "string",
+            "data": [0]
+        }],
+        "xAxis": {
+            "data": [0]
+        }
+    }
+
+    Parameters
+    ----------
+    view: vizier.plot.view.ChartViewHandle
+        Handle defining the dataset chart view
+    rows: list()
+        List of rows in the query result
+
+    Returns
+    -------
+    dict
+    """
+    obj = dict()
+    # Add chart type information
+    obj['chart'] = {
+        'type': view.chart_type,
+        'grouped': view.grouped_chart
+    }
+    # Create a list of series indexes. Then remove the series that contains the
+    # x-axis labels (if given). Keep x-axis data in a separate list
+    series = range(len(view.data))
+    if not view.x_axis is None:
+        obj['xAxis'] = {'data': [row[view.x_axis] for row in rows]}
+        del series[view.x_axis]
+    obj['series'] = list()
+    for s_idx in series:
+        obj['series'].append({
+            'label': view.data[s_idx].label,
+            'data': [row[s_idx] for row in rows]
+        })
+    return obj
 
 
 class TextOutput(OutputObject):

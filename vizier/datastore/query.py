@@ -1,4 +1,4 @@
-# Copyright (C) 2018 New York University
+# Copyright (C) 2018 New York University,
 #                    University at Buffalo,
 #                    Illinois Institute of Technology.
 #
@@ -49,64 +49,67 @@ class DataStreamConsumer(object):
                 self.values.append(val)
 
 
-def get_dataset_chart(self, identifier, view):
-    """Query a given dataset by selecting the columns in the given list.
-    Each row in the result is the result of projecting a tuple in the
-    dataset on the given columns.
+class ChartQuery(object):
+    """Query processor for simple chart queries."""
+    def exec_query(self, dataset, view):
+        """Query a given dataset by selecting the columns in the given list.
+        Each row in the result is the result of projecting a tuple in the
+        dataset on the given columns.
 
-    Raises ValueError if any of the specified columns do not exist.
+        Raises ValueError if any of the specified columns do not exist.
 
-    Parameters
-    ----------
-    identifier: string
-        Unique dataset identifier
-    view: vizier.plot.view.ChartViewHandle
-        Chart view definition handle
+        Parameters
+        ----------
+        dataset: vizier.datastore.dataset.DatasetHandle
+            Handle for dataset that is being queried
+        view: vizier.engine.packages.plot.view.ChartViewHandle
+            Chart view definition handle
 
-    Returns
-    -------
-    list()
-    """
-    dataset = self.get_dataset(identifier)
-    # Get index position for x-axis. Set to negative value if none is given.
-    # the value is used to determine which data series are converted to
-    # numeric values and which are not.
-    x_axis = -1
-    if not view.x_axis is None:
-        x_axis = view.x_axis
-    # Create a list of data consumers, one for each data series
-    consumers = list()
-    for s_idx in range(len(view.data)):
-        s = view.data[s_idx]
-        c_idx = get_index_for_column(dataset, s.column)
-        consumers.append(
-            DataStreamConsumer(
-                column_index=c_idx,
-                range_start=s.range_start,
-                range_end=s.range_end,
-                cast_to_number=(s_idx != x_axis)
+        Returns
+        -------
+        list()
+        """
+        # Get index position for x-axis. Set to negative value if none is given.
+        # the value is used to determine which data series are converted to
+        # numeric values and which are not.
+        x_axis = -1
+        if not view.x_axis is None:
+            x_axis = view.x_axis
+        # Create a list of data consumers, one for each data series
+        consumers = list()
+        for s_idx in range(len(view.data)):
+            s = view.data[s_idx]
+            c_idx = dataset.get_index(s.column)
+            if c_idx is None:
+                raise ValueError('unknown column identifier \'' + str(s.column) + '\'')
+            consumers.append(
+                DataStreamConsumer(
+                    column_index=c_idx,
+                    range_start=s.range_start,
+                    range_end=s.range_end,
+                    cast_to_number=(s_idx != x_axis)
+                )
             )
-        )
-    # Consume all dataset rows
-    rows = dataset.fetch_rows()
-    for row_index in range(len(rows)):
-        row = rows[row_index]
+        # Consume all dataset rows
+        rows = dataset.fetch_rows()
+        for row_index in range(len(rows)):
+            row = rows[row_index]
+            for c in consumers:
+                c.consume(row=row, row_index=row_index)
+        # the size of the result set is determined by the longest data series
+        max_values = -1
         for c in consumers:
-            c.consume(row=row, row_index=row_index)
-    # the size of the result set is determined by the longest data series
-    max_values = -1
-    for c in consumers:
-        if len(c.values) > max_values:
-            max_values = len(c.values)
-    # Create result array
-    data = []
-    for idx_row in range(max_values):
-        row = list()
-        for idx_series in range(len(consumers)):
-            consumer = consumers[idx_series]
-            if idx_row < len(consumer.values):
-                row.append(consumer.values[idx_row])
-            else:
-                row.append(None)
-        data.append(row)
-    return data
+            if len(c.values) > max_values:
+                max_values = len(c.values)
+        # Create result array
+        data = []
+        for idx_row in range(max_values):
+            row = list()
+            for idx_series in range(len(consumers)):
+                consumer = consumers[idx_series]
+                if idx_row < len(consumer.values):
+                    row.append(consumer.values[idx_row])
+                else:
+                    row.append(None)
+            data.append(row)
+        return data
