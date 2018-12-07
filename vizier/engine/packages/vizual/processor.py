@@ -17,7 +17,7 @@
 """Task processor for commands in the vizual package."""
 
 from vizier.core.util import is_valid_name
-from vizier.engine.packages.processor import ExecResult, TaskProcessor
+from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, TextOutput
 
 import vizier.engine.packages.base as pckg
@@ -50,12 +50,12 @@ class VizualTaskProcessor(TaskProcessor):
             Unique identifier for a command in a package declaration
         arguments: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         if command_id == cmd.VIZUAL_DEL_COL:
             return self.compute_delete_column(
@@ -132,12 +132,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name and column identifier.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -165,12 +165,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name and and row index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -198,12 +198,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name and remove the associated entry from the
         # dictionary of datasets in the context. Will raise exception if the
@@ -232,12 +232,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get the name of the dataset and the list of columns to filter
         # as well as the optional new column name.
@@ -279,12 +279,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, column index, and new column name.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -314,12 +314,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, and row index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -347,12 +347,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get the new dataset name. Raise exception if a dataset with the
         # specified name already exsists.
@@ -400,12 +400,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, column name, and target position.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -435,12 +435,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, row index, and target index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -470,12 +470,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, column specification, and new column name.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -505,12 +505,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get name of existing dataset and the new dataset name. Raise
         # exception if a dataset with the new name already exists or if the new
@@ -543,12 +543,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get the name of the dataset and the list of columns to sort on
         # as well as the optional sort order.
@@ -590,12 +590,12 @@ class VizualTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name, cell coordinates, and update value.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
@@ -651,7 +651,7 @@ class VizualTaskProcessor(TaskProcessor):
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Create updated database state where the input dataset is replaced by
         # the generated output dataset

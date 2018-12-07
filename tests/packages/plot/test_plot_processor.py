@@ -7,7 +7,7 @@ import unittest
 from vizier.client.command.plot import create_plot
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.plot.processor import PlotProcessor
-from vizier.engine.packages.processor import TaskContext
+from vizier.engine.task.base import TaskContext
 from vizier.filestore.fs.base import DefaultFilestore
 
 

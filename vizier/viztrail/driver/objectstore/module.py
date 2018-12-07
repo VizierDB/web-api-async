@@ -353,20 +353,21 @@ class OSModuleHandle(ModuleHandle):
         # Materialize module state
         self.write_safe()
 
-    def set_running(self, external_form, started_at=None):
+    def set_running(self, started_at=None, external_form=None):
         """Set status of the module to running. The started_at property of the
         timestamp is set to the given value or the current time (if None).
 
         Parameters
         ----------
-        external_form: string
-            Adjusted external representation for the module command.
         started_at: datetime.datetime, optional
             Timestamp when module started running
+        external_form: string, optional
+            Adjusted external representation for the module command.
         """
         # Update state and timestamp information. Clear outputs and, database
         # state,
-        self.external_form = external_form
+        if not external_form is None:
+            self.external_form = external_form
         self.state = MODULE_RUNNING
         self.timestamp.started_at = started_at if not started_at is None else get_current_time()
         self.outputs = ModuleOutputs()

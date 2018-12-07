@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 from vizier.datastore.fs.base import FileSystemDatastore
-from vizier.engine.packages.processor import TaskContext
+from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi, RESOURCE_DATASET
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.filestore.fs.base import DefaultFilestore

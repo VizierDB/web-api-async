@@ -19,7 +19,7 @@
 from vizier.core.util import is_valid_name
 from vizier.engine.packages.plot.query import ChartQuery
 from vizier.engine.packages.plot.view import ChartViewHandle
-from vizier.engine.packages.processor import ExecResult, TaskProcessor
+from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, ChartOutput
 
 import vizier.engine.packages.base as pckg
@@ -41,12 +41,12 @@ class PlotProcessor(TaskProcessor):
             Unique identifier for a command in a package declaration
         arguments: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         if command_id == cmd.PLOT_SIMPLE_CHART:
             return self.compute_simple_chart(
@@ -63,12 +63,12 @@ class PlotProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get dataset name and the associated dataset. This will raise an
         # exception if the dataset name is unknown.

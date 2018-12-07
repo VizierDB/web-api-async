@@ -34,13 +34,14 @@ class VizierBackend(object):
 
         Parameters
         ----------
-        task: vizier.engine.packages.processor.TaskHandle
+        task: vizier.engine.task.base.TaskHandle
             Handle for task for which execution is requested to be canceled
+            controlling workflow engine
         """
         raise NotImplementedError
 
     @abstractmethod
-    def execute_task(self, api, task, command, context):
+    def execute_task(self, task, command, context):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
@@ -49,14 +50,25 @@ class VizierBackend(object):
 
         Parameters
         ----------
-        api: vizier.api.engine.WorkflowEngineApi
-            Reference to the engine API instance to modify task states
-        task: vizier.engine.packages.processor.TaskHandle
-            Handle for task for which execution is requested to be canceled
+        task: vizier.engine.task.base.TaskHandle
+            Handle for task for which execution is requested by the controlling
+            workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict
+        context: dict()
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def next_task_state(self):
+        """Get the module state of the next task that will be submitted for
+        execution. This method allows the workflow controller to set the initial
+        state of a module before submitting it for execution.
+
+        Returns
+        -------
+        int
         """
         raise NotImplementedError

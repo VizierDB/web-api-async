@@ -23,10 +23,42 @@ execution of individual steps in the associated data curation workflow.
 """
 
 from vizier.core.timestamp import get_current_time
-from vizier.engine.packages.processor import TaskHandle
+from vizier.core.util import get_unique_identifier
+from vizier.engine.task.base import TaskHandle
 from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
-from vizier.viztrail.module import MODULE_PENDING
+from vizier.viztrail.module import MODULE_PENDING, MODULE_RUNNING
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
+
+
+class ExtendedTaskHandle(TaskHandle):
+    """Extend task handle with additional information that is used internally
+    when the state of the task changes.
+
+    Adds branch and module identifier to the task handle as well as the
+    external representation of the executed command.
+    """
+    def __init__(self, viztrail_id, branch_id, module_id, external_form=None):
+        """Initialize the components of the extended task handle. Generates a
+        unique identifier for the task.
+
+        Parameters
+        ----------
+        viztrail_id: string
+            Unique identifier of the associated viztrail
+        branch_id: string
+            Unique branch identifier
+        module_id: string
+            Unique module identifier
+        external_form: string, optional
+            External representation of the executed command
+        """
+        super(ExtendedTaskHandle, self).__init__(
+            task_id=get_unique_identifier(),
+            viztrail_id=viztrail_id
+        )
+        self.branch_id = branch_id
+        self.module_id = module_id
+        self.external_form = external_form
 
 
 class ProjectHandle(object):
@@ -65,6 +97,8 @@ class ProjectHandle(object):
         self.filestore = filestore
         self.backend = backend
         self.packages = packages
+        # Maintain an internal dictionary of running tasks
+        self.tasks = dict()
 
     def append_workflow_module(self, branch_id, command):
         """Append module to the workflow at the head of the given viztrail
@@ -100,18 +134,21 @@ class ProjectHandle(object):
         else:
             datasets = dict()
             modules = list()
-        #Get the external representation for the command
+        # Get the external representation for the command
         external_form = command.to_external_form(
             command=self.packages[command.package_id].get(command.command_id)
             datasets=datasets,
             filestore=self.filestore
         )
-        # Create new workflow by appending one module to the current head of the
-        # branch
+        # Create new workflow by appending one module to the current head of
+        # the branch. The module state is pending if the workflow is active
+        # otherwise it depends on the associated backend.
+        state = self.backend.next_task_state() if not head is_active else MODULE_PENDING
         workflow = branch.append_pending_workflow(
             modules=modules,
             pending_modules=[
                 ModuleHandle(
+                    state=state,
                     command=command,
                     external_for=external_form
                 )
@@ -119,14 +156,14 @@ class ProjectHandle(object):
             action=ACTION_INSERT,
             command=command
         )
+        task = ExtendedTaskHandle(
+            viztrail_id=self.viztrail.identifier,
+            branch_id=branch_id,
+            module_id=workflow.modules[-1].identifier
+        )
+        self.tasks[task.task_id] = task
         self.backend.execute_task(
-            api=self,
-            task=TaskHandle(
-                viztrail_id=self.viztrail.identifier,
-                branch_id=branch_id,
-                module_id=workflow.modules[-1].identifier,
-                external_form=external_form
-            ),
+            task=task,
             command=command,
             context=datasets
         )
@@ -199,10 +236,13 @@ class ProjectHandle(object):
                     filestore=self.filestore
                 )
                 # Replace original modules with pending modules for those that
-                # need to be executed
+                # need to be executed. The state of the first module depends on
+                # the state of the backend. All following modules will be in
+                # pending state.
                 pending_modules = [
                     ModuleHandle(
                         command=command,
+                        state=self.backend.next_task_state(),
                         external_for=external_form
                     )
                 ]
@@ -223,14 +263,14 @@ class ProjectHandle(object):
                     action=ACTION_DELETE,
                     command=deleted_module.command
                 )
+                task = ExtendedTaskHandle(
+                    viztrail_id=self.viztrail.identifier,
+                    branch_id=branch_id,
+                    module_id=workflow.modules[module_index].identifier
+                )
+                self.tasks[task.task_id] = task
                 self.backend.execute_task(
-                    api=self,
-                    task=TaskHandle(
-                        viztrail_id=self.viztrail.identifier,
-                        branch_id=branch_id,
-                        module_id=workflow.modules[module_index].identifier,
-                        external_form=external_form
-                    ),
+                    task=task,
                     command=command,
                     context=datasets
                 )
@@ -250,19 +290,27 @@ class ProjectHandle(object):
                 command=deleted_module.command
             )
 
-    def get_task(self, task):
+    def get_task(self, task_id):
         """Get the workflow and module index for the given task. Returns None
         and -1 if the workflow or module is undefined.
 
+        Removes the tast from the internal task index.
+
         Parameters
         ----------
-        task: vizier.engine.packages.processor.TaskHandle
+        task: vizier.engine.task.base.TaskHandle
             Unique task identifier
 
         Returns
         -------
         vizier.viztrail.workflow.WorkflowHandle, int
         """
+        # Check if a task with the given identifier exists
+        if not task_id in self.tasks:
+            return None, -1
+        # Get the task handle and remove it from the internal task index
+        task = self.tasks[task_id]
+        del self.tasks[task_id]
         # Get the handle for the head workflow of the specified branch
         branch = self.viztrail.get_branch(task.branch_id)
         if branch is None:
@@ -340,15 +388,18 @@ class ProjectHandle(object):
             datasets = modules[module_index - 1].datasets
         else:
             datasets = dict()
+        # Create handle for the inserted module. The state on the module depends
+        # on the state of the backend.
         inserted_module = ModuleHandle(
             command=command,
+            state=self.backend.next_task_state(),
             external_form=command.to_external_form(
                 command=self.packages[command.package_id].get(command.command_id),
                 datasets=datasets,
                 filestore=self.filestore
             )
         )
-        # Create list of pending modules for the new workflow
+        # Create list of pending modules for the new workflow.
         pending_modules = [inserted_module]
         for m in modules[module_index:]:
             pending_modules.append(
@@ -366,14 +417,14 @@ class ProjectHandle(object):
             action=ACTION_INSERT,
             command=inserted_module.command
         )
+        task = ExtendedTaskHandle(
+            viztrail_id=self.viztrail.identifier,
+            branch_id=branch_id,
+            module_id=workflow.modules[module_index].identifier
+        )
+        self.tasks[task.task_id] = task
         self.backend.execute_task(
-            task=TaskHandle(
-                api=self,
-                viztrail_id=self.viztrail.identifier,
-                branch_id=branch_id,
-                module_id=workflow.modules[module_index].identifier,
-                external_form=inserted_module.external_form
-            ),
+            task=task,
             command=command,
             context=datasets
         )
@@ -421,13 +472,15 @@ class ProjectHandle(object):
         if module_index is None:
             return None
         # Get handle for the replaced module. Keep any resource information from
-        # the provenance object of the previous module execution.
+        # the provenance object of the previous module execution. The state of
+        # the module depends on the state of the backend.
         if module_index > 0:
             datasets = modules[module_index - 1].datasets
         else:
             datasets = dict()
         replaced_module = ModuleHandle(
             command=command,
+            state=self.backend.next_task_state(),
             external_form=command.to_external_form(
                 command=self.packages[command.package_id].get(command.command_id),
                 datasets=datasets,
@@ -455,19 +508,20 @@ class ProjectHandle(object):
             action=ACTION_REPLACE,
             command=replaced_module.command
         )
+        task = ExtendedTaskHandle(
+            viztrail_id=self.viztrail.identifier,
+            branch_id=branch_id,
+            module_id=workflow.modules[module_index].identifier
+        )
+        self.tasks[task.task_id] = task
         self.backend.execute_task(
-            task=TaskHandle(
-                api=self,
-                viztrail_id=self.viztrail.identifier,
-                branch_id=branch_id,
-                module_id=workflow.modules[module_index].identifier
-            ),
+            task=task,
             command=command,
             context=datasets
         )
         return workflow
 
-    def set_canceled(self, task, finished_at=None, outputs=None):
+    def set_canceled(self, task_id, finished_at=None, outputs=None):
         """Set status of the identified module at the head of the specified
         viztrail branch to canceled. The finished_at property of the timestamp
         is set to the given value or the current time (if None). The module
@@ -481,7 +535,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.processor.TaskHandle
+        task_id : string
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -494,7 +548,7 @@ class ProjectHandle(object):
         """
         # Get the handle for the head workflow of the specified branch and the
         # index for the module matching the identifier in the task.
-        workflow, module_index = self.get_task(task)
+        workflow, module_index = self.get_task(task_id)
         if workflow is None or module_index == -1:
             return None
         module = workflow.modules[module_index]
@@ -507,7 +561,7 @@ class ProjectHandle(object):
         else:
             return None
 
-    def set_error(self, task, finished_at=None, outputs=None):
+    def set_error(self, task_id, finished_at=None, outputs=None):
         """Set status of the identified module at the head of the specified
         viztrail branch to error. The finished_at property of the timestamp is
         set to the given value or the current time (if None). The module outputs
@@ -521,7 +575,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.processor.TaskHandle
+        task_id : string
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -534,7 +588,7 @@ class ProjectHandle(object):
         """
         # Get the handle for the head workflow of the specified branch and the
         # index for the module matching the identifier in the task.
-        workflow, module_index = self.get_task(task)
+        workflow, module_index = self.get_task(task_id)
         if workflow is None or module_index == -1:
             return None
         module = workflow.modules[module_index]
@@ -546,7 +600,7 @@ class ProjectHandle(object):
         else:
             return None
 
-    def set_running(self, task, external_form, started_at=None):
+    def set_running(self, task_id, started_at=None):
         """Set status of the identified module at the head of the specified
         viztrail branch to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
@@ -556,10 +610,8 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.processor.TaskHandle
+        task_id : string
             Unique task identifier
-        external_form: string
-            Adjusted external representation for the module command.
         started_at: datetime.datetime, optional
             Timestamp when module started running
 
@@ -569,7 +621,7 @@ class ProjectHandle(object):
         """
         # Get the handle for the head workflow of the specified branch and the
         # index for the module matching the identifier in the task.
-        workflow, module_index = self.get_task(task)
+        workflow, module_index = self.get_task(task_id)
         if workflow is None or module_index == -1:
             return None
         module = workflow.modules[module_index]
@@ -582,7 +634,7 @@ class ProjectHandle(object):
         else:
             return None
 
-    def set_success(self, task, finished_at=None, datasets=None, outputs=None, provenance=None):
+    def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
         """Set status of the identified module at the head of the specified
         viztrail branch to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
@@ -597,7 +649,7 @@ class ProjectHandle(object):
 
         Parameters
         ----------
-        task : vizier.engine.packages.processor.TaskHandle
+        task_id : string
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
@@ -616,7 +668,7 @@ class ProjectHandle(object):
         """
         # Get the handle for the head workflow of the specified branch and the
         # index for the module matching the identifier in the task.
-        workflow, module_index = self.get_task(task)
+        workflow, module_index = self.get_task(task_id)
         if workflow is None or module_index == -1:
             return None
         module = workflow.modules[module_index]
@@ -649,14 +701,23 @@ class ProjectHandle(object):
                         datasets=context,
                         filestore=self.filestore
                     )
+                    # If the backend is going to run the task immediately we
+                    # need to adjust the module state
+                    state = self.backend.next_task_state()
+                    if state == MODULE_RUNNING:
+                        next_module.set_running(
+                            external_form=get_current_time(),
+                            started_at=started_at
+                        )
+                    task = ExtendedTaskHandle(
+                        viztrail_id=self.viztrail.identifier,
+                        branch_id=task.branch_id,
+                        module_id=next_module.identifier,
+                        external_form=external_form
+                    )
+                    self.tasks[task.task_id] = task
                     self.backend.execute_task(
-                        api=self,
-                        task=TaskHandle(
-                            viztrail_id=self.viztrail.identifier,
-                            branch_id=task.branch_id,
-                            module_id=next_module.identifier,
-                            external_form=external_form
-                        ),
+                        task=task,
                         command=command,
                         context=context
                     )

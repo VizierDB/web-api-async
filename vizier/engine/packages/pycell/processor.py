@@ -18,7 +18,7 @@
 
 import sys
 
-from vizier.engine.packages.processor import ExecResult, TaskProcessor
+from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.stream import OutputStream
 from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, TextOutput
@@ -41,12 +41,12 @@ class PyCellTaskProcessor(TaskProcessor):
             Unique identifier for a command in a package declaration
         arguments: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         if command_id == cmd.PYTHON_CODE:
             return self.execute_script(
@@ -63,12 +63,12 @@ class PyCellTaskProcessor(TaskProcessor):
         ----------
         args: vizier.viztrail.command.ModuleArguments
             User-provided command arguments
-        context: vizier.engine.packages.processor.TaskContext
+        context: vizier.engine.task.base.TaskContext
             Context in which a task is being executed
 
         Returns
         -------
-        vizier.engine.packages.processor.ExecResult
+        vizier.engine.task.processor.ExecResult
         """
         # Get Python script from user arguments
         source = args.get_value(cmd.PYTHON_SOURCE)

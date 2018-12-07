@@ -8,7 +8,7 @@ import unittest
 
 from vizier.client.command.pycell import python_cell
 from vizier.datastore.fs.base import FileSystemDatastore
-from vizier.engine.packages.processor import TaskContext
+from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
