@@ -14,20 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interface for the vizier backend that executes workflow modules. Different
-implementations for the backend are possible.
+"""Default multi-process backend to execute vizier workflow tasks. The default
+backend starts a separate process for each task that is being executed. This
+backend is primarily intended for local installations of vizier with a single
+user or for installations where each project is running in a separate container
+or virtual environment.
 """
 
-from abc import abstractmethod
+from vizier.engine.backen.based import VizierBackend
+from vizier.engine.task.base import TaskContext
+from vizier.viztrail.module import MODULE_RUNNING
 
 
-class VizierBackend(object):
-    """The backend interface defines two main methods: execute and cancel. The
-    first method is used by the API to request execution of a command that
-    defines a module in a data curation workflow. The second method is used
-    by the API to cancel execution (on user request).
-
+class MultiProcessBackend(VizierBackend):
+    """The multi-process backend maintains references to the datastore and the
+    filestore that are associated with a project. It contains an index of task
+    processors.
     """
+    def __init__(self, datastore, filestore, processors):
+        """
+        """
+        self.datastore = datastore
+        self.filestore = filestore
+        self.processors = processors
+
     @abstractmethod
     def cancel_task(self, task):
         """Request to cancel execution of the given task.
@@ -40,13 +50,18 @@ class VizierBackend(object):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def execute_task(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
         contains the names and identifier of resources in the database state
         against which the task is executed.
+
+        The multi-process backend first ensures that if has a processor for the
+        package of the given command. If True, the package-specific processor
+        will be used to run the command in a separate process.
+
+        Raises ValueError if no processor for the command package exists.
 
         Parameters
         ----------
@@ -62,16 +77,30 @@ class VizierBackend(object):
             Optional information about resources that were generated during a
             previous execution of the command
         """
-        raise NotImplementedError
+        # Ensure there is a processor for the package that contains the command
+        if not command.package_id in self.processors:
+            raise ValueError('unknown package \'' + str(command.package_id) + '\'')
+        processor = self.processors[command.package_id]
+        processor.compute(
+            command_id=command.command_id,
+            arguments=command.arguments,
+            context=TaskContext(
+                datastore=self.datastore,
+                filestore=self.filestore,
+                datasets=context,
+                resources=resources
+            )
+        )
 
-    @abstractmethod
     def next_task_state(self):
         """Get the module state of the next task that will be submitted for
-        execution. This method allows the workflow controller to set the initial
-        state of a module before submitting it for execution.
+        execution.
+
+        For the multi-process backend a process will start running immediately
+        in a separate process.
 
         Returns
         -------
         int
         """
-        raise NotImplementedError
+        return MODULE_RUNNING

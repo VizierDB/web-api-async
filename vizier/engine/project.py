@@ -165,7 +165,7 @@ class ProjectHandle(object):
         self.backend.execute_task(
             task=task,
             command=command,
-            context=datasets
+            context=self.task_context(datasets)
         )
         return workflow
 
@@ -263,16 +263,18 @@ class ProjectHandle(object):
                     action=ACTION_DELETE,
                     command=deleted_module.command
                 )
+                exec_module = workflow.modules[module_index]
                 task = ExtendedTaskHandle(
                     viztrail_id=self.viztrail.identifier,
                     branch_id=branch_id,
-                    module_id=workflow.modules[module_index].identifier
+                    module_id=exec_module.identifier
                 )
                 self.tasks[task.task_id] = task
                 self.backend.execute_task(
                     task=task,
                     command=command,
-                    context=datasets
+                    context=self.task_context(datasets),
+                    resources=exec_module.provenance.resources
                 )
                 return workflow
             else:
@@ -426,7 +428,7 @@ class ProjectHandle(object):
         self.backend.execute_task(
             task=task,
             command=command,
-            context=datasets
+            context=self.task_context(datasets)
         )
         return workflow
 
@@ -517,7 +519,8 @@ class ProjectHandle(object):
         self.backend.execute_task(
             task=task,
             command=command,
-            context=datasets
+            context=self.task_context(datasets),
+            resources=replaced_module.provenance.resources
         )
         return workflow
 
@@ -719,8 +722,31 @@ class ProjectHandle(object):
                     self.backend.execute_task(
                         task=task,
                         command=command,
-                        context=context
+                        context=self.task_context(context),
+                        resources=next_module.provenance.resources
                     )
             return workflow
         else:
             return None
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def task_context(datasets):
+    """Convert a database state into a task context. The database state is a
+    dictionary where dataset descriptors are indexed by the user defined name.
+    The task context is a dictionary where dataset identifier are indexed by
+    the user-defined name.
+
+    Parameters
+    ----------
+    datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
+        Index of datasets in the a database state
+
+    Returns
+    -------
+    dict()
+    """
+    return {name: datasets[name].identifier for name in datasets}
