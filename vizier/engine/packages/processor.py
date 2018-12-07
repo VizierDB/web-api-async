@@ -29,10 +29,9 @@ class ExecResult(object):
 
     Attributes
     ----------
-    datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
-        Dictionary for the new database state. The user-specified name is the
-        key for the dataset descriptors. If the state of the result is an error
-        the database state might be empty.
+    datasets : dict()
+        Mapping of dataset names to unique identifier for datasets in the
+        resulting database state
     is_error: bool
         Flag indicating if the execution resulted in an error
     is_success: bool
@@ -52,8 +51,9 @@ class ExecResult(object):
         ----------
         is_success: bool
             Flag indicating if execution was successful
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting database state.
+        datasets : dict(), optional
+            Mapping of dataset names to unique identifier for datasets in the
+            resulting database state
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Outputs to STDOUT and STDERR generated during task execution
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -82,10 +82,13 @@ class TaskContext(object):
     are associated with the project that executes the task. The context also
     contains the current database state against which a task is executed.
 
+    The database state is represented as a mapping of user-defined dataset names
+    to unique dataset identifier.
+
     Attributes
     ----------
-    datasets: dict(vizier.datastore.dataset.DatasetDescriptors)
-        Descriptors for datasets in the database state agains which a task is
+    datasets: dict()
+        Identifier for datasets in the database state agains which a task is
         executed (keyed by user-provided name)
     datastore: vizier.datastore.base.Datastore
         Datastore for the project that execute the task
@@ -114,8 +117,8 @@ class TaskContext(object):
         self.resources = resources
 
     def get_dataset(self, name):
-        """Get the descriptor for the dataset with the given name. Raises
-        ValueError if the dataset does not exist.
+        """Get the handle for the dataset with the given name. Raises ValueError
+        if the dataset does not exist.
 
         Parameters
         ----------
@@ -124,7 +127,7 @@ class TaskContext(object):
 
         Returns
         -------
-        vizier.datastore.dataset.DatasetDescriptor
+        vizier.datastore.dataset.DatasetHandle
         """
         if name in self.datasets:
             dataset = self.datastore.get_dataset(self.datasets[name])
@@ -172,8 +175,7 @@ class TaskProcessor(object):
     @abstractmethod
     def compute(self, command_id, arguments, context):
         """Compute results for a given package command using the set of user-
-        provided arguments and the current database state. Return an execution
-        result is case of success or error.
+        provided arguments and the current database state.
 
         Parameters
         ----------

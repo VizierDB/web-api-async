@@ -17,11 +17,11 @@
 """Classes to manipulate vizier datasets from within the Python workflow cell.
 """
 
-from vizier.datastore.base import DatasetColumn, DatasetRow, get_column_index
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
 from vizier.datastore.metadata import DatasetMetadata
 
 
-class VizierDataset(object):
+class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
     cell. Provides access to the columns and rows. Allows to insert and delete
     rows, and to update cell values.

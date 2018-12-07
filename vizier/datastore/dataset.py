@@ -214,7 +214,7 @@ class DatasetDescriptor(object):
             output.append(text)
         output.append(')')
         return output
-        
+
 
 class DatasetHandle(DatasetDescriptor):
     """Abstract class to maintain information about a dataset in a Vizier
@@ -334,7 +334,7 @@ class DatasetRow(object):
     values : list(string)
         List of column values in the row
     """
-    def __init__(self, identifier=None, values=None):
+    def __init__(self, identifier=None, values=None, annotations=None):
         """Initialize the row object.
 
         Parameters
@@ -343,9 +343,12 @@ class DatasetRow(object):
             Unique row identifier
         values : list(string)
             List of column values in the row
+        annotations: list(bool), optional
+            Optional flags indicating whether row cells are annotated
         """
         self.identifier = identifier if not identifier is None else -1
         self.values = values if not values is None else list()
+        self.cell_annotations = annotations if not annotations is None else [False] * len(values)
 
 
 # ------------------------------------------------------------------------------

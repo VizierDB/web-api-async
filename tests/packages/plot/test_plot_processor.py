@@ -20,12 +20,10 @@ TSV_FILE = './.files/w49k-mmkh.tsv'
 DATASET_NAME = 'abc'
 
 
-class TestDefaultVizualProcessor(unittest.TestCase):
+class TestDefaultPlotProcessor(unittest.TestCase):
 
     def setUp(self):
-        """Create an instance of the default vizier processor for an empty server
-        directory.
-        """
+        """Create instances of the default datastore and filestore."""
         # Drop directory if it exists
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)

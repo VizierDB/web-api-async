@@ -50,6 +50,40 @@ class Datastore(VizierSystemComponent):
         return [component_descriptor('datastore', self.system_build())]
 
     @abstractmethod
+    def create_dataset(
+        self, columns, rows, column_counter=None, row_counter=None,
+        annotations=None
+    ):
+        """Create a new dataset in the datastore. Expects at least the list of
+        columns and the rows for the dataset.
+
+        Raises ValueError if (1) the column identifier are not unique, (2) the
+        row identifier are not uniqe, (3) the number of columns and values in a
+        row do not match, (4) any of the column or row identifier have a
+        negative value, or (5) if the given column or row counter have value
+        lower or equal to any of the column or row identifier.
+
+        Parameters
+        ----------
+        columns: list(vizier.datastore.dataset.DatasetColumn)
+            List of columns. It is expected that each column has a unique
+            identifier.
+        rows: list(vizier.datastore.dataset.DatasetRow)
+            List of dataset rows.
+        column_counter: int, optional
+            Counter to generate unique column identifier
+        row_counter: int, optional
+            Counter to generate unique row identifier
+        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+            Annotations for dataset components
+
+        Returns
+        -------
+        vizier.datastore.fs.dataset.FileSystemDatasetHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_dataset(self, identifier):
         """Delete dataset with given identifier. Returns True if dataset existed
         and False otherwise.
