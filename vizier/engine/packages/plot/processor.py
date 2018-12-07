@@ -17,7 +17,7 @@
 """Task processor for commands in the plot package."""
 
 from vizier.core.util import is_valid_name
-from vizier.datastore.query import ChartQuery
+from vizier.engine.packages.plot.query import ChartQuery
 from vizier.engine.packages.plot.view import ChartViewHandle
 from vizier.engine.packages.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, ChartOutput
