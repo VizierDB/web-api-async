@@ -32,12 +32,9 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        self.processor = VizualTaskProcessor(
-            api =DefaultVizualApi(
-                datastore=FileSystemDatastore(DATASTORE_DIR),
-                filestore=DefaultFilestore(FILESTORE_DIR)
-            )
-        )
+        self.processor = VizualTaskProcessor(api =DefaultVizualApi())
+        self.datastore=FileSystemDatastore(DATASTORE_DIR)
+        self.filestore=DefaultFilestore(FILESTORE_DIR)
 
     def tearDown(self):
         """Clean-up by dropping the server directory.
@@ -47,7 +44,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
 
     def load_dataset(self):
         """Load a single dataset and return the resulting database state."""
-        fh = self.processor.api.filestore.upload_file(CSV_FILE)
+        fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
             file_id={pckg.FILE_ID: fh.identifier},
@@ -57,8 +54,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore
+                datastore=self.datastore,
+                filestore=self.filestore
             )
         )
         return result.datasets
@@ -92,8 +89,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore,
+                datastore=self.datastore,
+                filestore=self.filestore,
                 datasets=datasets
             )
         )
@@ -137,7 +134,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
     def test_load_dataset(self):
         """Test functionality to load a dataset."""
         # Create a new dataset
-        fh = self.processor.api.filestore.upload_file(CSV_FILE)
+        fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name='ABC',
             file_id={pckg.FILE_ID: fh.identifier},
@@ -147,8 +144,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore
+                datastore=self.datastore,
+                filestore=self.filestore
             )
         )
         self.assertIsNotNone(result.provenance.write)
@@ -163,8 +160,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore,
+                datastore=self.datastore,
+                filestore=self.filestore,
                 resources=result.provenance.resources
             )
         )
@@ -214,8 +211,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore,
+                datastore=self.datastore,
+                filestore=self.filestore,
                 datasets=datasets
             )
         )
@@ -257,8 +254,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datastore=self.processor.api.datastore,
-                filestore=self.processor.api.filestore,
+                datastore=self.datastore,
+                filestore=self.filestore,
                 datasets=datasets
             )
         )
@@ -273,8 +270,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
                 command_id=cmd.command_id,
                 arguments=cmd.arguments,
                 context=TaskContext(
-                    datastore=self.processor.api.datastore,
-                    filestore=self.processor.api.filestore
+                    datastore=self.datastore,
+                    filestore=self.filestore
                 )
             )
 

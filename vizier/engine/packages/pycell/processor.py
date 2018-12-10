@@ -111,14 +111,16 @@ class PyCellTaskProcessor(TaskProcessor):
             datasets = dict(client.datasets)
             read = dict()
             for name in client.read:
-                read[name] = context.datasets[name] if name in context.datasets else ''
+                read[name] = context.datasets[name] if name in context.datasets else None
             write = dict()
             for name in client.write:
-                write[name] = client.datasets[name] if name in client.datasets else ''
+                write[name] = client.datasets[name] if name in client.datasets else None
             # Ensure that all three variables are valid dictionaries and the
             # user did not attempt anything tricky
             for mapping in [datasets, read, write]:
                 for key in mapping:
+                    if mapping[key] is None:
+                        continue
                     if not isinstance(key, basestring) or not isinstance(mapping[key], basestring):
                         raise RuntimeError('not a valid mapping dictionary')
             provenance = ModuleProvenance(read=read, write=write)

@@ -56,7 +56,7 @@ class VizualApi(object):
     for different storage backends.
     """
     @abstractmethod
-    def delete_column(self, identifier, column_id):
+    def delete_column(self, identifier, column_id, datastore):
         """Delete a column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -68,6 +68,8 @@ class VizualApi(object):
             Unique dataset identifier
         column_id: int
             Unique column identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -76,7 +78,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_row(self, identifier, row_index):
+    def delete_row(self, identifier, row_index, datastore):
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -88,6 +90,8 @@ class VizualApi(object):
             Unique dataset identifier
         row_index: int
             Row index for deleted row
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -96,7 +100,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def filter_columns(self, identifier, columns, names):
+    def filter_columns(self, identifier, columns, names, datastore):
         """Dataset projection operator. Returns a copy of the dataset with the
         given identifier that contains only those columns listed in columns.
         The list of names contains optional new names for the filtered columns.
@@ -114,6 +118,8 @@ class VizualApi(object):
             List of column identifier for columns in the result.
         names: list(string)
             Optional new names for filtered columns.
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -122,7 +128,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_column(self, identifier, position, name=None):
+    def insert_column(self, identifier, position, name, datastore):
         """Insert column with given name at given position in dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -137,6 +143,8 @@ class VizualApi(object):
             Index position at which the column will be inserted
         name: string, optional
             New column name
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -145,7 +153,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_row(self, identifier, position):
+    def insert_row(self, identifier, position, datastore):
         """Insert row at given position in a dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -157,6 +165,8 @@ class VizualApi(object):
             Unique dataset identifier
         position: int
             Index position at which the row will be inserted
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -166,8 +176,8 @@ class VizualApi(object):
 
     @abstractmethod
     def load_dataset(
-        self, file_id=None, uri=None, username=None, password=None,
-        resources=None, reload=False
+        self, datastore, filestore, file_id=None, uri=None, username=None,
+        password=None, resources=None, reload=False
     ):
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the uri are not None but
@@ -181,6 +191,10 @@ class VizualApi(object):
 
         Parameters
         ----------
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        filestore: vizier.filestore.Filestore
+            Filestore to retrieve uploaded datasets
         file_id: string, optional
             Identifier for a file in an associated filestore
         uri: string, optional
@@ -203,7 +217,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_column(self, identifier, column_id, position):
+    def move_column(self, identifier, column_id, position, datastore):
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -217,6 +231,8 @@ class VizualApi(object):
             Unique column identifier
         position: int
             Target position for the column
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -225,7 +241,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_row(self, identifier, row_index, position):
+    def move_row(self, identifier, row_index, position, datastore):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -239,6 +255,8 @@ class VizualApi(object):
             Row index for deleted row
         position: int
             Target position for the row
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -247,7 +265,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def rename_column(self, identifier, column_id, name):
+    def rename_column(self, identifier, column_id, name, datastore):
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -261,6 +279,8 @@ class VizualApi(object):
             Unique column identifier
         name: string
             New column name
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -269,7 +289,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def sort_dataset(self, identifier, columns, reversed):
+    def sort_dataset(self, identifier, columns, reversed, datastore):
         """Sort the dataset with the given identifier according to the order by
         statement. The order by statement is a pair of lists. The first list
         contains the identifier of columns to sort on. The second list contains
@@ -291,6 +311,8 @@ class VizualApi(object):
         reversed: list(bool)
             Flags indicating whether the sort order of the corresponding column
             is reveresed.
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
@@ -299,7 +321,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def update_cell(self, identifier, column_id, row_index, value):
+    def update_cell(self, identifier, column_id, row_index, value, datastore):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -315,6 +337,8 @@ class VizualApi(object):
             Row index for updated cell (starting at 0)
         value: string
             New cell value
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------

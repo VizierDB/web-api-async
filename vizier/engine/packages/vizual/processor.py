@@ -147,7 +147,8 @@ class VizualTaskProcessor(TaskProcessor):
         # Execute delete column command
         result = self.api.delete_column(
             identifier=ds.identifier,
-            column_id=column_id
+            column_id=column_id,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -180,7 +181,8 @@ class VizualTaskProcessor(TaskProcessor):
         # Execute delete row command
         result = self.api.delete_row(
             identifier=ds.identifier,
-            row_index=row_index
+            row_index=row_index,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -261,7 +263,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.filter_columns(
             identifier=ds.identifier,
             columns=columns,
-            names=names
+            names=names,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -296,7 +299,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.insert_column(
             identifier=ds.identifier,
             position=position,
-            name=column_name
+            name=column_name,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -329,7 +333,8 @@ class VizualTaskProcessor(TaskProcessor):
         # Execute insert row command.
         result = self.api.insert_row(
             identifier=ds.identifier,
-            position=position
+            position=position,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -377,6 +382,8 @@ class VizualTaskProcessor(TaskProcessor):
         reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
         # Execute load command
         result = self.api.load_dataset(
+            datastore=context.datastore,
+            filestore=context.filestore,
             file_id=file_id,
             uri=uri,
             username=username,
@@ -417,7 +424,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.move_column(
             identifier=ds.identifier,
             column_id=column_id,
-            position=position
+            position=position,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -452,7 +460,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.move_row(
             identifier=ds.identifier,
             row_index=row_index,
-            position=position
+            position=position,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -487,7 +496,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.rename_column(
             identifier=ds.identifier,
             column_id=column_id,
-            name=column_name
+            name=column_name,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -569,7 +579,8 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.sort_dataset(
             identifier=ds.identifier,
             columns=columns,
-            reversed=reversed
+            reversed=reversed,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
@@ -612,7 +623,8 @@ class VizualTaskProcessor(TaskProcessor):
             identifier=ds.identifier,
             column_id=column_id,
             row_index=row_index,
-            value=value
+            value=value,
+            datastore=context.datastore
         )
         # Create result object
         return self.create_exec_result(
