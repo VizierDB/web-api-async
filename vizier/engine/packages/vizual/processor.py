@@ -223,8 +223,9 @@ class VizualTaskProcessor(TaskProcessor):
                 ]
             ),
             provenance=ModuleProvenance(
-                read={ds_name: ds.identifier},
-                write=dict()
+                read=dict(),
+                write=dict(),
+                delete=[ds_name]
             )
         )
 
@@ -542,8 +543,9 @@ class VizualTaskProcessor(TaskProcessor):
             datasets=datasets,
             outputs=ModuleOutputs(stdout=[TextOutput('D1 dataset renamed')]),
             provenance=ModuleProvenance(
-                read={ds_name: ds.identifier},
-                write={new_name: ds.identifier}
+                read=dict(),
+                write={new_name: ds.identifier},
+                delete=[ds_name]
             )
         )
 

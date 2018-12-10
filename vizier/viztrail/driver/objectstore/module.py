@@ -50,6 +50,7 @@ KEY_OUTPUT_TYPE = 'type'
 KEY_OUTPUT_VALUE = 'value'
 KEY_PACKAGE_ID = 'packageId'
 KEY_PROVENANCE = 'prov'
+KEY_PROVENANCE_DELETE = 'delete'
 KEY_PROVENANCE_READ = 'read'
 KEY_PROVENANCE_RESOURCES = 'resources'
 KEY_PROVENANCE_WRITE = 'write'
@@ -290,12 +291,16 @@ class OSModuleHandle(ModuleHandle):
         write_prov = None
         if KEY_PROVENANCE_WRITE in obj[KEY_PROVENANCE]:
             write_prov = get_dataset_index(obj[KEY_PROVENANCE][KEY_PROVENANCE_WRITE])
+        delete_prov = None
+        if KEY_PROVENANCE_DELETE in obj[KEY_PROVENANCE]:
+            delete_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE]
         res_prov = None
         if KEY_PROVENANCE_RESOURCES in obj[KEY_PROVENANCE]:
             res_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_RESOURCES]
         provenance = ModuleProvenance(
             read=read_prov,
             write=write_prov,
+            delete=delete_prov,
             resources=res_prov
         )
         # Return module handle
@@ -575,6 +580,8 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
                 KEY_DATASET_ID: provenance.write[name]
             } for name in provenance.write
         ]
+    if not provenance.delete is None:
+        prov[KEY_PROVENANCE_DELETE] = list(provenance.delete)
     if not provenance.resources is None:
         prov[KEY_PROVENANCE_RESOURCES] = provenance.resources
     # Create dictionary serialization for the module handle

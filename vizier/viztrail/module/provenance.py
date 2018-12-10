@@ -14,17 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A workflow is a sequence of modules. Each module is represented by a module
-handle. The handle maintains information about the module command, status, the
-module outputs, and the module state (datasets).
+"""The module provenance object maintains information about the datasets that
+a module has read and written in previous executions and the names of those
+datasets that have been deleted.
+
+In addition to information about accessed and manipulated datasets the
+provenance object allows to carry state from previous executions for a module.
 """
 
 
 class ModuleProvenance(object):
     """The module provenance object maintains information about the datasets
-    that a module has read and written in previous executions. Provenance
-    information is maintained in two dictionaries where the key is the dataset
-    name and the value the dataset identifier.
+    that a module has read and written in previous executions as wellas the
+    datasets that the module has deleted. Read/write information is maintained
+    in two dictionaries where the key is the dataset name and the value the
+    dataset identifier. Delete information is maintained as a list or set of
+    dataset names.
 
     Note that the dataset identifier that is associated with a name in either
     of the two maintained dictionaries may be None. This situation results for
@@ -44,7 +49,7 @@ class ModuleProvenance(object):
     the resulting dataset identifier to avoid re-downloading the files but to
     use the previously generated local copy instead.
     """
-    def __init__(self, read=None, write=None, resources=None):
+    def __init__(self, read=None, write=None, delete=None, resources=None):
         """Initialize the datasets that were read and written by a previous
         module execution.
 
@@ -54,11 +59,14 @@ class ModuleProvenance(object):
             Dictionary of datasets that the module used as input
         write: dict, optional
             Dictionary of datasets that the module modified
+        delete: list or set, optional
+            List of names for datasets that have been deleted by a module
         resources: dict, optional
             Resources and other information that was generated during execution
         """
         self.read = read
         self.write = write
+        self.delete = delete
         self.resources = resources
 
     def adjust_state(self, datasets, datastore):
@@ -78,13 +86,15 @@ class ModuleProvenance(object):
         -------
         dict(vizier.datastore.dataset.DatasetDescriptor)
         """
+        result = dict(datasets)
         if not self.write is None:
-            result = dict(datasets)
             for ds_name in self.write:
-                result[ds_name] = repository.get_descriptor(self.write[ds_name])
-            return result
-        else:
-            return datasets
+                result[ds_name] = datastore.get_descriptor(self.write[ds_name])
+        if not self.delete is None:
+            for ds_name in self.delete:
+                if ds_name in result:
+                    del result[ds_name]
+        return result
 
     def requires_exec(self, datasets):
         """Test if a module requires execution based on the provenance
@@ -130,6 +140,12 @@ class ModuleProvenance(object):
                 return True
             elif self.read[name] != datasets[name].identifier:
                 return True
+        # If any dataset is being deleted that does not exist in the current
+        # state we re-execute (because this may lead to an unwanted error state)
+        if not self.delete is None:
+            for name in self.delete:
+                if not name in datasets:
+                    return True
         # The database state is the same as for the previous execution of the
         # module (with respect to the input dependencies). Thus, the module
         # does not need to be re-executed.

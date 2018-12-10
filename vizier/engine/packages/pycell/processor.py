@@ -124,7 +124,11 @@ class PyCellTaskProcessor(TaskProcessor):
                         continue
                     if not isinstance(key, basestring) or not isinstance(mapping[key], basestring):
                         raise RuntimeError('not a valid mapping dictionary')
-            provenance = ModuleProvenance(read=read, write=write)
+            provenance = ModuleProvenance(
+                read=read,
+                write=write,
+                delete=client.delete
+            )
         else:
             datasets = context.datasets
             provenance = ModuleProvenance()

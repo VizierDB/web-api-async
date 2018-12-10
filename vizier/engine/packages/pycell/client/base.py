@@ -44,6 +44,7 @@ class VizierDBClient(object):
         # Keep track of datasets that are read and written
         self.read = set()
         self.write = set()
+        self.delete = None
 
     def create_dataset(self, name, dataset):
         """Create a new dataset with given name.
@@ -120,6 +121,9 @@ class VizierDBClient(object):
         """
         # Remove the context dataset identifier for the given name. Will raise
         # a ValueError if dataset does not exist
+        if self.delete is None:
+            self.delete = set()
+        self.delete.add(name)
         self.remove_dataset_identifier(name)
 
     def get_dataset(self, name):
@@ -194,7 +198,7 @@ class VizierDBClient(object):
         return DatasetClient()
 
     def remove_dataset_identifier(self, name):
-        """Remove the entry in the dataset distionary that is associated with
+        """Remove the entry in the dataset dictionary that is associated with
         the given name. Raises ValueError if not dataset with name exists.
 
         Parameters

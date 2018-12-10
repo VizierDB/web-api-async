@@ -222,7 +222,8 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': 'ID1A','DS2': 'ID2'}
+                write={'DS1': 'ID1A','DS2': 'ID2'},
+                delete=['A', 'B']
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
@@ -239,6 +240,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEquals(len(m.provenance.write), 2)
         self.assertEquals(m.provenance.write['DS1'], 'ID1A')
         self.assertEquals(m.provenance.write['DS2'], 'ID2')
+        self.assertEquals(m.provenance.delete, ['A', 'B'])
 
     def test_read_write_module(self):
         """Test reading and writing modules."""
