@@ -146,13 +146,21 @@ class OSBranchHandle(BranchHandle):
         -------
         vizier.viztrailworkflow.WorkflowHandle
         """
-        # Add workflow to cache. Remove first element is cache size
-        # exceeds the defined limit. Do not access the cache if the
-        # size limit is not greater than 0.
-        if self.cache_size > 0:
+        # Ensure that we do not evict an active workflow from the cache.
+        # Add workflow to cache unless the cache size is zero and the workflow
+        # is not active. Remove first non-active element if the size of the
+        # cache exceeds the defined limit.
+        if self.cache_size > 0 or workflow.is_active:
             self.cache.append(workflow)
             if len(self.cache) > self.cache_size:
-                del self.cache[0]
+                # Remove all inactive workflows from cache that occur at a
+                # position that is before the current cache size
+                index = 0
+                while index < len(self.cache) - self.cache_size:
+                    if not self.cache[index].is_active:
+                        del self.cache[index]
+                    else:
+                        index += 1
         return workflow
 
     def append_workflow(self, modules, action, command, pending_modules=None):
