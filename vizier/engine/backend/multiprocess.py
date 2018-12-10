@@ -23,7 +23,7 @@ or virtual environment.
 
 from vizier.engine.backen.based import VizierBackend
 from vizier.engine.task.base import TaskContext
-from vizier.viztrail.module import MODULE_RUNNING
+from vizier.viztrail.module.base import MODULE_RUNNING
 
 
 class MultiProcessBackend(VizierBackend):

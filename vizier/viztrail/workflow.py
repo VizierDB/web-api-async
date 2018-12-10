@@ -23,7 +23,7 @@ only the different workflows but also the history for each of them.
 
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
-from vizier.viztrail.module import ModuleState, MODULE_SUCCESS
+from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS
 
 
 """Workflow modification action identifier."""

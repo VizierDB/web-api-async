@@ -10,10 +10,10 @@ from vizier.core.timestamp import get_current_time
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
-from vizier.viztrail.module import ModuleHandle, ModuleOutputs
-from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp
-from vizier.viztrail.module import TextOutput
-from vizier.viztrail.module import MODULE_SUCCESS
+from vizier.viztrail.module.base import ModuleHandle, MODULE_SUCCESS
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT
 
 

@@ -18,7 +18,8 @@
 
 from vizier.core.util import is_valid_name
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd

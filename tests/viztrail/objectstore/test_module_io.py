@@ -8,8 +8,10 @@ import unittest
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
-from vizier.viztrail.module import ModuleProvenance, ModuleTimestamp, ModuleOutputs
-from vizier.viztrail.module import OutputObject, TextOutput, MODULE_PENDING
+from vizier.viztrail.module.base import MODULE_PENDING
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.client.command.plot import create_plot
 from vizier.client.command.pycell import python_cell
 

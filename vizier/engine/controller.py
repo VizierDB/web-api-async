@@ -52,7 +52,7 @@ class WorkflowController(object):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
 
         Returns
@@ -104,9 +104,9 @@ class WorkflowController(object):
         datasets : dict(), optional
             Dictionary of resulting datasets. The user-specified name is the key
             for the dataset identifier.
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
 

@@ -36,9 +36,9 @@ class ExecResult(object):
         Flag indicating if the execution resulted in an error
     is_success: bool
         True if not in error, i.e., execution was succcessful
-    outputs: vizier.viztrail.module.ModuleOutputs
+    outputs: vizier.viztrail.module.output.ModuleOutputs
         Output streams for STDOUT and STDERR
-    provenance: vizier.viztrail.module.ModuleProvenance
+    provenance: vizier.viztrail.module.provenance.ModuleProvenance
         Provenance information about datasets that were read and writen during
         task execution.
     """
@@ -54,9 +54,9 @@ class ExecResult(object):
         datasets : dict(), optional
             Mapping of dataset names to unique identifier for datasets in the
             resulting database state
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Outputs to STDOUT and STDERR generated during task execution
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen
             during task execution.
         """

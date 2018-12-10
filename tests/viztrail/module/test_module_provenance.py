@@ -5,7 +5,7 @@ information from previous module executions.
 import unittest
 
 from vizier.datastore.dataset import DatasetDescriptor
-from vizier.viztrail.module import ModuleProvenance
+from vizier.viztrail.module.provenance import ModuleProvenance
 
 
 class TestModuleProvenance(unittest.TestCase):

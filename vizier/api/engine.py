@@ -20,8 +20,8 @@ orchestrate the execution of data curation workflows.
 
 from vizier.core.timestamp import get_current_time
 from vizier.engine.base import TaskHandle
-from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
-from vizier.viztrail.module import MODULE_PENDING
+from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
 
@@ -498,7 +498,7 @@ class WorkflowEngineApi(object):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
 
         Returns
@@ -538,7 +538,7 @@ class WorkflowEngineApi(object):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
 
         Returns
@@ -617,9 +617,9 @@ class WorkflowEngineApi(object):
         datasets : dict(string:string), optional
             Dictionary of resulting datasets. The user-specified name is the key
             and the unique dataset identifier the value.
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
 

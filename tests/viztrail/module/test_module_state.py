@@ -1,8 +1,8 @@
 """Test properties of the module state object."""
 import unittest
 
-from vizier.viztrail.module import ModuleState
-import vizier.viztrail.module as state
+from vizier.viztrail.module.base import ModuleState
+import vizier.viztrail.module.base as state
 
 
 class TestModuleState(unittest.TestCase):

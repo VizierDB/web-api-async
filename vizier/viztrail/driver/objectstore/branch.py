@@ -25,8 +25,8 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.module import get_module_path
-from vizier.viztrail.module import ModuleTimestamp
-from vizier.viztrail.module import MODULE_PENDING, MODULE_RUNNING
+from vizier.viztrail.module.base import MODULE_PENDING, MODULE_RUNNING
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
 from vizier.viztrail.workflow import ACTION_CREATE, ACTION_INSERT
 

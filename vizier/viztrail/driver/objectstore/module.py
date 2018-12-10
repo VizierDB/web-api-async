@@ -22,10 +22,11 @@ from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
-from vizier.viztrail.module import ModuleHandle, ModuleOutputs, ModuleProvenance
-from vizier.viztrail.module import ModuleTimestamp, OutputObject, TextOutput
-from vizier.viztrail.module import MODULE_CANCELED, MODULE_ERROR, MODULE_PENDING
-from vizier.viztrail.module import MODULE_ERROR, MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.module.base import ModuleHandle, MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.module.base import MODULE_CANCELED, MODULE_ERROR, MODULE_PENDING
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 
 """Json labels for serialized object."""
@@ -125,14 +126,14 @@ class OSModuleHandle(ModuleHandle):
             Path to module resource in object store
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        timestamp: vizier.viztrail.module.ModuleTimestamp, optional
+        timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp, optional
             Module timestamp
         datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of resulting datasets. Dataset descriptors are keyed by
             the user-specified dataset name.
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         object_store: vizier.core.io.base.ObjectStore, optional
@@ -166,14 +167,14 @@ class OSModuleHandle(ModuleHandle):
             Printable representation of module command
         state: int
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-        timestamp: vizier.viztrail.module.ModuleTimestamp
+        timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
             Module timestamp
         datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
             Dictionary of resulting datasets. Dataset descriptors are keyed by
             the user-specified dataset name.
-        outputs: vizier.viztrail.module.ModuleOutputs
+        outputs: vizier.viztrail.module.output.ModuleOutputs
             Module output streams STDOUT and STDERR
-        provenance: vizier.viztrail.module.ModuleProvenance
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         module_folder: string
@@ -321,7 +322,7 @@ class OSModuleHandle(ModuleHandle):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
         # Update state, timestamp and output information. Clear database state.
@@ -342,7 +343,7 @@ class OSModuleHandle(ModuleHandle):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
         # Update state, timestamp and output information. Clear database state.
@@ -390,9 +391,9 @@ class OSModuleHandle(ModuleHandle):
         datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of resulting datasets. The user-specified name is the key
             for the dataset descriptor.
-        outputs: vizier.viztrail.module.ModuleOutputs, optional
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
-        provenance: vizier.viztrail.module.ModuleProvenance, optional
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
@@ -540,13 +541,13 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
         Printable representation of module command
     state: int
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
-    timestamp: vizier.viztrail.module.ModuleTimestamp
+    timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
         Module timestamp
     datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
         Dictionary of resulting dataset descriptors.
-    outputs: vizier.viztrail.module.ModuleOutputs
+    outputs: vizier.viztrail.module.output.ModuleOutputs
         Module output streams STDOUT and STDERR
-    provenance: vizier.viztrail.module.ModuleProvenance
+    provenance: vizier.viztrail.module.provenance.ModuleProvenance
         Provenance information about datasets that were read and writen by
         previous execution of the module.
 

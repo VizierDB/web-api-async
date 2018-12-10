@@ -1,7 +1,7 @@
 """Ensure that the module output object is working properly."""
 import unittest
 
-from vizier.viztrail.module import ModuleOutputs, OutputObject, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 
 
 class TestModuleOutput(unittest.TestCase):

@@ -21,7 +21,8 @@ import sys
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.stream import OutputStream
-from vizier.viztrail.module import ModuleOutputs, ModuleProvenance, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as cmd

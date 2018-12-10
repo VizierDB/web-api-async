@@ -1,7 +1,7 @@
 """Ensure that the module timestamp object is initialized properly."""
 import unittest
 
-from vizier.viztrail.module import ModuleTimestamp
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 
 class TestModuleTimestamp(unittest.TestCase):
