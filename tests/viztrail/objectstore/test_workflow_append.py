@@ -61,13 +61,13 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 modules = branch.head.modules + [module]
             else:
                 modules = [module]
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
                 command=command
             )
         head_modules = branch.get_head().modules
-        wf = branch.append_completed_workflow(
+        wf = branch.append_workflow(
             modules=head_modules[:-1],
             action=ACTION_DELETE,
             command=head_modules[-1].command
@@ -87,17 +87,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
         self.assertEquals(wf.descriptor.action, ACTION_DELETE)
         self.assertEquals(wf.descriptor.package_id, PACKAGE_PYTHON)
         self.assertEquals(wf.descriptor.command_id, PYTHON_CODE)
-        # Ensure exception is thrown if a module is active
-        m = head_modules[-1]
-        head_modules.append(
-            ModuleHandle(command=m.command, external_form=m.command)
-        )
-        with self.assertRaises(ValueError):
-            branch.append_completed_workflow(
-                modules=head_modules,
-                action=ACTION_DELETE,
-                command=head_modules[-1].command
-            )
 
     def test_multi_append(self):
         """Test appending modules to viztrail branch."""
@@ -128,7 +117,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 modules = branch.head.modules + [module]
             else:
                 modules = [module]
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
                 command=command
@@ -174,7 +163,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 modules = branch.head.modules + [module]
             else:
                 modules = [module]
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
                 command=command
@@ -183,7 +172,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
         before_ids = [m.identifier for m in head_modules]
         modules = head_modules[:5]
         pending_modules = [ModuleHandle(command=m.command, external_form=m.external_form) for m in head_modules[5:]]
-        wf = branch.append_pending_workflow(
+        wf = branch.append_workflow(
             modules=head_modules[:5],
             pending_modules=pending_modules,
             action=ACTION_DELETE,
@@ -236,7 +225,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
             module_folder=vt.modules_folder,
             object_store=vt.object_store
         )
-        wf = branch.append_completed_workflow(
+        wf = branch.append_workflow(
             modules=[module],
             action=ACTION_INSERT,
             command=command

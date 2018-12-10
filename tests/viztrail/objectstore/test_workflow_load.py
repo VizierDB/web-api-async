@@ -60,7 +60,7 @@ class TestOSWorkflow(unittest.TestCase):
                 modules = branch.head.modules + [module]
             else:
                 modules = [module]
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
                 command=command
@@ -120,7 +120,7 @@ class TestOSWorkflow(unittest.TestCase):
                 modules = branch.head.modules + [module]
             else:
                 modules = [module]
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
                 command=command

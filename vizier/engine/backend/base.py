@@ -29,6 +29,23 @@ class VizierBackend(object):
 
     """
     @abstractmethod
+    def can_execute(self, command):
+        """Test whether a given command can be executed in synchronous mode. If
+        the result is True the command can be executed in the same process as
+        the calling method.
+
+        Parameters
+        ----------
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the command that is to be executed
+
+        Returns
+        -------
+        bool
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def cancel_task(self, task):
         """Request to cancel execution of the given task.
 
@@ -41,7 +58,34 @@ class VizierBackend(object):
         raise NotImplementedError
 
     @abstractmethod
-    def execute_task(self, task, command, context, resources=None):
+    def execute(self, command, context, resources=None):
+        """Execute a given command. The command will be executed immediately if
+        the backend supports synchronous excution, i.e., if the .can_excute()
+        method returns True. The result is the execution result returned by the
+        respective package task processor.
+
+        Raises ValueError if the given command cannot be excuted in synchronous
+        mode.
+
+        Parameters
+        ----------
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the command that is to be executed
+        context: dict()
+            Dictionary of available resource in the database state. The key is
+            the resource name. Values are resource identifiers.
+        resources: dict(), optional
+            Optional information about resources that were generated during a
+            previous execution of the command
+
+        Returns
+        ------
+        vizier.engine.task.processor.ExecResult
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def execute_async(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context

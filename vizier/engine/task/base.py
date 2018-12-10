@@ -83,8 +83,11 @@ class TaskHandle(object):
     """A task is uniquely identified by a task identifier. The identifier is
     used as a key between the controlling workflow engine and the excuting
     processor to signal state changes.
+
+    The given controller is used to signal state changes to the controlling
+    workflow engine.
     """
-    def __init__(self, task_id, viztrail_id):
+    def __init__(self, task_id, viztrail_id, controller):
         """Initialize the components of the task handle.
 
         Parameters
@@ -93,6 +96,9 @@ class TaskHandle(object):
             Unique task identifier
         viztrail_id: string
             Unique viztrail identifier
+        controller: vizier.engine.controller.WorkflowController
+            Controller for associates workflow engine
         """
         self.task_id = task_id
         self.viztrail_id = viztrail_id
+        self.controller = controller

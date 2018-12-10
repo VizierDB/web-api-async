@@ -117,40 +117,22 @@ class BranchHandle(NamedObject):
         self.provenance = provenance
 
     @abstractmethod
-    def append_completed_workflow(self, modules, action, command):
-        """Append a completed workflow as the new head of the branch. Returns a
-        handle for the new workflow.
-
-        Parameters
-        ----------
-        modules: list(vizier.viztrail.module.ModuleHandle
-            List of modules in the workflow
-        action: string
-            Identifier of the action that created the workflow
-        command: vizier.viztrail.module.ModuleCommand
-            Specification of the executed command that created the workflow
-
-        Returns
-        -------
-        vizier.viztrail.workflow.base.WorkflowHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def append_pending_workflow(self, modules, pending_modules, action, command):
-        """Append a workflow as the new head of the branch that includes at
-        least one pending module. Returns a handle for the new workflow.
+    def append_workflow(self, modules, action, command, pending_modules=None):
+        """Append a workflow as the new head of the branch. The new workflow may
+        contain modules that have not been persisted prevoiusly (pending
+        modules). These modules are persisted as part of the workflow being
+        created.
 
         Parameters
         ----------
         modules: list(vizier.viztrail.module.ModuleHandle
             List of modules in the workflow that are completed
-        pending_modules: list(vizier.viztrail.module.ModuleHandle
-            List of modules in the workflow that require execution
         action: string
             Identifier of the action that created the workflow
         command: vizier.viztrail.module.ModuleCommand
             Specification of the executed command that created the workflow
+        pending_modules: list(vizier.viztrail.module.ModuleHandle, optional
+            List of modules in the workflow that need to be materialized
 
         Returns
         -------

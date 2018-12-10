@@ -58,7 +58,7 @@ class TestOSBranchCache(unittest.TestCase):
             module_folder=vt.modules_folder,
             object_store=vt.object_store
         )
-        wf = branch.append_completed_workflow(
+        wf = branch.append_workflow(
             modules=[module],
             action=ACTION_INSERT,
             command=command
@@ -80,7 +80,7 @@ class TestOSBranchCache(unittest.TestCase):
                 module_folder=vt.modules_folder,
                 object_store=vt.object_store
             )
-            branch.append_completed_workflow(
+            branch.append_workflow(
                 modules=branch.head.modules + [module],
                 action=ACTION_INSERT,
                 command=command
@@ -102,7 +102,7 @@ class TestOSBranchCache(unittest.TestCase):
             module_folder=vt.modules_folder,
             object_store=vt.object_store
         )
-        branch.append_completed_workflow(
+        branch.append_workflow(
             modules=branch.head.modules + [module],
             action=ACTION_INSERT,
             command=command

@@ -24,9 +24,10 @@ execution of individual steps in the associated data curation workflow.
 
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_unique_identifier
+from vizier.engine.controller import WorkflowController
 from vizier.engine.task.base import TaskHandle
 from vizier.viztrail.module import ModuleHandle, ModuleTimestamp
-from vizier.viztrail.module import MODULE_PENDING, MODULE_RUNNING
+from vizier.viztrail.module import MODULE_PENDING, MODULE_ERROR, MODULE_RUNNING, MODULE_SUCCESS
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
 
@@ -37,7 +38,7 @@ class ExtendedTaskHandle(TaskHandle):
     Adds branch and module identifier to the task handle as well as the
     external representation of the executed command.
     """
-    def __init__(self, viztrail_id, branch_id, module_id, external_form=None):
+    def __init__(self, viztrail_id, branch_id, module_id, controller, external_form=None):
         """Initialize the components of the extended task handle. Generates a
         unique identifier for the task.
 
@@ -49,19 +50,22 @@ class ExtendedTaskHandle(TaskHandle):
             Unique branch identifier
         module_id: string
             Unique module identifier
+        controller: vizier.engine.controller.WorkflowController
+            Controller for associates workflow engine
         external_form: string, optional
             External representation of the executed command
         """
         super(ExtendedTaskHandle, self).__init__(
             task_id=get_unique_identifier(),
-            viztrail_id=viztrail_id
+            viztrail_id=viztrail_id,
+            controller=controller
         )
         self.branch_id = branch_id
         self.module_id = module_id
         self.external_form = external_form
 
 
-class ProjectHandle(object):
+class ProjectHandle(WorkflowController):
     """The project handle is a wrapper around the main components of a vizier
     data curation project. These components provide all the functionality that
     is required by the project. Each project can therefore run in isolation from
@@ -140,34 +144,72 @@ class ProjectHandle(object):
             datasets=datasets,
             filestore=self.filestore
         )
-        # Create new workflow by appending one module to the current head of
-        # the branch. The module state is pending if the workflow is active
-        # otherwise it depends on the associated backend.
-        state = self.backend.next_task_state() if not head is_active else MODULE_PENDING
-        workflow = branch.append_pending_workflow(
-            modules=modules,
-            pending_modules=[
-                ModuleHandle(
-                    state=state,
+        # If the workflow is not active and the command can be executed
+        # synchronously we run the command immediately and return the completed
+        # workflow. Otherwise, a pending workflow is created.
+        if not head.is_active and self.backend.can_execute(command):
+            ts_start = get_current_time()
+            result = self.backend.execute(
+                command=command,
+                context=self.task_context(datasets)
+            )
+            ts_finish = get_current_time()
+            # Depending on the execution outcome create a handle for the
+            # executed module
+            if result.is_success:
+                module = ModuleHandle(
+                    state=MODULE_SUCCESS,
                     command=command,
-                    external_for=external_form
+                    external_for=external_form,
+                    timestamp=ModuleTimestamp(
+                        created_at=ts_start,
+                        started_at=ts_start,
+                        finished_at=ts_finish
+                    ),
+                    datasets=self.get_database_state(
+                        workflow=head,
+                        module_index=len(head.modules) - 1,
+                        datasets=result.datasets
+                    ),
+                    outputs=result.outputs,
+                    provenance=result.provenance
                 )
-            ],
-            action=ACTION_INSERT,
-            command=command
-        )
-        task = ExtendedTaskHandle(
-            viztrail_id=self.viztrail.identifier,
-            branch_id=branch_id,
-            module_id=workflow.modules[-1].identifier
-        )
-        self.tasks[task.task_id] = task
-        self.backend.execute_task(
-            task=task,
-            command=command,
-            context=self.task_context(datasets)
-        )
-        return workflow
+            else:
+                module = ModuleHandle(
+                    state=MODULE_ERROR,
+                    command=command,
+                    external_for=external_form,
+                    outputs=result.outputs
+                )
+            return branch.append_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command,
+                pending_modules=[module]
+            )
+        else:
+            # Create new workflow by appending one module to the current head of
+            # the branch. The module state is pending if the workflow is active
+            # otherwise it depends on the associated backend.
+            state = self.backend.next_task_state() if not head.is_active else MODULE_PENDING
+            workflow = branch.append_workflow(
+                modules=modules,
+                action=ACTION_INSERT,
+                command=command,
+                pending_modules=[
+                    ModuleHandle(
+                        state=state,
+                        command=command,
+                        external_for=external_form
+                    )
+                ]
+            )
+            self.execute_module(
+                branch_id=branch_id,
+                module=workflow.modules[-1],
+                datasets=datasets
+            )
+            return workflow
 
     def delete_workflow_module(self, branch_id, module_id):
         """Delete the module with the given identifier from the workflow at the
@@ -223,7 +265,10 @@ class ProjectHandle(object):
                 if module_index == module_count - 1:
                     break
                 else:
-                    datasets = modules[module_index].provenance.adjust_state(datasets)
+                    datasets = modules[module_index].provenance.adjust_state(
+                        datasets,
+                        datastore=self.datastore
+                    )
                     module_index += 1
             if module_index < module_count:
                 # The module that module_index points to has to be executed.
@@ -257,24 +302,16 @@ class ProjectHandle(object):
                             provenance=m.provenance
                         )
                     )
-                workflow = branch.append_pending_workflow(
+                workflow = branch.append_workflow(
                     modules=modules[:module_index],
-                    pending_modules=pending_modules,
                     action=ACTION_DELETE,
-                    command=deleted_module.command
+                    command=deleted_module.command,
+                    pending_modules=pending_modules
                 )
-                exec_module = workflow.modules[module_index]
-                task = ExtendedTaskHandle(
-                    viztrail_id=self.viztrail.identifier,
+                self.execute_module(
                     branch_id=branch_id,
-                    module_id=exec_module.identifier
-                )
-                self.tasks[task.task_id] = task
-                self.backend.execute_task(
-                    task=task,
-                    command=command,
-                    context=self.task_context(datasets),
-                    resources=exec_module.provenance.resources
+                    module=workflow.modules[module_index],
+                    datasets=datasets
                 )
                 return workflow
             else:
@@ -291,6 +328,74 @@ class ProjectHandle(object):
                 action=ACTION_DELETE,
                 command=deleted_module.command
             )
+
+    def execute_module(self, branch_id, module, datasets, external_form=None):
+        """Create a new task for the given module and execute the module in
+        asynchronous mode.
+
+        Parameters
+        ----------
+        branch_id: string
+            Unique branch identifier
+        module: vizier.viztrail.module.ModuleHandle
+            handle for executed module
+        datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
+            Index of datasets in the a database state
+        external_form: string, optional
+            External representation of the executed command
+        """
+        task = ExtendedTaskHandle(
+            viztrail_id=self.viztrail.identifier,
+            branch_id=branch_id,
+            module_id=module.identifier,
+            controller=self,
+            external_form=external_form
+        )
+        self.tasks[task.task_id] = task
+        self.backend.execute_async(
+            task=task,
+            command=module.command,
+            context=self.task_context(datasets),
+            resources=module.provenance.resources
+        )
+
+    def get_database_state(self, workflow, module_index, datasets):
+        """Adjust the database state after module execution. The dictionary of
+        datasets contains names and identifier of datasets in the new database
+        state. To avoid reading descriptors for unchanged datasets from storage
+        the database state of the previous module is used. Returns a dictionary
+        that contains dataset descriptors instead of dataset identifier.
+
+        Parameters
+        ----------
+        workflow: vizier.viztrail.workflow.WorkflowHandle
+            Workflow that is being modified
+        module_index: int
+            Index position of the workflow modules that has been modified
+        datasets: dict()
+            Dictionary of dataset names and identifier in the new database
+            state after module execution
+
+        Returns
+        -------
+        dict(vizier.datastore.dataset.DatasetDescriptor)
+        """
+        if datasets is None:
+            return dict()
+        context = dict()
+        if module_index > 0:
+            prev_state = workflow.modules[module_index - 1].datasets
+            for ds_name in prev_state:
+                if ds_name in datasets:
+                    context[ds_name] = prev_state[ds_name]
+        for ds_name in datasets:
+            ds_id = datasets[ds_name]
+            if ds_name in context:
+                if context[ds_name].identifier != ds_id:
+                    context[ds_name] = self.datastore.get_descriptor(ds_id)
+            else:
+                context[ds_name] = self.datastore.get_descriptor(ds_id)
+        return context
 
     def get_task(self, task_id):
         """Get the workflow and module index for the given task. Returns None
@@ -413,22 +518,16 @@ class ProjectHandle(object):
                     provenance=m.provenance
                 )
             )
-        workflow = branch.append_pending_workflow(
+        workflow = branch.append_workflow(
             modules=modules[:module_index],
-            pending_modules=pending_modules,
             action=ACTION_INSERT,
-            command=inserted_module.command
+            command=inserted_module.command,
+            pending_modules=pending_modules
         )
-        task = ExtendedTaskHandle(
-            viztrail_id=self.viztrail.identifier,
+        self.execute_module(
             branch_id=branch_id,
-            module_id=workflow.modules[module_index].identifier
-        )
-        self.tasks[task.task_id] = task
-        self.backend.execute_task(
-            task=task,
-            command=command,
-            context=self.task_context(datasets)
+            module=workflow.modules[module_index],
+            datasets=datasets
         )
         return workflow
 
@@ -504,23 +603,16 @@ class ProjectHandle(object):
                     provenance=m.provenance
                 )
             )
-        workflow = branch.append_pending_workflow(
+        workflow = branch.append_workflow(
             modules=modules[:module_index],
-            pending_modules=pending_modules,
             action=ACTION_REPLACE,
-            command=replaced_module.command
+            command=replaced_module.command,
+            pending_modules=pending_modules
         )
-        task = ExtendedTaskHandle(
-            viztrail_id=self.viztrail.identifier,
+        self.execute_module(
             branch_id=branch_id,
-            module_id=workflow.modules[module_index].identifier
-        )
-        self.tasks[task.task_id] = task
-        self.backend.execute_task(
-            task=task,
-            command=command,
-            context=self.task_context(datasets),
-            resources=replaced_module.provenance.resources
+            module=workflow.modules[module_index],
+            datasets=datasets
         )
         return workflow
 
@@ -565,10 +657,10 @@ class ProjectHandle(object):
             return None
 
     def set_error(self, task_id, finished_at=None, outputs=None):
-        """Set status of the identified module at the head of the specified
-        viztrail branch to error. The finished_at property of the timestamp is
-        set to the given value or the current time (if None). The module outputs
-        are adjusted to the given value. the output streams are empty if no
+        """Set status of the module that is associated with the given task
+        identifier to error. The finished_at property of the timestamp is set
+        to the given value or the current time (if None). The module outputs
+        are adjusted to the given value. The output streams are empty if no
         value is given for the outputs parameter.
 
         Cancels all pending modules in the workflow.
@@ -604,8 +696,8 @@ class ProjectHandle(object):
             return None
 
     def set_running(self, task_id, started_at=None):
-        """Set status of the identified module at the head of the specified
-        viztrail branch to running. The started_at property of the timestamp is
+        """Set status of the module that is associated with the given task
+        identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
 
         Returns the handle for the modified workflow. If the specified module
@@ -638,8 +730,8 @@ class ProjectHandle(object):
             return None
 
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
-        """Set status of the identified module at the head of the specified
-        viztrail branch to success. The finished_at property of the timestamp
+        """Set status of the module that is associated with the given task
+        identifier to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
 
         If case of a successful module execution the database state and module
@@ -656,9 +748,9 @@ class ProjectHandle(object):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
+        datasets : dict(), optional
             Dictionary of resulting datasets. The user-specified name is the key
-            for the dataset descriptor.
+            for the dataset identifier.
         outputs: vizier.viztrail.module.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.ModuleProvenance, optional
@@ -676,13 +768,18 @@ class ProjectHandle(object):
             return None
         module = workflow.modules[module_index]
         if module.is_running:
+            # Adjust the module context
+            context = self.get_database_state(
+                workflow=workflow,
+                module_idex=module_index,
+                datasets=datasets
+            )
             module.set_success(
                 finished_at=finished_at,
-                datasets=datasets,
+                datasets=context,
                 outputs=outputs,
                 provenance=provenance
             )
-            context = datasets if not datasets is None else dict()
             for next_module in workflow.modules[module_index+1:]:
                 if not next_module.is_pending:
                     return None
@@ -712,18 +809,11 @@ class ProjectHandle(object):
                             external_form=get_current_time(),
                             started_at=started_at
                         )
-                    task = ExtendedTaskHandle(
-                        viztrail_id=self.viztrail.identifier,
+                    self.execute_module(
                         branch_id=task.branch_id,
-                        module_id=next_module.identifier,
+                        module=next_module,
+                        datasets=context,
                         external_form=external_form
-                    )
-                    self.tasks[task.task_id] = task
-                    self.backend.execute_task(
-                        task=task,
-                        command=command,
-                        context=self.task_context(context),
-                        resources=next_module.provenance.resources
                     )
             return workflow
         else:
