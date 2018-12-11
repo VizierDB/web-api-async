@@ -26,8 +26,10 @@ from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_unique_identifier
 from vizier.engine.controller import WorkflowController
 from vizier.engine.task.base import TaskHandle
-from vizier.viztrail.module.base import ModuleHandle
-from vizier.viztrail.module.base import MODULE_PENDING, MODULE_ERROR, MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.module.base import ModuleHandle, MODULE_CANCELED
+from vizier.viztrail.module.base import MODULE_ERROR, MODULE_PENDING
+from vizier.viztrail.module.base import MODULE_RUNNING, MODULE_SUCCESS
+from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
 
@@ -138,10 +140,12 @@ class ProjectHandle(WorkflowController):
                 datasets = head.modules[-1].datasets
                 modules = head.modules
                 is_active = head.is_active
+                is_error = head.modules[-1].is_error or head.modules[-1].is_canceled
             else:
                 datasets = dict()
                 modules = list()
                 is_active = False
+                is_error = False
             # Get the external representation for the command
             external_form = command.to_external_form(
                 command=self.packages[command.package_id].get(command.command_id),
@@ -164,7 +168,7 @@ class ProjectHandle(WorkflowController):
                     module = ModuleHandle(
                         state=MODULE_SUCCESS,
                         command=command,
-                        external_for=external_form,
+                        external_form=external_form,
                         timestamp=ModuleTimestamp(
                             created_at=ts_start,
                             started_at=ts_start,
@@ -182,7 +186,7 @@ class ProjectHandle(WorkflowController):
                     module = ModuleHandle(
                         state=MODULE_ERROR,
                         command=command,
-                        external_for=external_form,
+                        external_form=external_form,
                         outputs=result.outputs
                     )
                 workflow = branch.append_workflow(
@@ -196,7 +200,12 @@ class ProjectHandle(WorkflowController):
                 # head of the branch. The module state is pending if the
                 # workflow is active otherwise it depends on the associated
                 # backend.
-                state = self.backend.next_task_state() if not is_active else MODULE_PENDING
+                if is_active:
+                    state = MODULE_PENDING
+                elif is_error:
+                    state = MODULE_CANCELED
+                else:
+                    state = self.backend.next_task_state()
                 workflow = branch.append_workflow(
                     modules=modules,
                     action=ACTION_INSERT,
@@ -209,11 +218,50 @@ class ProjectHandle(WorkflowController):
                         )
                     ]
                 )
-                self.execute_module(
-                    branch_id=branch_id,
-                    module=workflow.modules[-1],
-                    datasets=datasets
-                )
+                if state == MODULE_RUNNING:
+                    self.execute_module(
+                        branch_id=branch_id,
+                        module=workflow.modules[-1],
+                        datasets=datasets
+                    )
+            return workflow
+
+    def cancel_exec(self, branch_id):
+        """Cancel the execution of all active modules for the head workflow of
+        the given branch. Sets the status of all active modules to canceled and
+        sends terminate signal to running tasks. The finished_at property is
+        set to the current time. The module outputs will be empty.
+
+        Returns the handle for the modified workflow. If the specified branch
+        is unknown the result is None.
+
+        Parameters
+        ----------
+        branch_id : string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.workflow.WorkflowHandle
+        """
+        with self.backend.lock:
+            # Get the handle for the head workflow of the specified branch.
+            branch = self.viztrail.get_branch(branch_id)
+            if branch is None:
+                return None
+            workflow = branch.head
+            if workflow is None:
+                return None
+            # Set the state of all active modules to canceled
+            for module in workflow.modules:
+                if module.is_active:
+                    module.set_canceled()
+            # Cancel all running tasks for the branch
+            for task_id in self.tasks.keys():
+                task = self.tasks[task_id]
+                if task.branch_id == branch_id:
+                    self.backend.cancel_task(task_id)
+                    del self.tasks[task_id]
             return workflow
 
     def delete_workflow_module(self, branch_id, module_id):
@@ -296,7 +344,7 @@ class ProjectHandle(WorkflowController):
                         ModuleHandle(
                             command=command,
                             state=self.backend.next_task_state(),
-                            external_for=external_form
+                            external_form=external_form
                         )
                     ]
                     for i in range(module_index + 1, module_count):
@@ -304,7 +352,7 @@ class ProjectHandle(WorkflowController):
                         pending_modules.append(
                             ModuleHandle(
                                 command=m.command,
-                                external_for=m.external_form,
+                                external_form=m.external_form,
                                 datasets=m.datasets,
                                 outputs=m.outputs,
                                 provenance=m.provenance
@@ -325,13 +373,13 @@ class ProjectHandle(WorkflowController):
                 else:
                     # None of the module required execution and the workflow is
                     # complete
-                    return branch.append_completed_workflow(
+                    return branch.append_workflow(
                         modules=modules,
                         action=ACTION_DELETE,
                         command=deleted_module.command
                     )
             else:
-                return branch.append_completed_workflow(
+                return branch.append_workflow(
                     modules=modules,
                     action=ACTION_DELETE,
                     command=deleted_module.command
@@ -521,7 +569,7 @@ class ProjectHandle(WorkflowController):
                 pending_modules.append(
                     ModuleHandle(
                         command=m.command,
-                        external_for=m.external_form,
+                        external_form=m.external_form,
                         datasets=m.datasets,
                         outputs=m.outputs,
                         provenance=m.provenance
@@ -607,7 +655,7 @@ class ProjectHandle(WorkflowController):
                 pending_modules.append(
                     ModuleHandle(
                         command=m.command,
-                        external_for=m.external_form,
+                        external_form=m.external_form,
                         datasets=m.datasets,
                         outputs=m.outputs,
                         provenance=m.provenance
@@ -625,47 +673,6 @@ class ProjectHandle(WorkflowController):
                 datasets=datasets
             )
             return workflow
-
-    def set_canceled(self, task_id, finished_at=None, outputs=None):
-        """Set status of the identified module at the head of the specified
-        viztrail branch to canceled. The finished_at property of the timestamp
-        is set to the given value or the current time (if None). The module
-        outputs are set to the given value. If no outputs are given the module
-        output streams will be empty.
-
-        Cancels all pending modules in the workflow.
-
-        Returns the handle for the modified workflow. If the specified module
-        is not in an active state the result is None.
-
-        Parameters
-        ----------
-        task_id : string
-            Unique task identifier
-        finished_at: datetime.datetime, optional
-            Timestamp when module started running
-        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
-            Output streams for module
-
-        Returns
-        -------
-        vizier.viztrail.workflow.WorkflowHandle
-        """
-        with self.backend.lock:
-            # Get the handle for the head workflow of the specified branch and
-            # the index for the module matching the identifier in the task.
-            workflow, module_index = self.get_task(task_id)
-            if workflow is None or module_index == -1:
-                return None
-            module = workflow.modules[module_index]
-            if module.is_active:
-                self.backend.cancel_task(task_id)
-                module.set_canceled(finished_at=finished_at, outputs=outputs)
-                for m in workflow.modules[module_index+1:]:
-                    m.set_canceled()
-                return workflow
-            else:
-                return None
 
     def set_error(self, task_id, finished_at=None, outputs=None):
         """Set status of the module that is associated with the given task
