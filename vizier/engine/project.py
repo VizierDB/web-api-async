@@ -136,23 +136,25 @@ class ProjectHandle(WorkflowController):
         if not head is None and len(head.modules) > 0:
             datasets = head.modules[-1].datasets
             modules = head.modules
+            is_active = head.is_active
         else:
             datasets = dict()
             modules = list()
+            is_active = False
         # Get the external representation for the command
         external_form = command.to_external_form(
-            command=self.packages[command.package_id].get(command.command_id)
+            command=self.packages[command.package_id].get(command.command_id),
             datasets=datasets,
             filestore=self.filestore
         )
         # If the workflow is not active and the command can be executed
         # synchronously we run the command immediately and return the completed
         # workflow. Otherwise, a pending workflow is created.
-        if not head.is_active and self.backend.can_execute(command):
+        if not is_active and self.backend.can_execute(command):
             ts_start = get_current_time()
             result = self.backend.execute(
                 command=command,
-                context=self.task_context(datasets)
+                context=task_context(datasets)
             )
             ts_finish = get_current_time()
             # Depending on the execution outcome create a handle for the
@@ -169,7 +171,7 @@ class ProjectHandle(WorkflowController):
                     ),
                     datasets=self.get_database_state(
                         workflow=head,
-                        module_index=len(head.modules) - 1,
+                        module_index=len(modules) - 1,
                         datasets=result.datasets
                     ),
                     outputs=result.outputs,
@@ -192,7 +194,8 @@ class ProjectHandle(WorkflowController):
             # Create new workflow by appending one module to the current head of
             # the branch. The module state is pending if the workflow is active
             # otherwise it depends on the associated backend.
-            state = self.backend.next_task_state() if not head.is_active else MODULE_PENDING
+            state = self.backend.next_task_state() if not is_active else MODULE_PENDING
+            print 'APPEND IN STATE ' + str(state)
             workflow = branch.append_workflow(
                 modules=modules,
                 action=ACTION_INSERT,
@@ -201,7 +204,7 @@ class ProjectHandle(WorkflowController):
                     ModuleHandle(
                         state=state,
                         command=command,
-                        external_for=external_form
+                        external_form=external_form
                     )
                 ]
             )
@@ -356,7 +359,7 @@ class ProjectHandle(WorkflowController):
         self.backend.execute_async(
             task=task,
             command=module.command,
-            context=self.task_context(datasets),
+            context=task_context(datasets),
             resources=module.provenance.resources
         )
 
@@ -381,7 +384,7 @@ class ProjectHandle(WorkflowController):
         -------
         dict(vizier.datastore.dataset.DatasetDescriptor)
         """
-        if datasets is None:
+        if workflow is None or datasets is None:
             return dict()
         context = dict()
         if module_index > 0:
@@ -649,7 +652,7 @@ class ProjectHandle(WorkflowController):
             return None
         module = workflow.modules[module_index]
         if module.is_active:
-            self.backend.cancel_task(task)
+            self.backend.cancel_task(task_id)
             module.set_canceled(finished_at=finished_at, outputs=outputs)
             for m in workflow.modules[module_index+1:]:
                 m.set_canceled()
@@ -688,6 +691,7 @@ class ProjectHandle(WorkflowController):
         if workflow is None or module_index == -1:
             return None
         module = workflow.modules[module_index]
+        print 'ERROR FOR ' + module.identifier
         if module.is_active:
             module.set_error(finished_at=finished_at, outputs=outputs)
             for m in workflow.modules[module_index+1:]:
@@ -769,10 +773,11 @@ class ProjectHandle(WorkflowController):
             return None
         module = workflow.modules[module_index]
         if module.is_running:
+            print 'SUCCESS FOR ' + workflow.modules[module_index].identifier
             # Adjust the module context
             context = self.get_database_state(
                 workflow=workflow,
-                module_idex=module_index,
+                module_index=module_index,
                 datasets=datasets
             )
             module.set_success(
@@ -781,10 +786,13 @@ class ProjectHandle(WorkflowController):
                 outputs=outputs,
                 provenance=provenance
             )
+            #print workflow.modules[module_index+1:]
             for next_module in workflow.modules[module_index+1:]:
                 if not next_module.is_pending:
+                    print next_module.identifier + ' not pending'
                     return None
-                elif not next_module.requires_exec(context):
+                elif not next_module.provenance.requires_exec(context):
+                    print next_module.identifier + ' does not require execution'
                     context = next_module.provenance.adjust_state(
                         context,
                         datastore=self.datastore
@@ -796,6 +804,7 @@ class ProjectHandle(WorkflowController):
                         provenance=next_module.provenance
                     )
                 else:
+                    print 'NEXT ON THE LIST OF ' + str(len(workflow.modules[module_index+1:])) + ' IS ' + next_module.identifier
                     command = next_module.command
                     external_form = command.to_external_form(
                         command=self.packages[command.package_id].get(command.command_id),
@@ -807,15 +816,16 @@ class ProjectHandle(WorkflowController):
                     state = self.backend.next_task_state()
                     if state == MODULE_RUNNING:
                         next_module.set_running(
-                            external_form=get_current_time(),
-                            started_at=started_at
+                            external_form=external_form,
+                            started_at=get_current_time()
                         )
                     self.execute_module(
-                        branch_id=task.branch_id,
+                        branch_id=workflow.branch_id,
                         module=next_module,
                         datasets=context,
                         external_form=external_form
                     )
+                    break
             return workflow
         else:
             return None

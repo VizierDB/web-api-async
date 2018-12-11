@@ -61,6 +61,7 @@ class WorkflowController(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def set_running(self, task_id, started_at=None):
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
@@ -82,6 +83,7 @@ class WorkflowController(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
         """Set status of the module that is associated with the given task
         identifier to success. The finished_at property of the timestamp

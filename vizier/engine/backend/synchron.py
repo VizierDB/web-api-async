@@ -30,8 +30,8 @@ class SynchronousBackend(VizierBackend):
     """Backend that only supports synchronous execution of tasks. All methods
     that are related to asynchronous task execution remain uninplemented.
     """
-    def __init__(self, datastore, filestore, processors):
-        """Initialize the datastore and filestore. The processors dictionary
+    def __init__(self, datastore, filestore, commands):
+        """Initialize the datastore and filestore. The commands dictionary
         contains the task engines for all commands that can be executed. This
         is a dictionary of dictionaries that are keyed by the package
         identifier. Each internal idictionary contains the task engines keyed
@@ -43,13 +43,13 @@ class SynchronousBackend(VizierBackend):
             Datastore for the project that execute the task
         filestore: vizier.filestore.Filestore
             Filestore for the project that executes the task
-        processors: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
+        commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
         """
         self.datastore = datastore
         self.filestore = filestore
-        self.processors = processors
+        self.commands = commands
 
     def can_execute(self, command):
         """Test whether a given command can be executed in synchronous mode. If
@@ -67,7 +67,7 @@ class SynchronousBackend(VizierBackend):
         """
         pckg = command.package_id
         cmd = command.command_id
-        return pckg in self.processors and cmd in self.processors[pckg]
+        return pckg in self.commands and cmd in self.commands[pckg]
 
     def execute(self, command, context, resources=None):
         """Execute a given command. The command will be executed immediately if
@@ -93,8 +93,8 @@ class SynchronousBackend(VizierBackend):
         ------
         vizier.engine.task.processor.ExecResult
         """
-        if command.package_id in self.processors:
-            package = self.processors[command.package_id]
+        if command.package_id in self.commands:
+            package = self.commands[command.package_id]
             if command.command_id in package:
                 processor = package[command.command_id]
                 return processor.compute(

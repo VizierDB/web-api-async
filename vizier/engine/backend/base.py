@@ -46,14 +46,13 @@ class VizierBackend(object):
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_task(self, task):
+    def cancel_task(self, task_id):
         """Request to cancel execution of the given task.
 
         Parameters
         ----------
-        task: vizier.engine.task.base.TaskHandle
-            Handle for task for which execution is requested to be canceled
-            controlling workflow engine
+        task_id: string
+            Unique task identifier
         """
         raise NotImplementedError
 

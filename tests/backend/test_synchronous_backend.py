@@ -54,7 +54,7 @@ class TestSynchronousBackend(unittest.TestCase):
         self.backend = SynchronousBackend(
             datastore=FileSystemDatastore(DATASTORE_DIR),
             filestore=DefaultFilestore(FILESTORE_DIR),
-            processors={
+            commands={
                 PACKAGE_PYTHON: {PYTHON_CODE: pycell},
                 PACKAGE_VIZUAL: {
                     VIZUAL_LOAD: vizual,
