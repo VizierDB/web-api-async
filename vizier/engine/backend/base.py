@@ -21,13 +21,41 @@ implementations for the backend are possible.
 from abc import abstractmethod
 
 
+class NonLock(object):
+    """Dummy implementation of __enter__ and __exit__ methods for backends that
+    do not require a lock.
+    """
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, tb):
+        pass
+
+
 class VizierBackend(object):
     """The backend interface defines two main methods: execute and cancel. The
     first method is used by the API to request execution of a command that
     defines a module in a data curation workflow. The second method is used
     by the API to cancel execution (on user request).
 
+    Each backend should provide an implementation-specific lock. The lock is
+    used by the workflow controller to serialize execution for those parts of
+    the code that are used by the controller and the backend.
+
+    If tasks are executed remotely the lock is a dummy lock. Only for
+    multi-process execution the lock shoulc be the default multi-process-lock.
     """
+    def __init__(self, lock=None):
+        """Initialize the implementation-specific lock. Use a dummy lock if
+        the subclass does not provide a lock.
+
+        Parameters
+        ----------
+        lock: class
+            Class that implements __enter__ and __exit__ methods
+        """
+        self.lock = lock if not lock is None else NonLock()
+
     @abstractmethod
     def can_execute(self, command):
         """Test whether a given command can be executed in synchronous mode. If

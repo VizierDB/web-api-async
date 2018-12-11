@@ -30,7 +30,7 @@ class SynchronousBackend(VizierBackend):
     """Backend that only supports synchronous execution of tasks. All methods
     that are related to asynchronous task execution remain uninplemented.
     """
-    def __init__(self, datastore, filestore, commands):
+    def __init__(self, datastore, filestore, commands, lock=None):
         """Initialize the datastore and filestore. The commands dictionary
         contains the task engines for all commands that can be executed. This
         is a dictionary of dictionaries that are keyed by the package
@@ -46,7 +46,10 @@ class SynchronousBackend(VizierBackend):
         commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
+        lock: class
+            Class that implements __enter__ and __exit__ methods
         """
+        super(SynchronousBackend, self).__init__(lock=lock)
         self.datastore = datastore
         self.filestore = filestore
         self.commands = commands

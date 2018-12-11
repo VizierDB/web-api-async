@@ -22,7 +22,7 @@ or virtual environment.
 """
 
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Lock, Pool
 
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.synchron import SynchronousBackend
@@ -42,7 +42,8 @@ class MultiProcessBackend(SynchronousBackend):
         super(MultiProcessBackend, self).__init__(
             datastore=datastore,
             filestore=filestore,
-            commands=synchron_commands if not synchron_commands is None else dict()
+            commands=synchron_commands if not synchron_commands is None else dict(),
+            lock=Lock()
         )
         self.processors = processors
         # Maintain tasks that are currently being executed and the associated

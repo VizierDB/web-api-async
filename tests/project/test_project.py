@@ -71,23 +71,25 @@ class TestMultiprocessBackend(unittest.TestCase):
             shutil.rmtree(SERVER_DIR)
 
     def test_project(self):
-        """
+        """Test running a sequence of statements and wait for their
+        completion.
         """
         self.assertEquals(self.project.identifier, '000')
         self.assertIsNone(self.project.viztrail.default_branch.head)
         branch_id = self.project.viztrail.default_branch.identifier
-        for i in range(5):
+        for i in range(10):
             cmd = command=python_cell('print ' + str(i) + ' + ' + str(i))
             self.project.append_workflow_module(branch_id=branch_id, command=cmd)
-        time.sleep(10)
+        while self.project.viztrail.default_branch.head.is_active:
+            time.sleep(0.1)
         wf = self.project.viztrail.default_branch.head
         self.assertIsNotNone(wf)
-        for module in wf.modules:
-            print module.state
-            for out in module.outputs.stdout:
-                print 'STDOUT: ' + out.value
-            for out in module.outputs.stderr:
-                print 'STDERR: ' + out.value
+        for i in range(10):
+            module = wf.modules[i]
+            self.assertTrue(module.is_success)
+            self.assertEquals(len(module.outputs.stdout), 1)
+            self.assertEquals(module.outputs.stdout[0].value, str(i+i))
+            self.assertEquals(len(module.outputs.stderr), 0)
 
 
 if __name__ == '__main__':
