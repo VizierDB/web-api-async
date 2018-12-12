@@ -4,7 +4,8 @@ import os
 import shutil
 import unittest
 
-from vizier.core.io.base import DefaultObjectStore, MAX_ATTEMPS
+from vizier.core.io.base import DefaultObjectStore
+from vizier.core.io.base import MAX_ATTEMPS, PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
 from vizier.core.util import get_short_identifier
 
 

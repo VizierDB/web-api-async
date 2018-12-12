@@ -34,8 +34,6 @@ from vizier.filestore.base import get_download_filename, get_fileformat
 FILENAME_SUFFIX = '.dat'
 # Name of the metadata file
 METADATA_FILE_NAME = 'index.tsv'
-# Version information
-VERSION_INFO = '0.2.1'
 
 
 """Configuration parameter."""
@@ -67,53 +65,6 @@ class DefaultFilestore(Filestore):
         self.base_path = base_path
         # Initialize the index file and read the content
         self.index_file = os.path.join(self.base_path, METADATA_FILE_NAME)
-        self.files = dict()
-        if os.path.isfile(self.index_file):
-            with open(self.index_file, 'r') as f:
-                for line in f:
-                    tokens = line.strip().split('\t')
-                    file_id = tokens[0]
-                    filepath = get_filepath(self.base_path, file_id)
-                    file_name = tokens[1]
-                    file_format = None
-                    if len(tokens) == 3:
-                        file_format = tokens[2]
-                    self.files[file_id] = FileHandle(
-                        file_id,
-                        filepath=filepath,
-                        file_name=file_name,
-                        file_format=file_format
-                    )
-
-    def cleanup(self, active_files):
-        """Cleanup file store to remove files that are no longer referenced by
-        any workflow. The list of active files contains the identifier of those
-        files that are reference. Any file that is NOT in the given list will
-        be deleted.
-
-        Returns the number of deleted files.
-
-        Parameters
-        ----------
-        active_files: list(string)
-            List of identifier for those files that are NOT to be deleted.
-
-        Returns
-        -------
-        int
-        """
-        # Delete inactive files
-        count = 0
-        for file_id in self.files.keys():
-            if not file_id in active_files:
-                os.remove(self.files[file_id].filepath)
-                del self.files[file_id]
-                count += 1
-        # Only write index if files where deleted
-        if count > 0:
-            write_index_file(self.index_file, self.files.values())
-        # Return count of files that were deleted
-        return count
 
     def delete_file(self, identifier):
         """Delete file with given identifier. Returns True if file was deleted
@@ -128,11 +79,14 @@ class DefaultFilestore(Filestore):
         -------
         bool
         """
-        if identifier in self.files:
-            os.remove(self.files[identifier].filepath)
-            del self.files[identifier]
-            write_index_file(self.index_file, self.files.values())
-            return True
+        files = self.list_files()
+        for i in range(len(files)):
+            fh = files[i]
+            if fh.identifier == identifier:
+                os.remove(fh.filepath)
+                del files[i]
+                write_index_file(self.index_file, files)
+                return True
         return False
 
     def download_file(self, uri, username=None, password=None):
@@ -169,8 +123,7 @@ class DefaultFilestore(Filestore):
             file_name=filename,
             file_format=get_fileformat(filename)
         )
-        self.files[identifier] = f_handle
-        write_index_file(self.index_file, self.files.values())
+        write_index_file(self.index_file, self.list_files() + [f_handle])
         return f_handle
 
     def get_file(self, identifier):
@@ -186,13 +139,14 @@ class DefaultFilestore(Filestore):
         -------
         vizier.filestore.base.FileHandle
         """
-        if identifier in self.files:
-            return self.files[identifier]
+        for fh in self.list_files():
+            if fh.identifier == identifier:
+                return fh
         return None
 
     @staticmethod
     def init(properties):
-        """Create an instance of the viztrails repositorfile storey from a given
+        """Create an instance of the viztrails repositorfile store from a given
         dictionary of configuration arguments. At this point only the base
         directory is expected as to be present in the properties dictionary.
 
@@ -217,7 +171,24 @@ class DefaultFilestore(Filestore):
         -------
         list(vizier.filestore.base.FileHandle)
         """
-        return self.files.values()
+        files = dict()
+        if os.path.isfile(self.index_file):
+            with open(self.index_file, 'r') as f:
+                for line in f:
+                    tokens = line.strip().split('\t')
+                    file_id = tokens[0]
+                    filepath = get_filepath(self.base_path, file_id)
+                    file_name = tokens[1]
+                    file_format = None
+                    if len(tokens) == 3:
+                        file_format = tokens[2]
+                    files[file_id] = FileHandle(
+                        file_id,
+                        filepath=filepath,
+                        file_name=file_name,
+                        file_format=file_format
+                    )
+        return files.values()
 
     def upload_file(self, filename):
         """Create a new entry from a given local file. Will make a copy of the
@@ -250,8 +221,7 @@ class DefaultFilestore(Filestore):
             file_name=name,
             file_format=get_fileformat(filename)
         )
-        self.files[identifier] = f_handle
-        write_index_file(self.index_file, self.files.values())
+        write_index_file(self.index_file, self.list_files() + [f_handle])
         return f_handle
 
     def upload_stream(self, file, file_name):
@@ -280,8 +250,7 @@ class DefaultFilestore(Filestore):
             file_name=file_name,
             file_format=get_fileformat(file_name)
         )
-        self.files[identifier] = f_handle
-        write_index_file(self.index_file, self.files.values())
+        write_index_file(self.index_file, self.list_files() + [f_handle])
         return f_handle
 
 

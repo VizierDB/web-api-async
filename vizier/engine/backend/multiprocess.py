@@ -37,7 +37,22 @@ class MultiProcessBackend(SynchronousBackend):
     Each task is executed by a single-process pool.
     """
     def __init__(self, datastore, filestore, processors, synchron_commands=None):
-        """
+        """Initialize the datastore, filestore and index of package processors.
+        Accepts an optional dictionary of commands that will be executed
+        synchronously instead of forking a new process for execution.
+
+        Parameters
+        ----------
+        datastore: vizier.datastore.base.datastore
+            Datastore to access datasets for all tasks
+        filestore: vizier.filestore.base.Filestore
+            Filestore to access uploaded files
+        processors: dict(vizier.engine.packages.task.processor.TaskProcessor)
+            task processors that are indexed by the task identifier
+        synchron_commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
+            Dictionary of task processors for tasks that are executed in
+            synchronous mode. Processors are keyed by the pakage identifier and
+            the command identifier
         """
         super(MultiProcessBackend, self).__init__(
             datastore=datastore,

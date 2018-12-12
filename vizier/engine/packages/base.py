@@ -28,6 +28,8 @@ import json
 import yaml
 from jsonschema import validate, ValidationError
 
+from vizier.core.loader import ClassLoader
+
 
 # ------------------------------------------------------------------------------
 # Package Declaration
@@ -540,8 +542,10 @@ def variable_format(parameter_id):
 # ------------------------------------------------------------------------------
 
 class PackageIndex(object):
-    """Index of package command declarations."""
-    def __init__(self, package):
+    """Index of package command declarations. Maintains a dictionary that can be
+    used to instantiate objects of the associated package task engine.
+    """
+    def __init__(self, package, properties=None):
         """Initialize the index from a package declaration.
 
         Validates the given package declaration. Raises ValueError if an
@@ -549,13 +553,19 @@ class PackageIndex(object):
 
         Parameters
         ----------
-        package: dict
+        package: dict()
             Package declaration
+        properties: dict()
+            Additional properties to create an instance of the associated
+            package engine.
         """
         # Validate the given package specification
         validate_package(package)
-        self.module_name = package[LABEL_MODULENAME]
-        self.class_name = package[LABEL_CLASSNAME]
+        self.engine = ClassLoader.to_dict(
+            module_name=package[LABEL_MODULENAME],
+            class_name=package[LABEL_CLASSNAME],
+            properties=properties
+        )
         self.commands = dict()
         for cmd in package[LABEL_COMMAND]:
             self.commands[cmd[LABEL_ID]] = CommandDeclaration(

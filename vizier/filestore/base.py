@@ -132,6 +132,22 @@ class Filestore(object):
     """Abstract API to upload and retrieve files."""
 
     @abstractmethod
+    def delete_file(self, identifier):
+        """Delete file with given identifier. Returns True if file was deleted
+        or False if no such file existed.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique file identifier
+
+        Returns
+        -------
+        bool
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def download_file(self, uri, username=None, password=None):
         """Create a local copy of the identified web resource.
 

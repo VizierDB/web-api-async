@@ -51,7 +51,7 @@ class VizierApi(object):
         viztrails_repository: vizier.viztrail.repository.ViztrailRepository
             Viztrail manager for the API instance
         """
-        self.api = config.get_api_engine()
+        self.engine = config.get_api_engine()
         self.urls = UrlFactory(config)
         self.service_descriptor = {
             'name': config.webservice.name,
@@ -61,9 +61,9 @@ class VizierApi(object):
                 'maxFileSize': config.webservice.defaults.max_file_size
             },
             'environment': {
-                'name': api.name,
-                'version': api.version
-            }
+                'name': self.engine.name,
+                'version': self.engine.version
+            },
             'links': HATEOAS({
                 'self': self.urls.service_descriptor(),
                 'doc': config.webservice.doc_url,
@@ -72,6 +72,11 @@ class VizierApi(object):
             })
         }
 
+    def init(self):
+        """Initialize the API before the first request."""
+        self.engine.init()
+
+        
     # --------------------------------------------------------------------------
     # Service
     # --------------------------------------------------------------------------

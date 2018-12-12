@@ -47,7 +47,7 @@ class VizierEngine(object):
         inital state of the engine. For the webservice the vizier configuration
         file will contain the referecne to the used engine and the configuration
         dictionary.
-        
+
         Parameters
         ----------
         name: string
@@ -77,7 +77,7 @@ class VizierEngine(object):
         """
         raise NotImplementedError
 
-    @bastractmethod
+    @abstractmethod
     def delete_project(self, project_id):
         """Delete all resources that are associated with the given project.
 
@@ -94,11 +94,19 @@ class VizierEngine(object):
 
     @abstractmethod
     def get_project(self, project_id):
-        """Get the handle for the given project.
+        """Get the handle for the given project. Returns None if the project
+        does not exist.
 
         Returns
         -------
         vizier.viztrail.engine.project.ProjectHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def init(self):
+        """Initialization method that is called before the first call to any of
+        the other engine methods.
         """
         raise NotImplementedError
 

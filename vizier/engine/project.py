@@ -588,6 +588,16 @@ class ProjectHandle(WorkflowController):
             )
             return workflow
 
+    @property
+    def name(self):
+        """Shortcut to get the name of the associated viztrail.
+
+        Returns
+        -------
+        string
+        """
+        return self.viztrail.name
+
     def replace_workflow_module(self, branch_id, module_id, command):
         """Replace an existing module in the workflow at the head of the
         specified viztrail branch. The modified workflow is executed and the

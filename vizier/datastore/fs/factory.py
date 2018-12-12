@@ -20,23 +20,26 @@ import os
 import shutil
 
 from vizier.datastore.factory import DatastoreFactory
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.fs.base import FileSystemDatastore, PARA_DIRECTORY
 
 
 class FileSystemDatastoreFactory(DatastoreFactory):
     """Datastore factory for file system based datastores."""
-    def __init__(self, base_path):
+    def __init__(self, properties):
         """Initialize the reference to the base directory that contains all
         datastore folders.
 
+        Expects a dictionary with a single entry that contains the base path
+        for all created datastores.
+
         Parameters
         ----------
-        base_path: string
-            Path to diretory on local disk
+        properties: dict()
+            Dictionary of configuration properties
         """
-        self.base_path = os.path.abspath(base_path)
+        self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
 
-    def delete_datatore(self, identifier):
+    def delete_datastore(self, identifier):
         """Delete a datastore. This method is normally called when the project
         with which the datastore is associated is deleted.
 

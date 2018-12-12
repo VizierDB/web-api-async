@@ -37,32 +37,6 @@ class TestDefaultFilestore(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
 
-    def test_cleanup(self):
-        """Test clean up function."""
-        db = DefaultFilestore(SERVER_DIR)
-        fh1 = db.upload_file(CSV_FILE)
-        fh2 = db.upload_file(GZIP_CSV_FILE)
-        fh3 = db.upload_file(TSV_FILE)
-        fh4 = db.upload_file(GZIP_TSV_FILE)
-        fh5 = db.upload_file(CSV_FILE)
-        fh6 = db.upload_file(GZIP_CSV_FILE)
-        fh7 = db.upload_file(TSV_FILE)
-        fh8 = db.upload_file(GZIP_TSV_FILE)
-        files = db.list_files()
-        self.assertEquals(len(files), 8)
-        count = db.cleanup(active_files=[fh1.identifier, fh3.identifier, fh7.identifier])
-        self.assertEquals(count, 5)
-        files = db.list_files()
-        self.assertEquals(len(files), 3)
-        self.assertIsNotNone(db.get_file(fh1.identifier))
-        self.assertIsNotNone(db.get_file(fh3.identifier))
-        self.assertIsNotNone(db.get_file(fh7.identifier))
-        self.assertIsNone(db.get_file(fh2.identifier))
-        self.assertIsNone(db.get_file(fh4.identifier))
-        self.assertIsNone(db.get_file(fh5.identifier))
-        self.assertIsNone(db.get_file(fh6.identifier))
-        self.assertIsNone(db.get_file(fh8.identifier))
-
     def test_delete_file(self):
         """Test delete file method."""
         db = DefaultFilestore(SERVER_DIR)

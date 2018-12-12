@@ -11,7 +11,7 @@ setup(
     packages=['vizier'],
     package_data={'': ['LICENSE.txt']},
     install_requires=[
-	'Flask~=0.12',
+	'Flask>=1.0',
 	'flask-cors',
     'jsonschema',
 	'pyyaml',

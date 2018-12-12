@@ -5,7 +5,7 @@ from vizier.client.command.pycell import python_cell
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle, ACTION_CREATE
 
-import vizier.viztrail.module as state
+import vizier.viztrail.module.base as state
 
 
 class TestWorkflowState(unittest.TestCase):

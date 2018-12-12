@@ -4,10 +4,11 @@ import os
 import shutil
 import unittest
 
+from vizier.core.loader import ClassLoader
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi, RESOURCE_DATASET
-from vizier.engine.packages.vizual.processor import VizualTaskProcessor
+from vizier.engine.packages.vizual.processor import VizualTaskProcessor, PROPERTY_API
 from vizier.filestore.fs.base import DefaultFilestore
 
 import vizier.client.command.vizual as vizual
@@ -32,7 +33,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        self.processor = VizualTaskProcessor(api =DefaultVizualApi())
+        self.processor = VizualTaskProcessor(api=DefaultVizualApi())
         self.datastore=FileSystemDatastore(DATASTORE_DIR)
         self.filestore=DefaultFilestore(FILESTORE_DIR)
 
@@ -41,6 +42,40 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         """
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
+
+    def test_create_api_from_dictionary(self):
+        """Test creating the processor instance with properties parameter
+        instead of api.
+        """
+        processor = VizualTaskProcessor(
+            properties={
+                PROPERTY_API: ClassLoader.to_dict(
+                    module_name='vizier.engine.packages.vizual.api.fs',
+                    class_name='DefaultVizualApi'
+                )
+            }
+        )
+        fh = self.filestore.upload_file(CSV_FILE)
+        cmd = vizual.load_dataset(
+            dataset_name=DATASET_NAME,
+            file_id={pckg.FILE_ID: fh.identifier},
+            validate=True
+        )
+        result = processor.compute(
+            command_id=cmd.command_id,
+            arguments=cmd.arguments,
+            context=TaskContext(
+                datastore=self.datastore,
+                filestore=self.filestore
+            )
+        )
+        self.assertIsNotNone(result.provenance.write)
+        self.assertTrue(DATASET_NAME in result.datasets)
+        dataset_id = result.datasets[DATASET_NAME]
+        self.assertEquals(result.provenance.write[DATASET_NAME], dataset_id)
+        self.assertIsNone(result.provenance.read)
+        self.assertIsNotNone(result.provenance.resources)
+        self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
 
     def load_dataset(self):
         """Load a single dataset and return the resulting database state."""
@@ -95,7 +130,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             )
         )
         self.assertFalse(DATASET_NAME in result.datasets)
-        self.assertTrue(DATASET_NAME in result.provenance.read)
+        self.assertFalse(DATASET_NAME in result.provenance.read)
+        self.assertTrue(DATASET_NAME in result.provenance.delete)
         self.assertFalse(DATASET_NAME in result.provenance.write)
 
     def test_filter_columns(self):
@@ -218,7 +254,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         )
         self.assertFalse(DATASET_NAME in result.datasets)
         self.assertTrue('xyz' in result.datasets)
-        self.assertTrue(DATASET_NAME in result.provenance.read)
+        self.assertFalse(DATASET_NAME in result.provenance.read)
+        self.assertTrue(DATASET_NAME in result.provenance.delete)
         self.assertFalse(DATASET_NAME in result.provenance.write)
         self.assertTrue('xyz' in result.provenance.write)
 

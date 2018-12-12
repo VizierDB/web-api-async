@@ -4,10 +4,12 @@ import os
 import shutil
 import unittest
 
+from vizier.core.io.base import PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
 from vizier.core.io.mem import MemObjectStore
+from vizier.core.loader import ClassLoader
 from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.driver.objectstore.repository import OBJ_VIZTRAILINDEX
-from vizier.viztrail.driver.objectstore.repository import PARA_DIRECTORY, PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
+from vizier.viztrail.driver.objectstore.repository import PARA_DIRECTORY, PARA_OBJECT_STORE
 from vizier.viztrail.driver.objectstore.viztrail import FOLDER_BRANCHES, FOLDER_MODULES
 from vizier.viztrail.driver.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA, OBJ_PROPERTIES
 from vizier.viztrail.base import PROPERTY_NAME
@@ -31,7 +33,10 @@ class TestOSViztrailRepository(unittest.TestCase):
 
     def test_create_inmem_viztrail(self):
         """Ensure that object store argument is passed oon to children."""
-        repo = OSViztrailRepository(base_path=REPO_DIR, object_store=MemObjectStore())
+        repo = OSViztrailRepository(
+            properties={PARA_DIRECTORY: REPO_DIR},
+            object_store=MemObjectStore()
+        )
         self.assertFalse(os.path.isfile(os.path.join(REPO_DIR, OBJ_VIZTRAILINDEX)))
         vt1 = repo.create_viztrail()
         vt_folder = os.path.join(REPO_DIR, vt1.identifier)
@@ -40,7 +45,7 @@ class TestOSViztrailRepository(unittest.TestCase):
 
     def test_create_viztrail(self):
         """Test creating a new viztrail."""
-        repo = OSViztrailRepository(base_path=REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertTrue(os.path.isfile(os.path.join(REPO_DIR, OBJ_VIZTRAILINDEX)))
         vt1 = repo.create_viztrail()
         vt_folder = os.path.join(REPO_DIR, vt1.identifier)
@@ -68,7 +73,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertTrue(vt1.identifier in vt_index)
         self.assertTrue(vt2.identifier in vt_index)
         # Reload the repository
-        repo = OSViztrailRepository(REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertEquals(len(repo.list_viztrails()), 2)
         vt1 = repo.get_viztrail(vt1.identifier)
         vt2 = repo.get_viztrail(vt2.identifier)
@@ -80,21 +85,21 @@ class TestOSViztrailRepository(unittest.TestCase):
 
     def test_delete_viztrail(self):
         """Test creating a new viztrail."""
-        repo = OSViztrailRepository(REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         vt1 = repo.create_viztrail()
         vt2 = repo.create_viztrail(properties={PROPERTY_NAME: 'My Viztrail'})
         # Returns false when deleting unknown viztrail
         self.assertIsNone(repo.get_viztrail(vt1.identifier + vt2.identifier))
         self.assertFalse(repo.delete_viztrail(vt1.identifier + vt2.identifier))
         # Reload the repository
-        repo = OSViztrailRepository(REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertEquals(len(repo.list_viztrails()), 2)
         self.assertTrue(repo.delete_viztrail(vt1.identifier))
         self.assertEquals(len(repo.list_viztrails()), 1)
         self.assertIsNone(repo.get_viztrail(vt1.identifier))
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         # Reload the repository
-        repo = OSViztrailRepository(REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertEquals(len(repo.list_viztrails()), 1)
         self.assertIsNone(repo.get_viztrail(vt1.identifier))
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
@@ -102,7 +107,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertTrue(repo.delete_viztrail(vt2.identifier))
         self.assertEquals(len(repo.list_viztrails()), 0)
         # Reload the repository
-        repo = OSViztrailRepository(REPO_DIR)
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertEquals(len(repo.list_viztrails()), 0)
         self.assertFalse(repo.delete_viztrail(vt1.identifier))
         self.assertFalse(repo.delete_viztrail(vt2.identifier))
@@ -110,16 +115,22 @@ class TestOSViztrailRepository(unittest.TestCase):
     def test_init(self):
         """Test the init method with different argument values."""
         with self.assertRaises(ValueError):
-            OSViztrailRepository.init(dict())
-        repo = OSViztrailRepository.init({PARA_DIRECTORY: REPO_DIR})
-        self.assertTrue(len(repo.object_store.identifier_factory()) == 8)
-        self.assertFalse(repo.object_store.keep_deleted_files)
-        repo = OSViztrailRepository.init({
-            PARA_DIRECTORY: REPO_DIR,
-            PARA_KEEP_DELETED: True,
-            PARA_LONG_IDENTIFIER: True
-        })
+            OSViztrailRepository(dict())
+        repo = OSViztrailRepository(properties={PARA_DIRECTORY: REPO_DIR})
         self.assertFalse(len(repo.object_store.identifier_factory()) == 8)
+        self.assertFalse(repo.object_store.keep_deleted_files)
+        repo = OSViztrailRepository(properties={
+            PARA_DIRECTORY: REPO_DIR,
+            PARA_OBJECT_STORE: ClassLoader.to_dict(
+                module_name='vizier.core.io.base',
+                class_name='DefaultObjectStore',
+                properties={
+                    PARA_KEEP_DELETED: True,
+                    PARA_LONG_IDENTIFIER: False
+                }
+            )
+        })
+        self.assertTrue(len(repo.object_store.identifier_factory()) == 8)
         self.assertTrue(repo.object_store.keep_deleted_files)
 
 

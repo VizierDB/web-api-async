@@ -18,25 +18,9 @@
 list of available packages.
 
 The app configuration has three main parts: API and Web service configuration,
-file server, and the workflow execution environment. The structure of the
-configuration object is as follows:
+list of available packages, and the workflow execution environment. The
+structure of the configuration object is as follows:
 
-datastore:
-    module: Name of the Python module containing data store class
-    class: Class name of data store
-    properties: Dictionary of data store specific properties
-debug: Flag indicating whether server is started in debug mode
-filestore:
-    module: Name of the Python module containing file store class
-    class: Class name of file store
-    properties: Dictionary of file store specific properties
-logs:
-    server: Log file for Web Server
-packages: List of files, each containing the declaration of commands for a supported package
-viztrails:
-    module: Name of the Python module containing repository class
-    class: Class name of viztrails repository
-    properties: Dictionary of repository specific properties
 webservice:
     server_url: Url of the server (e.g., http://localhost)
     server_port: Public server port (e.g., 5000)
@@ -49,15 +33,27 @@ webservice:
         row_limit: Default row limit for requests that read datasets
         max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
         max_file_size: Maximum size for file uploads (in byte)
+packages: # List of package declarations
+    - declarations: File containing declaration of package commands
+      parameters: Package specific configuration parameters
+engine:
+    moduleName: Name of the module containing the used engine
+    className: Class name of the used engine
+    properties: Dictionary of engine specific configuration properties
+debug: Flag indicating whether server is started in debug mode
+logs:
+    server: Log file for Web Server
 """
 
-import importlib
 import json
 import os
 import yaml
 
+from vizier.core.io.base import PARA_LONG_IDENTIFIER
+from vizier.core.loader import ClassLoader
 from vizier.engine.packages.base import PackageIndex
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
+from vizier.engine.packages.vizual.processor import PROPERTY_API
 
 import vizier.datastore.fs.base as ds
 import vizier.filestore.fs.base as fs
@@ -68,7 +64,7 @@ import vizier.viztrail.driver.objectstore.repository as vt
 ENV_CONFIG = 'VIZIERSERVER_CONFIG'
 
 """Default directory for API data."""
-ENV_DIRECTORY = '../.vizierdb'
+ENV_DIRECTORY = './.vizierdb'
 
 """Default settings."""
 DEFAULT_SETTINGS = {
@@ -77,7 +73,7 @@ DEFAULT_SETTINGS = {
         'server_port': 5000,
         'server_local_port': 5000,
         'app_path': '/vizier-db/api/v1',
-        'doc_url': 'http://cds-swg1.cims.nyu.edu/vizier-db/doc/api/v1',
+        'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/',
         'name': 'Vizier Web API',
         'defaults': {
             'row_limit': 25,
@@ -85,36 +81,37 @@ DEFAULT_SETTINGS = {
             'max_file_size': 16 * 1024 * 1024
         }
     },
-    'engine' : {
-        'moduleName': 'vizier.engine.environments.local',
-        'className': 'LocalVizierEngine',
-        'properties': {
-            'datastore': {
-                'moduleName': 'vizier.datastore.fs',
-                'className': 'FileSystemDatastore',
-                'properties': {
+    'engine' : ClassLoader.to_dict(
+        module_name='vizier.engine.environments.local',
+        class_name='DefaultLocalEngine',
+        properties={
+            'datastore': ClassLoader.to_dict(
+                module_name='vizier.datastore.fs.factory',
+                class_name='FileSystemDatastoreFactory',
+                properties={
                     ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
                 }
-            },
-            'filestore': {
-                'moduleName': 'vizier.filestore.fs.base',
-                'className': 'DefaultFilestore',
-                'properties': {
+            ),
+            'filestore': ClassLoader.to_dict(
+                module_name='vizier.filestore.fs.factory',
+                class_name='DefaultFilestoreFactory',
+                properties={
                     fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
                 }
-            },
-            'viztrails': {
-                'moduleName': 'vizier.viztrail.driver.objectstore.repository',
-                'className': 'OSViztrailRepository',
-                'properties': {
-                    vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt')
+            ),
+            'viztrails': ClassLoader.to_dict(
+                module_name='vizier.viztrail.driver.objectstore.repository',
+                class_name='OSViztrailRepository',
+                properties={
+                    vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt'),
+                    PARA_LONG_IDENTIFIER: False
                 }
-            }
+            )
         }
-    },
+    ),
     'logs': {
         'server': os.path.join(ENV_DIRECTORY, 'logs')
-    }
+    },
     'debug': True,
 }
 
@@ -146,7 +143,10 @@ class AppConfig(object):
         configuration_file: string, optional
             Optional path to configuration file
         """
-        # Read configuration from either of the following:
+        # Read configuration from given configuration file or one of the
+        # options: value oin environment variable, local config.json file, or
+        # local config.yaml file. Use the default settings if no configuration
+        # file is found.
         doc = None
         if configuration_file != None:
             if os.path.isfile(configuration_file):
@@ -155,8 +155,8 @@ class AppConfig(object):
                 raise ValueError('unknown file \'' + str(configuration_file) + '\'')
         else:
             files = [
-                configuration_file,
                 os.getenv(ENV_CONFIG),
+                './config.json',
                 './config.yaml'
             ]
             for config_file in files:
@@ -164,34 +164,43 @@ class AppConfig(object):
                     doc = read_object_from_file(config_file)
                     break
         if doc is None:
-            raise RuntimeError('no configuration file found')
+            doc = DEFAULT_SETTINGS
         # Registry of available packages. By default, only the VizUAL package is
         # pre-loaded. Additional packages are loaded from files specified in the
         # 'packages' element (optional). Note that the list may contain a
         # reference to a VizUAL package which overrides the default package
         # declaration.
-        self.packages = {PACKAGE_VIZUAL: PackageIndex(VIZUAL_COMMANDS)}
-        self.package_parameters = dict()
+        self.packages = {
+            PACKAGE_VIZUAL: PackageIndex(
+                package=VIZUAL_COMMANDS,
+                properties={
+                    PROPERTY_API: ClassLoader.to_dict(
+                        module_name='vizier.engine.packages.vizual.api.fs',
+                        class_name='DefaultVizualApi'
+                    )
+                }
+            )
+        }
         if 'packages' in doc:
             for pckg_file in doc['packages']:
                 if not 'declarations' in pckg_file:
                     raise ValueError('missing key \'declarations\' for package')
                 pckg = read_object_from_file(pckg_file['declarations'])
                 for key in pckg:
-                    self.packages[key] = PackageIndex(pckg[key])
                     if 'parameters' in pckg_file:
-                        self.package_parameters[key] = pckg_file['parameters']
-        # Create configuration object for system components data store, file
-        # store, viztrail registry, and workflow execution engine.
-        for key in ['datastore', 'filestore', 'viztrails']:
-            if key in doc:
-                obj = ComponentConfig(
-                    values=doc[key],
-                    default_values=DEFAULT_SETTINGS[key]
-                )
-            else:
-                obj = ComponentConfig(values=DEFAULT_SETTINGS[key])
-            setattr(self, key, obj)
+                        package_parameters = pckg_file['parameters']
+                    else:
+                        package_parameters = None
+                    self.packages[key] = PackageIndex(
+                        package=pckg[key],
+                        properties=package_parameters
+                    )
+        # Create a class loader instance for the engine.
+        if 'engine' in doc:
+            engine = ClassLoader(values=doc['engine'])
+        else:
+            engine = ClassLoader(values=DEFAULT_SETTINGS['engine'])
+        setattr(self, 'engine', engine)
         # Create objects for configuration of log files and web service.
         for key in ['logs', 'webservice']:
             if key in doc:
@@ -224,40 +233,14 @@ class AppConfig(object):
         base_url += self.webservice.app_path
         return base_url
 
+    def get_api_engine(self):
+        """Get the instance of the defined API engine.
 
-class ComponentConfig(object):
-    """Configuration object for system component. All components are specified
-    by the Python module and class. Component initialization is done via a
-    dictionary of configuration arguments (properties).
-    """
-    def __init__(self, values, default_values=dict()):
-        """Set the component module, class and configuration arguments
-        dictionary.
-
-        Parameters
-        ----------
-        values: dict
-            Dictionary containing component specification and arguments.
-        default_values: dict
-            Dictionary of default values.
+        Returns
+        -------
+        vizier.engine.base.VizierEngine
         """
-        if 'moduleName' in values:
-            self.module_name = values['moduleName']
-        else:
-            self.module_name = default_values['moduleName']
-        if 'className' in values:
-            self.class_name = values['className']
-        else:
-            self.class_name = default_values['className']
-        if 'properties' in values:
-            self.properties = values['properties']
-        else:
-            self.properties = default_values['properties']
-
-    def create_instance(self):
-        """Create an instance of the specified system component."""
-        module = importlib.import_module(self.module_name)
-        return getattr(module, self.class_name).init(self.properties)
+        return self.engine.get_instance(packages=self.packages)
 
 
 class ConfigObject(object):

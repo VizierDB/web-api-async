@@ -1,7 +1,7 @@
 Vizier API Configuration
 ========================
 
-The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution environment for data curation workflows, (iii) the list of available packages and their respective configuration parameters, and (iv) some server specific information (e.g., the log file folder).
+The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution environment for data curation workflows, (iii) the list of available packages and their respective configuration parameters, and (iv) additional server specific information (e.g., the log file folder).
 
 
 Configuration Parameters
@@ -45,8 +45,14 @@ The commands that are available to be executed by workflow modules are defined i
 By default, the API only supports the VizUAL and the system packages. All other packages have to be loaded explicitly when the application configuration object is created (see below). Packages are loaded from files that contain serializations of dictionaries with command definitions (either in Yaml or Json format). For an example have a look at the [Mimir Package Definition](https://github.com/VizierDB/web-api/blob/master/config/mimir.pckg.json).
 
 
-Components of Vizier Instance
------------------------------
+Vizier Engine
+-------------
+
+The **Vizier Engine** defines the interface that is used by the API for creating, deleting, and manipulating projects. Different implementations of the engine will use different implementations for datasores, filestores, vitrails repositories and backends.
+
+The class that contains the engine that is being used by a Vizier instance is defined in the *engine* section of the configuration file. The section may contain another element *properties* that contains an engine-specific dictionary of configuration parameters. This dictionary is passed to the specified engine object when it is instantiated.
+
+## Configuring the Local Vizier Engine
 
 The community edition environment runs on the local machine. Expects the definition of the datastore, filestore and viztrail repository that is used for all projects. Intended for single user that works on a single project. Uses multi-process backend.
 

@@ -16,6 +16,7 @@
 
 """Task processor for commands in the vizual package."""
 
+from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
@@ -24,21 +25,32 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 
+"""Proeprty defining the API class if instantiated from dictionary."""
+PROPERTY_API = 'api'
+
 
 class VizualTaskProcessor(TaskProcessor):
     """Implmentation of the task processor for the vizual package. The processor
     uses an instance of the vizual API to allow running on different types of
     datastores (e.g., the default datastore or the Mimir datastore).
     """
-    def __init__(self, api):
-        """Initialize the vizual API instance.
+    def __init__(self, api=None, properties=None):
+        """Initialize the vizual API instance. Either expects an API instance or
+        a dictionary from which an instance can be loaded. The second option is
+        only attempted if the given api is None.
 
         Parameters
         ----------
-        api: vizier.engine.packages.vizual.api.base.VizualApi
+        api: vizier.engine.packages.vizual.api.base.VizualApi, optional
             Instance of the vizual API
         """
-        self.api = api
+        if not api is None:
+            self.api = api
+        else:
+            # Expects a dictionary with a single element that contains the
+            # class specification
+            values = properties[PROPERTY_API]
+            self.api = ClassLoader(values=values).get_instance()
 
     def compute(self, command_id, arguments, context):
         """Compute results for the given vizual command using the set of user-
@@ -393,6 +405,11 @@ class VizualTaskProcessor(TaskProcessor):
             resources=context.resources,
             reload=reload
         )
+        # Delete the uploaded file (of load was from file). A reference to the
+        # created dataset is in the resources and will be used if the module is
+        # re-executed.
+        if not file_id is None:
+            context.filestore.delete_file(file_id)
         # Create result object
         return self.create_exec_result(
             dataset_name=ds_name,

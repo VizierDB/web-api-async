@@ -24,7 +24,7 @@ import json
 import os
 import shutil
 
-from vizier.core.util import init_value, get_unique_identifier
+from vizier.core.util import get_short_identifier, get_unique_identifier
 
 
 """Maximium nuber attempts to generate a unique identifier before an exception
@@ -32,12 +32,17 @@ is raised.
 """
 MAX_ATTEMPS = 100
 
+"""Elements for parameters when instantiating the default object store from a
+dictionary.
+"""
+PARA_KEEP_DELETED = 'keepDeletedFiles'
+PARA_LONG_IDENTIFIER = 'useLongIdentifier'
+
 
 class ObjectStore(object):
     """Abstract object store class that defines the interface methods to read
     and write objects and to maintain folders.
     """
-
     @abstractmethod
     def create_folder(self, parent_folder, identifier=None):
         """Create a new folder in the given parent folder. The folder name is
@@ -211,20 +216,29 @@ class DefaultObjectStore(ObjectStore):
     flag allows to switch between scenarios where we want to keep the full
     history of any resource that was ever created.
     """
-    def __init__(self, identifier_factory=None, keep_deleted_files=False):
+    def __init__(self, properties=None, identifier_factory=None, keep_deleted_files=False):
         """Initialize the identifier_factory and keep_deleted_files flag. By
         default the get_unique_identifier function is used to generate new
         folder and resource identifier.
 
         Parameters
         ----------
+        properties: dict()
+            Dictionary for object properties. Overwrites the default values.
         identifier_factory: func, optional
             Function to create a new unique identifier
         keep_deleted_files: bool, optional
             Flag indicating whether files and folder are actually deleted or not
         """
-        self.identifier_factory = init_value(identifier_factory, get_unique_identifier)
+        # Initialize the default values. Override them if respective properties
+        # are given.
+        self.identifier_factory = identifier_factory if not identifier_factory is None else get_unique_identifier
         self.keep_deleted_files = keep_deleted_files
+        if not properties is None:
+            if PARA_KEEP_DELETED in properties:
+                self.keep_deleted_files = properties[PARA_KEEP_DELETED]
+            if PARA_LONG_IDENTIFIER in properties and not properties[PARA_LONG_IDENTIFIER]:
+                self.identifier_factory = get_short_identifier
 
     def create_folder(self, parent_folder, identifier=None):
         """Create a new folder in the given parent folder. The folder name is

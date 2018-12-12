@@ -253,6 +253,20 @@ def validate_json_request(request, required=None, optional=None):
             raise InvalidRequest('unknown element \'' + key + '\'')
     return obj
 
+# ------------------------------------------------------------------------------
+#
+# Initialize
+#
+# ------------------------------------------------------------------------------
+
+@app.before_first_request
+def initialize():
+    """Initialize the API before the first request. This can help avoid loading
+    data twice since the API object is usually instatiated twice when the server
+    starts.
+    """
+    api.init()
+
 
 # ------------------------------------------------------------------------------
 #

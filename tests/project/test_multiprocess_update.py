@@ -30,8 +30,8 @@ REPO_DIR = './.temp/vt'
 
 CSV_FILE = './.files/dataset.csv'
 
-DATASET_NAME = 'abc'
-SECOND_DATASET_NAME = 'def'
+DATASET_NAME = 'people'
+SECOND_DATASET_NAME = 'employee'
 
 PY_ADD_ONE = """ds = vizierdb.get_dataset('""" + DATASET_NAME + """')
 age = int(ds.rows[0].get_value('Age'))
@@ -181,7 +181,21 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
-        # Insert at the start will leave all moules in error or canceled state
+        # Insert a neutral python cell at from will have no impact on the other
+        # modules
+        self.project.insert_workflow_module(
+            branch_id=branch_id,
+            before_module_id=wf.modules[0].identifier,
+            command=python_cell('print 2+2')
+        )
+        while self.project.viztrail.default_branch.head.is_active:
+            time.sleep(0.1)
+        self.assert_module_count_is(13)
+        wf = self.project.viztrail.default_branch.head
+        for module in wf.modules:
+            self.assertTrue(module.is_success)
+        # Inserting an error at the start will leave all moules in error or
+        # canceled state
         self.project.insert_workflow_module(
             branch_id=branch_id,
             before_module_id=wf.modules[0].identifier,
@@ -189,7 +203,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         )
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
-        self.assert_module_count_is(13)
+        self.assert_module_count_is(14)
         wf = self.project.viztrail.default_branch.head
         self.assertTrue(wf.modules[0].is_error)
         for module in wf.modules[1:]:
@@ -243,15 +257,16 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         require to be re-executed because they access a different dataset.
         """
         branch_id = self.project.viztrail.default_branch.identifier
-        fh = self.project.filestore.upload_file(CSV_FILE)
+        fh1 = self.project.filestore.upload_file(CSV_FILE)
+        fh2 = self.project.filestore.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier}
+            file_id={pckg.FILE_ID: fh1.identifier}
         )
         self.project.append_workflow_module(branch_id=branch_id, command=cmd)
         cmd = load_dataset(
             dataset_name=SECOND_DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier}
+            file_id={pckg.FILE_ID: fh2.identifier}
         )
         self.project.append_workflow_module(branch_id=branch_id, command=cmd)
         for i in range(10):
@@ -263,6 +278,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         wf = self.project.viztrail.default_branch.head
+        self.assertTrue(wf.get_state().is_success)
         datasets = [module.datasets for module in wf.modules[4:]]
         self.assert_module_count_is(12)
         # Replace a module that updates the first datasets. All modules that
@@ -276,6 +292,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         wf = self.project.viztrail.default_branch.head
+        self.assertTrue(wf.get_state().is_success)
         i = 0
         for module in wf.modules[4:]:
             self.assertNotEqual(datasets[i][DATASET_NAME].identifier, module.datasets[DATASET_NAME].identifier)

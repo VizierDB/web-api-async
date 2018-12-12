@@ -16,23 +16,20 @@ class TestConfig(unittest.TestCase):
         """Test the default configuration settings.
         """
         config = AppConfig(configuration_file=CONFIG_FILE)
-        self.validate_default_settings(config)
+        self.validate_default_settings(config, 'FileSystemDatastoreFactory')
         # Make sure that the configuration file is found if no parameter is
         # given
         config = AppConfig()
-        self.validate_default_settings(config)
+        self.validate_default_settings(config, 'MySystemDatastore')
 
-    def validate_default_settings(self, settings):
+    def validate_default_settings(self, settings, class_name):
         """Validate expected application settings for the default configuration
         file.
         """
         for pckg in [PACKAGE_MIMIR, PACKAGE_PLOT, PACKAGE_PYTHON, PACKAGE_VIZUAL]:
             self.assertTrue(pckg in settings.packages)
-        self.assertEquals(len(settings.package_parameters), 1)
-        self.assertTrue(PACKAGE_PYTHON in settings.package_parameters)
-        parameters = settings.package_parameters[PACKAGE_PYTHON]
-        self.assertEquals(parameters['moduleName'], 'NoModule')
-        self.assertEquals(parameters['className'], 'NoClass')
+        self.assertEquals(settings.packages[PACKAGE_PYTHON].engine['properties']['moduleName'], 'NoModule')
+        self.assertEquals(settings.packages[PACKAGE_PYTHON].engine['properties']['className'], 'NoClass')
         # API
         self.assertEquals(settings.webservice.server_url, 'http://vizier-db.info')
         self.assertEquals(settings.webservice.server_port, 80)
@@ -44,11 +41,10 @@ class TestConfig(unittest.TestCase):
         self.assertEquals(settings.webservice.defaults.max_file_size, 1024)
         self.assertEquals(settings.webservice.defaults.row_limit, 25)
         self.assertEquals(settings.webservice.defaults.max_row_limit, -1)
-        # File server
-        self.assertEquals(settings.filestore.class_name, 'NoName')
-        self.assertEquals(settings.filestore.properties['directory'], 'fs-directory')
-        # Viztrails
-        self.assertEquals(settings.viztrails.properties['directory'], '../.env/vt')
+        # Engine
+        self.assertEquals(settings.engine.module_name, 'vizier.engine.environments.local')
+        self.assertEquals(settings.engine.class_name, 'DefaultLocalEngine')
+        self.assertEquals(settings.engine.properties['datastore']['className'], class_name)
         # Misc
         self.assertEquals(settings.debug, True)
         # Logs

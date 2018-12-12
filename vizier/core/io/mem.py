@@ -17,20 +17,23 @@
 """In-memory object store. This class is primarily used for test purposes."""
 
 from vizier.core.io.base import ObjectStore, MAX_ATTEMPS
-from vizier.core.util import init_value, get_unique_identifier
+from vizier.core.io.base import PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
+from vizier.core.util import get_short_identifier, get_unique_identifier
 
 
 class MemObjectStore(ObjectStore):
     """Implements an in-memory object store. Maintains all object in a
     dictionary indexed by their object path.
     """
-    def __init__(self, identifier_factory=None, keep_deleted_files=False):
+    def __init__(self, properties=None, identifier_factory=None, keep_deleted_files=False):
         """Initialize the identifier_factory and keep_deleted_files flag. By
         default the get_unique_identifier function is used to generate new
         folder and resource identifier.
 
         Parameters
         ----------
+        properties: dict()
+            Dictionary for object properties. Overwrites the default values.
         identifier_factory: func, optional
             Function to create a new unique identifier
         keep_deleted_files: bool, optional
@@ -38,8 +41,13 @@ class MemObjectStore(ObjectStore):
         """
         self.store = dict()
         self.folders = dict()
-        self.identifier_factory = init_value(identifier_factory, get_unique_identifier)
+        self.identifier_factory = identifier_factory if not identifier_factory is None else get_unique_identifier
         self.keep_deleted_files = keep_deleted_files
+        if not properties is None:
+            if PARA_KEEP_DELETED in properties:
+                self.keep_deleted_files = properties[PARA_KEEP_DELETED]
+            if PARA_LONG_IDENTIFIER in properties and not properties[PARA_LONG_IDENTIFIER]:
+                self.identifier_factory = get_short_identifier
 
     def create_folder(self, parent_folder, identifier=None):
         """Create a new folder in the given parent folder. The folder name is

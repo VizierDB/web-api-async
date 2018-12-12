@@ -28,7 +28,7 @@ class DatastoreFactory(object):
     by a unique identifier.
     """
     @abstractmethod
-    def delete_datatore(self, identifier):
+    def delete_datastore(self, identifier):
         """Delete a datastore. This method is normally called when the project
         with which the datastore is associated is deleted.
 

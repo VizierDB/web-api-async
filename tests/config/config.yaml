@@ -12,10 +12,13 @@ webservice:
     doc_url: 'http://vizier-db.info/doc/api/v1'
     defaults:
         max_file_size: 1024
-filestore:
-    className: 'NoName'
+engine:
+    moduleName: 'vizier.engine.environments.local'
+    className: 'DefaultLocalEngine'
     properties:
-        directory: 'fs-directory'
+        datastore:
+            moduleName: 'vizier.datastore.fake'
+            className: 'MySystemDatastore'
 debug: True
 logs:
     server: 'logs'
