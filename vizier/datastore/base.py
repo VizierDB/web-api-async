@@ -21,33 +21,11 @@ workflows.
 
 from abc import abstractmethod
 
-from vizier.core.system import component_descriptor, VizierSystemComponent
 from vizier.datastore.metadata import DatasetMetadata
 
 
-class Datastore(VizierSystemComponent):
+class Datastore(object):
     """Abstract API to store and retireve datasets."""
-    def __init__(self, build):
-        """Initialize the build information. Expects a dictionary containing two
-        elements: name and version.
-
-        Raises ValueError if build dictionary is invalid.
-
-        Parameters
-        ---------
-        build : dict()
-            Build information
-        """
-        super(Datastore, self).__init__(build)
-
-    def components(self):
-        """List containing component descriptor.
-
-        Returns
-        -------
-        list
-        """
-        return [component_descriptor('datastore', self.system_build())]
 
     @abstractmethod
     def create_dataset(

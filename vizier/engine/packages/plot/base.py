@@ -44,8 +44,8 @@ PARA_XAXIS_RANGE = PARA_XAXIS + '_' + PARA_RANGE
 # Declaration of plot package commands
 PLOT_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_PLOT,
-    module_name='',
-    class_name='',
+    module_name='vizier.engine.packages.plot.processor',
+    class_name='PlotProcessor',
     commands=[
         pckg.command_declaration(
             identifier=PLOT_SIMPLE_CHART,

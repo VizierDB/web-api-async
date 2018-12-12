@@ -26,7 +26,6 @@ import json
 
 import vistrails.packages.mimir.init as mimir
 
-from vizier.core.system import build_info
 from vizier.core.util import is_valid_name
 from vizier.datastore.base import get_index_for_column
 from vizier.datastore.mimir import MimirDatasetColumn
@@ -51,8 +50,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         """
         super(MimirVizualEngine, self).__init__(
             datastore,
-            fileserver,
-            build=build_info('MimirVizualEngine')
+            fileserver
         )
 
     def delete_column(self, identifier, column):

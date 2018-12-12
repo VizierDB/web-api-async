@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Vizier Web Server - Implements the requests for the Vizier Web API as
-documented in http://cds-swg1.cims.nyu.edu/vizier/api/v1/doc/.
+documented in http://cds-swg1.cims.nyu.edu/doc/vizier-db.
 """
 from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS

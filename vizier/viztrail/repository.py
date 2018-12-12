@@ -20,27 +20,19 @@ viztrails. It provides methods to create, delete, and access viztrails.
 
 from abc import abstractmethod
 
-from vizier.core.system import VizierSystemComponent
 
-
-class ViztrailRepository(VizierSystemComponent):
+class ViztrailRepository(object):
     """Repository for viztrails. This is an abstract class that defines all
     necessary methods to maintain and manipulate viztrails.
     """
-    def __init__(self, build, viztrails=None):
-        """Initialize the build information. Expects a dictionary containing two
-        elements: name and version.
-
-        Raises ValueError if build dictionary is invalid.
+    def __init__(self, viztrails=None):
+        """Initialize the viztrail index.
 
         Parameters
         ---------
-        build : dict()
-            Build information
         viztrails: list(vizier.viztrail.base.ViztrailHandle)
             List of viztrails that are maintained by the repository
         """
-        super(ViztrailRepository, self).__init__(build)
         self.viztrails = dict()
         # Initialize the viztrail index from the given list
         if not viztrails is None:

@@ -91,8 +91,8 @@ def para_row(index):
 
 VIZUAL_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_VIZUAL,
-    module_name='',
-    class_name='',
+    module_name='vizier.engine.packages.vizual.processor',
+    class_name='VizualTaskProcessor',
     commands=[
         pckg.command_declaration(
             identifier=VIZUAL_DEL_COL,

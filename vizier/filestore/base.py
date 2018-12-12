@@ -22,8 +22,6 @@ from abc import abstractmethod
 import gzip
 
 from vizier.core.util import get_unique_identifier
-from vizier.core.system import build_info, component_descriptor
-from vizier.core.system import VizierSystemComponent
 
 
 """File format identifier."""
@@ -130,29 +128,8 @@ class FileHandle(object):
             return open(self.filepath, 'r')
 
 
-class Filestore(VizierSystemComponent):
+class Filestore(object):
     """Abstract API to upload and retrieve files."""
-    def __init__(self, build):
-        """Initialize the build information. Expects a dictionary containing two
-        elements: name and version.
-
-        Raises ValueError if build dictionary is invalid.
-
-        Parameters
-        ---------
-        build : dict()
-            Build information
-        """
-        super(Filestore, self).__init__(build)
-
-    def components(self):
-        """List containing component descriptor.
-
-        Returns
-        -------
-        list
-        """
-        return [component_descriptor('filestore', self.system_build())]
 
     @abstractmethod
     def download_file(self, uri, username=None, password=None):

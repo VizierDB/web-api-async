@@ -26,7 +26,6 @@ import os
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import get_short_identifier, get_unique_identifier
-from vizier.core.system import build_info
 from vizier.core.util import init_value
 from vizier.viztrail.driver.objectstore import VERSION_INFO
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
@@ -85,10 +84,6 @@ class OSViztrailRepository(ViztrailRepository):
         # Load viztrails and intialize the remaining instance variables by
         # calling the constructor of the super class
         super(OSViztrailRepository, self).__init__(
-            build=build_info(
-                "vizier.viztrail.driver.objectstore.viztrail.repository.OSViztrailRepository",
-                version_info=VERSION_INFO
-            ),
             viztrails=OSViztrailRepository.load_repository(
                 base_path=self.base_path,
                 viztrails_index=self.viztrails_index,

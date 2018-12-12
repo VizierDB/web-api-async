@@ -12,9 +12,8 @@ filestore:
 logs:
     server: './.vizierdb/logs'
 packages:
-    - declarations: './resources/packages/mimir.pckg.json'
-    - declarations: './resources/packages/plot.pckg.json'
-    - declarations: './resources/packages/python.pckg.json'
+    - declarations: '/home/heiko/projects/vizier/vizier-api/resources/packages/plot.pckg.json'
+    - declarations: '/home/heiko/projects/vizier/vizier-api/resources/packages/python.pckg.json'
 viztrails:
     moduleName: 'vizier.viztrail.driver.objectstore.repository'
     className: 'OSViztrailRepository'

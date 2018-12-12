@@ -30,7 +30,6 @@ from StringIO import StringIO
 
 import vistrails.packages.mimir.init as mimir
 
-from vizier.core.system import build_info
 from vizier.core.util import get_unique_identifier, min_max
 from vizier.datastore.base import DatasetHandle, DatasetColumn, DatasetRow
 from vizier.datastore.base import DataStore, encode_values, max_column_id
@@ -560,7 +559,7 @@ class MimirDatasetReader(DatasetReader):
         return self
 
 
-class MimirDataStore(DataStore):
+class MimirDataStore(Datastore):
     """Vizier data store implementation using Mimir.
 
     Maintains information about the dataset schema separately. This is necessary
@@ -582,7 +581,6 @@ class MimirDataStore(DataStore):
             Dictionary with configuration parameters. The only parameter that
             currently is expected is 'directory'
         """
-        super(MimirDataStore, self).__init__(build_info('MimirDataStore'))
         if not PARA_DIRECTORY in properties:
             raise ValueError('missing parameter \'' + PARA_DIRECTORY + '\'')
         self.base_dir = os.path.abspath(properties[PARA_DIRECTORY])

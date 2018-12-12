@@ -25,8 +25,6 @@ import tempfile
 import urllib2
 
 from vizier.core.util import get_unique_identifier
-from vizier.core.system import build_info, component_descriptor
-from vizier.core.system import VizierSystemComponent
 from vizier.filestore.base import Filestore, FileHandle
 from vizier.filestore.base import get_download_filename, get_fileformat
 
@@ -63,9 +61,6 @@ class DefaultFilestore(Filestore):
         base_path : string
             Path to the base directory.
         """
-        super(DefaultFilestore, self).__init__(
-            build_info('Default File Server', version_info=VERSION_INFO)
-        )
         # Create the base directory if it does not exist
         if not os.path.isdir(base_path):
             os.makedirs(base_path)

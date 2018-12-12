@@ -68,35 +68,10 @@ import vizier.viztrail.driver.objectstore.repository as vt
 ENV_CONFIG = 'VIZIERSERVER_CONFIG'
 
 """Default directory for API data."""
-ENV_DIRECTORY = '../.env'
+ENV_DIRECTORY = '../.vizierdb'
 
-"""Default execution environment."""
+"""Default settings."""
 DEFAULT_SETTINGS = {
-    'datastore': {
-        'moduleName': 'vizier.datastore.fs',
-        'className': 'FileSystemDatastore',
-        'properties': {
-            ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
-        }
-    },
-    'debug': True,
-    'filestore': {
-        'moduleName': 'vizier.filestore.fs.base',
-        'className': 'DefaultFilestore',
-        'properties': {
-            fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
-        }
-    },
-    'logs': {
-        'server': os.path.join(ENV_DIRECTORY, 'logs')
-    },
-    'viztrails': {
-        'moduleName': 'vizier.viztrail.driver.objectstore.repository',
-        'className': 'OSViztrailRepository',
-        'properties': {
-            vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt')
-        }
-    },
     'webservice': {
         'server_url': 'http://localhost',
         'server_port': 5000,
@@ -109,8 +84,40 @@ DEFAULT_SETTINGS = {
             'max_row_limit': -1,
             'max_file_size': 16 * 1024 * 1024
         }
+    },
+    'engine' : {
+        'moduleName': 'vizier.engine.environments.local',
+        'className': 'LocalVizierEngine',
+        'properties': {
+            'datastore': {
+                'moduleName': 'vizier.datastore.fs',
+                'className': 'FileSystemDatastore',
+                'properties': {
+                    ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
+                }
+            },
+            'filestore': {
+                'moduleName': 'vizier.filestore.fs.base',
+                'className': 'DefaultFilestore',
+                'properties': {
+                    fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
+                }
+            },
+            'viztrails': {
+                'moduleName': 'vizier.viztrail.driver.objectstore.repository',
+                'className': 'OSViztrailRepository',
+                'properties': {
+                    vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt')
+                }
+            }
+        }
+    },
+    'logs': {
+        'server': os.path.join(ENV_DIRECTORY, 'logs')
     }
+    'debug': True,
 }
+
 
 class AppConfig(object):
     """Application configuration object. This object contains all configuration

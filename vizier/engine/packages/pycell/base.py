@@ -34,8 +34,8 @@ PYTHON_SOURCE = 'source'
 """Define the python cell command structure."""
 PYTHON_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_PYTHON,
-    module_name='',
-    class_name='',
+    module_name='vizier.engine.packages.pycell.processor',
+    class_name='PyCellTaskProcessor',
     commands=[
         pckg.command_declaration(
             identifier=PYTHON_CODE,

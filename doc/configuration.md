@@ -1,7 +1,7 @@
 Vizier API Configuration
 ========================
 
-The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the file store, (iii) definition of the data store, (iv) definition of the viztrails repository, and (v) the list of available packages and their respective configuration parameters.
+The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution environment for data curation workflows, (iii) the list of available packages and their respective configuration parameters, and (iv) some server specific information (e.g., the log file folder).
 
 
 Configuration Parameters
@@ -10,24 +10,6 @@ Configuration Parameters
 The API is configured using a dictionary of configuration parameters. The parameters are divided into the following parts:
 
 ```
-datastore:
-    moduleName: Name of the Python module containing data store class
-    className: Class name of data store
-    properties: Dictionary of data store specific properties
-debug: Flag indicating whether server is started in debug mode
-filestore:
-    moduleName: Name of the Python module containing file store class
-    className: Class name of file store
-    properties: Dictionary of file store specific properties
-logs:
-    server: Log file for Web Server
-packages: # List of package declarations
-    - declarations: File containing declaration of package commands
-      parameters: Package specific configuration parameters
-viztrails:
-    moduleName: Name of the Python module containing repository class
-    className: Class name of viztrails repository
-    properties: Dictionary of repository specific properties
 webservice:
     server_url: Url of the server (e.g., http://localhost)
     server_port: Public server port (e.g., 5000)
@@ -40,6 +22,16 @@ webservice:
         row_limit: Default row limit for requests that read datasets
         max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
         max_file_size: Maximum size for file uploads (in byte)
+packages: # List of package declarations
+    - declarations: File containing declaration of package commands
+      parameters: Package specific configuration parameters
+engine:
+    moduleName: Name of the module containing the used engine
+    className: Class name of the used engine
+    properties: Dictionary of engine specific configuration properties
+debug: Flag indicating whether server is started in debug mode
+logs:
+    server: Log file for Web Server
 ```
 
 Note that a package declaration file can contain multiple packages. The *parameters* that are associated with a *declarations* element in the *packages* list will be passed to the constructor of the package engine for each of the packages in the file.
@@ -56,6 +48,8 @@ By default, the API only supports the VizUAL and the system packages. All other 
 Components of Vizier Instance
 -----------------------------
 
+The community edition environment runs on the local machine. Expects the definition of the datastore, filestore and viztrail repository that is used for all projects. Intended for single user that works on a single project. Uses multi-process backend.
+
 A running Vizier instance has four main components: (1)) data store, (2) file store, (3) viztrails repository, and (4) workflow execution engine. For each of these components different implementations are possible. When initializing the instance the components that are to be used are loaded based on the respective configuration parameters.
 
 
@@ -65,7 +59,7 @@ The configuration parameter for the default viztrails repository are:
 
 - *directory*: Path to base directory on file system where viztrails resources are being stored
 - *keepDeletedFiles*: Boolean flag that indicates whether files are being physicaly deleted (False) or kept (True) when a viztrail or branch is deleted. Default is False.
-- *useLongIdentifier*: Use long unique identifier if Ture or short eight character identifier if False. Default is False
+- *useLongIdentifier*: Use long unique identifier if True or short eight character identifier if False. Default is False
 
 
 Initialization

@@ -26,8 +26,10 @@ Internally the API is further divided into four parts that deal with the file
 store, data store, viztrail repository and the workflow execution engine.
 """
 
-from vizier.api.filestore import FilestoreApi
-from vizier.api.viztrails import ViztrailRepositoryApi
+from vizier.api.webservice.routes import UrlFactory
+from vizier.api.webservice.serialize import HATEOAS
+from vizier.core import VERSION_INFO
+from vizier.core.timestamp import get_current_time
 
 
 class VizierApi(object):
@@ -39,7 +41,7 @@ class VizierApi(object):
     that are necessary for the Web Service, i.e., file store, data store,
     viztrail repository, and workflow execution engine.
     """
-    def __init__(self, filestore, viztrails_repository):
+    def __init__(self, config):
         """Initialize the API components.
 
         Parameters
@@ -49,8 +51,26 @@ class VizierApi(object):
         viztrails_repository: vizier.viztrail.repository.ViztrailRepository
             Viztrail manager for the API instance
         """
-        self.filestore = FilestoreApi(filestore)
-        self.projects = ViztrailRepositoryApi(viztrails_repository)
+        self.api = config.get_api_engine()
+        self.urls = UrlFactory(config)
+        self.service_descriptor = {
+            'name': config.webservice.name,
+            'version': VERSION_INFO,
+            'startedAt': get_current_time().isoformat(),
+            'defaults': {
+                'maxFileSize': config.webservice.defaults.max_file_size
+            },
+            'environment': {
+                'name': api.name,
+                'version': api.version
+            }
+            'links': HATEOAS({
+                'self': self.urls.service_descriptor(),
+                'doc': config.webservice.doc_url,
+                'projects:create': self.urls.create_project(),
+                'projects:list': self.urls.list_projects()
+            })
+        }
 
     # --------------------------------------------------------------------------
     # Service
@@ -65,17 +85,3 @@ class VizierApi(object):
         dict
         """
         return self.service_descriptor
-
-    def system_build(self):
-        """Returns a dictionary with information about individual system
-        components, including version information for software components.
-
-        Returns
-        -------
-        dict
-        """
-        components = list()
-        components.extend(self.datastore.components())
-        components.extend(self.filestore.components())
-        components.extend(self.projects.components())
-        return serialize.SERVICE_BUILD(components, self.urls)

@@ -26,7 +26,6 @@ import shutil
 import tempfile
 import urllib2
 
-from vizier.core.system import build_info
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import Datastore
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
@@ -62,12 +61,6 @@ class FileSystemDatastore(Datastore):
         base_path : string
             Path to base directory for the datastore
         """
-        super(FileSystemDatastore, self).__init__(
-            build_info(
-                name='vizier.datastore.fs.base.FileSystemDatastore',
-                version_info=VERSION_INFO
-            )
-        )
         # Create the base directory if it does not exist
         self.base_path = os.path.abspath(base_path)
         if not os.path.isdir(self.base_path):
