@@ -218,6 +218,15 @@ class ViztrailHandle(NamedObject):
         """
         return branch_id in self.branches
 
+    def is_default_branch(self, branch_id):
+        """Test if a given branch is the default branch.
+
+        Returns
+        -------
+        bool
+        """
+        return self.default_branch.identifier == branch_id
+
     @property
     def last_modified_at(self):
         """The timestamp of last modification is either the time when the

@@ -15,21 +15,21 @@
 # limitations under the License.
 
 """This module contains helper methods for the webservice that are used to
-serialize branches.
+serialize file resources.
 """
 
 import vizier.api.serialize.base as serialize
 
 
-def BRANCH_DESCRIPTOR(project, branch, urls):
-    """Dictionary serialization for branch descriptor.
+def FILE_HANDLE(f_handle, project, urls):
+    """Dictionary serialization for a file handle.
 
     Parameters
     ----------
+    f_handle : vizier.filestore.base.FileHandle
+        File handle
     project: vizier.engine.project.ProjectHandle
         Handle for the containing project
-    branch : vizier.viztrail.branch.BranchHandle
-        Branch handle
     urls: vizier.api.webservice.routes.UrlFactory
         Factory for resource urls
 
@@ -38,16 +38,20 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
     dict
     """
     project_id = project.identifier
-    branch_id = branch.identifier
-    return {
-        'id': branch_id,
-        'isDefault': project.viztrail.is_default_branch(branch_id),
-        'properties': serialize.ANNOTATIONS(branch.properties),
+    file_id = f_handle.identifier
+    # At the moment the self reference and the download Url are identical
+    download_url = urls.file_download(project_id, file_id)
+    obj = {
+        'id': file_id,
+        'name': f_handle.file_name,
         'links': serialize.HATEOAS({
-            'self': urls.get_branch(project_id, branch_id),
-            'branch:delete': urls.delete_branch(project_id, branch_id),
-            'branch:head': urls.get_branch_head(project_id, branch_id),
-            'branch:project': urls.get_project(project_id),
-            'branch:update': urls.update_branch(project_id, branch_id)
+            'self': download_url,
+            'file:download': download_url
         })
     }
+    # Add mimetype and encoding if not None
+    if not f_handle.mimetype is None:
+        obj['mimetype'] = f_handle.mimetype
+    if not f_handle.encoding is None:
+        obj['encoding'] = f_handle.encoding
+    return obj

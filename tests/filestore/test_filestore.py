@@ -54,7 +54,7 @@ class TestDefaultFilestore(unittest.TestCase):
         fh2 = db.get_file(fh1.identifier)
         self.assertEquals(fh1.identifier, fh2.identifier)
         self.assertEquals(fh1.filepath, fh2.filepath)
-        self.assertEquals(fh1.file_format, fh2.file_format)
+        self.assertEquals(fh1.mimetype, fh2.mimetype)
         # Ensure that the file parses as a CSV file
         with fh1.open() as csvfile:
             rows = 0
@@ -83,7 +83,7 @@ class TestDefaultFilestore(unittest.TestCase):
         db = DefaultFilestore(SERVER_DIR)
         fh = db.upload_file(CSV_FILE)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.file_format, fs.FORMAT_CSV)
+        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, fh.identifier, METADATA_FILENAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
@@ -92,7 +92,7 @@ class TestDefaultFilestore(unittest.TestCase):
         db = DefaultFilestore(SERVER_DIR)
         fh = db.get_file(fh.identifier)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.file_format, fs.FORMAT_CSV)
+        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
         # Add files with other valid suffixes
         fh = db.upload_file(CSV_FILE)
@@ -119,7 +119,7 @@ class TestDefaultFilestore(unittest.TestCase):
         file = FileStorage(filename=CSV_FILE)
         fh = db.upload_stream(file=file, file_name=os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.file_format, fs.FORMAT_CSV)
+        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
         self.assertTrue(os.path.isfile(fh.filepath))
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
 

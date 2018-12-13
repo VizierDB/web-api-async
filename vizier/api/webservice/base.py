@@ -27,11 +27,17 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 from vizier.api.webservice.routes import UrlFactory
-from vizier.api.serialize.base import HATEOAS
-from vizier.api.serialize.project import PROJECT_DESCRIPTOR, PROJECT_HANDLE
 from vizier.core import VERSION_INFO
 from vizier.core.timestamp import get_current_time
+from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.command import ModuleCommand
 
+import vizier.api.serialize.base as serialize
+import vizier.api.serialize.branch as serialbr
+import vizier.api.serialize.files as serialfs
+import vizier.api.serialize.module as serialmd
+import vizier.api.serialize.project as serialpr
+import vizier.api.serialize.workflow as serialwf
 
 
 class VizierApi(object):
@@ -66,11 +72,11 @@ class VizierApi(object):
                 'name': self.engine.name,
                 'version': self.engine.version
             },
-            'links': HATEOAS({
+            'links': serialize.HATEOAS({
                 'self': self.urls.service_descriptor(),
-                'doc': config.webservice.doc_url,
-                'projects:create': self.urls.create_project(),
-                'projects:list': self.urls.list_projects()
+                'doc': self.urls.api_doc(),
+                'project:create': self.urls.create_project(),
+                'project:list': self.urls.list_projects()
             })
         }
 
@@ -110,7 +116,7 @@ class VizierApi(object):
         """
         # Create a new project and return the serialized descriptor
         project = self.engine.create_project(properties=properties)
-        return PROJECT_DESCRIPTOR(project, self.urls)
+        return serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
 
     def delete_project(self, project_id):
         """Delete the project with given identifier. Deletes all resources that
@@ -145,12 +151,16 @@ class VizierApi(object):
         -------
         dict
         """
-        # Retrieve the project from the repository to ensure that it exists.
+        # Retrieve the project from the repository to ensure that it exists
         project = self.engine.get_project(project_id)
         if project is None:
             return None
         # Get serialization for project handle.
-        return PROJECT_HANDLE(project, self.urls)
+        return serialpr.PROJECT_HANDLE(
+            project=project,
+            packages=self.engine.packages,
+            urls=self.urls
+        )
 
     def list_projects(self):
         """Returns a list of descriptors for all projects that are currently
@@ -162,12 +172,12 @@ class VizierApi(object):
         """
         return {
             'projects': [
-                PROJECT_DESCRIPTOR(project, self.urls)
+                serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
                     for project in self.engine.list_projects()
             ],
-            'links': HATEOAS({
+            'links': serialize.HATEOAS({
                 'self': self.urls.list_projects(),
-                'projects:create': self.urls.create_project()
+                'project:create': self.urls.create_project()
             })
         }
 
@@ -189,24 +199,66 @@ class VizierApi(object):
         dict
             Serialization of the project handle
         """
-        # Retrieve the project from the repository to ensure that it exists.
+        # Retrieve the project from the repository to ensure that it exists
         project = self.engine.get_project(project_id)
         if project is None:
             return None
         # Update properties that are associated with the viztrail. Make sure
         # that a new project name, if given, is not the empty string.
-        if 'name' in properties:
-            project_name = properties['name']
-            if not project_name is None:
-                if project_name == '':
-                    raise ValueError('not a valid project name')
+        validate_name(properties, message='not a valid project name')
         project.viztrail.properties.update(properties)
         # Return serialization for project handle.
-        return PROJECT_DESCRIPTOR(project, self.urls)
+        return serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
 
     # --------------------------------------------------------------------------
     # Branches
     # --------------------------------------------------------------------------
+    def create_branch(
+        self, project_id, branch_id=None, workflow_id=None, module_id=None,
+        properties=None
+    ):
+        """Create a new branch for a given project. The branch point is
+        specified by the branch_id, workflow_id, and module_id parameters. If
+        all values are None an empty branch is created.
+
+        The properties for the new branch are set from the given properties
+        dictionary.
+
+        Returns None if the specified project does not exist. Raises ValueError
+        if the specified branch point does not exists.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string, optional
+            Unique branch identifier
+        workflow_id: string, optional
+            Unique workflow identifier
+        module_id: string, optional
+            Unique module identifier
+        properties: dict(), optional
+            Properties for new workflow branch
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        if branch_id is None and workflow_id is None and module_id is None:
+            # Create an empty branch if the branch point is not specified
+            branch = project.viztrail.create_branch(properties=properties)
+            return serialbr.BRANCH_DESCRIPTOR(
+                branch=branch,
+                project=project,
+                urls=self.urls
+            )
+        else:
+            return None
+
     def delete_branch(self, project_id, branch_id):
         """Delete the branch with the given identifier from the given
         project.
@@ -227,13 +279,13 @@ class VizierApi(object):
         -------
         bool
         """
-        # Delete viztrail branch. The result is None if either the viztrail or
-        # the branch does not exist.
-        viztrail = self.viztrails.delete_branch(
-            viztrail_id=project_id,
-            branch_id=branch_id
-        )
-        return not viztrail is None
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return False
+        # Delete viztrail branch. The result indicates if the branch existed
+        # or not.
+        return project.viztrail.delete_branch(branch_id=branch_id)
 
     def get_branch(self, project_id, branch_id):
         """Retrieve a branch from a given project.
@@ -280,17 +332,202 @@ class VizierApi(object):
         -------
         dict
         """
-        # Get the viztrail to ensure that it exists
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
             return None
         # Get the specified branch
-        if not branch_id in viztrail.branches:
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
             return None
-        # Update properties that are associated with the workflow
-        viztrail.branches[branch_id].properties.update_properties(properties)
-        return serialize.BRANCH_HANDLE(
-            viztrail,
-            viztrail.branches[branch_id],
+        # Update branch properties and return branch descriptor. Ensure that
+        # the branch name is not set to an invalid value.
+        validate_name(properties, message='not a valid branch name')
+        branch.properties.update(properties)
+        return serialbr.BRANCH_DESCRIPTOR(
+            branch=branch,
+            project=project,
             urls=self.urls
         )
+
+    # --------------------------------------------------------------------------
+    # Workflows
+    # --------------------------------------------------------------------------
+    def append_module(self, project_id, branch_id, package_id, command_id, arguments):
+        """Append a new module to the head of the identified project branch.
+        The module command is identified by the package and command identifier.
+        Arguments is a list of command arguments.
+
+        Raises ValueError if the command is unknown or the command arguments
+        cannot be validated.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        branch_id: string
+            Unique workflow branch identifier
+        package_id: string
+            Unique package identifier
+        command_id: string
+            Unique command identifier
+        arguments: list()
+            List of dictionaries representing the user-provided command
+            arguments
+
+        Returns
+        -------
+        dict()
+        """
+        # Retrieve the project and branch from the repository to ensure that
+        # they exist. Run this part first to ensure that all requested resources
+        # exist before validating the command.
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
+            return None
+        # Create module command (will ensure that it is a valid command) and
+        # append it to the workflow at the branch head. The result is the handle
+        # for the appended module.
+        module = project.append_workflow_module(
+            branch_id=branch_id,
+            command=ModuleCommand(
+                package_id=package_id,
+                command_id=command_id,
+                arguments=arguments,
+                packages=self.engine.packages
+            )
+        )
+        return serialmd.MODULE_HANDLE(
+            project=project,
+            branch=branch,
+            module=module,
+            urls=self.urls
+        )
+
+    def get_workflow(self, project_id, branch_id, workflow_id=None):
+        """Retrieve a workflow from a given project branch. If the workflow
+        identifier is omitted, the handle for the head of the branch is
+        returned.
+
+        Returns None if the project, branch, or workflow do not exist.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        branch_id: string
+            Unique workflow branch identifier
+        workflow_id: string, optional
+            Unique identifier for workflow
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Get the specified branch to ensure that it exists
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
+            return None
+        # If the branch is empty we return a special empty workflow handle
+        if branch.head is None:
+            return serialwf.EMPTY_WORKFLOW_HANDLE(
+                project=project,
+                branch=branch,
+                urls=self.urls
+            )
+        else:
+            return serialwf.WORKFLOW_HANDLE(
+                project=project,
+                branch=branch,
+                workflow=branch.head,
+                urls=self.urls
+            )
+
+    # --------------------------------------------------------------------------
+    # Files
+    # --------------------------------------------------------------------------
+    def get_file(self, project_id, file_id):
+        """Get the handle for given file. The result is None if the project or
+        file are unknown.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        file_id: string
+            Unique file identifier
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        return project.filestore.get_file(file_id)
+
+    def upload_file(self, project_id, file, file_name):
+        """Upload file to the filestore that is associated with the given
+        project. The file is uploaded from a given file stream.
+
+        Returns serialization of the handle for the created file or None if the
+        project is unknown.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        file: werkzeug.datastructures.FileStorage
+            File object (e.g., uploaded via HTTP request)
+        file_name: string
+            Name of the file
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        # Retrieve the project from the repository to ensure that it exists
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Upload file to projects filestore and return a serialization of the
+        # returned file handle
+        f_handle = project.filestore.upload_stream(
+            file=file,
+            file_name=file_name
+        )
+        return serialfs.FILE_HANDLE(
+            f_handle=f_handle,
+            project=project,
+            urls=self.urls
+        )
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def validate_name(properties, message='not a valid name'):
+    """Ensure that a name property (if given) is not None or the empty string.
+    Will raise a ValueError in case of an invalid name.
+
+    Parameters
+    ----------
+    properties: dict()
+        Dictionary of resource properties
+    message: string, optional
+        Error message if exception is thrown
+    """
+    if PROPERTY_NAME in properties:
+        project_name = properties[PROPERTY_NAME]
+        if not project_name is None:
+            if project_name.strip() == '':
+                raise ValueError(message)

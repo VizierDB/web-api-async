@@ -18,29 +18,29 @@
 and need to keep as a local copy because they are not accessible via an Url.
 """
 
-from abc import abstractmethod
 import gzip
+import mimetypes
+
+from abc import abstractmethod
 
 from vizier.core.util import get_unique_identifier
 
 
 """File format identifier."""
-FORMAT_CSV = 'csv'
-FORMAT_CSV_GZIP = 'csv:gzip'
-FORMAT_TSV = 'tsv'
-FORMAT_TSV_GZIP = 'tsv:gzip'
+FORMAT_CSV = 'text/csv'
+FORMAT_TSV = 'text/tab-separated-values'
 
-FILE_FORMATS = [FORMAT_CSV, FORMAT_CSV_GZIP, FORMAT_TSV, FORMAT_TSV_GZIP]
+ENCODING_GZIP = 'gzip'
 
 
 class FileHandle(object):
     """File handle for an uploaded file."""
-    def __init__(self, identifier, filepath, file_name, file_format=None):
+    def __init__(self, identifier, filepath, file_name, mimetype=None, encoding=None):
         """Initialize the file identifier, the (full) file path, the file
-        format, and the file creation timestamp.
+        format, and the file encoding (for compressed files).
 
-        If the format of the file is not one of the known formats it has to be
-        None. Raises ValueError if an invalid file format is specified.
+        The file encoding may be None. If the mimetype is None an attempt is
+        made to guess the mime type.
 
         Parameters
         ----------
@@ -50,32 +50,33 @@ class FileHandle(object):
             Absolute path to file on disk
         file_name: string
             Base name of the original file
-        file_format: string, optional
-            File format identifier or None if unknown
+        mimetype: string
+            The (assumed) Mime type of the file
+        encoding: string
+            Name of the program used to encode the file (if compressed)> May be
+            None
         """
-        # Ensure that a valid file format has been given
-        if not file_format is None:
-            if not file_format in FILE_FORMATS:
-                raise ValueError('invalid file format \'' + str(file_format) + '\'')
-        # Initialize the class variables
         self.identifier = identifier
         self.filepath = filepath
         self.file_name = file_name
-        self.file_format = file_format
+        if mimetype is None:
+            type, encoding = mimetypes.guess_type(url=file_name)
+            self.mimetype = type
+            self.encoding = encoding
+        else:
+            self.mimetype = mimetype
+            self.encoding = encoding
 
     @property
     def compressed(self):
         """Flag indicating whether the file is in gzip format. This is currently
-        determined by the file format value. If the file format is unknown the
-        result is False.
+        determined by the value of the file encoding.
 
         Returns
         -------
         bool
         """
-        if not self.file_format is None:
-            return self.file_format in [FORMAT_CSV_GZIP, FORMAT_TSV_GZIP]
-        return False
+        return self.encoding == ENCODING_GZIP
 
     @property
     def delimiter(self):
@@ -86,11 +87,10 @@ class FileHandle(object):
         -------
         string
         """
-        if not self.file_format is None:
-            if self.file_format in [FORMAT_CSV, FORMAT_CSV_GZIP]:
-                return ','
-            else:
-                return '\t'
+        if self.mimetype ==  FORMAT_CSV:
+            return ','
+        elif self.mimetype == FORMAT_TSV:
+            return '\t'
         return None
 
     @property
@@ -102,7 +102,7 @@ class FileHandle(object):
         -------
         bool
         """
-        return not self.file_format is None
+        return self.mimetype in [FORMAT_CSV, FORMAT_TSV]
 
     @property
     def name(self):
@@ -257,27 +257,3 @@ def get_download_filename(url, info):
                 filename = content[content.rfind('filename="') + 11:]
                 return filename[:filename.find('"')]
     return 'download'
-
-
-def get_fileformat(filename):
-    """Determine the file type based on the file name suffix. If the suffix
-    is unknown the result is None.
-
-    Parameters
-    ----------
-    filename: string
-        File name
-
-    Returns
-    -------
-    string
-    """
-    if filename.endswith('.csv'):
-        return FORMAT_CSV
-    elif filename.endswith('.csv.gz'):
-        return FORMAT_CSV_GZIP
-    elif filename.endswith('.tsv'):
-        return FORMAT_TSV
-    elif filename.endswith('.tsv.gz'):
-        return FORMAT_TSV_GZIP
-    return None

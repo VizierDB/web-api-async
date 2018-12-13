@@ -27,7 +27,7 @@ import urllib2
 
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import Filestore, FileHandle
-from vizier.filestore.base import get_download_filename, get_fileformat
+from vizier.filestore.base import get_download_filename
 
 
 """File store constants."""
@@ -46,8 +46,8 @@ class DefaultFilestore(Filestore):
     given base directory. Each subfolder contains the uploaded file (named
     file.dat for convenience), and the metadata file properties.json.
 
-    The metadata object is a dictionary with two elements: originalFilename
-    and fileFormat.
+    The metadata object is a dictionary with three elements: originalFilename
+    and mimeType, and encoding.
     """
     def __init__(self, base_path):
         """Initialize the base directory that is used for file storage. The
@@ -114,8 +114,7 @@ class DefaultFilestore(Filestore):
         f_handle = FileHandle(
             identifier,
             filepath=output_file,
-            file_name=filename,
-            file_format=get_fileformat(filename)
+            file_name=filename
         )
         # Write metadata file
         write_metadata_file(file_dir, f_handle)
@@ -136,12 +135,13 @@ class DefaultFilestore(Filestore):
         """
         file_dir =self.get_file_dir(identifier)
         if os.path.isdir(file_dir):
-            file_name, file_format = read_metadata_file(file_dir)
+            file_name, mimetype, encoding = read_metadata_file(file_dir)
             return FileHandle(
                 identifier,
                 filepath=os.path.join(file_dir, DATA_FILENAME),
                 file_name=file_name,
-                file_format=file_format
+                mimetype=mimetype,
+                encoding=encoding
             )
         return None
 
@@ -178,12 +178,13 @@ class DefaultFilestore(Filestore):
         for f_name in os.listdir(self.base_path):
             dir_name = os.path.join(self.base_path, f_name)
             if os.path.isdir(dir_name):
-                file_name, file_format = read_metadata_file(dir_name)
+                file_name, mimetype, encoding = read_metadata_file(dir_name)
                 f_handle = FileHandle(
                     f_name,
                     filepath=os.path.join(dir_name, DATA_FILENAME),
                     file_name=file_name,
-                    file_format=file_format
+                    mimetype=mimetype,
+                    encoding=encoding
                 )
                 result.append(f_handle)
         return result
@@ -217,8 +218,7 @@ class DefaultFilestore(Filestore):
         f_handle = FileHandle(
             identifier,
             filepath=output_file,
-            file_name=name,
-            file_format=get_fileformat(filename)
+            file_name=name
         )
         # Write metadata file
         write_metadata_file(file_dir, f_handle)
@@ -248,8 +248,7 @@ class DefaultFilestore(Filestore):
         f_handle = FileHandle(
             identifier,
             filepath=output_file,
-            file_name=file_name,
-            file_format=get_fileformat(file_name)
+            file_name=file_name
         )
         # Write metadata file
         write_metadata_file(file_dir, f_handle)
@@ -262,7 +261,7 @@ class DefaultFilestore(Filestore):
 
 def read_metadata_file(file_dir):
     """Read metadata information for the specified file. Returns the original
-    file name and the file format.
+    file name, the mime type and encoding (the last two values may be None).
 
     Parameters
     ----------
@@ -271,13 +270,13 @@ def read_metadata_file(file_dir):
 
     Returns
     -------
-    (string, string)
+    (string, string, string)
     """
     metadata_file = os.path.join(file_dir, METADATA_FILENAME)
     with open(metadata_file, 'r') as f:
         obj = json.load(f)
-    return obj['originalFilename'], obj['fileFormat']
-    
+    return obj['originalFilename'], obj['mimeType'], obj['encoding']
+
 
 def write_metadata_file(file_dir, f_handle):
     """Write the metadata file for the given file handle.
@@ -293,5 +292,6 @@ def write_metadata_file(file_dir, f_handle):
     with open(metadata_file, 'w') as f:
         json.dump({
             'originalFilename': f_handle.file_name,
-            'fileFormat': f_handle.file_format
+            'mimeType': f_handle.mimetype,
+            'encoding': f_handle.encoding
         }, f)

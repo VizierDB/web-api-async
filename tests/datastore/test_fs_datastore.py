@@ -11,13 +11,14 @@ from vizier.datastore.fs.base import validate_dataset
 from vizier.filestore.fs.base import DefaultFilestore
 from vizier.filestore.base import FileHandle, FORMAT_TSV
 
-STORE_DIR = './.tmp'
+BASE_DIR = './.tmp'
+STORE_DIR = './.tmp/ds'
+FSSTORE_DIR = './.tmp/fs'
 
 FILE = FileHandle(
     identifier='0000',
     filepath='./.files/w49k-mmkh.tsv',
-    file_name='w49k-mmkh.tsv',
-    file_format=FORMAT_TSV
+    file_name='w49k-mmkh.tsv'
 )
 
 # Note that some tests access an external resource to test download capabilities.
@@ -30,16 +31,18 @@ class TestFileSystemDatastore(unittest.TestCase):
     def setUp(self):
         """Create an empty datastore directory."""
         # Delete datastore directory if it exists
-        if os.path.isdir(STORE_DIR):
-            shutil.rmtree(STORE_DIR)
+        if os.path.isdir(BASE_DIR):
+            shutil.rmtree(BASE_DIR)
         # Create new datastore directory
+        os.makedirs(BASE_DIR)
         os.makedirs(STORE_DIR)
+        os.makedirs(FSSTORE_DIR)
 
     def tearDown(self):
         """Clean-up by deleting the datastore directory.
         """
-        if os.path.isdir(STORE_DIR):
-            shutil.rmtree(STORE_DIR)
+        if os.path.isdir(BASE_DIR):
+            shutil.rmtree(BASE_DIR)
 
     def test_create_base(self):
         """Test that the datastore base directory is created if it does not
@@ -88,7 +91,7 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertFalse(os.path.isfile(os.path.join(dataset_dir, METADATA_FILE)))
         self.validate_class_size_dataset(ds)
         # Download file into a given filestore
-        fs = DefaultFilestore(STORE_DIR)
+        fs = DefaultFilestore(FSSTORE_DIR)
         ds, fh = store.download_dataset(
             uri=URI,
             filestore=fs

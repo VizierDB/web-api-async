@@ -111,7 +111,7 @@ paths:
                         $ref: "#/definitions/ProjectHandle"
                 404:
                     description: Unknown project
-        post:
+        put:
             summary: Update project properties
             description: Updates the set of user-defined properties for a given project
             operationId: updateProjectProperties
@@ -137,36 +137,15 @@ paths:
                     schema:
                         $ref: '#/definitions/ProjectDescriptor'
     #
-    # Workflows
+    # Branches
     #
     /projects/{projectId}/branches:
-        get:
-            summary: Get project branches
-            description: Get list of workflow branches that are associated with a project
-            operationId: getProjectBranches
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Project workflow
-                    schema:
-                        $ref: '#/definitions/BranchListing'
-                404:
-                    description: Unknown project
         post:
             summary: Create project branch
             description: Create a new workflow branch within a project
             operationId: createProjectBranch
             tags:
-                - workflow
+                - branch
             parameters:
                 - name: projectId
                   in: path
@@ -185,7 +164,7 @@ paths:
                 200:
                     description: Descriptor for new workflow branch
                     schema:
-                        $ref: '#/definitions/BranchHandle'
+                        $ref: '#/definitions/BranchDescriptor'
                 400:
                     description: Invalid branch properties
                 404:
@@ -196,7 +175,7 @@ paths:
             description: Delete workflow branch from a given project
             operationId: deleteProjectBranch
             tags:
-                - workflow
+                - branch
             parameters:
                 - name: projectId
                   in: path
@@ -217,10 +196,10 @@ paths:
                     description: Unknown project or branch
         get:
             summary: Get project branch
-            description: Get information about project branch with given identifier
+            description: Get full history of the branch
             operationId: getProjectBranch
             tags:
-                - workflow
+                - branch
             parameters:
                 - name: projectId
                   in: path
@@ -241,6 +220,39 @@ paths:
                         $ref: '#/definitions/BranchHandle'
                 404:
                     description: Unknown project or branch
+        put:
+            summary: Update branch properties
+            description: Updates the set of user-defined properties for a given project branch
+            operationId: updateBranchProperties
+            tags:
+                - branch
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: properties
+                  in: body
+                  required: true
+                  description: List of user-defined properties
+                  schema:
+                      $ref: '#/definitions/ObjectPropertyUpdateStmt'
+            produces:
+              - application/json
+            responses:
+                200:
+                    description: Successful update
+                    schema:
+                        $ref: "#/definitions/BranchDescriptor"
+    #
+    # Workflows
+    #
     /projects/{projectId}/branches/{branchId}/head:
         get:
             summary: Get branch head
@@ -268,7 +280,6 @@ paths:
                         $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project, branch, or workflow
-    /projects/{projectId}/branches/{branchId}/head/modules:
         post:
             summary: Append to branch head
             description: Append module to workflow at HEAD of given branch
@@ -296,13 +307,13 @@ paths:
                 - application/json
             responses:
                 200:
-                    description: Modified workflow handle
+                    description: Handle for appended module
                     schema:
-                        $ref: '#/definitions/WorkflowUpdateResult'
+                        $ref: '#/definitions/ModuleHandle'
                 400:
                     description: Invalid module statement
                 404:
-                    description: Unknown project, branch, or workflow
+                    description: Unknown project or branch
     /projects/{projectId}/branches/{branchId}/workflows/{workflowId}:
         get:
             summary: Get workflow
@@ -325,7 +336,7 @@ paths:
                   in: path
                   required: true
                   description: Unique workflow identifier
-                  type: integer
+                  type: string
             produces:
                 - application/json
             responses:
@@ -333,77 +344,6 @@ paths:
                     description: Workflow handle
                     schema:
                         $ref: '#/definitions/WorkflowHandle'
-                404:
-                    description: Unknown project, branch, or workflow
-    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules:
-        get:
-            summary: Get workflow modules
-            description: Get all modules in a given workflow
-            operationId: getWorkflowModules
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: integer
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Workflow modules
-                    schema:
-                        $ref: '#/definitions/WorkflowModules'
-                404:
-                    description: Unknown project, branch, or workflow
-        post:
-            summary: Append module
-            description: Append module to workflow and execute the resulting workflow
-            operationId: appendModule
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: integer
-                - name: module
-                  in: body
-                  required: true
-                  description: Definition of module
-                  schema:
-                      $ref: '#/definitions/ModuleStatement'
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Modified workflow handle
-                    schema:
-                        $ref: '#/definitions/WorkflowUpdateResult'
-                400:
-                    description: Invalid module statement
                 404:
                     description: Unknown project, branch, or workflow
     /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}:
@@ -428,7 +368,7 @@ paths:
                   in: path
                   required: true
                   description: Unique workflow identifier
-                  type: integer
+                  type: string
                 - name: moduleId
                   in: path
                   required: true
@@ -464,12 +404,12 @@ paths:
                   in: path
                   required: true
                   description: Unique workflow identifier
-                  type: integer
+                  type: string
                 - name: moduleId
                   in: path
                   required: true
                   description: Identifier of module before which the new module is inserted
-                  type: integer
+                  type: string
                 - name: module
                   in: body
                   required: true
@@ -508,12 +448,12 @@ paths:
                   in: path
                   required: true
                   description: Unique workflow identifier
-                  type: integer
+                  type: string
                 - name: moduleId
                   in: path
                   required: true
                   description: Identifier of module that is being replaced
-                  type: integer
+                  type: string
                 - name: module
                   in: body
                   required: true
@@ -531,80 +471,6 @@ paths:
                     description: Invalid module statement
                 404:
                     description: Unknown project, branch, workflow, or module
-    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}/views/{viewId}:
-        get:
-            summary: Get dataset view
-            description: Access content of a dataset view for a given workflow module version
-            operationId: getDatasetChartView
-            tags:
-                - workflow
-                - chart
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: integer
-                - name: moduleId
-                  in: path
-                  required: true
-                  description: Identifier of module
-                  type: integer
-                - name: viewId
-                  in: path
-                  required: true
-                  description: Identifier of chart view
-                  type: string
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Dataset chart view content
-                    schema:
-                        $ref: '#/definitions/DatasetChartView'
-                404:
-                    description: Unknown project, branch, workflow, module, or view
-    /projects/{projectId}/branches/{branchId}/properties:
-        post:
-            summary: Update branch properties
-            description: Updates the set of user-defined properties for a given project branch
-            operationId: updateBranchProperties
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: properties
-                  in: body
-                  required: true
-                  description: List of user-defined properties
-                  schema:
-                      $ref: '#/definitions/ObjectPropertyUpdateStmt'
-            produces:
-              - application/json
-            responses:
-                200:
-                    description: Successful update
-                    schema:
-                        $ref: "#/definitions/BranchHandle"
     #
     # Notebooks
     #
@@ -615,7 +481,6 @@ paths:
             operationId: getNotebook
             tags:
                 - notebook
-                - workflow
             parameters:
                 - name: project
                   in: query
@@ -645,128 +510,23 @@ paths:
     #
     # Files
     #
-    /files:
-        get:
-            summary: List files
-            description: List all uploaded files
-            operationId: listFiles
-            tags:
-                - file
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: List of file handles
-                    schema:
-                        $ref: '#/definitions/FileListing'
-    /files/{fileId}:
-        delete:
-            summary: Delete file
-            description: Delete a file from the file server
-            operationId: deleteFile
-            tags:
-                - file
-            parameters:
-                - name: fileId
-                  in: path
-                  required: true
-                  description: Unique file identifier
-                  type: string
-            produces:
-              - application/json
-            responses:
-                204:
-                    description: File deleted
-                404:
-                    description: Unknown file
-        get:
-            summary: Get file
-            description: Get handle for uploaded file
-            operationId: getFile
-            tags:
-                - file
-            parameters:
-                - name: fileId
-                  in: path
-                  required: true
-                  description: Unique file identifier
-                  type: string
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: File handle
-                    schema:
-                        $ref: "#/definitions/FileHandle"
-                404:
-                    description: Unknown file
-        post:
-            summary: Rename file
-            description: Rename an uploaded file
-            operationId: renameFile
-            tags:
-                - file
-            parameters:
-                - name: fileId
-                  in: path
-                  required: true
-                  description: Unique file identifier
-                  type: string
-                - name: properties
-                  in: body
-                  required: true
-                  description: New file name
-                  schema:
-                      $ref: '#/definitions/ResourceName'
-            produces:
-              - application/json
-            responses:
-                200:
-                    description: Successful update
-                    schema:
-                        $ref: "#/definitions/FileHandle"
-                400:
-                    description: Invalid request format or file name
-                404:
-                    description: Unknown file
-    /files/{fileId}/download:
-        get:
-            summary: Download file
-            description: Download file from file server
-            operationId: downloadFile
-            tags:
-                - file
-            parameters:
-                - name: fileId
-                  in: path
-                  required: true
-                  description: Unique file identifier
-                  type: string
-                - name: fileFormat
-                  in: query
-                  required: false
-                  description: File format identifier (csv or tsv)
-                  type: string
-            produces:
-                - text/csv
-                - application/gzip
-            responses:
-                200:
-                    description: CSV file
-                404:
-                    description: Unknown file
-    /files/upload:
+    /projects/{projectId}/files:
         post:
             summary: Upload file
-            description: Upload CSV file
+            description: Upload file from local disk
             operationId: uploadFile
             tags:
                 - file
             parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
                 - name: file
                   in: formData
                   required: true
-                  description: CSV (or TSV) file
+                  description: File data
                   type: file
             consumes:
                 - multipart/form-data
@@ -781,6 +541,32 @@ paths:
                     description: Invalid file or request
                 413:
                     description: Uploaded file size exceeds limit
+    /projects/{projectId}/files/{fileId}:
+        get:
+            summary: Download file
+            description: Download file from file server
+            operationId: downloadFile
+            tags:
+                - file
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: fileId
+                  in: path
+                  required: true
+                  description: Unique file identifier
+                  type: string
+            produces:
+                - text/csv
+                - application/gzip
+            responses:
+                200:
+                    description: File
+                404:
+                    description: Unknown file
     #
     # Datasets
     #
@@ -897,17 +683,66 @@ paths:
                     description: CSV file
                 404:
                     description: Unknown datasets
+    #
+    # Views
+    #
+    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}/views/{viewId}:
+        get:
+            summary: Get dataset view
+            description: Access content of a dataset view for a given workflow module version
+            operationId: getDatasetChartView
+            tags:
+                - chart
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: workflowId
+                  in: path
+                  required: true
+                  description: Unique workflow identifier
+                  type: integer
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Identifier of module
+                  type: integer
+                - name: viewId
+                  in: path
+                  required: true
+                  description: Identifier of chart view
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset chart view content
+                    schema:
+                        $ref: '#/definitions/DatasetChartView'
+                404:
+                    description: Unknown project, branch, workflow, module, or view
+
 definitions:
     BranchDescriptor:
         type: object
         description: Fundamental branch information
         required:
             - id
+            - isDefault
             - properties
             - links
         properties:
             id:
                 type: string
+            isDefault:
+                type: boolean
             properties:
                 type: array
                 items:
@@ -959,28 +794,42 @@ definitions:
                     $ref: "#/definitions/Reference"
     BranchStatement:
         type: object
-        description: Fundamental branch metadata and references
+        description: Branch point and properties for new branch
         required:
-            - source
             - properties
         properties:
             source:
                 type: object
                 required:
-                    - branch
-                    - version
+                    - branchId
+                    - workflowId
                     - moduleId
                 properties:
                     branch:
                         type: string
                     version:
-                        type: integer
+                        type: string
                     moduleId:
-                        type: integer
+                        type: string
             properties:
                 type: array
                 items:
                     $ref: "#/definitions/ObjectProperty"
+    ChartDescriptor:
+        type: object
+        description: Descriptor for a chart view
+        required:
+            - name
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            links:
+                type: array
+                items:
+                    $ref: '#/definitions/Reference'
     DatasetAnnotations:
         type: object
         description: Annotations for a dataset component
@@ -1161,214 +1010,102 @@ definitions:
                 type: array
                 items:
                     type: string
-    FileDescriptor:
-        type: object
-        description: Basic file information
-        required:
-            - id
-            - name
-        properties:
-            id:
-                type: string
-            name:
-                type: string
     FileHandle:
         type: object
         description: Metadata for uploaded file
         required:
             - id
             - name
-            - columns
-            - rows
-            - filesize
-            - createdAt
-            - lastModifiedAt
             - links
         properties:
             id:
                 type: string
             name:
                 type: string
-            columns:
-                type: integer
-            rows:
-                type: integer
-            filesize:
-                type: integer
-            createdAt:
+            mimetype:
                 type: string
-            lastModifiedAt:
+            encoding:
                 type: string
             links:
                 type: array
                 items:
                     $ref: "#/definitions/Reference"
-    FileListing:
-        type: object
-        description: Listing of file handles
-        required:
-            - files
-            - links
-        properties:
-            files:
-                type: array
-                items:
-                    $ref: "#/definitions/FileHandle"
-            links:
-                type: array
-                items:
-                    $ref: '#/definitions/Reference'
     ModuleHandle:
         type: object
         description: Module in VizUAL workflow
         required:
             - id
+            - state
             - command
             - text
-            - stdout
-            - stderr
-            - datasets
+            - timestamps
             - links
         properties:
             id:
+                type: string
+            state:
                 type: integer
             command:
+                $ref: "#/definitions/ModuleStatement"
+            text:
+                type: string
+            timestamps:
                 type: object
                 required:
-                    - type
-                    - id
-                    - arguments
+                    - createdAt
                 properties:
-                    type:
+                    createdAt:
                         type: string
-                    id:
+                    startedAt:
                         type: string
-                    arguments:
+                    finishedAt:
+                        type: string
+            outputs:
+                type: object
+                required:
+                    - stdout
+                    - stderr
+                properties:
+                    stdout:
                         type: array
                         items:
                             type: object
                             required:
-                                - name
-                                - value
+                                - type
+                                - data
                             properties:
-                                name:
+                                type:
                                     type: string
-                                value:
+                                data:
                                     type: string
-            text:
-                type: string
-            stdout:
-                type: array
-                items:
-                    type: object
-                    required:
-                        - type
-                        - data
-                    properties:
-                        type:
+                                result:
+                                    type: object
+                    stderr:
+                        type: array
+                        items:
                             type: string
-                        data:
-                            type: string
-                        result:
-                            type: object
-            stderr:
-                type: array
-                items:
-                    type: string
             datasets:
                 type: array
                 items:
-                    $ref: "#/definitions/DatasetReference"
+                    $ref: '#/definitions/DatasetDescriptor'
             links:
                 type: array
                 items:
                     $ref: '#/definitions/Reference'
-    ModuleSpecification:
-        type: object
-        required:
-            - type
-            - id
-            - name
-            - arguments
-        properties:
-            type:
-                type: string
-            id:
-                type: string
-            name:
-                type: string
-            group:
-                type: string
-            arguments:
-                type: array
-                items:
-                    type: object
-                    required:
-                        - id
-                        - label
-                        - index
-                        - name
-                        - datatype
-                        - required
-                    properties:
-                        id:
-                            type: string
-                        label:
-                            type: string
-                        name:
-                            type: string
-                        datatype:
-                            type: string
-                        values:
-                            type: array
-                            items:
-                                type: string
-                        parent:
-                            type: string
-                        required:
-                            type: boolean
-    ModuleSpecificationListing:
-        type: object
-        description: Listing of module specifications defining module parameters
-        required:
-            - project
-            - modules
-            - links
-        properties:
-            project:
-                $ref: "#/definitions/ProjectDescriptor"
-            modules:
-                type: array
-                items:
-                    $ref: "#/definitions/ModuleSpecification"
-            links:
-                type: array
-                items:
-                    $ref: "#/definitions/Reference"
     ModuleStatement:
         type: object
         description: Definition of a command to evaluate against a workflow state
         required:
-            - type
-            - identifier
+            - packageId
+            - commandId
             - arguments
         properties:
-            type:
+            packageId:
                 type: string
-            id:
+            commandId:
                 type: string
             arguments:
-                type: object
-            includeDataset:
-                type: object
-                required:
-                    - name
-                    - offset
-                properties:
-                    name:
-                        type: string
-                    offset:
-                        type: integer
+                type: array
     NotebookHandle:
         type: object
         description: Full information about project and workflow modules
@@ -1429,6 +1166,77 @@ definitions:
                 type: string
             type:
                 type: string
+    PackageDeclaration:
+        type: object
+        description: Declaration of commands for package of workflow modules
+        required:
+            - id
+            - name
+            - commands
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            description:
+                type: string
+            commands:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - id
+                        - name
+                        - arguments
+                    properties:
+                        id:
+                            type: string
+                        name:
+                            type: string
+                        description:
+                            type: string
+                        group:
+                            type: string
+                        parameters:
+                            type: array
+                            items:
+                                type: object
+                                required:
+                                    - id
+                                    - name
+                                    - index
+                                    - datatype
+                                    - required
+                                properties:
+                                    id:
+                                        type: string
+                                    name:
+                                        type: string
+                                    datatype:
+                                        type: string
+                                    index:
+                                        type: integer
+                                    hidden:
+                                        type: boolean
+                                    parent:
+                                        type: string
+                                    required:
+                                        type: boolean
+                                    values:
+                                        type: array
+                                        items:
+                                            type: object
+                                            required:
+                                                - value
+                                                - text
+                                                - isDefault
+                                            properties:
+                                                value:
+                                                    type: string
+                                                text:
+                                                    type: string
+                                                isDefault:
+                                                    type: boolean
     ProjectDescriptor:
         type: object
         description: Fundamental project metadata and references
@@ -1480,17 +1288,9 @@ definitions:
                 items:
                     $ref: '#/definitions/BranchDescriptor'
             packages:
-                type: object
-                required:
-                    - id
-                    - modules
-                properties:
-                    id:
-                        type: string
-                    modules:
-                        type: array
-                        items:
-                            $ref: "#/definitions/ModuleSpecification"
+                type: array
+                items:
+                    $ref: '#/definitions/PackageDeclaration'
             links:
                 type: array
                 items:
@@ -1623,63 +1423,21 @@ definitions:
         type: object
         description: Comprehensive workflow version information
         required:
-            - project
-            - branch
-            - version
+            - identifier
             - createdAt
             - state
+            - modules
+            - datasets
+            - charts
+            - readOnly
             - links
         properties:
-            project:
-                $ref: '#/definitions/ProjectDescriptor'
-            branch:
-                $ref: '#/definitions/BranchDescriptor'
-            version:
-                type: integer
+            identifier:
+                type: string
             createdAt:
                 type: string
             state:
-                type: object
-                required:
-                    - charts
-                    - datasets
-                    - hasError
-                    - moduleCount
-                properties:
-                    charts:
-                        $ref: '#/definitions/WorkflowResourceList'
-                    datasets:
-                        $ref: '#/definitions/WorkflowResourceList'
-                    hasError:
-                        type: boolean
-                    moduleCount:
-                        type: integer
-            readOnly:
-                type: boolean
-            links:
-                type: array
-                items:
-                    $ref: '#/definitions/Reference'
-    WorkflowModules:
-        type: object
-        description: Comprehensive workflow version information
-        required:
-            - project
-            - branch
-            - version
-            - createdAt
-            - modules
-            - datasets
-            - links
-        properties:
-            project:
-                $ref: '#/definitions/ProjectDescriptor'
-            branch:
-                $ref: '#/definitions/BranchDescriptor'
-            version:
                 type: integer
-            createdAt:
-                type: string
             modules:
                 type: array
                 items:
@@ -1688,31 +1446,16 @@ definitions:
                 type: array
                 items:
                     $ref: '#/definitions/DatasetDescriptor'
+            charts:
+                type: array
+                items:
+                    $ref: '#/definitions/ChartDescriptor'
             readOnly:
                 type: boolean
             links:
                 type: array
                 items:
                     $ref: '#/definitions/Reference'
-    WorkflowResource:
-        type: object
-        description: Descriptor for resource in workflow state
-        required:
-            - name
-            - links
-        properties:
-            id:
-                type: string
-            name:
-                type: string
-            links:
-                type: array
-                items:
-                    $ref: '#/definitions/Reference'
-    WorkflowResourceList:
-        type: array
-        items:
-            $ref: '#/definitions/WorkflowResource'
     WorkflowUpdateResult:
         type: object
         description: Result of workflow update. Contains handle and optional content (either notebook or dataset)

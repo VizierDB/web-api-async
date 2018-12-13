@@ -33,7 +33,7 @@ from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.datastore.metadata import DatasetMetadata
 from vizier.filestore.base import FileHandle
-from vizier.filestore.base import get_download_filename, get_fileformat
+from vizier.filestore.base import get_download_filename
 
 
 """Constants for data file names."""
@@ -204,8 +204,7 @@ class FileSystemDatastore(Datastore):
                 fh = FileHandle(
                     identifier=filename,
                     filepath=download_file,
-                    file_name=filename,
-                    file_format=get_fileformat(filename)
+                    file_name=filename
                 )
                 dataset = self.load_dataset(fh)
                 shutil.rmtree(temp_dir)

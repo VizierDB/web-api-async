@@ -62,7 +62,8 @@ class DefaultLocalEngine(VizierEngine):
         """
         super(DefaultLocalEngine, self).__init__(
             name='Default Local Engine',
-            version='0.1.0'
+            version='0.1.0',
+            packages=packages
         )
         for key in PROPERTIES:
             if not key in properties:
@@ -74,9 +75,6 @@ class DefaultLocalEngine(VizierEngine):
         self.datastores = ClassLoader(values=properties[PROPERTY_DATASTORE])
         self.filestores = ClassLoader(values=properties[PROPERTY_FILESTORE])
         self.viztrails = ClassLoader(values=properties[PROPERTY_VIZTRAILS])
-        # Keep the package index for now. Create dictionary of task engines
-        # when .init() is called.
-        self.packages = packages
 
     def create_project(self, properties=None):
         """Create a new project. Will create a viztrail in the underlying

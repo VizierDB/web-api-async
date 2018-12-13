@@ -42,6 +42,7 @@ LABEL_DATATYPE = 'datatype'
 LABEL_DELIMITER = 'delimiter'
 LABEL_DESCRIPTION = 'description'
 LABEL_FORMAT = 'format'
+LABEL_GROUPID = 'groupId'
 LABEL_ID = 'id'
 LABEL_LEFTSPACE = 'lspace'
 LABEL_MODULENAME = 'moduleName'
@@ -243,7 +244,7 @@ def validate_package(pckg_declaration):
 # Command Declaration
 # ------------------------------------------------------------------------------
 
-def command_declaration(identifier, name=None, description=None, parameters=None, format=None):
+def command_declaration(identifier, name=None, description=None, group_id=None, parameters=None, format=None):
     """Create a dictionary containing a package command declaration.
 
     Parameters
@@ -254,6 +255,8 @@ def command_declaration(identifier, name=None, description=None, parameters=None
         Optional command name
     description: string, optional
         Optional descriptive text for command
+    group_id: string, optional
+        Optional group identifier to arrange commands on the front-end
     parameters: list, optional
         List of command parameter declarations
     format: list, optional
@@ -267,8 +270,12 @@ def command_declaration(identifier, name=None, description=None, parameters=None
     obj = dict({LABEL_ID: identifier})
     if not name is None:
         obj[LABEL_NAME] = name
+    else:
+        obj[LABEL_NAME] = identifier
     if not description is None:
         obj[LABEL_DESCRIPTION] = description
+    if not group_id is None:
+        obj[LABEL_GROUPID] = description
     if not parameters is None:
         obj[LABEL_PARAMETER] = parameters
     else:
@@ -288,14 +295,16 @@ PARA_DATASET = 'dataset'
 PARA_NAME = 'name'
 
 
-def enum_value(value, is_default=False):
+def enum_value(value, text=None, is_default=False):
     """Create dictionary representing a value in an enumeration of possible
     values for a command parameter.
 
     Parameters
     ----------
-    value: string
+    value: scalar
         Enumeration value
+    text: string, optional
+        Text representation for the value in the front end
     is_default: bool, optional
         Flag indicating whether this is the default value for the list
 
@@ -303,7 +312,12 @@ def enum_value(value, is_default=False):
     -------
     dict
     """
-    return {'text': value, 'is_default': is_default}
+    obj = {'value': value, 'isDefault': is_default}
+    if not text is None:
+        obj['text'] = text
+    else:
+        obj['text'] = str(value)
+    return obj
 
 
 def parameter_declaration(
@@ -344,7 +358,7 @@ def parameter_declaration(
         'hidden': hidden
     }
     if not values is None:
-        para['enum'] = values
+        para['values'] = values
     if not parent is None:
         para[LABEL_PARENT] = parent
     return para
@@ -561,6 +575,17 @@ class PackageIndex(object):
         """
         # Validate the given package specification
         validate_package(package)
+        # Keep a copy of the package identifier, name and descripton.
+        self.identifier = package[LABEL_ID]
+        if LABEL_NAME in package:
+            self.name = package[LABEL_NAME]
+        else:
+            self.name = self.identifier
+        if LABEL_DESCRIPTION in package:
+            self.description = package[LABEL_DESCRIPTION]
+        else:
+            self.description = None
+        # Create a class loader for the package engine
         self.engine = ClassLoader.to_dict(
             module_name=package[LABEL_MODULENAME],
             class_name=package[LABEL_CLASSNAME],
@@ -569,6 +594,9 @@ class PackageIndex(object):
         self.commands = dict()
         for cmd in package[LABEL_COMMAND]:
             self.commands[cmd[LABEL_ID]] = CommandDeclaration(
+                identifier=cmd[LABEL_ID],
+                name=cmd[LABEL_NAME],
+                description=cmd[LABEL_DESCRIPTION] if LABEL_DESCRIPTION in cmd else None,
                 paramaters=cmd[LABEL_PARAMETER],
                 format=cmd[LABEL_FORMAT] if LABEL_FORMAT in cmd else list()
             )
@@ -596,17 +624,26 @@ class CommandDeclaration(object):
     """Command declaration contains an index of command parameter declarations
     and the command format declaration.
     """
-    def __init__(self, paramaters, format):
+    def __init__(self, identifier, name, paramaters, format, description=None):
         """Initialize the index from a given list of paramater declarations.
 
         Parameters
         ----------
+        identifier: string
+            Unique command identifier
+        name: string
+            Descriptive command name
         parameters: list
             List of parameter declarations
         format: list
             List of format specifications for tokens in the external form of the
             command
+        description: string, optional
+            Optional description for the command
         """
+        self.identifier = identifier
+        self.name = name
+        self.description = description
         self.parameters = dict()
         for para in paramaters:
             self.parameters[para[LABEL_ID]] = para

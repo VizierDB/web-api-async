@@ -122,10 +122,10 @@ PLOT_COMMANDS = pckg.package_declaration(
                     data_type=pckg.DT_STRING,
                     index=10,
                     values=[
-                        pckg.enum_value('Area Chart'),
-                        pckg.enum_value('Bar Chart', is_default=True),
-                        pckg.enum_value('Line Chart'),
-                        pckg.enum_value('Scatter Plot')
+                        pckg.enum_value(value='Area Chart'),
+                        pckg.enum_value(value='Bar Chart', is_default=True),
+                        pckg.enum_value(value='Line Chart'),
+                        pckg.enum_value(value='Scatter Plot')
                     ],
                     parent=PARA_CHART
                 ),

@@ -41,23 +41,28 @@ def PROJECT_DESCRIPTOR(project, urls):
         'id': project_id,
         'createdAt': project.created_at.isoformat(),
         'lastModifiedAt': project.last_modified_at.isoformat(),
-        'properties': ANNOTATIONS(project.viztrail.properties),
-        'links': HATEOAS({
+        'properties': serialize.ANNOTATIONS(project.viztrail.properties),
+        'links': serialize.HATEOAS({
             'self': urls.get_project(project_id),
+            'home': urls.service_descriptor(),
+            'doc': urls.api_doc(),
             'project:delete': urls.delete_project(project_id),
             'project:update': urls.update_project(project_id),
+            'branch:create': urls.create_branch(project_id),
             'file:upload': urls.file_upload(project_id)
         })
     }
 
 
-def PROJECT_HANDLE(project, urls):
+def PROJECT_HANDLE(project, packages, urls):
     """Dictionary serialization for project handle.
 
     Parameters
     ----------
     project : vizier.engine.project.ProjectHandle
         Project handle
+    packages: dict(vizier.engine.packages.base.PackageIndex)
+        Index of available packages
     urls: vizier.api.webservice.routes.UrlFactory
         Factory for resource urls
 
@@ -67,15 +72,31 @@ def PROJECT_HANDLE(project, urls):
     """
     # Use project descriptor as the base
     obj = PROJECT_DESCRIPTOR(project, urls)
-    # Ad descriptors for project branches
+    # Add descriptors for project branches
     branches = list()
-    for branch in project.viztrail.list_branches()
+    for branch in project.viztrail.list_branches():
         branches.append(
             br.BRANCH_DESCRIPTOR(
                 branch=branch,
-                urls=urls,
-                project_id=project.identifier
+                project=project,
+                urls=urls
             )
         )
     obj['branches'] = branches
+    # Add listing of available packages
+    package_listing = list()
+    for pckg in packages.values():
+        pckg_obj = {'id': pckg.identifier, 'name': pckg.name}
+        if not pckg.description is None:
+            pckg_obj['description'] = pckg.description
+        pckg_commands = list()
+        for cmd in pckg.commands.values():
+            cmd_obj = {'id': cmd.identifier, 'name': cmd.name}
+            if not cmd.description is None:
+                cmd_obj['description'] = cmd.description
+            cmd_obj['parameters'] = cmd.parameters
+            pckg_commands.append(cmd_obj)
+        pckg_obj['commands'] = pckg_commands
+        package_listing.append(pckg_obj)
+    obj['packages'] = package_listing
     return obj

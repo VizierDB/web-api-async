@@ -18,10 +18,12 @@
 front end and for any other (remote) clients. Implements the requests for the
 Vizier Web API as documented in http://cds-swg1.cims.nyu.edu/vizier/api/v1/doc/.
 """
-from flask import Flask, jsonify, make_response, request, send_file
-from flask_cors import CORS
 
 import os
+
+from flask import Flask, jsonify, make_response, request, send_file
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
 from vizier.api.webservice.base import VizierApi
 from vizier.config import AppConfig
@@ -104,19 +106,12 @@ def create_project():
     obj = validate_json_request(request, required=['properties'])
     if not isinstance(obj['properties'], list):
         raise InvalidRequest('expected a list of properties')
-    properties = dict()
-    for prop in obj['properties']:
-        if not isinstance(prop, dict):
-            raise InvalidRequest('expected property to be a dictionary')
-        for key in ['key', 'value']:
-            if not key in prop:
-                raise InvalidRequest('missing property element \'' + key + '\'')
-        properties[prop['key']] = prop['value']
+    properties = convert_properties(obj['properties'])
     # Create project and return the project descriptor
-    #try:
-    return jsonify(api.create_project(properties)), 201
-    #except ValueError as ex:
-    #    raise InvalidRequest(str(ex))
+    try:
+        return jsonify(api.create_project(properties)), 201
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
 
 
 @app.route('/projects/<string:project_id>')
@@ -138,7 +133,7 @@ def delete_project(project_id):
     raise ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>', methods=['POST'])
+@app.route('/projects/<string:project_id>', methods=['PUT'])
 def update_project(project_id):
     """Update the set of user-defined properties. Expects a Json object with
     a list of property update statements. These statements are (key,value)
@@ -161,18 +156,9 @@ def update_project(project_id):
     obj = validate_json_request(request, required=['properties'])
     if not isinstance(obj['properties'], list):
         raise InvalidRequest('expected a list of properties')
-    properties = dict()
-    for prop in obj['properties']:
-        if not isinstance(prop, dict):
-            raise InvalidRequest('expected property to be a dictionary')
-        if not 'key' in prop:
-            raise InvalidRequest('missing property element: ' + key)
-        if 'value' in prop:
-            properties[prop['key']] = prop['value']
-        else:
-            properties[prop['key']] = None
     # Update project and return the project descriptor. If no project with
     # the given identifier exists the update result will be None
+    properties = convert_properties(obj['properties'], allow_null=True)
     try:
         pj = api.update_project(project_id, properties)
         if not pj is None:
@@ -180,6 +166,235 @@ def update_project(project_id):
     except ValueError as ex:
         raise InvalidRequest(str(ex))
     raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+# ------------------------------------------------------------------------------
+# Branches
+# ------------------------------------------------------------------------------
+@app.route('/projects/<string:project_id>/branches', methods=['POST'])
+def create_branch(project_id):
+    """Create a new branch for a project. Expects a description of the parent
+    workflow in the request body together with an optional list of branch
+    properties (e.g., containing a branch name).
+
+    Request
+    -------
+    {
+      "source": {
+        "branchId": "string",
+        "workflowId": "string"
+        "moduleId": "string"
+      },
+      "properties": [
+        {
+          "key": "string",
+          "value": "string"
+        }
+      ]
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain the expected elements.
+    obj = validate_json_request(request, required=['properties'], optional=['source'])
+    # Get the branch point. If the source is given the dictionary should at
+    # most contain the three identifier
+    branch_id = None
+    workflow_id = None
+    module_id = None
+    if 'source' in obj:
+        for key in obj:
+            if key == 'branchId':
+                branch_id = obj[key]
+            elif key == 'workflowId':
+                workflow_id = obj[key]
+            elif key ==  'moduleId':
+                module_id = obj[key]
+            else:
+                raise InvalidRequest('invalid element \'' + key + '\' for branch point')
+    # Get the properties for the new branch
+    properties = convert_properties(obj['properties'])
+    # Create a new workflow. The result is the descriptor for the new workflow
+    # or None if the specified project does not exist. Will raise a ValueError
+    # if the specified workflow version or module do not exist
+    try:
+        branch = api.create_branch(
+            project_id=project_id,
+            branch_id=branch_id,
+            workflow_id=workflow_id,
+            module_id=module_id,
+            properties=properties
+        )
+        if not branch is None:
+            return jsonify(branch)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['DELETE'])
+def delete_branch(project_id, branch_id):
+    """Delete branch from a given project."""
+    try:
+        success = api.delete_branch(project_id=project_id, branch_id=branch_id)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    if success:
+        return '', 204
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['PUT'])
+def update_branch(project_id, branch_id):
+    """Update properties for a given project workflow branch. Expects a set of
+    key,value-pairs in the request body. Properties with given key but missing
+    value will be deleted.
+
+    Request
+    -------
+    {
+      "properties": [
+        {
+          "key": "string",
+          "value": "string"
+        }
+      ]
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain a properties key.
+    obj = validate_json_request(request, required=['properties'])
+    # Update properties for the given branch and return branch descriptor.
+    properties = convert_properties(obj['properties'], allow_null=True)
+    try:
+        # Result is None if project or branch are not found.
+        branch = api.update_branch(
+            project_id=project_id,
+            branch_id=branch_id,
+            properties=properties
+        )
+        if not branch is None:
+            return jsonify(branch)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+# ------------------------------------------------------------------------------
+# Workflows
+# ------------------------------------------------------------------------------
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head')
+def get_branch_head(project_id, branch_id):
+    """Get handle for a workflow at the HEAD of a given project branch."""
+    # Get the workflow handle. The result is None if the project, branch or
+    # workflow do not exist.
+    workflow = api.get_workflow(project_id=project_id, branch_id=branch_id)
+    if not workflow is None:
+        return jsonify(workflow)
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head', methods=['POST'])
+def append_branch_head(project_id, branch_id):
+    """Append a module to the workflow that is at the HEAD of the given branch.
+
+    Request
+    -------
+    {
+      "packageId": "string",
+      "commandId": "string",
+      "arguments": {}
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain the expected elements.
+    cmd = validate_json_request(
+        request,
+        required=['packageId', 'commandId', 'arguments']
+    )
+    # Extend and execute workflow. This will throw a ValueError if the command
+    # cannot be parsed.
+    try:
+        # Result is None if project or workflow version are not found.
+        result = api.append_module(
+            project_id=project_id,
+            branch_id=branch_id,
+            package_id=cmd['packageId'],
+            command_id=cmd['commandId'],
+            arguments=cmd['arguments']
+        )
+        if not result is None:
+            return jsonify(result)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')
+def get_workflow(project_id, branch_id, workflow_id):
+    """Get handle for a workflow in a given project branch."""
+    # Get the workflow handle. The result is None if the project, branch or
+    # workflow do not exist.
+    workflow = api.get_workflow(
+        project_id=project_id,
+        branch_id=branch_id,
+        workflow_id=workflow_id
+    )
+    if not workflow is None:
+        return jsonify(workflow)
+    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
+
+
+# ------------------------------------------------------------------------------
+# Files
+# ------------------------------------------------------------------------------
+
+@app.route('/projects/<string:project_id>/files', methods=['POST'])
+def upload_file(project_id):
+    """Upload file (POST) - Upload a data file to the project's filestore.
+    """
+    # The upload request may contain a file object or an Url from where to
+    # download the data.
+    if request.files and 'file' in request.files:
+        file = request.files['file']
+        # A browser may submit a empty part without filename
+        if file.filename == '':
+            raise InvalidRequest('empty file name')
+        # Save uploaded file to temp directory
+        filename = secure_filename(file.filename)
+        try:
+            f_handle = api.upload_file(
+                project_id=project_id,
+                file=file,
+                file_name=filename
+            )
+            if not f_handle is None:
+                return jsonify(f_handle), 201
+        except ValueError as ex:
+            raise InvalidRequest(str(ex))
+    else:
+        raise InvalidRequest('no file or url specified in request')
+    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/files/<string:file_id>')
+def download_file(project_id, file_id):
+    """Download file from file server."""
+    # Get handle for file from the project's filestore
+    f_handle = api.get_file(project_id, file_id)
+    if not f_handle is None:
+        # Use send_file to send the contents of the file
+        if f_handle.compressed:
+            mimetype = 'application/gzip'
+        else:
+            mimetype = f_handle.mimetype
+        return send_file(
+            f_handle.filepath,
+            mimetype=mimetype,
+            attachment_filename=f_handle.file_name,
+            as_attachment=True
+        )
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or file \'' + file_id + '\'')
 
 
 # ------------------------------------------------------------------------------
@@ -294,6 +509,43 @@ def internal_error(exception):
 # Helper Methods
 #
 # ------------------------------------------------------------------------------
+
+def convert_properties(properties, allow_null=False):
+    """Convert a list of properties from request format into a dictionary.
+
+    Raises InvalidRequest if an invalid list of properties is given.
+
+    Parameters
+    ----------
+    properties: list
+        List of key,value pairs defining object properties
+    allow_null: bool, optional
+        Allow None values for properties if True
+
+    Returns
+    -------
+    dict()
+    """
+    result = dict()
+    for prop in properties:
+        if not isinstance(prop, dict):
+            raise InvalidRequest('expected property to be a dictionary')
+        name = None
+        value = None
+        for key in prop:
+            if key  == 'key':
+                name = prop[key]
+            elif key == 'value':
+                value = prop[key]
+            else:
+                raise InvalidRequest('invalid property element \'' + key + '\'')
+        if name is None:
+            raise InvalidRequest('missing element \'key\' in property')
+        if value is None and not allow_null:
+            raise InvalidRequest('missing property value for \'' + name + '\'')
+        result[name] = value
+    return result
+
 
 def get_download_filename(url, info):
     """Extract a file name from a given Url or request info header.

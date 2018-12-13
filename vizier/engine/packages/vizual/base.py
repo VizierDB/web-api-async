@@ -53,8 +53,8 @@ PARA_COLUMNS_ORDER = PARA_COLUMNS + '_' + PARA_ORDER
 PARA_COLUMNS_RENAME = PARA_COLUMNS + '_' + pckg.PARA_NAME
 
 #Values for sort order.
-SORT_ASC = 'A-Z'
-SORT_DESC = 'Z-A'
+SORT_ASC = 'ASC'
+SORT_DESC = 'DESC'
 
 
 """VizUAL command specification schema."""
@@ -345,8 +345,8 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     data_type=pckg.DT_STRING,
                     index=3,
                     values=[
-                        pckg.enum_value(SORT_ASC, is_default=True),
-                        pckg.enum_value(SORT_DESC)
+                        pckg.enum_value(value=SORT_ASC, text='A -> Z', is_default=True),
+                        pckg.enum_value(value=SORT_DESC, text='Z -> A')
                     ],
                     parent=PARA_COLUMNS,
                     required=True

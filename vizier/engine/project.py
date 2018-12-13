@@ -112,8 +112,9 @@ class ProjectHandle(WorkflowController):
         branch. The modified workflow will be executed. The result is the new
         head of the branch.
 
-        Returns the handle for the modified workflow. The result is None if
-        the specified branch does not exist.
+        Returns the handle for the new module in the modified workflow.
+
+        Raises ValueError if the specified branch does not exist.
 
         Parameters
         ----------
@@ -125,12 +126,12 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        vizier.viztrail.module.base.ModuleHandle
         """
         # Get the handle for the specified branch
         branch = self.viztrail.get_branch(branch_id)
         if branch is None:
-            return None
+            raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         with self.backend.lock:
             # Get the current database state from the last module in the current
             # branch head. At the same time we retrieve the list of modules for
@@ -224,7 +225,7 @@ class ProjectHandle(WorkflowController):
                         module=workflow.modules[-1],
                         datasets=datasets
                     )
-            return workflow
+            return workflow.modules[-1]
 
     def cancel_exec(self, branch_id):
         """Cancel the execution of all active modules for the head workflow of
@@ -233,7 +234,7 @@ class ProjectHandle(WorkflowController):
         set to the current time. The module outputs will be empty.
 
         Returns the handle for the modified workflow. If the specified branch
-        is unknown the result is None.
+        is unknown or the branch head is None ValueError is raised.
 
         Parameters
         ----------
@@ -242,27 +243,29 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch.
             branch = self.viztrail.get_branch(branch_id)
             if branch is None:
-                return None
+                raise ValueError('unknown branch \'' + str(branch_id) + '\'')
             workflow = branch.head
             if workflow is None:
-                return None
+                raise ValueError('empty workflow at branch head')
             # Set the state of all active modules to canceled
+            modules = list()
             for module in workflow.modules:
                 if module.is_active:
                     module.set_canceled()
+                    modules.append(module)
             # Cancel all running tasks for the branch
             for task_id in self.tasks.keys():
                 task = self.tasks[task_id]
                 if task.branch_id == branch_id:
                     self.backend.cancel_task(task_id)
                     del self.tasks[task_id]
-            return workflow
+            return modules
 
     @property
     def created_at(self):
@@ -280,9 +283,9 @@ class ProjectHandle(WorkflowController):
         head of the viztrail branch. The resulting workflow is executed and will
         be the new head of the branch.
 
-        Returns the handle for the modified workflow. The result is None if the
-        branch or module do not exist. Raises ValueError if the current head of
-        the branch is active.
+        Returns the list of remaining modules in the modified workflow that are
+        affected by the deletion. Raises ValueError if the branch does not exist
+        or the current head of the branch is active.
 
         Parameters
         ----------
@@ -293,12 +296,12 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
         branch = self.viztrail.get_branch(branch_id)
         if branch is None:
-            return None
+            raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         with self.backend.lock:
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
@@ -327,6 +330,9 @@ class ProjectHandle(WorkflowController):
                     datasets = modules[module_index - 1].datasets
                 else:
                     datasets = dict()
+                # Keep track of the first remaining module that was affected
+                # by the delete
+                first_remaining_module = module_index
                 while not modules[module_index].provenance.requires_exec(datasets):
                     if module_index == module_count - 1:
                         break
@@ -380,21 +386,22 @@ class ProjectHandle(WorkflowController):
                         module=workflow.modules[module_index],
                         datasets=datasets
                     )
-                    return workflow
                 else:
                     # None of the module required execution and the workflow is
                     # complete
-                    return branch.append_workflow(
+                    branch.append_workflow(
                         modules=modules,
                         action=ACTION_DELETE,
                         command=deleted_module.command
                     )
+                return workflow.modules[first_remaining_module:]
             else:
-                return branch.append_workflow(
+                branch.append_workflow(
                     modules=modules,
                     action=ACTION_DELETE,
                     command=deleted_module.command
                 )
+                return list()
 
     def execute_module(self, branch_id, module, datasets, external_form=None):
         """Create a new task for the given module and execute the module in
@@ -520,9 +527,9 @@ class ProjectHandle(WorkflowController):
         module with the identifier that is given as the before_module_id
         argument.
 
-        Returns the handle for the modified workflow. The result is None if
-        the specified branch or module do not exist. Raises ValueError if the
-        current head of the branch is active.
+        Returns the list of affected modules in the modified workflow. Raises
+        ValueError if specified branch does not exist or the current head of
+        the branch is active.
 
         Parameters
         ----------
@@ -536,12 +543,12 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
         branch = self.viztrail.get_branch(branch_id)
         if branch is None:
-            return None
+            raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         with self.backend.lock:
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
@@ -597,7 +604,7 @@ class ProjectHandle(WorkflowController):
                 module=workflow.modules[module_index],
                 datasets=datasets
             )
-            return workflow
+            return workflow.modules[module_index:]
 
     @property
     def last_modified_at(self):
@@ -625,9 +632,9 @@ class ProjectHandle(WorkflowController):
         specified viztrail branch. The modified workflow is executed and the
         result is the new head of the branch.
 
-        Returns a handle for the new workflow. Returns None if the specified
-        branch or module do not exist. Raises ValueError if the current head of
-        the branch is active.
+        Returns the list of affected modules in the modified workflow. Raises
+        ValueError if the given branch is unknown or the current head of the
+        branch is active.
 
         Parameters
         ----------
@@ -640,12 +647,12 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
         branch = self.viztrail.get_branch(branch_id)
         if branch is None:
-            return None
+            raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         with self.backend.lock:
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
@@ -704,7 +711,7 @@ class ProjectHandle(WorkflowController):
                 module=workflow.modules[module_index],
                 datasets=datasets
             )
-            return workflow
+            return workflow.modules[module_index:]
 
     def set_error(self, task_id, finished_at=None, outputs=None):
         """Set status of the module that is associated with the given task
@@ -713,10 +720,8 @@ class ProjectHandle(WorkflowController):
         are adjusted to the given value. The output streams are empty if no
         value is given for the outputs parameter.
 
-        Cancels all pending modules in the workflow.
-
-        Returns the handle for the modified workflow. If the specified module
-        is not in an active state the result is None.
+        Cancels all pending modules in the workflow. Returns the list of
+        affected modules in the modified workflow.
 
         Parameters
         ----------
@@ -729,7 +734,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch and
@@ -742,17 +747,16 @@ class ProjectHandle(WorkflowController):
                 module.set_error(finished_at=finished_at, outputs=outputs)
                 for m in workflow.modules[module_index+1:]:
                     m.set_canceled()
-                return workflow
+                return workflow.modules[module_index:]
             else:
-                return None
+                return list()
 
     def set_running(self, task_id, started_at=None):
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
 
-        Returns the handle for the modified workflow. If the specified module
-        is not in pending state the result is None.
+        Returns the list of active module sin the workflow.
 
         Parameters
         ----------
@@ -763,7 +767,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch and
@@ -777,9 +781,9 @@ class ProjectHandle(WorkflowController):
                     external_form=external_form,
                     started_at=started_at
                 )
-                return workflow
+                return workflow.modules[module_index:]
             else:
-                return None
+                return list()
 
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
         """Set status of the module that is associated with the given task
@@ -791,8 +795,9 @@ class ProjectHandle(WorkflowController):
         output streams. If the workflow has pending modules the first pending
         module will be executed next.
 
-        Returns the handle for the modified workflow. If the specified module
-        is not in pending state the result is None.
+        Returns the list of handles for the workflow modules that occur after
+        the module that was completed successfully. If the specified module
+        is not in pending state the result is an empty list.
 
         Parameters
         ----------
@@ -811,7 +816,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch and
@@ -871,7 +876,7 @@ class ProjectHandle(WorkflowController):
                             external_form=external_form
                         )
                         break
-                return workflow
+                return workflow.modules[module_index+1:]
 
 
 # ------------------------------------------------------------------------------

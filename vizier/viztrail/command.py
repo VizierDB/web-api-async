@@ -383,6 +383,19 @@ class ModuleCommand(object):
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
 
+    def to_dict(self):
+        """Get a dictionary representation of the command specification.
+
+        Returns
+        -------
+        dict()
+        """
+        return {
+            'package': self.package_id,
+            'command': self.command_id,
+            'arguments': self.arguments.to_list()
+        }
+
     def to_external_form(self, command, datasets=None, filestore=None):
         """Get a string representation for the command based on the current
         arguments.

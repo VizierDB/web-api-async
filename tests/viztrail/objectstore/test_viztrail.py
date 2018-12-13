@@ -202,6 +202,7 @@ class TestOSViztrail(unittest.TestCase):
         )
         self.assertEquals(len(vt.branches), 1)
         branch = vt.get_default_branch()
+        self.assertTrue(vt.is_default_branch(branch.identifier))
         # Attempt to delete the branch that is the default should raise
         # ValueError
         with self.assertRaises(ValueError):
@@ -226,6 +227,7 @@ class TestOSViztrail(unittest.TestCase):
         second_branch = vt.create_branch(properties={PROPERTY_NAME: 'My Branch'})
         self.assertFalse(second_branch.is_default)
         self.assertNotEqual(vt.get_default_branch().identifier, second_branch.identifier)
+        self.assertFalse(vt.is_default_branch(second_branch.identifier))
         vt = OSViztrailHandle.load_viztrail(base_path)
         self.assertNotEqual(vt.get_default_branch().identifier, second_branch.identifier)
         # Set second branch as default branch

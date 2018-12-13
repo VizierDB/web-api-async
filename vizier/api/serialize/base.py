@@ -50,3 +50,18 @@ def HATEOAS(links):
     list()
     """
     return [{'rel': key, 'href': links[key]} for key in links]
+
+
+def OUTPUT(out):
+    """Get dictionary serialization for an output object.
+
+    Parameters
+    ----------
+    out: vizier.viztrail.module.output.OutputObject
+        Object in module output stream
+
+    Returns
+    -------
+    dict
+    """
+    return {'type': out.type, 'value': out.value}

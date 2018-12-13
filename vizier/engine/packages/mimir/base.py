@@ -128,8 +128,8 @@ MIMIR_LENSES = pckg.package_declaration(
                     data_type=pckg.DT_STRING,
                     index=5,
                     values=[
-                        pckg.enum_value('GOOGLE'),
-                        pckg.enum_value('OSM')
+                        pckg.enum_value(value='GOOGLE', is_default=True),
+                        pckg.enum_value(value='OSM')
                     ]
                 ),
                 para_make_input_certain(6)
@@ -268,8 +268,8 @@ MIMIR_LENSES = pckg.package_declaration(
                     data_type=pckg.DT_STRING,
                     index=3,
                     values=[
-                        pckg.enum_value('int'),
-                        pckg.enum_value('varchar')
+                        pckg.enum_value(value='int', is_default=True),
+                        pckg.enum_value(value='varchar')
                     ],
                     parent=PARA_SCHEMA
                 ),

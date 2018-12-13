@@ -785,22 +785,24 @@
                     }, 
                     {
                         "datatype": "string", 
-                        "enum": [
-                            {
-                                "is_default": true, 
-                                "text": "A-Z"
-                            }, 
-                            {
-                                "is_default": false, 
-                                "text": "Z-A"
-                            }
-                        ], 
                         "hidden": false, 
                         "id": "columns_order", 
                         "index": 3, 
                         "name": "Order", 
                         "parent": "columns", 
-                        "required": true
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "A -> Z", 
+                                "value": "ASC"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Z -> A", 
+                                "value": "DESC"
+                            }
+                        ]
                     }
                 ]
             }, 

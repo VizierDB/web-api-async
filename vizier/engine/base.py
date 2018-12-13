@@ -38,7 +38,7 @@ class VizierEngine(object):
     When the engine is created it will receive an implementation-specific
     dictionary of properties.
     """
-    def __init__(self, name, version):
+    def __init__(self, name, version, packages):
         """initialize the engine name and version information.
 
         Note that an implementation of this class should provide a constructor
@@ -54,9 +54,13 @@ class VizierEngine(object):
             Descriptive name for an engine configuration.
         version: string
             Version information
+        packages: dict(vizier.engine.packages.base.PackageIndex)
+            Index of loaded packages
         """
         self.name = name
         self.version = version
+        # Keep a reference for the package index.
+        self.packages = packages
 
     @abstractmethod
     def create_project(self, properties=None):

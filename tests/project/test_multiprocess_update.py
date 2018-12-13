@@ -139,7 +139,11 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         # Keep track of datasets in the completed workflow
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
         # Insert in the middle
-        self.project.delete_workflow_module(branch_id=branch_id, module_id=wf.modules[5].identifier)
+        result = self.project.delete_workflow_module(
+            branch_id=branch_id,
+            module_id=wf.modules[5].identifier
+        )
+        self.assertEquals(len(result), 5)
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         wf = self.project.viztrail.default_branch.head
@@ -151,6 +155,13 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
+        # Ensure that an error is raised when attempting to delete a module from
+        # an unknown branch
+        with self.assertRaises(ValueError):
+            self.project.delete_workflow_module(
+                branch_id='null',
+                module_id=wf.modules[-1].identifier
+            )
         # Delete at the end will not result in new datasets being generated
         while len(wf.modules) > 0:
             self.project.delete_workflow_module(branch_id=branch_id, module_id=wf.modules[-1].identifier)
@@ -167,11 +178,12 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
         # Insert in the middle
         cmd = command=python_cell(PY_ADD_TEN)
-        self.project.insert_workflow_module(
+        result = self.project.insert_workflow_module(
             branch_id=branch_id,
             before_module_id=wf.modules[5].identifier,
             command=cmd
         )
+        self.assertEquals(len(result), 7)
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(12)
@@ -181,6 +193,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
+        # Ensure that an error is raised when attempting to insert a module into
+        # an unknown branch
+        with self.assertRaises(ValueError):
+            self.project.insert_workflow_module(
+                branch_id='null',
+                before_module_id=wf.modules[-1].identifier,
+                command=python_cell('print 2+2')
+            )
         # Insert a neutral python cell at from will have no impact on the other
         # modules
         self.project.insert_workflow_module(
@@ -215,6 +235,13 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         self.assertFalse(self.project.viztrail.default_branch.head.is_active)
         self.assert_module_count_is(11)
         self.assert_value_is(33)
+        # Ensure that an error is raised when attempting to append to an
+        # unknown branch
+        with self.assertRaises(ValueError):
+            self.project.append_workflow_module(
+                branch_id='null',
+                command=python_cell('print 2+2')
+            )
 
     def test_replace(self):
         """Test replacing a module."""
@@ -224,11 +251,12 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
         # Insert in the middle
         cmd = command=python_cell(PY_ADD_TEN)
-        self.project.replace_workflow_module(
+        result = self.project.replace_workflow_module(
             branch_id=branch_id,
             module_id=wf.modules[5].identifier,
             command=cmd
         )
+        self.assertEquals(len(result), 6)
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(11)
@@ -238,12 +266,21 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
+        # Ensure that an error is raised when attempting to replace a module in
+        # an unknown branch
+        with self.assertRaises(ValueError):
+            self.project.replace_workflow_module(
+                branch_id='null',
+                module_id=wf.modules[0].identifier,
+                command=python_cell('print 2+2')
+            )
         # Replace at the start will leave all moules in error or canceled state
-        self.project.replace_workflow_module(
+        result = self.project.replace_workflow_module(
             branch_id=branch_id,
             module_id=wf.modules[0].identifier,
             command=cmd
         )
+        self.assertEquals(len(result), 11)
         while self.project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(11)
