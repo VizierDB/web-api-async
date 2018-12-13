@@ -19,7 +19,7 @@ serialize projects.
 """
 
 import vizier.api.serialize.base as serialize
-import vizier.api.serialize.branch as branches
+import vizier.api.serialize.branch as br
 
 
 def PROJECT_DESCRIPTOR(project, urls):
@@ -45,7 +45,8 @@ def PROJECT_DESCRIPTOR(project, urls):
         'links': HATEOAS({
             'self': urls.get_project(project_id),
             'project:delete': urls.delete_project(project_id),
-            'project:update': urls.update_project(project_id)
+            'project:update': urls.update_project(project_id),
+            'file:upload': urls.file_upload(project_id)
         })
     }
 
@@ -64,56 +65,17 @@ def PROJECT_HANDLE(project, urls):
     -------
     dict
     """
-    project_id = project.identifier
-    return {
-        'id': project_id,
-        'createdAt': project.created_at.isoformat(),
-        'lastModifiedAt': project.last_modified_at.isoformat(),
-        'properties': ANNOTATIONS(project.viztrail.properties),
-        'branches': [
-            branches.BRANCH_DESCRIPTOR(branch, urls)
-                for branch in project.viztrail.list_branches()
-        ],
-        'links': HATEOAS({
-            'self': urls.get_project(project_id),
-            'project:delete': urls.delete_project(project_id),
-            'project:update': urls.update_project(project_id)
-        })
-    }
-
-
-# ------------------------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------------------------
-
-def ANNOTATIONS(annotations):
-    """Serialize the content of an object annotation set.
-
-    Parameters
-    ----------
-    annotations: vizier.core.annotation.base.ObjectAnnotationSet
-        Set of object annotations
-
-    Returns
-    -------
-    dict()
-    """
-    values = annotations.values()
-    return [{'key': key, 'value': values[key]} for key in values]
-
-
-def HATEOAS(links):
-    """Convert a dictionary of key,value pairs into a list of references. Each
-    list element is a dictionary that contains a 'rel' and 'href' element.
-
-    Parameters
-    ----------
-    links: dict()
-        Dictionary where the key defines the relationship and the value is the
-        url.
-
-    Returns
-    -------
-    list()
-    """
-    return [{'rel': key, 'href': links[key]} for key in links]
+    # Use project descriptor as the base
+    obj = PROJECT_DESCRIPTOR(project, urls)
+    # Ad descriptors for project branches
+    branches = list()
+    for branch in project.viztrail.list_branches()
+        branches.append(
+            br.BRANCH_DESCRIPTOR(
+                branch=branch,
+                urls=urls,
+                project_id=project.identifier
+            )
+        )
+    obj['branches'] = branches
+    return obj

@@ -203,3 +203,94 @@ class VizierApi(object):
         project.viztrail.properties.update(properties)
         # Return serialization for project handle.
         return PROJECT_DESCRIPTOR(project, self.urls)
+
+    # --------------------------------------------------------------------------
+    # Branches
+    # --------------------------------------------------------------------------
+    def delete_branch(self, project_id, branch_id):
+        """Delete the branch with the given identifier from the given
+        project.
+
+        Returns True if the branch existed and False if the project or branch
+        are unknown.
+
+        Raises ValueError if an attempt is made to delete the default branch.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: int
+            Unique branch identifier
+
+        Returns
+        -------
+        bool
+        """
+        # Delete viztrail branch. The result is None if either the viztrail or
+        # the branch does not exist.
+        viztrail = self.viztrails.delete_branch(
+            viztrail_id=project_id,
+            branch_id=branch_id
+        )
+        return not viztrail is None
+
+    def get_branch(self, project_id, branch_id):
+        """Retrieve a branch from a given project.
+
+        Returns None if the project or the branch do not exist.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        dict
+            Serialization of the project workflow
+        """
+        # Get viztrail to ensure that it exist.
+        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        if viztrail is None:
+            return None
+        # Return serialization if branch does exist, otherwise None
+        if branch_id in viztrail.branches:
+            branch = viztrail.branches[branch_id]
+            return serialize.BRANCH_HANDLE(viztrail, branch, self.urls)
+
+    def update_branch(self, project_id, branch_id, properties):
+        """Update properties for a given project workflow branch. Returns the
+        handle for the modified workflow or None if the project or branch do not
+        exist.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique workflow branch identifier
+        properties: dict()
+            Properties that are being updated. A None value for a property
+            indicates that the property is to be deleted.
+
+        Returns
+        -------
+        dict
+        """
+        # Get the viztrail to ensure that it exists
+        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
+        if viztrail is None:
+            return None
+        # Get the specified branch
+        if not branch_id in viztrail.branches:
+            return None
+        # Update properties that are associated with the workflow
+        viztrail.branches[branch_id].properties.update_properties(properties)
+        return serialize.BRANCH_HANDLE(
+            viztrail,
+            viztrail.branches[branch_id],
+            urls=self.urls
+        )

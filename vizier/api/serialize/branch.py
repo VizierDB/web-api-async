@@ -21,13 +21,15 @@ serialize branches.
 import vizier.api.serialize.base as serialize
 
 
-def BRANCH_DESCRIPTOR(branch, urls):
+def BRANCH_DESCRIPTOR(branch, project_id, urls):
     """Dictionary serialization for branch descriptor.
 
     Parameters
     ----------
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
+    project_id: string
+        Unique identifier of the associated project
     urls: vizier.api.webservice.routes.UrlFactory
         Factory for resource urls
 
@@ -40,8 +42,8 @@ def BRANCH_DESCRIPTOR(branch, urls):
         'id': branch_id,
         'properties': serialize.ANNOTATIONS(branch.properties),
         'links': serialize.HATEOAS({
-            'self': urls.get_project(branch_id),
-            'project:delete': urls.delete_project(branch_id),
-            'project:update': urls.update_project(branch_id)
+            'self': urls.get_branch(project_id, branch_id),
+            'branch:delete': urls.delete_branch(project_id, branch_id),
+            'branch:update': urls.update_branch(project_id, branch_id)
         })
     }

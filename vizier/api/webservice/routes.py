@@ -79,6 +79,21 @@ class UrlFactory:
         """
         return self.get_project(project_id)
 
+    @abstractmethod
+    def file_upload(self, project_id):
+        """The the fil eupload url for the given project.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        raise NotImplementedError
+
     def get_project(self, project_id):
         """Url to retrieve the project with the given identifier.
 
@@ -115,3 +130,55 @@ class UrlFactory:
         string
         """
         return self.get_project(project_id)
+
+    # --------------------------------------------------------------------------
+    # Branches
+    # --------------------------------------------------------------------------
+    def delete_branch(self, project_id, branch_id):
+        """Url to delete the project branch with the given identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_branch(project_id, branch_id)
+
+    def get_branch(self, project_id, branch_id):
+        """Url to retrieve the project branch with the given identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id) + '/branches/' + branch_id
+
+    def update_branch(self, project_id, branch_id):
+        """Url to update properties for the project branch with the given
+        identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_branch(project_id, branch_id)
