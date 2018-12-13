@@ -10,7 +10,7 @@ import unittest
 
 from werkzeug.datastructures import FileStorage
 
-from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME, PARA_DIRECTORY
+from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILENAME, PARA_DIRECTORY
 import vizier.filestore.base as fs
 
 
@@ -62,15 +62,6 @@ class TestDefaultFilestore(unittest.TestCase):
                 rows += 1
         self.assertEquals(rows, 3)
 
-    def test_init(self):
-        """Test init class method."""
-        with self.assertRaises(ValueError):
-            DefaultFilestore.init({'somekeybutnottheone': SERVER_DIR})
-        db = DefaultFilestore.init({PARA_DIRECTORY: SERVER_DIR})
-        fh1 = db.upload_file(CSV_FILE)
-        fh2 = db.get_file(fh1.identifier)
-        self.assertEquals(fh1.identifier, fh2.identifier)
-
     def test_list_file(self):
         """Test list files method."""
         db = DefaultFilestore(SERVER_DIR)
@@ -94,7 +85,7 @@ class TestDefaultFilestore(unittest.TestCase):
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_format, fs.FORMAT_CSV)
         self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
-        self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, METADATA_FILE_NAME)))
+        self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, fh.identifier, METADATA_FILENAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
         self.assertTrue(fh.is_tabular)
         # Re-load the repository

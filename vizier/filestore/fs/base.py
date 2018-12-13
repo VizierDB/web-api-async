@@ -19,6 +19,7 @@ and their metadata on disk.
 """
 
 import gzip
+import json
 import os
 import shutil
 import tempfile
@@ -31,9 +32,9 @@ from vizier.filestore.base import get_download_filename, get_fileformat
 
 """File store constants."""
 # Default suffix for all local files
-FILENAME_SUFFIX = '.dat'
+DATA_FILENAME = 'file.dat'
 # Name of the metadata file
-METADATA_FILE_NAME = 'index.tsv'
+METADATA_FILENAME = 'properties.json'
 
 
 """Configuration parameter."""
@@ -41,17 +42,15 @@ PARA_DIRECTORY = 'directory'
 
 
 class DefaultFilestore(Filestore):
-    """Default file server implementation. Keeps all files in a given base
-    directory on disk. Files are named by their unique identifier (with suffix
-    .dat for convenience). File metadata is kept in a tab-delimited file
-    index.tsv in the same folder.
+    """Default file server implementation. Keeps all files subfolders of a
+    given base directory. Each subfolder contains the uploaded file (named
+    file.dat for convenience), and the metadata file properties.json.
 
-    The index file has three columns: the file identifier, the original file
-    name and an optional column with the file format. For files with unknown
-    format the third column is omitted.
+    The metadata object is a dictionary with two elements: originalFilename
+    and fileFormat.
     """
     def __init__(self, base_path):
-        """Initialize the base directory that is used for file storage. The base
+        """Initialize the base directory that is used for file storage. The
         directory will be created if they do not exist.
 
         Parameters
@@ -63,8 +62,6 @@ class DefaultFilestore(Filestore):
         if not os.path.isdir(base_path):
             os.makedirs(base_path)
         self.base_path = base_path
-        # Initialize the index file and read the content
-        self.index_file = os.path.join(self.base_path, METADATA_FILE_NAME)
 
     def delete_file(self, identifier):
         """Delete file with given identifier. Returns True if file was deleted
@@ -79,14 +76,10 @@ class DefaultFilestore(Filestore):
         -------
         bool
         """
-        files = self.list_files()
-        for i in range(len(files)):
-            fh = files[i]
-            if fh.identifier == identifier:
-                os.remove(fh.filepath)
-                del files[i]
-                write_index_file(self.index_file, files)
-                return True
+        file_dir =self.get_file_dir(identifier)
+        if os.path.isdir(file_dir):
+            shutil.rmtree(file_dir, ignore_errors=True)
+            return True
         return False
 
     def download_file(self, uri, username=None, password=None):
@@ -107,7 +100,8 @@ class DefaultFilestore(Filestore):
         """
         # Get unique identifier and output file
         identifier = get_unique_identifier()
-        output_file = get_filepath(self.base_path, identifier)
+        file_dir = self.get_file_dir(identifier, create=True)
+        output_file = os.path.join(file_dir, DATA_FILENAME)
         # Write web resource to output file.
         response = urllib2.urlopen(uri)
         filename = get_download_filename(uri, response.info())
@@ -123,7 +117,8 @@ class DefaultFilestore(Filestore):
             file_name=filename,
             file_format=get_fileformat(filename)
         )
-        write_index_file(self.index_file, self.list_files() + [f_handle])
+        # Write metadata file
+        write_metadata_file(file_dir, f_handle)
         return f_handle
 
     def get_file(self, identifier):
@@ -139,30 +134,38 @@ class DefaultFilestore(Filestore):
         -------
         vizier.filestore.base.FileHandle
         """
-        for fh in self.list_files():
-            if fh.identifier == identifier:
-                return fh
+        file_dir =self.get_file_dir(identifier)
+        if os.path.isdir(file_dir):
+            file_name, file_format = read_metadata_file(file_dir)
+            return FileHandle(
+                identifier,
+                filepath=os.path.join(file_dir, DATA_FILENAME),
+                file_name=file_name,
+                file_format=file_format
+            )
         return None
 
-    @staticmethod
-    def init(properties):
-        """Create an instance of the viztrails repositorfile store from a given
-        dictionary of configuration arguments. At this point only the base
-        directory is expected as to be present in the properties dictionary.
+    def get_file_dir(self, identifier, create=False):
+        """Get path to the directory for the file with the given identifier. If
+        the directory does not exist it will be created if the create flag is
+        True.
 
-        Parameter
-        ---------
-        properties: dict()
-            Dictionary of configuration arguments
+        Parameters
+        ----------
+        identifier: string
+            Unique file identifier
+        create: bool, optional
+            File directory will be created if it does not exist and the flag
+            is True
 
         Returns
         -------
-        vizier.filestore.fs.base.DefaultFilestore
+        string
         """
-        # Raise an exception if the pase directory argument is not given
-        if not PARA_DIRECTORY in properties:
-            raise ValueError('missing value for argument \'' + PARA_DIRECTORY + '\'')
-        return DefaultFilestore(base_path=properties[PARA_DIRECTORY])
+        file_dir = os.path.join(self.base_path, identifier)
+        if create and not os.path.isdir(file_dir):
+            os.makedirs(file_dir)
+        return file_dir
 
     def list_files(self):
         """Get list of file handles for all uploaded files.
@@ -171,24 +174,19 @@ class DefaultFilestore(Filestore):
         -------
         list(vizier.filestore.base.FileHandle)
         """
-        files = dict()
-        if os.path.isfile(self.index_file):
-            with open(self.index_file, 'r') as f:
-                for line in f:
-                    tokens = line.strip().split('\t')
-                    file_id = tokens[0]
-                    filepath = get_filepath(self.base_path, file_id)
-                    file_name = tokens[1]
-                    file_format = None
-                    if len(tokens) == 3:
-                        file_format = tokens[2]
-                    files[file_id] = FileHandle(
-                        file_id,
-                        filepath=filepath,
-                        file_name=file_name,
-                        file_format=file_format
-                    )
-        return files.values()
+        result = list()
+        for f_name in os.listdir(self.base_path):
+            dir_name = os.path.join(self.base_path, f_name)
+            if os.path.isdir(dir_name):
+                file_name, file_format = read_metadata_file(dir_name)
+                f_handle = FileHandle(
+                    f_name,
+                    filepath=os.path.join(dir_name, DATA_FILENAME),
+                    file_name=file_name,
+                    file_format=file_format
+                )
+                result.append(f_handle)
+        return result
 
     def upload_file(self, filename):
         """Create a new entry from a given local file. Will make a copy of the
@@ -211,7 +209,8 @@ class DefaultFilestore(Filestore):
         name = name = os.path.basename(filename)
         # Create a new unique identifier for the file.
         identifier = get_unique_identifier()
-        output_file = get_filepath(self.base_path, identifier)
+        file_dir = self.get_file_dir(identifier, create=True)
+        output_file = os.path.join(file_dir, DATA_FILENAME)
         # Copy the uploaded file
         shutil.copyfile(filename, output_file)
         # Add file to file index
@@ -221,7 +220,8 @@ class DefaultFilestore(Filestore):
             file_name=name,
             file_format=get_fileformat(filename)
         )
-        write_index_file(self.index_file, self.list_files() + [f_handle])
+        # Write metadata file
+        write_metadata_file(file_dir, f_handle)
         return f_handle
 
     def upload_stream(self, file, file_name):
@@ -241,7 +241,8 @@ class DefaultFilestore(Filestore):
         """
         # Create a new unique identifier for the file.
         identifier = get_unique_identifier()
-        output_file = get_filepath(self.base_path, identifier)
+        file_dir = self.get_file_dir(identifier, create=True)
+        output_file = os.path.join(file_dir, DATA_FILENAME)
         # Save the file object to the new file path
         file.save(output_file)
         f_handle = FileHandle(
@@ -250,7 +251,8 @@ class DefaultFilestore(Filestore):
             file_name=file_name,
             file_format=get_fileformat(file_name)
         )
-        write_index_file(self.index_file, self.list_files() + [f_handle])
+        # Write metadata file
+        write_metadata_file(file_dir, f_handle)
         return f_handle
 
 
@@ -258,35 +260,38 @@ class DefaultFilestore(Filestore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_filepath(base_dir, file_id):
-    """Get the absolute path for the file with the given identifier.
+def read_metadata_file(file_dir):
+    """Read metadata information for the specified file. Returns the original
+    file name and the file format.
 
     Parameters
     ----------
-    base_dir: string
-        Path of file store base directory
-    file_id: string
-        Unique file identifier
+    file_dir: string
+        Base directory for the file
+
+    Returns
+    -------
+    (string, string)
     """
-    return os.path.join(base_dir, file_id + FILENAME_SUFFIX)
+    metadata_file = os.path.join(file_dir, METADATA_FILENAME)
+    with open(metadata_file, 'r') as f:
+        obj = json.load(f)
+    return obj['originalFilename'], obj['fileFormat']
+    
 
-
-def write_index_file(filename, files):
-    """Write content of the file index. The output is a tab-delimited file where
-    each row has one or two columns. The first column is the file identifier.
-    The optional second column is the file format. This information is omitted
-    for files with unknown format.
+def write_metadata_file(file_dir, f_handle):
+    """Write the metadata file for the given file handle.
 
     Parameters
     ----------
-    filename: string
-        Absolute path to the output file
-    files: list(vizier.filestore.base.FileHandle)
-        List of file handles
+    file_dir: string
+        Base directory for the file
+    f_handle: vizier.filestore.base.FileHandle
+        File handle
     """
-    with open(filename, 'w') as f:
-        for fh in files:
-            line = fh.identifier + '\t' + fh.file_name
-            if not fh.file_format is None:
-                line += '\t' + fh.file_format
-            f.write(line + '\n')
+    metadata_file = os.path.join(file_dir, METADATA_FILENAME)
+    with open(metadata_file, 'w') as f:
+        json.dump({
+            'originalFilename': f_handle.file_name,
+            'fileFormat': f_handle.file_format
+        }, f)
