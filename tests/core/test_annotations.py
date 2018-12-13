@@ -43,6 +43,9 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         self.assertIsNotNone(annotations.find_one('A', raise_error_on_multi_value=False))
         self.assertTrue(1 in annotations.find_all('A'))
         self.assertTrue('XYZ' in annotations.find_all('A'))
+        values = annotations.values()
+        self.assertTrue('A' in values)
+        self.assertEquals(values['A'], [1, 'XYZ'])
 
     def test_delete_values(self):
         """Test functionality that deletes annotations.

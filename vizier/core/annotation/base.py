@@ -127,6 +127,19 @@ class ObjectAnnotationSet(object):
         """
         self.add(key=key, value=value, replace=True)
 
+    @abstractmethod
+    def update(self, properties):
+        """Update the current properties based on the values in the dictionary.
+
+        The (key, value)-pairs in the properties dictionary define the update
+        operations. Values are expected to be either None, a scalar value (i.e.,
+        int, float, or string) or a list of scalar values. If the value is None
+        the corresponding project property is deleted. Otherwise, the
+        corresponding property will be replaced by the value or the values in a
+        given list of values.
+        """
+        raise NotImplementedError
+
 
 class AnnotationStore(object):
     """Interface for ann otation store that manages persistent object
@@ -142,6 +155,16 @@ class AnnotationStore(object):
         ----------
         annotations: dict, optional
             Dictionary of object annotations
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def values(self):
+        """Get a dictionary of key,value pairs that contains all annotations.
+
+        Returns
+        -------
+        dict()
         """
         raise NotImplementedError
 
@@ -189,8 +212,8 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             Flag indicating whether the changes are to be persisted immediately
         """
         # Ensure that the value is a scalar value
-        if value is None or not type(value) in [int, float, str, basestring]:
-            raise ValueError('invalid annotation value')
+        if value is None or not type(value) in [int, float, str, basestring, unicode]:
+            raise ValueError('invalid annotation value type \'' + str(type(value)) + '\'')
         # Set the value if the replace flag is True or no prior annotation for
         # the given key exists
         if not key in self.elements:
@@ -378,3 +401,12 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         # Persist changes
         if not self.writer is None:
             self.writer.store(self.elements)
+
+    def values(self):
+        """Get a dictionary of key,value pairs that contains all annotations.
+
+        Returns
+        -------
+        dict()
+        """
+        return self.elements

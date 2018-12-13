@@ -15,21 +15,33 @@
 # limitations under the License.
 
 """This module contains helper methods for the webservice that are used to
-serialize web resources.
+serialize branches.
 """
 
-def HATEOAS(links):
-    """Convert a dictionary of key,value pairs into a list of references. Each
-    list element is a dictionary that contains a 'rel' and 'href' element.
+import vizier.api.serialize.base as serialize
+
+
+def BRANCH_DESCRIPTOR(branch, urls):
+    """Dictionary serialization for branch descriptor.
 
     Parameters
     ----------
-    links: dict()
-        Dictionary where the key defines the relationship and the value is the
-        url.
+    branch : vizier.viztrail.branch.BranchHandle
+        Branch handle
+    urls: vizier.api.webservice.routes.UrlFactory
+        Factory for resource urls
 
     Returns
     -------
-    list()
+    dict
     """
-    return [{'rel': key, 'href': links[key]} for key in links]
+    branch_id = branch.identifier
+    return {
+        'id': branch_id,
+        'properties': serialize.ANNOTATIONS(branch.properties),
+        'links': serialize.HATEOAS({
+            'self': urls.get_project(branch_id),
+            'project:delete': urls.delete_project(branch_id),
+            'project:update': urls.update_project(branch_id)
+        })
+    }

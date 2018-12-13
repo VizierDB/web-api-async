@@ -24,7 +24,7 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.viztrail.driver.objectstore.branch import OSBranchHandle
 from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
-from vizier.viztrail.branch import DEFAULT_BRANCH
+from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH
 
 
 """Resource identifier"""
@@ -113,7 +113,7 @@ class OSViztrailHandle(ViztrailHandle):
         modules: list(string), optional
             List of module identifier for the modules in the workflow at the
             head of the branch
-            
+
         Returns
         -------
         vizier.viztrail.driver.objectstore.branch.OSBranchHandle
@@ -179,13 +179,14 @@ class OSViztrailHandle(ViztrailHandle):
         )
         # Create the default branch for the new viztrail
         default_branch = create_branch(
-            provenance=None,
+            provenance=BranchProvenance(created_at=created_at),
             properties={PROPERTY_NAME: DEFAULT_BRANCH},
             modules=None,
             branch_folder=branch_folder,
             modules_folder=modules_folder,
             object_store=object_store,
-            is_default=True
+            is_default=True,
+            created_at=created_at
         )
         # Materialize the updated branch index
         write_branch_index(
@@ -347,7 +348,7 @@ class OSViztrailHandle(ViztrailHandle):
 
 def create_branch(
     provenance, properties, modules, branch_folder, modules_folder,
-    object_store, is_default=False
+    object_store, is_default=False, created_at=None
 ):
     """Create a new branch. If the list of workflow modules is given the list
     defines the branch head. Otherwise, the branch is empty.

@@ -27,9 +27,11 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 from vizier.api.webservice.routes import UrlFactory
-from vizier.api.webservice.serialize import HATEOAS
+from vizier.api.serialize.base import HATEOAS
+from vizier.api.serialize.project import PROJECT_DESCRIPTOR, PROJECT_HANDLE
 from vizier.core import VERSION_INFO
 from vizier.core.timestamp import get_current_time
+
 
 
 class VizierApi(object):
@@ -76,7 +78,6 @@ class VizierApi(object):
         """Initialize the API before the first request."""
         self.engine.init()
 
-        
     # --------------------------------------------------------------------------
     # Service
     # --------------------------------------------------------------------------
@@ -90,3 +91,115 @@ class VizierApi(object):
         dict
         """
         return self.service_descriptor
+
+    # --------------------------------------------------------------------------
+    # Projects
+    # --------------------------------------------------------------------------
+    def create_project(self, properties):
+        """Create a new project. All the information about a project is
+        currently stored as part of the viztrail.
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of user-defined project properties
+
+        Returns
+        -------
+        dict
+        """
+        # Create a new project and return the serialized descriptor
+        project = self.engine.create_project(properties=properties)
+        return PROJECT_DESCRIPTOR(project, self.urls)
+
+    def delete_project(self, project_id):
+        """Delete the project with given identifier. Deletes all resources that
+        are associated with the project.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+
+        Returns
+        -------
+        bool
+            True, if project existed and False otherwise
+        """
+        # Delete entry in repository. The result indicates whether the project
+        # existed or not.
+        return self.engine.delete_project(project_id)
+
+    def get_project(self, project_id):
+        """Get comprehensive information for the project with the given
+        identifier.
+
+        Returns None if no project with the given identifier exists.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project from the repository to ensure that it exists.
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Get serialization for project handle.
+        return PROJECT_HANDLE(project, self.urls)
+
+    def list_projects(self):
+        """Returns a list of descriptors for all projects that are currently
+        contained in the project repository.
+
+        Returns
+        ------
+        dict
+        """
+        return {
+            'projects': [
+                PROJECT_DESCRIPTOR(project, self.urls)
+                    for project in self.engine.list_projects()
+            ],
+            'links': HATEOAS({
+                'self': self.urls.list_projects(),
+                'projects:create': self.urls.create_project()
+            })
+        }
+
+    def update_project(self, project_id, properties):
+        """Update the set of user-defined properties for a project with given
+        identifier.
+
+        Returns None if no project with given identifier exists.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        properties : dict
+            Dictionary representing property update statements
+
+        Returns
+        -------
+        dict
+            Serialization of the project handle
+        """
+        # Retrieve the project from the repository to ensure that it exists.
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Update properties that are associated with the viztrail. Make sure
+        # that a new project name, if given, is not the empty string.
+        if 'name' in properties:
+            project_name = properties['name']
+            if not project_name is None:
+                if project_name == '':
+                    raise ValueError('not a valid project name')
+        project.viztrail.properties.update(properties)
+        # Return serialization for project handle.
+        return PROJECT_DESCRIPTOR(project, self.urls)

@@ -226,7 +226,7 @@ class OSBranchHandle(BranchHandle):
     @staticmethod
     def create_branch(
         identifier, base_path, modules_folder, is_default=False, provenance=None,
-        properties=None, modules=None, object_store=None
+        properties=None, created_at=None, modules=None, object_store=None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -299,7 +299,8 @@ class OSBranchHandle(BranchHandle):
                 workflow_count=0,
                 base_path=base_path,
                 object_store=object_store,
-                action=ACTION_CREATE
+                action=ACTION_CREATE,
+                created_at=provenance.created_at
             )
             workflows.append(descriptor)
             # Set the new workflow as the branch head

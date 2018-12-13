@@ -44,4 +44,4 @@ tests/env/
 .env/
 .vizierdb/
 vizier/env
-vizier/local.config.yaml
+resources/config/dev-config.yaml

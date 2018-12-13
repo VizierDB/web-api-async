@@ -104,16 +104,6 @@ paths:
                   required: true
                   description: The unique project identifier
                   type: string
-                - name: branch
-                  in: query
-                  required: false
-                  description: Branch identifier for workflow reference to be included in links
-                  type: string
-                - name: version
-                  in: query
-                  required: false
-                  description: Version identifier for workflow reference to be included in links
-                  type: integer
             responses:
                 200:
                     description: Project metadata and references
@@ -121,27 +111,6 @@ paths:
                         $ref: "#/definitions/ProjectHandle"
                 404:
                     description: Unknown project
-    /projects/{projectId}/modulespecs:
-        get:
-            summary: Executable modules
-            description: List of module specifications for all supported modules of the execution environment
-            operationId: projectModuleSpecifications
-            tags:
-                - project
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Module specification list
-                    schema:
-                        $ref: '#/definitions/ModuleSpecificationListing'
-    /projects/{projectId}/properties:
         post:
             summary: Update project properties
             description: Updates the set of user-defined properties for a given project
@@ -1465,15 +1434,12 @@ definitions:
         description: Fundamental project metadata and references
         required:
             - id
-            - environment
             - createdAt
             - lastModifiedAt
             - properties
             - links
         properties:
             id:
-                type: string
-            environment:
                 type: string
             createdAt:
                 type: string
@@ -1495,8 +1461,8 @@ definitions:
             - createdAt
             - lastModifiedAt
             - properties
-            - environment
             - branches
+            - packages
             - links
         properties:
             id:
@@ -1509,7 +1475,11 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/ObjectProperty"
-            environment:
+            branches:
+                type: array
+                items:
+                    $ref: '#/definitions/BranchDescriptor'
+            packages:
                 type: object
                 required:
                     - id
@@ -1521,10 +1491,6 @@ definitions:
                         type: array
                         items:
                             $ref: "#/definitions/ModuleSpecification"
-            branches:
-                type: array
-                items:
-                    $ref: '#/definitions/BranchDescriptor'
             links:
                 type: array
                 items:
@@ -1546,11 +1512,8 @@ definitions:
     ProjectStatement:
         type: object
         required:
-            - environment
             - properties
         properties:
-            environment:
-                type: string
             properties:
                 type: array
                 items:

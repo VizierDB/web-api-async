@@ -39,23 +39,9 @@ class UrlFactory:
             else:
                 break
 
-    def create_project(self):
-        """Url to create a new project (via POST request).
-
-        Returns
-        -------
-        string
-        """
-        return self.list_projects()
-
-    def list_projects(self):
-        """Url to retrieve the list of active projects.
-
-        Returns
-        -------
-        string
-        """
-        return self.base_url + '/projects'
+    # --------------------------------------------------------------------------
+    # Service
+    # --------------------------------------------------------------------------
 
     def service_descriptor(self):
         """Base Url for the webservice. Provides access to the service
@@ -66,3 +52,66 @@ class UrlFactory:
         string
         """
         return self.base_url
+
+    # --------------------------------------------------------------------------
+    # Projects
+    # --------------------------------------------------------------------------
+    def create_project(self):
+        """Url to create a new project.
+
+        Returns
+        -------
+        string
+        """
+        return self.list_projects()
+
+    def delete_project(self, project_id):
+        """Url to delete the project with the given identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id)
+
+    def get_project(self, project_id):
+        """Url to retrieve the project with the given identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.list_projects() + '/' + project_id
+
+    def list_projects(self):
+        """Url to retrieve the list of active projects.
+
+        Returns
+        -------
+        string
+        """
+        return self.base_url + '/projects'
+
+    def update_project(self, project_id):
+        """Url to update properties for the project with the given identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id)

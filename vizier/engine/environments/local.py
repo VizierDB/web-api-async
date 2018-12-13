@@ -185,4 +185,4 @@ class DefaultLocalEngine(VizierEngine):
         -------
         list(vizier.viztrail.engine.project.ProjectHandle)
         """
-        return list(self.projects)
+        return self.projects.values()

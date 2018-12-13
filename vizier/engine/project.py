@@ -264,6 +264,17 @@ class ProjectHandle(WorkflowController):
                     del self.tasks[task_id]
             return workflow
 
+    @property
+    def created_at(self):
+        """Shortcut to get the timestamp of creation from the associated
+        viztrail.
+
+        Returns
+        -------
+        datetime.datetime
+        """
+        return self.viztrail.created_at
+
     def delete_workflow_module(self, branch_id, module_id):
         """Delete the module with the given identifier from the workflow at the
         head of the viztrail branch. The resulting workflow is executed and will
@@ -587,6 +598,17 @@ class ProjectHandle(WorkflowController):
                 datasets=datasets
             )
             return workflow
+
+    @property
+    def last_modified_at(self):
+        """Shortcut to get the last modified timestamp from the associated
+        viztrail.
+
+        Returns
+        -------
+        datetime.datetime
+        """
+        return self.viztrail.last_modified_at
 
     @property
     def name(self):

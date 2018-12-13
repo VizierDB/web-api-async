@@ -73,6 +73,116 @@ def service_descriptor():
 
 
 # ------------------------------------------------------------------------------
+# Projects
+# ------------------------------------------------------------------------------
+@app.route('/projects')
+def list_projects():
+    """Get a list of descriptors for all projects that are currently being
+    managed by the API.
+    """
+    return jsonify(api.list_projects())
+
+
+@app.route('/projects', methods=['POST'])
+def create_project():
+    """Create a new project. The request is expected to contain a Json object
+    with an optional list of properties as (key,value)-pairs.
+
+    Request
+    -------
+    {
+      "properties": [
+        {
+          "key": "string",
+          "value": "string"
+        }
+      ]
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or if any
+    # of the provided project properties is not a dict with key and value.
+    obj = validate_json_request(request, required=['properties'])
+    if not isinstance(obj['properties'], list):
+        raise InvalidRequest('expected a list of properties')
+    properties = dict()
+    for prop in obj['properties']:
+        if not isinstance(prop, dict):
+            raise InvalidRequest('expected property to be a dictionary')
+        for key in ['key', 'value']:
+            if not key in prop:
+                raise InvalidRequest('missing property element \'' + key + '\'')
+        properties[prop['key']] = prop['value']
+    # Create project and return the project descriptor
+    #try:
+    return jsonify(api.create_project(properties)), 201
+    #except ValueError as ex:
+    #    raise InvalidRequest(str(ex))
+
+
+@app.route('/projects/<string:project_id>')
+def get_project(project_id):
+    """Retrieve information for project with given identifier."""
+    # Retrieve project serialization. If project does not exist the result
+    # will be none.
+    pj = api.get_project(project_id)
+    if not pj is None:
+        return jsonify(pj)
+    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+@app.route('/projects/<string:project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    """Delete an existing project."""
+    if api.delete_project(project_id):
+        return '', 204
+    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+@app.route('/projects/<string:project_id>', methods=['POST'])
+def update_project(project_id):
+    """Update the set of user-defined properties. Expects a Json object with
+    a list of property update statements. These statements are (key,value)
+    pairs, where the value is optional (i.e., missing value for delete
+    statements).
+
+    Request
+    -------
+    {
+      "properties": [
+        {
+          "key": "string",
+          "value": "scalar or list of scalars"
+        }
+      ]
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or if any
+    # of the project property update statements are invalid.
+    obj = validate_json_request(request, required=['properties'])
+    if not isinstance(obj['properties'], list):
+        raise InvalidRequest('expected a list of properties')
+    properties = dict()
+    for prop in obj['properties']:
+        if not isinstance(prop, dict):
+            raise InvalidRequest('expected property to be a dictionary')
+        if not 'key' in prop:
+            raise InvalidRequest('missing property element: ' + key)
+        if 'value' in prop:
+            properties[prop['key']] = prop['value']
+        else:
+            properties[prop['key']] = None
+    # Update project and return the project descriptor. If no project with
+    # the given identifier exists the update result will be None
+    try:
+        pj = api.update_project(project_id, properties)
+        if not pj is None:
+            return jsonify(pj)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+
+
+# ------------------------------------------------------------------------------
 #
 # Exceptions
 #
