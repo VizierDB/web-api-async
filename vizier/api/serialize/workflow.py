@@ -84,6 +84,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     project_id = project.identifier
     branch_id = branch.identifier
     workflow_id = workflow.identifier
+    read_only = (branch.head.identifier != workflow_id)
     return {
         'id': workflow_id,
         'createdAt': workflow.descriptor.created_at.isoformat(),
@@ -93,11 +94,12 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 project=project,
                 branch=branch,
                 module=m,
-                urls=urls
+                urls=urls,
+                include_self=(not read_only)
             ) for m in workflow.modules
         ],
         'datasets': list(),
-        'readOnly': (branch.head.identifier != workflow_id),
+        'readOnly': read_only,
         'links': serialize.HATEOAS({
             'workflow:append': urls.workflow_append(
                 project_id=project_id,

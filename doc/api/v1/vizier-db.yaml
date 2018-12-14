@@ -281,7 +281,7 @@ paths:
                 404:
                     description: Unknown project, branch, or workflow
         post:
-            summary: Append to branch head
+            summary: Append module to branch head
             description: Append module to workflow at HEAD of given branch
             operationId: appendBranchHead
             tags:
@@ -314,6 +314,174 @@ paths:
                     description: Invalid module statement
                 404:
                     description: Unknown project or branch
+    /projects/{projectId}/branches/{branchId}/head/cancel:
+        post:
+            summary: Cancel workflow
+            description: Cancel execution of all running or pending modules in the branch head
+            operationId: cancelWorkflow
+            tags:
+                - workflow
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Handle forthe resulting workflow
+                    schema:
+                        $ref: '#/definitions/WorkflowHandle'
+                404:
+                    description: Unknown project or branch
+    /projects/{projectId}/branches/{branchId}/head/modules/{moduleId}:
+        delete:
+            summary: Delete module
+            description: Delete existing module in workflow at HEAD of given branch
+            operationId: deleteModule
+            tags:
+                - workflow
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Unique identifier of the workflow module
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Modified workflow handle
+                    schema:
+                        $ref: '#/definitions/WorkflowUpdateResult'
+                404:
+                    description: Unknown project, branch, workflow, or module
+        get:
+            summary: Get module state
+            description: Get state of a module in the head workflow of a branch
+            operationId: getBranchHead
+            tags:
+                - workflow
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Unique identifier of the workflow module
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Workflow handle
+                    schema:
+                        $ref: '#/definitions/ModuleHandle'
+                404:
+                    description: Unknown project, branch, or module
+        post:
+            summary: Insert module
+            description: Insert a new module into workflow at HEAD of given branch
+            operationId: insertModule
+            tags:
+                - workflow
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Unique identifier of the workflow module
+                  type: string
+                - name: module
+                  in: body
+                  required: true
+                  description: Definition of module
+                  schema:
+                      $ref: '#/definitions/ModuleStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Modified workflow handle
+                    schema:
+                        $ref: '#/definitions/WorkflowUpdateResult'
+                400:
+                    description: Invalid module statement
+                404:
+                    description: Unknown project, branch, workflow, or module
+        put:
+            summary: Replace module
+            description: Replace existing module in workflow at HEAD of given branch
+            operationId: replaceModule
+            tags:
+                - workflow
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Unique identifier of the workflow module
+                  type: string
+                - name: module
+                  in: body
+                  required: true
+                  description: Definition of module
+                  schema:
+                      $ref: '#/definitions/ModuleStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Modified workflow handle
+                    schema:
+                        $ref: '#/definitions/WorkflowUpdateResult'
+                400:
+                    description: Invalid module statement
+                404:
+                    description: Unknown project, branch, workflow, or module
     /projects/{projectId}/branches/{branchId}/workflows/{workflowId}:
         get:
             summary: Get workflow
@@ -346,131 +514,6 @@ paths:
                         $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project, branch, or workflow
-    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}:
-        delete:
-            summary: Delete module
-            description: Delete an existing module in a workflow and execute the resulting workflow
-            operationId: deleteModule
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: string
-                - name: moduleId
-                  in: path
-                  required: true
-                  description: Identifier of module before which the new module is inserted
-                  type: integer
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Modified workflow handle
-                    schema:
-                        $ref: '#/definitions/WorkflowUpdateResult'
-                404:
-                    description: Unknown project, branch, workflow, or module
-        post:
-            summary: Insert module
-            description: Insert a new module into a workflow before the identified module and execute the resulting workflow
-            operationId: insertModule
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: string
-                - name: moduleId
-                  in: path
-                  required: true
-                  description: Identifier of module before which the new module is inserted
-                  type: string
-                - name: module
-                  in: body
-                  required: true
-                  description: Definition of module
-                  schema:
-                      $ref: '#/definitions/ModuleStatement'
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Modified workflow handle
-                    schema:
-                        $ref: '#/definitions/WorkflowUpdateResult'
-                400:
-                    description: Invalid module statement
-                404:
-                    description: Unknown project, branch, workflow, or module
-        put:
-            summary: Replace module
-            description: Replace an existing module in a workflow and execute the resulting workflow
-            operationId: replaceModule
-            tags:
-                - workflow
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: string
-                - name: moduleId
-                  in: path
-                  required: true
-                  description: Identifier of module that is being replaced
-                  type: string
-                - name: module
-                  in: body
-                  required: true
-                  description: Definition of module
-                  schema:
-                      $ref: '#/definitions/ModuleStatement'
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Modified workflow handle
-                    schema:
-                        $ref: '#/definitions/WorkflowUpdateResult'
-                400:
-                    description: Invalid module statement
-                404:
-                    description: Unknown project, branch, workflow, or module
     #
     # Notebooks
     #
@@ -1458,19 +1501,11 @@ definitions:
                     $ref: '#/definitions/Reference'
     WorkflowUpdateResult:
         type: object
-        description: Result of workflow update. Contains handle and optional content (either notebook or dataset)
+        description: List of handles for modules that were affected by a workflow update
         required:
-            - workflow
+            - modules
         properties:
-            workflow:
-                $ref: '#/definitions/WorkflowHandle'
             modules:
                 type: array
                 items:
                     $ref: '#/definitions/ModuleHandle'
-            datasets:
-                type: array
-                items:
-                    $ref: '#/definitions/DatasetDescriptor'
-            dataset:
-                $ref: '#/definitions/DatasetHandle'

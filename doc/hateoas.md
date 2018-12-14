@@ -53,6 +53,12 @@ workflow:append
 
 
 
+ModuleHandle
+------------
+self
+module
+
+
 FileHandle
 ----------
 

@@ -243,7 +243,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        list(vizier.viztrail.module.base.ModuleHandle)
+        vizier.viztrail.workflow.WorkflowHandle
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch.
@@ -254,18 +254,16 @@ class ProjectHandle(WorkflowController):
             if workflow is None:
                 raise ValueError('empty workflow at branch head')
             # Set the state of all active modules to canceled
-            modules = list()
             for module in workflow.modules:
                 if module.is_active:
                     module.set_canceled()
-                    modules.append(module)
             # Cancel all running tasks for the branch
             for task_id in self.tasks.keys():
                 task = self.tasks[task_id]
                 if task.branch_id == branch_id:
                     self.backend.cancel_task(task_id)
                     del self.tasks[task_id]
-            return modules
+            return workflow
 
     @property
     def created_at(self):

@@ -21,9 +21,12 @@ serialize workflow modules.
 import vizier.api.serialize.base as serialize
 
 
-def MODULE_HANDLE(project, branch, module, urls):
+def MODULE_HANDLE(project, branch, module, urls, include_self=True):
     """Dictionary serialization for a handle in the workflow at the branch
     head.
+
+    The list of references will only contain a self referene if the include_self
+    flag is True.
 
     Parameters
     ----------
@@ -35,6 +38,8 @@ def MODULE_HANDLE(project, branch, module, urls):
         Module handle
     urls: vizier.api.webservice.routes.UrlFactory
         Factory for resource urls
+    include_self: bool, optional
+        Indicate if self link is included
 
     Returns
     -------
@@ -58,28 +63,65 @@ def MODULE_HANDLE(project, branch, module, urls):
             'createdAt': timestamp.created_at.isoformat()
         },
         'links': serialize.HATEOAS({
-            'self': urls.get_workflow_module(
-                project_id=project_id,
-                branch_id=branch_id,
-                module_id=module_id
-            ),
-            'cancel': urls.cancel_workflow(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
             'branch:head': urls.get_branch_head(
                 project_id=project_id,
                 branch_id=branch_id
             )
         })
     }
+    if include_self:
+        obj['links'].extend(serialize.HATEOAS({
+            'self': urls.get_workflow_module(
+                project_id=project_id,
+                branch_id=branch_id,
+                module_id=module_id
+            )
+        }))
+    if not timestamp.started_at is None:
+        obj['timestamps']['startedAt'] = timestamp.started_at.isoformat()
+    # Add outputs and datasets if module is not active. Else add cancel link
     if not module.is_active:
         obj['outputs'] = {
             'stdout': [serialize.OUTPUT(out) for out in module.outputs.stdout],
             'stderr': [serialize.OUTPUT(out) for out in module.outputs.stderr]
         }
-    if not timestamp.started_at is None:
-        obj['timestamps']['startedAt'] = timestamp.started_at.isoformat()
-    if not timestamp.finished_at is None:
-        obj['timestamps']['finishedAt'] = timestamp.finished_at.isoformat()
+        if not timestamp.finished_at is None:
+            obj['timestamps']['finishedAt'] = timestamp.finished_at.isoformat()
+    else:
+        obj['links'].extend(serialize.HATEOAS({
+            'cancel': urls.cancel_workflow(
+                project_id=project_id,
+                branch_id=branch_id
+            )
+        }))
     return obj
+
+
+def MODULE_HANDLE_LIST(project, branch, modules, urls):
+    """Serialize a list of module handles into a dictionary.
+
+    Parameters
+    ----------
+    project: vizier.engine.project.ProjectHandle
+        Handle for the containing project
+    branch : vizier.viztrail.branch.BranchHandle
+        Branch handle
+    modules: list(vizier.viztrail.module.base.ModuleHandle)
+        Module handle
+    urls: vizier.api.webservice.routes.UrlFactory
+        Factory for resource urls
+
+    Returns
+    -------
+    dict
+    """
+    return {
+        'modules': [
+            MODULE_HANDLE(
+                project=project,
+                branch=branch,
+                module=m,
+                urls=urls
+            ) for m in modules
+        ]
+    }

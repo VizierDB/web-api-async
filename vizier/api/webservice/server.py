@@ -303,7 +303,7 @@ def append_branch_head(project_id, branch_id):
     {
       "packageId": "string",
       "commandId": "string",
-      "arguments": {}
+      "arguments": []
     }
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
@@ -315,18 +315,34 @@ def append_branch_head(project_id, branch_id):
     # Extend and execute workflow. This will throw a ValueError if the command
     # cannot be parsed.
     try:
-        # Result is None if project or workflow version are not found.
-        result = api.append_module(
+        # Result is None if project or branch are not found
+        module = api.append_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             package_id=cmd['packageId'],
             command_id=cmd['commandId'],
             arguments=cmd['arguments']
         )
-        if not result is None:
-            return jsonify(result)
+        if not module is None:
+            return jsonify(module)
     except ValueError as ex:
         raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/cancel', methods=['POST'])
+def cancel_workflow(project_id, branch_id):
+    """Cancel execution for all running and pending modules in the head
+    workflow of a given project branch.
+    """
+    # Get the workflow handle. The result is None if the project, branch or
+    # workflow do not exist.
+    workflow = api.cancel_workflow(
+        project_id=project_id,
+        branch_id=branch_id
+    )
+    if not workflow is None:
+        return jsonify(workflow)
     raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
@@ -343,6 +359,111 @@ def get_workflow(project_id, branch_id, workflow_id):
     if not workflow is None:
         return jsonify(workflow)
     raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')
+def get_workflow_module(project_id, branch_id, module_id):
+    """Get handle for a module in the head workflow of a given project branch.
+    """
+    # Get the workflow handle. The result is None if the project, branch or
+    # workflow do not exist.
+    module = api.get_workflow_module(
+        project_id=project_id,
+        branch_id=branch_id,
+        module_id=module_id
+    )
+    if not module is None:
+        return jsonify(module)
+    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['DELETE'])
+def delete_workflow_module(project_id, branch_id, module_id):
+    """Delete a module in the head workflow of a given project branch."""
+    result = api.delete_workflow_module(
+        project_id=project_id,
+        branch_id=branch_id,
+        module_id=module_id
+    )
+    if not result is None:
+        return jsonify(result)
+    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['POST'])
+def insert_workflow_module(project_id, branch_id, module_id):
+    """Insert a module into a workflow branch before the specified module and
+    execute the resulting workflow.
+
+    Request
+    -------
+    {
+      "packageId": "string",
+      "commandId": "string",
+      "arguments": []
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain the expected elements.
+    cmd = validate_json_request(
+        request,
+        required=['packageId', 'commandId', 'arguments']
+    )
+    # Extend and execute workflow. This will throw a ValueError if the command
+    # cannot be parsed.
+    try:
+        # Result is None if project, branch or module are not found.
+        modules = api.insert_workflow_module(
+            project_id=project_id,
+            branch_id=branch_id,
+            before_module_id=module_id,
+            package_id=cmd['packageId'],
+            command_id=cmd['commandId'],
+            arguments=cmd['arguments']
+        )
+        if not modules is None:
+            return jsonify(modules)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['PUT'])
+def replace_workflow_module(project_id, branch_id, module_id):
+    """Replace a module in the current project workflow branch and execute the
+    resulting workflow.
+
+    Request
+    -------
+    {
+      "packageId": "string",
+      "commandId": "string",
+      "arguments": []
+    }
+    """
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain the expected elements.
+    cmd = validate_json_request(
+        request,
+        required=['packageId', 'commandId', 'arguments']
+    )
+    # Extend and execute workflow. This will throw a ValueError if the command
+    # cannot be parsed.
+    try:
+        # Result is None if project, branch or module are not found.
+        modules = api.replace_workflow_module(
+            project_id=project_id,
+            branch_id=branch_id,
+            module_id=module_id,
+            package_id=cmd['packageId'],
+            command_id=cmd['commandId'],
+            arguments=cmd['arguments']
+        )
+        if not modules is None:
+            return jsonify(modules)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
 # ------------------------------------------------------------------------------
