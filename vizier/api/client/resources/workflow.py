@@ -17,7 +17,7 @@
 """Resource object representing a workflow from a project branch that is
 available at a remote vizier instance."""
 
-from vizier.client.api.resources.module import ModuleResource
+from vizier.api.client.resources.module import ModuleResource
 from vizier.core.timestamp import to_datetime
 
 import vizier.engine.packages.pycell.base as pycell
@@ -51,7 +51,7 @@ class WorkflowResource(object):
 
         Returns
         -------
-        vizier.client.api.resources.workflow.WorkflowResource
+        vizier.api.client.resources.workflow.WorkflowResource
         """
         # Get the action name
         action = to_external_form(obj['action'])

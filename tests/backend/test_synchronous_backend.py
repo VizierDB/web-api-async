@@ -13,8 +13,8 @@ from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZU
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.filestore.fs.base import DefaultFilestore
 
-import vizier.client.command.vizual as vizual
-import vizier.client.command.pycell as pycell
+import vizier.api.client.command.vizual as vizual
+import vizier.api.client.command.pycell as pycell
 import vizier.engine.packages.base as pckg
 
 

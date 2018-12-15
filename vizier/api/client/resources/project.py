@@ -14,36 +14,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Resource object representing a branch of a project that is available at a
-remote vizier instance."""
+"""Resource object representing a project in a remote vizier instance."""
 
-from vizier.client.api.resources.workflow import WorkflowResource
 from vizier.core.timestamp import to_datetime
 
 
-class BranchResource(object):
-    """A project branch in a remote vizier instance."""
-    def __init__(self, identifier, name, created_at, last_modified_at, workflows=None):
-        """Initialize the branch attributes."""
+class ProjectResource(object):
+    """A project in a remote vizier instance."""
+    def __init__(self, identifier, name, created_at, last_modified_at):
+        """Initialize the project attributes."""
         self.identifier = identifier
         self.name = name
         self.created_at = created_at
         self.last_modified_at = last_modified_at
-        self.workflows = workflows
 
     @staticmethod
     def from_dict(obj):
-        """Get a branch resource instance from the dictionary representation
-        returned by the vizier web service.
+        """Get a project instance from the dictionary representation returned
+        by the vizier web service.
 
         Parameters
         ----------
         obj: dict()
-            Dictionary serialization of a branch descriptor or handle
+            Dictionary serialization of a project handle
 
         Returns
         -------
-        vizier.client.api.resources.branch.BranchResource
+        vizier.api.client.resources.project.ProjectResource
         """
         # Get the name from the properties list
         name = None
@@ -51,15 +48,9 @@ class BranchResource(object):
             if prop['key'] == 'name':
                 name = prop['value']
                 break
-        workflows = None
-        if 'workflows' in obj:
-            workflows = [
-                WorkflowResource.from_dict(wf) for wf in obj['workflows']
-            ]
-        return BranchResource(
+        return ProjectResource(
             identifier=obj['id'],
             name=name,
             created_at=to_datetime(obj['createdAt']),
-            last_modified_at=to_datetime(obj['lastModifiedAt']),
-            workflows=workflows
+            last_modified_at=to_datetime(obj['lastModifiedAt'])
         )

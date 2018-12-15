@@ -6,7 +6,7 @@ import os
 import shutil
 import unittest
 
-from vizier.client.command.pycell import python_cell
+from vizier.api.client.command.pycell import python_cell
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.pycell.client.base import VizierDBClient

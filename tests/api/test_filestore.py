@@ -3,7 +3,7 @@ import shutil
 import unittest
 
 from vizier.api.base import VizierApi
-from vizier.client.cli.interpreter import CommandInterpreter
+from vizier.api.client.cli.interpreter import CommandInterpreter
 from vizier.config import AppConfig
 
 

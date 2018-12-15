@@ -4,10 +4,10 @@ package.
 
 import unittest
 
-from vizier.client.command.mimir import mimir_domain, mimir_geocode
-from vizier.client.command.mimir import mimir_key_repair, mimir_missing_key
-from vizier.client.command.mimir import mimir_missing_value, mimir_picker
-from vizier.client.command.mimir import mimir_schema_matching
+from vizier.api.client.command.mimir import mimir_domain, mimir_geocode
+from vizier.api.client.command.mimir import mimir_key_repair, mimir_missing_key
+from vizier.api.client.command.mimir import mimir_missing_value, mimir_picker
+from vizier.api.client.command.mimir import mimir_schema_matching
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
 import vizier.engine.packages.base as pckg

@@ -142,7 +142,6 @@ class DefaultLocalEngine(VizierEngine):
         """
         if project_id in self.projects:
             return self.projects[project_id]
-        print self.projects
         return None
 
     def init(self):

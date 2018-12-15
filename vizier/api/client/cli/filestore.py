@@ -16,7 +16,7 @@
 
 """Implementation of commands that interact with the Api's file store."""
 
-from vizier.client.cli.command import Command
+from vizier.api.client.cli.command import Command
 
 
 class FilestoreCommands(Command):

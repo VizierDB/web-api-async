@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 
-from vizier.client.command.pycell import python_cell
+from vizier.api.client.command.pycell import python_cell
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle

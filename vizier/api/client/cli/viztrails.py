@@ -18,8 +18,8 @@
 repository.
 """
 
-from vizier.client.api.base import VizierApiClient
-from vizier.client.cli.command import Command
+from vizier.api.client.base import VizierApiClient
+from vizier.api.client.cli.command import Command
 from vizier.core.timestamp import utc_to_local
 from vizier.viztrail.base import PROPERTY_NAME
 
@@ -133,12 +133,12 @@ class ViztrailsCommands(Command):
             # list projects
             elif tokens[0] == 'list' and tokens[1] == 'projects':
                 return self.list_projects()
-            # list workflows
-            elif tokens[0] == 'list' and tokens[1] == 'workflows':
+            # show history
+            elif tokens[0] == 'show' and tokens[1] == 'history':
                 return self.list_workflows()
             # show workflow
-            elif tokens[0] == 'show' and tokens[1] == 'workflow':
-                return self.show_workflow()
+            elif tokens[0] == 'show' and tokens[1] == 'notebook':
+                return self.show_notebook()
         elif len(tokens) == 3:
             # create branch <name>
             if tokens[0] == 'create' and tokens[1] == 'branch':
@@ -165,8 +165,8 @@ class ViztrailsCommands(Command):
             elif tokens[0] == 'set' and tokens[1] == 'project':
                 return self.set_project(tokens[2])
             # show workflow <workflow-id>
-            elif tokens[0] == 'show' and tokens[1] == 'workflow':
-                return self.show_workflow(workflow_id=tokens[2])
+            elif tokens[0] == 'show' and tokens[1] == 'notebook':
+                return self.show_notebook(workflow_id=tokens[2])
             # show workflow <workflow-id>
             elif tokens[0] == 'run' and tokens[1] == 'python':
                 return self.run_python(code=tokens[2])
@@ -182,12 +182,12 @@ class ViztrailsCommands(Command):
         print '  delete project <project-id>'
         print '  list branches'
         print '  list projects'
-        print '  list workflows'
         print '  rename branch <name>'
         print '  rename project <name>'
         print '  set project <project-id>'
         print '  set branch <branch-id>'
-        print '  show workflow {<workflow-id>}'
+        print '  show history'
+        print '  show notebook {<workflow-id>}'
         print '  run python [<file> | <script-code>]'
 
     def list_branches(self):
@@ -331,7 +331,7 @@ class ViztrailsCommands(Command):
             print 'Unknown project: ' + project_id
         return True
 
-    def show_workflow(self, workflow_id=None):
+    def show_notebook(self, workflow_id=None):
         """List all modules for a given workflow. If the workflow identifier is
         not given the branch head is used as the workflow.
         """

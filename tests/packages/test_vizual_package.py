@@ -6,7 +6,7 @@ other modules.
 
 import unittest
 
-import vizier.client.command.vizual as vizual
+import vizier.api.client.command.vizual as vizual
 import vizier.engine.packages.base as pckg
 
 

@@ -9,7 +9,7 @@ from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-from vizier.client.command.pycell import python_cell
+from vizier.api.client.command.pycell import python_cell
 
 MODULE_DIR = './.temp'
 

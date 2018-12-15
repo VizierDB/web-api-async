@@ -16,8 +16,8 @@
 
 """Simple command line interpreter to test functionality of the vizier Api."""
 
-from vizier.client.cli import VERSION_INFO
-from vizier.client.cli.viztrails import ViztrailsCommands
+from vizier.api.client.cli import VERSION_INFO
+from vizier.api.client.cli.viztrails import ViztrailsCommands
 
 
 class CommandInterpreter(object):

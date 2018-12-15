@@ -4,7 +4,7 @@ package.
 
 import unittest
 
-from vizier.client.command.plot import create_plot
+from vizier.api.client.command.plot import create_plot
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 
 import vizier.engine.packages.base as pckg

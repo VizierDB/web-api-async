@@ -6,10 +6,10 @@ import os
 import shutil
 import unittest
 
-from vizier.client.command.vizual import delete_column, load_dataset
-from vizier.client.command.vizual import projection, sort_dataset, update_cell
+from vizier.api.client.command.vizual import delete_column, load_dataset
+from vizier.api.client.command.vizual import projection, sort_dataset, update_cell
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILE_NAME
+from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILENAME
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual

@@ -46,7 +46,7 @@ class ModuleResource(object):
 
         Returns
         -------
-        vizier.client.api.resources.module.ModuleResource
+        vizier.api.client.resources.module.ModuleResource
         """
         # Create a list of outputs.
         outputs = list()

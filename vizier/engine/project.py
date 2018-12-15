@@ -720,8 +720,10 @@ class ProjectHandle(WorkflowController):
         are adjusted to the given value. The output streams are empty if no
         value is given for the outputs parameter.
 
-        Cancels all pending modules in the workflow. Returns the list of
-        affected modules in the modified workflow.
+        Cancels all pending modules in the workflow.
+
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -734,7 +736,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        list(vizier.viztrail.module.base.ModuleHandle)
+        bool
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch and
@@ -747,16 +749,17 @@ class ProjectHandle(WorkflowController):
                 module.set_error(finished_at=finished_at, outputs=outputs)
                 for m in workflow.modules[module_index+1:]:
                     m.set_canceled()
-                return workflow.modules[module_index:]
+                return True
             else:
-                return list()
+                return False
 
     def set_running(self, task_id, started_at=None):
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
 
-        Returns the list of active module sin the workflow.
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -767,7 +770,7 @@ class ProjectHandle(WorkflowController):
 
         Returns
         -------
-        list(vizier.viztrail.module.base.ModuleHandle)
+        bool
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch and
@@ -781,9 +784,9 @@ class ProjectHandle(WorkflowController):
                     external_form=external_form,
                     started_at=started_at
                 )
-                return workflow.modules[module_index:]
+                return True
             else:
-                return list()
+                return False
 
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
         """Set status of the module that is associated with the given task
@@ -795,9 +798,8 @@ class ProjectHandle(WorkflowController):
         output streams. If the workflow has pending modules the first pending
         module will be executed next.
 
-        Returns the list of handles for the workflow modules that occur after
-        the module that was completed successfully. If the specified module
-        is not in pending state the result is an empty list.
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -825,58 +827,63 @@ class ProjectHandle(WorkflowController):
             if workflow is None or module_index == -1:
                 return None
             module = workflow.modules[module_index]
-            if module.is_running:
-                # Adjust the module context
-                context = self.get_database_state(
-                    workflow=workflow,
-                    module_index=module_index,
-                    datasets=datasets
-                )
-                module.set_success(
-                    finished_at=finished_at,
-                    datasets=context,
-                    outputs=outputs,
-                    provenance=provenance
-                )
-                for next_module in workflow.modules[module_index+1:]:
-                    if not next_module.is_pending:
-                        return None
-                    elif not next_module.provenance.requires_exec(context):
-                        context = next_module.provenance.adjust_state(
-                            context,
-                            datastore=self.datastore
+            if not module.is_running:
+                # The result is false if the state of the module did not change
+                return False
+            # Adjust the module context
+            context = self.get_database_state(
+                workflow=workflow,
+                module_index=module_index,
+                datasets=datasets
+            )
+            module.set_success(
+                finished_at=finished_at,
+                datasets=context,
+                outputs=outputs,
+                provenance=provenance
+            )
+            for next_module in workflow.modules[module_index+1:]:
+                if not next_module.is_pending:
+                    # This case can only happen if we allow parallel execution
+                    # of modules in the future. At this point it should not
+                    # occur.
+                    raise RuntimeError('invalid workflow state')
+                elif not next_module.provenance.requires_exec(context):
+                    context = next_module.provenance.adjust_state(
+                        context,
+                        datastore=self.datastore
+                    )
+                    next_module.set_success(
+                        finished_at=finished_at,
+                        datasets=context,
+                        outputs=next_module.outputs,
+                        provenance=next_module.provenance
+                    )
+                else:
+                    command = next_module.command
+                    package_id = command.package_id
+                    command_id = command.command_id
+                    external_form = command.to_external_form(
+                        command=self.packages[package_id].get(command_id),
+                        datasets=context,
+                        filestore=self.filestore
+                    )
+                    # If the backend is going to run the task immediately we
+                    # need to adjust the module state
+                    state = self.backend.next_task_state()
+                    if state == MODULE_RUNNING:
+                        next_module.set_running(
+                            external_form=external_form,
+                            started_at=get_current_time()
                         )
-                        next_module.set_success(
-                            finished_at=finished_at,
-                            datasets=context,
-                            outputs=next_module.outputs,
-                            provenance=next_module.provenance
-                        )
-                    else:
-                        command = next_module.command
-                        package_id = command.package_id
-                        command_id = command.command_id
-                        external_form = command.to_external_form(
-                            command=self.packages[package_id].get(command_id),
-                            datasets=context,
-                            filestore=self.filestore
-                        )
-                        # If the backend is going to run the task immediately we
-                        # need to adjust the module state
-                        state = self.backend.next_task_state()
-                        if state == MODULE_RUNNING:
-                            next_module.set_running(
-                                external_form=external_form,
-                                started_at=get_current_time()
-                            )
-                        self.execute_module(
-                            branch_id=workflow.branch_id,
-                            module=next_module,
-                            datasets=context,
-                            external_form=external_form
-                        )
-                        break
-                return workflow.modules[module_index+1:]
+                    self.execute_module(
+                        branch_id=workflow.branch_id,
+                        module=next_module,
+                        datasets=context,
+                        external_form=external_form
+                    )
+                    break
+            return True
 
 
 # ------------------------------------------------------------------------------

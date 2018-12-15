@@ -2,7 +2,7 @@
 
 import unittest
 
-from vizier.client.command.pycell import python_cell
+from vizier.api.client.command.pycell import python_cell
 from vizier.viztrail.command import ModuleCommand, ARG, ARG_ID
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as pycell

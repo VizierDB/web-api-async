@@ -6,7 +6,7 @@ other modules.
 
 import unittest
 
-import vizier.client.command.mimir as mimir
+import vizier.api.client.command.mimir as mimir
 
 
 class TestMimirCommandValidation(unittest.TestCase):

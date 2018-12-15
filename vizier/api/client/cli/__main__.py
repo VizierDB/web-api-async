@@ -20,7 +20,7 @@ import os
 import sys
 
 from vizier.api.webservice.routes import UrlFactory
-from vizier.client.cli.interpreter import CommandInterpreter
+from vizier.api.client.cli.interpreter import CommandInterpreter
 from vizier.config import AppConfig
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 

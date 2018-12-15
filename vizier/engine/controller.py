@@ -43,8 +43,8 @@ class WorkflowController(object):
 
         Cancels all pending modules in the workflow.
 
-        Returns the handle for the modified workflow. If the specified module
-        is not in an active state the result is None.
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -57,7 +57,7 @@ class WorkflowController(object):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        bool
         """
         raise NotImplementedError
 
@@ -67,8 +67,8 @@ class WorkflowController(object):
         identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
 
-        Returns the handle for the modified workflow. If the specified module
-        is not in pending state the result is None.
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -79,7 +79,7 @@ class WorkflowController(object):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        bool
         """
         raise NotImplementedError
 
@@ -94,8 +94,8 @@ class WorkflowController(object):
         output streams. If the workflow has pending modules the first pending
         module will be executed next.
 
-        Returns the handle for the modified workflow. If the specified module
-        is not in pending state the result is None.
+        Returns True if the state of the workflow was changed and False
+        otherwise. The result is None if the project or task did not exist.
 
         Parameters
         ----------
@@ -114,6 +114,6 @@ class WorkflowController(object):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        bool
         """
         raise NotImplementedError
