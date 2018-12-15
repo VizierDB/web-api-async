@@ -38,6 +38,7 @@ def get_base_directory():
 def main(args):
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
+    print args
     # Initialize the url factory and read default values.
     app_dir = get_base_directory()
     config = AppConfig(configuration_file=os.path.join(app_dir, 'config.yaml'))

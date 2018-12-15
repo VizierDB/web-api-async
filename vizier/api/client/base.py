@@ -17,27 +17,57 @@
 """Client-size apit for a remote vizier instance."""
 
 import json
+import requests
 import urllib2
 
 from vizier.api.client.resources.branch import BranchResource
 from vizier.api.client.resources.project import ProjectResource
 from vizier.api.client.resources.workflow import WorkflowResource
 
+import vizier.api.serialize.base as serialize
+import vizier.api.serialize.labels as labels
+
+
+"""Annotation keys for default values."""
+KEY_DEFAULT_BRANCH = 'branch'
+KEY_DEFAULT_PROJECT = 'project'
+
+"""Default error messages."""
+MSG_NO_DEFAULT_BRANCH = 'Default branch not set'
+MSG_NO_DEFAULT_PROJECT = 'Default project not set'
+
 
 class VizierApiClient(object):
     """Client-size API to remote vizier instances provides access to resources
     that are available at the instance.
     """
-    def __init__(self, urls):
+    def __init__(self, urls, defaults=None):
         """Initialize the url factory that is used to access and manipulate
         resoures on the vizier instance.
 
         Parameters
         ----------
         urls: vizier.api.routes.UrlFactory
-            Factory for resource urls
+            Factory for request urls
+        defaults: vizier.core.annotation.base.ObjectAnnotationSet
+            Annotation set for default values
         """
         self.urls = urls
+        # We only set the defaults if a value is given. Otherwise, the local
+        # variables are not initialized.
+        if not defaults is None:
+            self.defaults = defaults
+            # Set the default project
+            project_id = self.defaults.find_one(KEY_DEFAULT_PROJECT)
+            if not project_id is None:
+                self.default_project = project_id
+            else:
+                self.default_project = None
+            branch_id = self.defaults.find_one(KEY_DEFAULT_BRANCH)
+            if not branch_id is None:
+                self.default_branch = branch_id
+            else:
+                self.default_branch = None
 
     def get_branch(self, project_id, branch_id):
         """Fetch a project branch from the remote web service API.
@@ -109,7 +139,6 @@ class VizierApiClient(object):
         # Convert result into instance of a workflow resource
         return WorkflowResource.from_dict(data)
 
-
     def list_branches(self, project_id):
         """Fetch list of project from remote web service API.
 
@@ -144,3 +173,27 @@ class VizierApiClient(object):
         for obj in data['projects']:
             projects.append(ProjectResource.from_dict(obj))
         return projects
+
+    def update_project(self, project_id, properties):
+        """Update the properties of a given project.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        properties: dict
+            Properties update statements
+
+        Returns
+        -------
+        vizier.api.client.resources.project.ProjectResource
+        """
+        # Get the request url and create the request body
+        url = self.urls.update_project(project_id)
+        data = {labels.PROPERTIES: serialize.PROPERTIES(properties)}
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful
+        r = requests.put(url, json=data)
+        r.raise_for_status()
+        # the result is the new project descriptor
+        return ProjectResource.from_dict(json.loads(r.text))

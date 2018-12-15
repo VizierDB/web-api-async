@@ -16,7 +16,9 @@
 
 """Simple command line interpreter to test functionality of the vizier Api."""
 
+from vizier.api.client.base import VizierApiClient
 from vizier.api.client.cli import VERSION_INFO
+from vizier.api.client.cli.settings import SettingCommands
 from vizier.api.client.cli.viztrails import ViztrailsCommands
 
 
@@ -35,8 +37,10 @@ class CommandInterpreter(object):
         defaults: vizier.core.annotation.base.ObjectAnnotationSet
             Annotation set for default values
         """
+        self.api = VizierApiClient(urls=urls, defaults=defaults)
         self.commands = [
-            ViztrailsCommands(urls=urls, defaults=defaults)
+            SettingCommands(api=self.api),
+            ViztrailsCommands(api=self.api)
         ]
 
     def eval(self, tokens):

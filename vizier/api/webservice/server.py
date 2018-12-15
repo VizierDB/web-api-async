@@ -32,6 +32,7 @@ from vizier.api.webservice.base import VizierApi
 from vizier.config import AppConfig
 
 import vizier.api.base as srv
+import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 
 
@@ -112,7 +113,7 @@ def create_project():
     obj = srv.validate_json_request(request, required=['properties'])
     if not isinstance(obj['properties'], list):
         raise srv.InvalidRequest('expected a list of properties')
-    properties = srv.convert_properties(obj['properties'])
+    properties = deserialize.PROPERTIES(obj['properties'])
     # Create project and return the project descriptor
     try:
         return jsonify(api.projects.create_project(properties)), 201
@@ -164,7 +165,7 @@ def update_project(project_id):
         raise srv.InvalidRequest('expected a list of properties')
     # Update project and return the project descriptor. If no project with
     # the given identifier exists the update result will be None
-    properties = srv.convert_properties(obj['properties'], allow_null=True)
+    properties = deserialize.PROPERTIES(obj['properties'], allow_null=True)
     try:
         pj = api.projects.update_project(project_id, properties)
         if not pj is None:
@@ -219,7 +220,7 @@ def create_branch(project_id):
             else:
                 raise srv.InvalidRequest('invalid element \'' + key + '\' for branch point')
     # Get the properties for the new branch
-    properties = srv.convert_properties(obj['properties'])
+    properties = deserialize.PROPERTIES(obj['properties'])
     # Create a new workflow. The result is the descriptor for the new workflow
     # or None if the specified project does not exist. Will raise a ValueError
     # if the specified workflow version or module do not exist
@@ -282,7 +283,7 @@ def update_branch(project_id, branch_id):
     # contain a properties key.
     obj = srv.validate_json_request(request, required=['properties'])
     # Update properties for the given branch and return branch descriptor.
-    properties = srv.convert_properties(obj['properties'], allow_null=True)
+    properties = deserialize.PROPERTIES(obj['properties'], allow_null=True)
     try:
         # Result is None if project or branch are not found.
         branch = api.branches.update_branch(

@@ -94,43 +94,6 @@ class ResourceNotFound(ServerRequestException):
 #
 # ------------------------------------------------------------------------------
 
-def convert_properties(properties, allow_null=False):
-    """Convert a list of properties from request format into a dictionary.
-
-    Raises InvalidRequest if an invalid list of properties is given.
-
-    Parameters
-    ----------
-    properties: list
-        List of key,value pairs defining object properties
-    allow_null: bool, optional
-        Allow None values for properties if True
-
-    Returns
-    -------
-    dict()
-    """
-    result = dict()
-    for prop in properties:
-        if not isinstance(prop, dict):
-            raise InvalidRequest('expected property to be a dictionary')
-        name = None
-        value = None
-        for key in prop:
-            if key  == 'key':
-                name = prop[key]
-            elif key == 'value':
-                value = prop[key]
-            else:
-                raise InvalidRequest('invalid property element \'' + key + '\'')
-        if name is None:
-            raise InvalidRequest('missing element \'key\' in property')
-        if value is None and not allow_null:
-            raise InvalidRequest('missing property value for \'' + name + '\'')
-        result[name] = value
-    return result
-
-
 def validate_json_request(request, required=None, optional=None):
     """Validate the body of the given request. Ensures that the request contains
     a Json object and that this object contains at least the required keys and

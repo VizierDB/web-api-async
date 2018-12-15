@@ -51,9 +51,31 @@ def HATEOAS(links):
 
     Returns
     -------
-    list()
+    list
     """
     return [{labels.REL: key, labels.HREF: links[key]} for key in links]
+
+
+def PROPERTIES(properties):
+    """Serialize a dictionary of object properties into a list of dictionaries
+    as expected by the web service API.
+
+    Parameters
+    ----------
+    properties: dict
+
+    Returns
+    -------
+    list
+    """
+    result = list()
+    for key in properties:
+        obj = {labels.KEY: key}
+        value = properties[key]
+        if not value is None:
+            obj[labels.VALUE] = value
+        result.append(obj)
+    return result
 
 
 # ------------------------------------------------------------------------------

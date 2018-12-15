@@ -18,20 +18,11 @@
 repository.
 """
 
-from vizier.api.client.base import VizierApiClient
+from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
+from vizier.api.client.base import MSG_NO_DEFAULT_BRANCH, MSG_NO_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
 from vizier.core.timestamp import utc_to_local
 from vizier.viztrail.base import PROPERTY_NAME
-
-
-"""Annotation keys for default values."""
-KEY_DEFAULT_BRANCH = 'branch'
-KEY_DEFAULT_PROJECT = 'project'
-
-
-"""Default error messages."""
-MSG_NO_DEFAULT_BRANCH = 'Default branch not set'
-MSG_NO_DEFAULT_PROJECT = 'Default project not set'
 
 
 """Default timestamp format."""
@@ -40,29 +31,17 @@ TIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 class ViztrailsCommands(Command):
     """"Collection of commands that interact with the viztrails repository."""
-    def __init__(self, urls, defaults):
-        """Initialize the viztrails repository manager from the API object.
+    def __init__(self, api):
+        """Initialize the viztrails API.
 
         Parameters
         ----------
-        urls: vizier.api.routes.UrlFactory
-            Factory for request urls
-        defaults: vizier.core.annotation.base.ObjectAnnotationSet
-            Annotation set for default values
+        api: vizier.api.client.base.VizierApiClient
+            Vizier API client
         """
-        self.api = VizierApiClient(urls)
-        self.defaults = defaults
-        # Set the default project
-        project_id = self.defaults.find_one(KEY_DEFAULT_PROJECT)
-        if not project_id is None:
-            self.default_project = project_id
-        else:
-            self.default_project = None
-        branch_id = self.defaults.find_one(KEY_DEFAULT_BRANCH)
-        if not branch_id is None:
-            self.default_branch = branch_id
-        else:
-            self.default_branch = None
+        self.api = api
+        self.default_project = api.default_project
+        self.default_branch = api.default_branch
 
     def create_branch(self, name):
         """Create a new branch in the default project."""
@@ -122,11 +101,7 @@ class ViztrailsCommands(Command):
         tokans: list(string)
             List of tokens in the command line
         """
-        if len(tokens) == 1:
-            # defaults
-            if tokens[0] == 'defaults':
-                return self.print_defaults()
-        elif len(tokens) == 2:
+        if len(tokens) == 2:
             # list branches
             if tokens[0] == 'list' and tokens[1] == 'branches':
                 return self.list_branches()
@@ -134,7 +109,7 @@ class ViztrailsCommands(Command):
             elif tokens[0] == 'list' and tokens[1] == 'projects':
                 return self.list_projects()
             # show history
-            elif tokens[0] == 'show' and tokens[1] == 'history':
+            elif tokens[0] == 'show' and tokens[1] in ['history', 'notebooks']:
                 return self.list_workflows()
             # show workflow
             elif tokens[0] == 'show' and tokens[1] == 'notebook':
@@ -158,12 +133,6 @@ class ViztrailsCommands(Command):
             # rename project <name>
             elif tokens[0] == 'rename' and tokens[1] == 'project':
                 return self.rename_project(tokens[2])
-            # set project <project-id>
-            elif tokens[0] == 'set' and tokens[1] == 'branch':
-                return self.set_branch(tokens[2])
-            # set project <project-id>
-            elif tokens[0] == 'set' and tokens[1] == 'project':
-                return self.set_project(tokens[2])
             # show workflow <workflow-id>
             elif tokens[0] == 'show' and tokens[1] == 'notebook':
                 return self.show_notebook(workflow_id=tokens[2])
@@ -177,16 +146,13 @@ class ViztrailsCommands(Command):
         print '\nProjects'
         print '  create branch <name>'
         print '  create project <name>'
-        print '  defaults'
         print '  delete branch <branch-id>'
         print '  delete project <project-id>'
         print '  list branches'
         print '  list projects'
         print '  rename branch <name>'
         print '  rename project <name>'
-        print '  set project <project-id>'
-        print '  set branch <branch-id>'
-        print '  show history'
+        print '  show [history | notebooks]'
         print '  show notebook {<workflow-id>}'
         print '  run python [<file> | <script-code>]'
 
@@ -255,23 +221,6 @@ class ViztrailsCommands(Command):
         print '\n' + str(len(branch.workflows)) + ' workflow(s)\n'
         return True
 
-    def print_defaults(self):
-        """Print the current defaults."""
-        if not self.default_project is None:
-            project = self.api.get_project(project_id=self.default_project)
-            print 'Project \'' + project.name + '\' (' + project.identifier + ')'
-            if not self.default_branch is None:
-                branch = self.api.get_branch(
-                    project_id=project.identifier,
-                    branch_id=self.default_branch
-                )
-                print 'On branch \'' + branch.name + '\' (' + branch.identifier + ')'
-            else:
-                print MSG_NO_DEFAULT_BRANCH
-        else:
-            print MSG_NO_DEFAULT_PROJECT
-        return True
-
     def rename_branch(self, name):
         """Rename the default branch."""
         self.viztrails.update_branch_properties(
@@ -287,48 +236,11 @@ class ViztrailsCommands(Command):
         if self.default_project is None:
             print MSG_NO_DEFAULT_PROJECT
             return True
-        self.viztrails.update_project_properties(
-            project_id=self.default_project.identifier,
+        self.api.update_project(
+            project_id=self.default_project,
             properties={PROPERTY_NAME: name}
         )
         print 'Project renamed to ' + name
-        return True
-
-    def set_branch(self, branch_id):
-        """Set the default branch."""
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        branch = None
-        for br in self.api.list_branches(project_id=self.default_project):
-            if br.identifier == branch_id:
-                branch = br
-                break
-        if not branch is None:
-            self.defaults.add(
-                key=KEY_DEFAULT_BRANCH,
-                value=branch_id,
-                replace=True
-            )
-            print 'On branch \'' + branch.name + '\''
-        else:
-            print 'Unknown branch ' + branch_id
-        return True
-
-    def set_project(self, project_id):
-        """Set the default project."""
-        project = self.api.get_project(project_id=project_id)
-        if not project is None:
-            self.default_project = project_id
-            self.defaults.add(
-                key=KEY_DEFAULT_PROJECT,
-                value=project_id,
-                replace=True
-            )
-            self.defaults.delete(key=KEY_DEFAULT_BRANCH)
-            print 'Default project is now \'' + project.name + '\''
-        else:
-            print 'Unknown project: ' + project_id
         return True
 
     def show_notebook(self, workflow_id=None):

@@ -21,12 +21,13 @@ from vizier.core.timestamp import to_datetime
 
 class ProjectResource(object):
     """A project in a remote vizier instance."""
-    def __init__(self, identifier, name, created_at, last_modified_at):
+    def __init__(self, identifier, name, created_at, last_modified_at, default_branch=None):
         """Initialize the project attributes."""
         self.identifier = identifier
         self.name = name
         self.created_at = created_at
         self.last_modified_at = last_modified_at
+        self.default_branch = default_branch
 
     @staticmethod
     def from_dict(obj):
@@ -48,9 +49,16 @@ class ProjectResource(object):
             if prop['key'] == 'name':
                 name = prop['value']
                 break
+        default_branch = None
+        if 'branches' in obj:
+            for branch in obj['branches']:
+                if branch['isDefault']:
+                    default_branch = branch['id']
+                    break
         return ProjectResource(
             identifier=obj['id'],
             name=name,
             created_at=to_datetime(obj['createdAt']),
-            last_modified_at=to_datetime(obj['lastModifiedAt'])
+            last_modified_at=to_datetime(obj['lastModifiedAt']),
+            default_branch=default_branch
         )

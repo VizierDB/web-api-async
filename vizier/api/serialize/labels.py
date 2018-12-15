@@ -20,6 +20,11 @@
 ID = 'id'
 NAME = 'name'
 
+# Properties
+PROPERTIES = 'properties'
+KEY = 'key'
+VALUE = 'value'
+
 # HATEOAS
 HREF = 'href'
 LINKS = 'links'
