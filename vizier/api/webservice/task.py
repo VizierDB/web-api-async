@@ -1,0 +1,120 @@
+# Copyright (C) 2018 New York University,
+#                    University at Buffalo,
+#                    Illinois Institute of Technology.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Vizier Task API - Implements all methods of the API to interact with running
+tasks in vizier projects.
+"""
+
+from vizier.core.timestamp import to_datetime
+from vizier.viztrail.base import PROPERTY_NAME
+
+import vizier.api.serialize.base as serialize
+import vizier.api.serialize.deserialize as deserialize
+import vizier.api.serialize.labels as labels
+import vizier.viztrail.module.base as states
+
+
+class VizierTaskApi(object):
+    """The Vizier task API implements the methods that interact with active
+    task for vizier projects.
+    """
+    def __init__(self, engine):
+        """Initialize the API components.
+
+        Parameters
+        ----------
+        engine: vizier.engine.base.VizierEngine
+            Instance of the API engine
+        """
+        self.engine = engine
+
+    def update_task_state(self, project_id, task_id, state, body):
+        """Update that state pf a given task. The contents of the request body
+        depend on the value of the new task state.
+
+        Raises a ValueError if the request body is invalid. The result is None
+        if the project or task are unknown. Otherwise, the result is a
+        dictionary with a single result value. The result is 0 if the task state
+        did not change. A positive value signals a successful task state change.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        task_id: string
+            Unique task identifier
+        state: int
+            The new state of the task
+        body: dict
+            State-dependent additional information
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project from the repository to ensure thatit exists.
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Depending on the requested state change call the respective method
+        # after extracting additional parameters from the request body.
+        result = None
+        if state == states.MODULE_RUNNING:
+            if labels.STARTED_AT in body:
+                result = project.set_running(
+                    task_id=task_id,
+                    started_at=to_datetime(body[labels.STARTED_AT])
+                )
+            else:
+                result = project.set_running(task_id=task_id)
+        elif state == states.MODULE_ERROR:
+            finished_at = None
+            if labels.FINISHED_AT in body:
+                finished_at = to_datetime(body[labels.FINISHED_AT])
+            outputs = None
+            if labels.OUTPUTS in body:
+                outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
+            result = project.set_error(
+                task_id=task_id,
+                finished_at=finished_at,
+                outputs=outputs
+            )
+        elif state == states.MODULE_SUCCESS:
+            finished_at = None
+            if labels.FINISHED_AT in body:
+                finished_at = to_datetime(body[labels.FINISHED_AT])
+            outputs = None
+            if labels.OUTPUTS in body:
+                outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
+            datasets = None
+            if labels.DATASETS in body:
+                datasets = deserialize.DATASETS(body[labels.DATASETS])
+            provenance = None
+            if labels.PROVENANCE in body:
+                provenance = deserialize.PROVENANCE(body[labels.PROVENANCE])
+            result = project.set_success(
+                task_id=task_id,
+                finished_at=finished_at,
+                datasets=datasets,
+                outputs=outputs,
+                provenance=provenance
+            )
+        else:
+            raise ValueError('invalid state change')
+        # Create state change result
+        if not result is None:
+            return {serialize.RESULT: len(result)}
+        return None

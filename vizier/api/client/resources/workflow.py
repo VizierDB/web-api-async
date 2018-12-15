@@ -46,7 +46,7 @@ class WorkflowResource(object):
 
         Parameters
         ----------
-        obj: dict()
+        obj: dict
             Dictionary serialization of a workflow descriptor or handle
 
         Returns

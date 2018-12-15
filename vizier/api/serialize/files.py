@@ -19,6 +19,7 @@ serialize file resources.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.labels as labels
 
 
 def FILE_HANDLE(f_handle, project, urls):
@@ -30,7 +31,7 @@ def FILE_HANDLE(f_handle, project, urls):
         File handle
     project: vizier.engine.project.ProjectHandle
         Handle for the containing project
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns
@@ -44,7 +45,7 @@ def FILE_HANDLE(f_handle, project, urls):
     obj = {
         'id': file_id,
         'name': f_handle.file_name,
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'self': download_url,
             'file:download': download_url
         })

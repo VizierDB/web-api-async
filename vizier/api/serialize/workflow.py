@@ -19,6 +19,7 @@ serialize workflow resources.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.labels as labels
 import vizier.api.serialize.module as serialmd
 
 
@@ -32,7 +33,7 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns
@@ -49,7 +50,7 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
         'datasets': list(),
         'charts': list(),
         'readOnly': False,
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'workflow:append': urls.workflow_append(
                 project_id=project_id,
                 branch_id=branch_id
@@ -74,7 +75,7 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
         Branch handle
     woekflow: vizier.viztrail.workflow.WorkflowDescriptor
         Workflow descriptor
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns
@@ -90,7 +91,7 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
         'action': workflow.action,
         'packageId': workflow.package_id,
         'commandId': workflow.command_id,
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'self': urls.get_workflow(
                 project_id=project_id,
                 branch_id=branch_id,
@@ -116,7 +117,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         Branch handle
     woekflow: vizier.viztrail.workflow.WorkflowHandle
         Workflow handle
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns
@@ -146,7 +147,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         ],
         'datasets': list(),
         'readOnly': read_only,
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'workflow:append': urls.workflow_append(
                 project_id=project_id,
                 branch_id=branch_id

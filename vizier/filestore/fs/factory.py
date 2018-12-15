@@ -34,7 +34,7 @@ class DefaultFilestoreFactory(FilestoreFactory):
 
         Parameters
         ----------
-        properties: dict()
+        properties: dict
             Dictionary of configuration properties
         """
         self.base_path = os.path.abspath(properties[PARA_DIRECTORY])

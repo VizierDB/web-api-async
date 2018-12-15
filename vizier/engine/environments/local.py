@@ -55,7 +55,7 @@ class DefaultLocalEngine(VizierEngine):
 
         Parameters
         ----------
-        properties: dict()
+        properties: dict
             Configuration object for the local engine
         packages: dict(vizier.engine.packages.base.PackageIndex)
             Index of loaded packages

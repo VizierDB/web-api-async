@@ -30,7 +30,7 @@ class TaskContext(object):
 
     Attributes
     ----------
-    datasets: dict()
+    datasets: dict
         Identifier for datasets in the database state agains which a task is
         executed (keyed by user-provided name)
     datastore: vizier.datastore.base.Datastore
@@ -47,10 +47,10 @@ class TaskContext(object):
             Datastore for the project that execute the task
         filestore: vizier.filestore.Filestore
             Filestore for the project that executes the task
-        datasets: dict(), optional
+        datasets: dict, optional
             Identifier for datasets in the database state agains which a task
             is executed (keyed by user-provided name)
-        resources: dict(), optional
+        resources: dict, optional
             Optional information about resources that were generated during a
             previous execution of the command
         """

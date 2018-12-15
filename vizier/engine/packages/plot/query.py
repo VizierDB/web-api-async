@@ -24,7 +24,7 @@ class DataStreamConsumer(object):
 
     Attributes
     ----------
-    values: list()
+    values: list
         List of values in the resulting data series
     """
     def __init__(self, column_index, range_start=None, range_end=None, cast_to_number=True):

@@ -41,7 +41,7 @@ class ModuleResource(object):
 
         Parameters
         ----------
-        obj: dict()
+        obj: dict
             Dictionary serialization of a workflow module handle
 
         Returns

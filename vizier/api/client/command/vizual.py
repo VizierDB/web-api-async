@@ -165,7 +165,7 @@ def load_dataset(dataset_name, file_id, validate=False):
     ----------
     dataset_name: string
         Name for the new dataset
-    file_id: dict()
+    file_id: dict
         Dictionary containing at least one of 'fileId' or 'uri' and optional
         'userName' and 'password'.
     validate: bool, optional

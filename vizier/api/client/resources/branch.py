@@ -38,7 +38,7 @@ class BranchResource(object):
 
         Parameters
         ----------
-        obj: dict()
+        obj: dict
             Dictionary serialization of a branch descriptor or handle
 
         Returns

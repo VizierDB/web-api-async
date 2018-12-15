@@ -218,7 +218,7 @@ def validate_package(pckg_declaration):
 
     Parameters
     ----------
-    pckg_declaration: dict()
+    pckg_declaration: dict
         Dictionary containing package declaration
 
     """
@@ -567,9 +567,9 @@ class PackageIndex(object):
 
         Parameters
         ----------
-        package: dict()
+        package: dict
             Package declaration
-        properties: dict()
+        properties: dict
             Additional properties to create an instance of the associated
             package engine.
         """
@@ -705,7 +705,7 @@ def export_package(filename, package_key, package_def, format='YAML'):
         Name of the output file.
     package_key: string
         Unique package identifier
-    package_def: dict()
+    package_def: dict
         Definition of commands that are supported by the package
     """
     if not format.upper() in ['JSON', 'YAML']:

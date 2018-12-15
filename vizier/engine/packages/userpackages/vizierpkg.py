@@ -988,7 +988,7 @@ def add_data_series(view, series_spec, dataset, prefix=cmd.PARA_SERIES, default_
     ----------
     view: vizier.plot.view.ChartViewHandle
         Chart view handle
-    series_spec: dict()
+    series_spec: dict
         Data series specification
     dataset: vizier.datastore.base.DatasetHandle
         Dataset handle
@@ -1044,7 +1044,7 @@ def add_param(params, name, dataset, args, key):
         Name of the parameter
     dataset: vizier.datastore.base.DatasetHandle
         Dataset handle
-    args : dict(dict())
+    args : dict(dict)
         Dictionary of command arguments
     key : string
         Argument name
@@ -1085,7 +1085,7 @@ def get_argument(key, args, as_int=False, raise_error=True, default_value=None):
     ----------
     key : string
         Argument name
-    args : dict(dict())
+    args : dict(dict)
         Dictionary of command arguments
     as_int : bool
         Flag indicating whther the argument should be cobverted to int. If the
@@ -1128,7 +1128,7 @@ def get_column_argument(dataset, args, key, optional=False):
     ----------
     dataset: vizier.datastore.base.DatasetHandle
         Dataset handle
-    args : dict(dict())
+    args : dict(dict)
         Dictionary of command arguments
     key : string
         Argument name

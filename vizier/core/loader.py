@@ -37,7 +37,7 @@ class ClassLoader(object):
 
         Parameters
         ----------
-        values: dict()
+        values: dict
             Dictionary that specifies a new class instance
         """
         # Ensure that the mandatory elements are present in the dictionary
@@ -62,7 +62,7 @@ class ClassLoader(object):
 
         Parameters
         ----------
-        properties: dict()
+        properties: dict
             Dictionary of properties passed to the new class instance.
 
         Returns
@@ -89,7 +89,7 @@ class ClassLoader(object):
             Name of the Python module that contains the reference class
         class_name: string
             Name of the class that is being referenced
-        properties: dict(), optional
+        properties: dict, optional
             Optional dictionary of class-specific configuration parameters
 
         Returns

@@ -19,15 +19,19 @@ front end and for any other (remote) clients. Implements the requests for the
 Vizier Web API as documented in http://cds-swg1.cims.nyu.edu/vizier/api/v1/doc/.
 """
 
+import csv
 import os
+import StringIO
 
 from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
+from vizier.api.routes import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config import AppConfig
 
+import vizier.api.base as srv
 import vizier.api.serialize.labels as labels
 
 
@@ -84,7 +88,7 @@ def list_projects():
     """Get a list of descriptors for all projects that are currently being
     managed by the API.
     """
-    return jsonify(api.list_projects())
+    return jsonify(api.projects.list_projects())
 
 
 @app.route('/projects', methods=['POST'])
@@ -105,15 +109,15 @@ def create_project():
     """
     # Abort with BAD REQUEST if request body is not in Json format or if any
     # of the provided project properties is not a dict with key and value.
-    obj = validate_json_request(request, required=['properties'])
+    obj = srv.validate_json_request(request, required=['properties'])
     if not isinstance(obj['properties'], list):
-        raise InvalidRequest('expected a list of properties')
-    properties = convert_properties(obj['properties'])
+        raise srv.InvalidRequest('expected a list of properties')
+    properties = srv.convert_properties(obj['properties'])
     # Create project and return the project descriptor
     try:
-        return jsonify(api.create_project(properties)), 201
+        return jsonify(api.projects.create_project(properties)), 201
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
+        raise srv.InvalidRequest(str(ex))
 
 
 @app.route('/projects/<string:project_id>')
@@ -121,18 +125,18 @@ def get_project(project_id):
     """Retrieve information for project with given identifier."""
     # Retrieve project serialization. If project does not exist the result
     # will be none.
-    pj = api.get_project(project_id)
+    pj = api.projects.get_project(project_id)
     if not pj is None:
         return jsonify(pj)
-    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
 @app.route('/projects/<string:project_id>', methods=['DELETE'])
 def delete_project(project_id):
     """Delete an existing project."""
-    if api.delete_project(project_id):
+    if api.projects.delete_project(project_id):
         return '', 204
-    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
 @app.route('/projects/<string:project_id>', methods=['PUT'])
@@ -155,19 +159,19 @@ def update_project(project_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or if any
     # of the project property update statements are invalid.
-    obj = validate_json_request(request, required=['properties'])
+    obj = srv.validate_json_request(request, required=['properties'])
     if not isinstance(obj['properties'], list):
-        raise InvalidRequest('expected a list of properties')
+        raise srv.InvalidRequest('expected a list of properties')
     # Update project and return the project descriptor. If no project with
     # the given identifier exists the update result will be None
-    properties = convert_properties(obj['properties'], allow_null=True)
+    properties = srv.convert_properties(obj['properties'], allow_null=True)
     try:
-        pj = api.update_project(project_id, properties)
+        pj = api.projects.update_project(project_id, properties)
         if not pj is None:
             return jsonify(pj)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
 # ------------------------------------------------------------------------------
@@ -197,7 +201,7 @@ def create_branch(project_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    obj = validate_json_request(request, required=['properties'], optional=['source'])
+    obj = srv.validate_json_request(request, required=['properties'], optional=['source'])
     # Get the branch point. If the source is given the dictionary should at
     # most contain the three identifier
     branch_id = None
@@ -213,14 +217,14 @@ def create_branch(project_id):
             elif key ==  'moduleId':
                 module_id = source[key]
             else:
-                raise InvalidRequest('invalid element \'' + key + '\' for branch point')
+                raise srv.InvalidRequest('invalid element \'' + key + '\' for branch point')
     # Get the properties for the new branch
-    properties = convert_properties(obj['properties'])
+    properties = srv.convert_properties(obj['properties'])
     # Create a new workflow. The result is the descriptor for the new workflow
     # or None if the specified project does not exist. Will raise a ValueError
     # if the specified workflow version or module do not exist
     try:
-        branch = api.create_branch(
+        branch = api.branches.create_branch(
             project_id=project_id,
             branch_id=branch_id,
             workflow_id=workflow_id,
@@ -230,20 +234,20 @@ def create_branch(project_id):
         if not branch is None:
             return jsonify(branch)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['DELETE'])
 def delete_branch(project_id, branch_id):
     """Delete branch from a given project."""
     try:
-        success = api.delete_branch(project_id=project_id, branch_id=branch_id)
+        success = api.branches.delete_branch(project_id=project_id, branch_id=branch_id)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
+        raise srv.InvalidRequest(str(ex))
     if success:
         return '', 204
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>')
@@ -251,10 +255,10 @@ def get_branch(project_id, branch_id):
     """Get handle for a branch in a given project."""
     # Get the branch handle. The result is None if the project or the branch
     # do not exist.
-    branch = api.get_branch(project_id, branch_id)
+    branch = api.branches.get_branch(project_id, branch_id)
     if not branch is None:
         return jsonify(branch)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['PUT'])
@@ -276,12 +280,12 @@ def update_branch(project_id, branch_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain a properties key.
-    obj = validate_json_request(request, required=['properties'])
+    obj = srv.validate_json_request(request, required=['properties'])
     # Update properties for the given branch and return branch descriptor.
-    properties = convert_properties(obj['properties'], allow_null=True)
+    properties = srv.convert_properties(obj['properties'], allow_null=True)
     try:
         # Result is None if project or branch are not found.
-        branch = api.update_branch(
+        branch = api.branches.update_branch(
             project_id=project_id,
             branch_id=branch_id,
             properties=properties
@@ -289,8 +293,8 @@ def update_branch(project_id, branch_id):
         if not branch is None:
             return jsonify(branch)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 # ------------------------------------------------------------------------------
@@ -302,10 +306,10 @@ def get_branch_head(project_id, branch_id):
     """Get handle for a workflow at the HEAD of a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
-    workflow = api.get_workflow(project_id=project_id, branch_id=branch_id)
+    workflow = api.workflows.get_workflow(project_id=project_id, branch_id=branch_id)
     if not workflow is None:
         return jsonify(workflow)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head', methods=['POST'])
@@ -322,7 +326,7 @@ def append_branch_head(project_id, branch_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    cmd = validate_json_request(
+    cmd = srv.validate_json_request(
         request,
         required=['packageId', 'commandId', 'arguments']
     )
@@ -330,7 +334,7 @@ def append_branch_head(project_id, branch_id):
     # cannot be parsed.
     try:
         # Result is None if project or branch are not found
-        module = api.append_workflow_module(
+        module = api.workflows.append_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             package_id=cmd['packageId'],
@@ -340,8 +344,8 @@ def append_branch_head(project_id, branch_id):
         if not module is None:
             return jsonify(module)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/cancel', methods=['POST'])
@@ -351,13 +355,13 @@ def cancel_workflow(project_id, branch_id):
     """
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
-    workflow = api.cancel_workflow(
+    workflow = api.workflows.cancel_workflow(
         project_id=project_id,
         branch_id=branch_id
     )
     if not workflow is None:
         return jsonify(workflow)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')
@@ -365,14 +369,14 @@ def get_workflow(project_id, branch_id, workflow_id):
     """Get handle for a workflow in a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
-    workflow = api.get_workflow(
+    workflow = api.workflows.get_workflow(
         project_id=project_id,
         branch_id=branch_id,
         workflow_id=workflow_id
     )
     if not workflow is None:
         return jsonify(workflow)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')
@@ -381,27 +385,27 @@ def get_workflow_module(project_id, branch_id, module_id):
     """
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
-    module = api.get_workflow_module(
+    module = api.workflows.get_workflow_module(
         project_id=project_id,
         branch_id=branch_id,
         module_id=module_id
     )
     if not module is None:
         return jsonify(module)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['DELETE'])
 def delete_workflow_module(project_id, branch_id, module_id):
     """Delete a module in the head workflow of a given project branch."""
-    result = api.delete_workflow_module(
+    result = api.workflows.delete_workflow_module(
         project_id=project_id,
         branch_id=branch_id,
         module_id=module_id
     )
     if not result is None:
         return jsonify(result)
-    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['POST'])
@@ -419,7 +423,7 @@ def insert_workflow_module(project_id, branch_id, module_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    cmd = validate_json_request(
+    cmd = srv.validate_json_request(
         request,
         required=['packageId', 'commandId', 'arguments']
     )
@@ -427,7 +431,7 @@ def insert_workflow_module(project_id, branch_id, module_id):
     # cannot be parsed.
     try:
         # Result is None if project, branch or module are not found.
-        modules = api.insert_workflow_module(
+        modules = api.workflows.insert_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             before_module_id=module_id,
@@ -438,8 +442,8 @@ def insert_workflow_module(project_id, branch_id, module_id):
         if not modules is None:
             return jsonify(modules)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['PUT'])
@@ -457,7 +461,7 @@ def replace_workflow_module(project_id, branch_id, module_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    cmd = validate_json_request(
+    cmd = srv.validate_json_request(
         request,
         required=['packageId', 'commandId', 'arguments']
     )
@@ -465,7 +469,7 @@ def replace_workflow_module(project_id, branch_id, module_id):
     # cannot be parsed.
     try:
         # Result is None if project, branch or module are not found.
-        modules = api.replace_workflow_module(
+        modules = api.workflows.replace_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             module_id=module_id,
@@ -476,8 +480,8 @@ def replace_workflow_module(project_id, branch_id, module_id):
         if not modules is None:
             return jsonify(modules)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
 # ------------------------------------------------------------------------------
@@ -489,7 +493,7 @@ def update_task_state(project_id, task_id):
     """Update the state of a running task."""
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    obj = validate_json_request(
+    obj = srv.validate_json_request(
         request,
         required=[labels.STATE],
         optional=[
@@ -506,7 +510,7 @@ def update_task_state(project_id, task_id):
     # the project or task are unknown.
     try:
         # Result is None if project, branch or module are not found.
-        result = api.update_task_state(
+        result = api.tasks.update_task_state(
             project_id=project_id,
             task_id=task_id,
             state=obj[labels.STATE],
@@ -515,8 +519,149 @@ def update_task_state(project_id, task_id):
         if not result is None:
             return jsonify(result)
     except ValueError as ex:
-        raise InvalidRequest(str(ex))
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or task \'' + task_id + '\'')
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or task \'' + task_id + '\'')
+
+
+# ------------------------------------------------------------------------------
+# Datasets
+# ------------------------------------------------------------------------------
+
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>')
+def get_dataset(project_id, dataset_id):
+    """Get the dataset with given identifier that has been generated by a
+    curation workflow.
+    """
+    # Get dataset rows with offset and limit parameters
+    try:
+        dataset = api.datasets.get_dataset(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            offset=request.args.get(PAGE_OFFSET),
+            limit=request.args.get(PAGE_LIMIT)
+        )
+        if not dataset is None:
+            return jsonify(dataset)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
+def get_dataset_annotations(project_id, dataset_id):
+    """Get annotations that are associated with the given dataset.
+    """
+    # Expects at least a column or row identifier
+    column_id = request.args.get(labels.COLUMN, -1, type=int)
+    row_id = request.args.get(labels.ROW, -1, type=int)
+    if column_id < 0 and row_id < 0:
+        raise srv.InvalidRequest('missing identifier for column or row')
+    # Get annotations for dataset with given identifier. The result is None if
+    # no dataset with given identifier exists.
+    annotations = api.datasets.get_annotations(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        column_id=column_id,
+        row_id=row_id
+    )
+    if not annotations is None:
+        return jsonify(annotations)
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
+def update_dataset_annotation(project_id, dataset_id):
+    """Update an annotation that is associated with a component of the given
+    dataset.
+
+    Request
+    -------
+    {
+      "annoId": 0,
+      "columnId": 0,
+      "rowId": 0,
+      "key": "string",
+      "value": "string"
+    }
+    """
+    # Validate the request
+    obj = srv.validate_json_request(
+        request,
+        required=[],
+        optional=['annoId', 'columnId', 'rowId', 'key', 'value']
+    )
+    # Create update statement and execute. The result is None if no dataset with
+    # given identifier exists.
+    key = obj['key'] if 'key' in obj else None
+    anno_id = obj['annoId'] if 'annoId' in obj else -1
+    column_id = obj['columnId'] if 'columnId' in obj else -1
+    row_id = obj['rowId'] if 'rowId' in obj else -1
+    value = obj['value'] if 'value' in obj else None
+    annotations = api.datasets.update_annotation(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        column_id=column_id,
+        row_id=row_id,
+        anno_id=anno_id,
+        key=key,
+        value=value
+    )
+    if not annotations is None:
+        return jsonify(annotations)
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/csv')
+def download_dataset(project_id, dataset_id):
+    """Get the dataset with given identifier in CSV format.
+    """
+    # Get the handle for the dataset with given identifier. The result is None
+    # if no dataset with given identifier exists.
+    dataset = api.datasets.get_dataset_handle(project_id, dataset_id)
+    if dataset is None:
+        raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    # Read the dataset into a string buffer in memory
+    si = StringIO.StringIO()
+    cw = csv.writer(si)
+    cw.writerow([col.name for col in dataset.columns])
+    with dataset.reader() as reader:
+        for row in reader:
+            cw.writerow(row.values)
+    # Return the CSV file file
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
+
+# ------------------------------------------------------------------------------
+# Views
+# ------------------------------------------------------------------------------
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/views/<string:view_id>')
+def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, view_id):
+    """Get content of a dataset chart view for a given workflow module.
+    """
+    try:
+        view = api.get_dataset_chart_view(
+            project_id=project_id,
+            branch_id=branch_id,
+            workflow_id=workflow_id,
+            module_id=module_id,
+            view_id=view_id
+        )
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+    if not view is None:
+        return jsonify(view)
+    raise srv.ResourceNotFound(
+        ''.join([
+            'unknown project \'' + project_id,
+            '\', branch \'' + branch_id,
+            '\', workflow \'' + workflow_id,
+            '\', module \'' + module_id,
+            '\' or view \'' + view_id + '\''
+        ])
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -533,11 +678,11 @@ def upload_file(project_id):
         file = request.files['file']
         # A browser may submit a empty part without filename
         if file.filename == '':
-            raise InvalidRequest('empty file name')
+            raise srv.InvalidRequest('empty file name')
         # Save uploaded file to temp directory
         filename = secure_filename(file.filename)
         try:
-            f_handle = api.upload_file(
+            f_handle = api.files.upload_file(
                 project_id=project_id,
                 file=file,
                 file_name=filename
@@ -545,17 +690,17 @@ def upload_file(project_id):
             if not f_handle is None:
                 return jsonify(f_handle), 201
         except ValueError as ex:
-            raise InvalidRequest(str(ex))
+            raise srv.InvalidRequest(str(ex))
     else:
-        raise InvalidRequest('no file or url specified in request')
-    raise ResourceNotFound('unknown project \'' + project_id + '\'')
+        raise srv.InvalidRequest('no file or url specified in request')
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
 @app.route('/projects/<string:project_id>/files/<string:file_id>')
 def download_file(project_id, file_id):
     """Download file from file server."""
     # Get handle for file from the project's filestore
-    f_handle = api.get_file(project_id, file_id)
+    f_handle = api.files.get_file(project_id, file_id)
     if not f_handle is None:
         # Use send_file to send the contents of the file
         if f_handle.compressed:
@@ -568,74 +713,7 @@ def download_file(project_id, file_id):
             attachment_filename=f_handle.file_name,
             as_attachment=True
         )
-    raise ResourceNotFound('unknown project \'' + project_id + '\' or file \'' + file_id + '\'')
-
-
-# ------------------------------------------------------------------------------
-#
-# Exceptions
-#
-# ------------------------------------------------------------------------------
-
-class ServerRequestException(Exception):
-    """Base class for API exceptions."""
-    def __init__(self, message, status_code):
-        """Initialize error message and status code.
-
-        Parameters
-        ----------
-        message : string
-            Error message.
-        status_code : int
-            Http status code.
-        """
-        Exception.__init__(self)
-        self.message = message
-        self.status_code = status_code
-
-    def to_dict(self):
-        """Dictionary representation of the exception.
-
-        Returns
-        -------
-        Dictionary
-        """
-        return {'message' : self.message}
-
-
-class InvalidRequest(ServerRequestException):
-    """Exception for invalid requests that have status code 400."""
-    def __init__(self, message):
-        """Initialize the message and status code (400) of super class.
-
-        Parameters
-        ----------
-        message : string
-            Error message.
-        """
-        super(InvalidRequest, self).__init__(message, 400)
-
-
-class NoJsonInRequest(InvalidRequest):
-    """Exception to signal that a request body does not contain the expected
-    Json element.
-    """
-    def __init__(self):
-        """Set message of the super class BAD REQUEST response."""
-        super(NoJsonInRequest, self).__init__('invalid request body format')
-
-
-class ResourceNotFound(ServerRequestException):
-    """Exception for file not found situations that have status code 404."""
-    def __init__(self, message):
-        """Initialize the message and status code (404) of super class.
-
-        Parameters
-        ----------
-        message : string
-            Error message.
-        """
-        super(ResourceNotFound, self).__init__(message, 404)
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or file \'' + file_id + '\'')
 
 
 # ------------------------------------------------------------------------------
@@ -644,7 +722,7 @@ class ResourceNotFound(ServerRequestException):
 #
 # ------------------------------------------------------------------------------
 
-@app.errorhandler(ServerRequestException)
+@app.errorhandler(srv.ServerRequestException)
 def invalid_request_or_resource_not_found(error):
     """JSON response handler for invalid requests or requests that access
     unknown resources.
@@ -677,117 +755,6 @@ def internal_error(exception):
     app.logger.error(exception)
     return make_response(jsonify({'error': str(exception)}), 500)
 
-
-# ------------------------------------------------------------------------------
-#
-# Helper Methods
-#
-# ------------------------------------------------------------------------------
-
-def convert_properties(properties, allow_null=False):
-    """Convert a list of properties from request format into a dictionary.
-
-    Raises InvalidRequest if an invalid list of properties is given.
-
-    Parameters
-    ----------
-    properties: list
-        List of key,value pairs defining object properties
-    allow_null: bool, optional
-        Allow None values for properties if True
-
-    Returns
-    -------
-    dict()
-    """
-    result = dict()
-    for prop in properties:
-        if not isinstance(prop, dict):
-            raise InvalidRequest('expected property to be a dictionary')
-        name = None
-        value = None
-        for key in prop:
-            if key  == 'key':
-                name = prop[key]
-            elif key == 'value':
-                value = prop[key]
-            else:
-                raise InvalidRequest('invalid property element \'' + key + '\'')
-        if name is None:
-            raise InvalidRequest('missing element \'key\' in property')
-        if value is None and not allow_null:
-            raise InvalidRequest('missing property value for \'' + name + '\'')
-        result[name] = value
-    return result
-
-
-def get_download_filename(url, info):
-    """Extract a file name from a given Url or request info header.
-
-    Parameters
-    ----------
-    url: string
-        Url that was opened using urllib2.urlopen
-    info: dict
-        Header information returned by urllib2.urlopen
-
-    Returns
-    -------
-    string
-    """
-    # Try to extract the filename from the Url first
-    filename = url[url.rfind('/') + 1:]
-    if '.' in filename:
-        return filename
-    else:
-        if 'Content-Disposition' in info:
-            content = info['Content-Disposition']
-            if 'filename="' in content:
-                filename = content[content.rfind('filename="') + 11:]
-                return filename[:filename.find('"')]
-    return 'download'
-
-
-def validate_json_request(request, required=None, optional=None):
-    """Validate the body of the given request. Ensures that the request contains
-    a Json object and that this object contains at least the required keys and
-    at most the required and optional keys. Returns the validated Json body.
-
-    Raises NoJsonInRequest exception if request does not contain a Json object
-    and InvalidRequest exception if a required key is missing or if a key is
-    present that is not required or optional.
-
-    Parameters
-    ----------
-    request: Http request
-        The Http request object
-    required: list(string), optional
-        List of mandatory keys in the request body
-    optional: list(string), optional
-        List of optional keys in the request body
-
-    Returns
-    -------
-    dict()
-    """
-    # Verify that the request contains a Json object
-    if not request.json:
-        raise NoJsonInRequest()
-    obj = request.json
-    # Ensure that all required elements are present
-    possible_keys = []
-    if not required is None:
-        possible_keys = required
-        for key in required:
-            if not key in obj:
-                raise InvalidRequest('missing element \'' + key + '\'')
-    # Ensure that no unwanted elements are in the request body
-    if not optional is None:
-        possible_keys += optional
-    for key in obj:
-        if not key in possible_keys:
-            raise InvalidRequest('unknown element \'' + key + '\'')
-    return obj
 
 # ------------------------------------------------------------------------------
 #

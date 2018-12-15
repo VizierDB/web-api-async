@@ -20,6 +20,8 @@ serialize web resources.
 
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 
+import vizier.api.serialize.labels as labels
+
 
 def ANNOTATIONS(annotations):
     """Serialize the content of an object annotation set.
@@ -43,7 +45,7 @@ def HATEOAS(links):
 
     Parameters
     ----------
-    links: dict()
+    links: dict
         Dictionary where the key defines the relationship and the value is the
         url.
 
@@ -51,7 +53,7 @@ def HATEOAS(links):
     -------
     list()
     """
-    return [{'rel': key, 'href': links[key]} for key in links]
+    return [{labels.REL: key, labels.HREF: links[key]} for key in links]
 
 
 # ------------------------------------------------------------------------------

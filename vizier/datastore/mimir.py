@@ -577,7 +577,7 @@ class MimirDataStore(Datastore):
 
         Parameters
         ----------
-        properties : dict()
+        properties : dict
             Dictionary with configuration parameters. The only parameter that
             currently is expected is 'directory'
         """

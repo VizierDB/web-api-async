@@ -223,7 +223,7 @@ class DefaultObjectStore(ObjectStore):
 
         Parameters
         ----------
-        properties: dict()
+        properties: dict
             Dictionary for object properties. Overwrites the default values.
         identifier_factory: func, optional
             Function to create a new unique identifier

@@ -35,7 +35,7 @@ class ProjectResource(object):
 
         Parameters
         ----------
-        obj: dict()
+        obj: dict
             Dictionary serialization of a project handle
 
         Returns

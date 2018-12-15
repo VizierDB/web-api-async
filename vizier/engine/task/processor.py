@@ -29,7 +29,7 @@ class ExecResult(object):
 
     Attributes
     ----------
-    datasets : dict()
+    datasets : dict
         Mapping of dataset names to unique identifier for datasets in the
         resulting database state
     is_error: bool
@@ -51,7 +51,7 @@ class ExecResult(object):
         ----------
         is_success: bool
             Flag indicating if execution was successful
-        datasets : dict(), optional
+        datasets : dict, optional
             Mapping of dataset names to unique identifier for datasets in the
             resulting database state
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional

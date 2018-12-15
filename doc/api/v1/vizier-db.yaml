@@ -558,6 +558,187 @@ paths:
                 404:
                     description: Unknown project or task
     #
+    # Datasets
+    #
+    /projects/{projectId}/datasets/{datasetId}:
+        get:
+            summary: Get dataset
+            description: Get columns and cell values for dataset
+            operationId: getDataset
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: offset
+                  in: query
+                  required: false
+                  description: Row offset for pagination
+                  type: integer
+                - name: limit
+                  in: query
+                  required: false
+                  description: Row limit for pagination
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetHandle'
+                404:
+                    description: Unknown dataset
+    /projects/{projectId}/datasets/{datasetId}/annotations:
+        get:
+            summary: Get dataset annotations
+            description: Get all annotations that are associated with dataset components
+            operationId: getDatasetAnnotations
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: column
+                  in: query
+                  required: false
+                  description: Unique column identifier
+                  type: integer
+                - name: row
+                  in: query
+                  required: false
+                  description: Unique row identifier
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetAnnotations'
+                404:
+                    description: Unknown dataset
+        post:
+            summary: Update dataset annotations
+            description: Update an annotations that is associated with a dataset component
+            operationId: updateDatasetAnnotation
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: annotation
+                  in: body
+                  description: Update annotation statement
+                  required: true
+                  schema:
+                      $ref: '#/definitions/UpdateAnnotationStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetAnnotations'
+                400:
+                    description: Invalid request
+                404:
+                    description: Unknown dataset
+    /projects/{projectId}/datasets/{datasetsIdentifier}/csv:
+        get:
+            summary: Get CSV file
+            description: Get dataset in CSF format
+            operationId: downloadDataset
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetsIdentifier
+                  in: path
+                  required: true
+                  description: The unique datasets identifier
+                  type: string
+            produces:
+                - text/csv
+            responses:
+                200:
+                    description: CSV file
+                404:
+                    description: Unknown datasets
+    #
+    # Views
+    #
+    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}/views/{viewId}:
+        get:
+            summary: Get dataset view
+            description: Access content of a dataset view for a given workflow module version
+            operationId: getDatasetChartView
+            tags:
+                - chart
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: workflowId
+                  in: path
+                  required: true
+                  description: Unique workflow identifier
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Identifier of module
+                  type: string
+                - name: viewId
+                  in: path
+                  required: true
+                  description: Identifier of chart view
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset chart view content
+                    schema:
+                        $ref: '#/definitions/DatasetChartView'
+                404:
+                    description: Unknown project, branch, workflow, module, or view
+    #
     # Files
     #
     /projects/{projectId}/files:
@@ -617,168 +798,6 @@ paths:
                     description: File
                 404:
                     description: Unknown file
-    #
-    # Datasets
-    #
-    /datasets/{datasetId}:
-        get:
-            summary: Get dataset
-            description: Get columns and cell values for dataset
-            operationId: getDataset
-            tags:
-                - dataset
-            parameters:
-                - name: datasetId
-                  in: path
-                  required: true
-                  description: The unique dataset identifier
-                  type: string
-                - name: offset
-                  in: query
-                  required: false
-                  description: Row offset for pagination
-                  type: integer
-                - name: limit
-                  in: query
-                  required: false
-                  description: Row limit for pagination
-                  type: integer
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Dataset data
-                    schema:
-                        $ref: '#/definitions/DatasetHandle'
-                404:
-                    description: Unknown dataset
-    /datasets/{datasetId}/annotations:
-        get:
-            summary: Get dataset annotations
-            description: Get all annotations that are associated with dataset components
-            operationId: getDatasetAnnotations
-            tags:
-                - dataset
-            parameters:
-                - name: datasetId
-                  in: path
-                  required: true
-                  description: The unique dataset identifier
-                  type: string
-                - name: column
-                  in: query
-                  required: false
-                  description: Unique column identifier
-                  type: integer
-                - name: row
-                  in: query
-                  required: false
-                  description: Unique row identifier
-                  type: integer
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Dataset data
-                    schema:
-                        $ref: '#/definitions/DatasetAnnotations'
-                404:
-                    description: Unknown dataset
-        post:
-            summary: Update dataset annotations
-            description: Update an annotations that is associated with a dataset component
-            operationId: updateDatasetAnnotation
-            tags:
-                - dataset
-            parameters:
-                - name: datasetId
-                  in: path
-                  required: true
-                  description: The unique dataset identifier
-                  type: string
-                - name: annotation
-                  in: body
-                  description: Update annotation statement
-                  required: true
-                  schema:
-                      $ref: '#/definitions/UpdateAnnotationStatement'
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Dataset data
-                    schema:
-                        $ref: '#/definitions/DatasetAnnotations'
-                400:
-                    description: Invalid request
-                404:
-                    description: Unknown dataset
-    /datasets/{datasetsIdentifier}/csv:
-        get:
-            summary: Get CSV file
-            description: Get dataset in CSF format
-            operationId: downloadDataset
-            tags:
-                - dataset
-            parameters:
-                - name: datasetsIdentifier
-                  in: path
-                  required: true
-                  description: The unique datasets identifier
-                  type: string
-            produces:
-                - text/csv
-            responses:
-                200:
-                    description: CSV file
-                404:
-                    description: Unknown datasets
-    #
-    # Views
-    #
-    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}/views/{viewId}:
-        get:
-            summary: Get dataset view
-            description: Access content of a dataset view for a given workflow module version
-            operationId: getDatasetChartView
-            tags:
-                - chart
-            parameters:
-                - name: projectId
-                  in: path
-                  required: true
-                  description: The unique project identifier
-                  type: string
-                - name: branchId
-                  in: path
-                  required: true
-                  description: Unique identifier of the project branch
-                  type: string
-                - name: workflowId
-                  in: path
-                  required: true
-                  description: Unique workflow identifier
-                  type: integer
-                - name: moduleId
-                  in: path
-                  required: true
-                  description: Identifier of module
-                  type: integer
-                - name: viewId
-                  in: path
-                  required: true
-                  description: Identifier of chart view
-                  type: string
-            produces:
-                - application/json
-            responses:
-                200:
-                    description: Dataset chart view content
-                    schema:
-                        $ref: '#/definitions/DatasetChartView'
-                404:
-                    description: Unknown project, branch, workflow, module, or view
-
 definitions:
     BranchDescriptor:
         type: object
@@ -974,7 +993,7 @@ definitions:
             - id
             - name
             - columns
-            - rows
+            - rowCount
             - links
         properties:
             id:
@@ -985,7 +1004,7 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/DatasetColumn"
-            rows:
+            rowCount:
                 type: integer
             links:
                 type: array
@@ -999,7 +1018,7 @@ definitions:
             - columns
             - rows
             - offset
-            - rowcount
+            - rowCount
             - annotatedCells
             - links
         properties:

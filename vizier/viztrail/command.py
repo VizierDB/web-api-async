@@ -448,7 +448,7 @@ def append_token(tokens, token, lspace=True, rspace=True):
 
     Parameters
     ----------
-    tokens: list()
+    tokens: list
         List of string and boolean values
     token: string
         Next token in output list
@@ -468,7 +468,7 @@ def concat_tokens(tokens):
 
     Parameters
     ----------
-    tokens: list()
+    tokens: list
         List of string and boolean values
 
     Returns
@@ -549,7 +549,7 @@ def get_file_name(file_id, filestore):
 
     Parameters
     ----------
-    file_id: dict()
+    file_id: dict
         Dictionary containing at least the fileId or an uri
     filestore: vizier.filestore.base.Filestore
         File store to access file handles for uploaded files

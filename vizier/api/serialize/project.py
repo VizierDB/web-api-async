@@ -20,6 +20,7 @@ serialize projects.
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.branch as br
+import vizier.api.serialize.labels as labels
 
 
 def PROJECT_DESCRIPTOR(project, urls):
@@ -29,7 +30,7 @@ def PROJECT_DESCRIPTOR(project, urls):
     ----------
     project : vizier.engine.project.ProjectHandle
         Project handle
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns
@@ -42,7 +43,7 @@ def PROJECT_DESCRIPTOR(project, urls):
         'createdAt': project.created_at.isoformat(),
         'lastModifiedAt': project.last_modified_at.isoformat(),
         'properties': serialize.ANNOTATIONS(project.viztrail.properties),
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'self': urls.get_project(project_id),
             'home': urls.service_descriptor(),
             'doc': urls.api_doc(),
@@ -63,7 +64,7 @@ def PROJECT_HANDLE(project, packages, urls):
         Project handle
     packages: dict(vizier.engine.packages.base.PackageIndex)
         Index of available packages
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns

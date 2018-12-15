@@ -98,10 +98,10 @@ class VizierBackend(object):
         ----------
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict()
+        context: dict
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
-        resources: dict(), optional
+        resources: dict, optional
             Optional information about resources that were generated during a
             previous execution of the command
 
@@ -126,10 +126,10 @@ class VizierBackend(object):
             workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict()
+        context: dict
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
-        resources: dict(), optional
+        resources: dict, optional
             Optional information about resources that were generated during a
             previous execution of the command
         """

@@ -92,7 +92,7 @@ class ChartOutput(OutputObject):
         ----------
         view: vizier.engine.packages.plot.view.ChartViewHandle
             Handle defining the dataset chart view
-        rows: list()
+        rows: list
             List of rows in the query result
         """
         super(ChartOutput, self).__init__(
@@ -123,7 +123,7 @@ def CHART_VIEW_DATA(view, rows):
     ----------
     view: vizier.plot.view.ChartViewHandle
         Handle defining the dataset chart view
-    rows: list()
+    rows: list
         List of rows in the query result
 
     Returns

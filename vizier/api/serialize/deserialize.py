@@ -63,7 +63,7 @@ def OUTPUTS(obj):
 
     Parameters
     ----------
-    obj: dict()
+    obj: dict
         Default output serialization for a pair of module output streams
 
     Returns

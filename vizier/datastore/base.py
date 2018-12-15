@@ -318,7 +318,7 @@ def max_object_id(objects):
 
     Parameters
     ----------
-    object: list()
+    object: list
         List of dataset columns or rows
 
     Returns

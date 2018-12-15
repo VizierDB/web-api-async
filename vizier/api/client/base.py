@@ -34,7 +34,7 @@ class VizierApiClient(object):
 
         Parameters
         ----------
-        urls: vizier.api.webservice.routes.UrlFactory
+        urls: vizier.api.routes.UrlFactory
             Factory for resource urls
         """
         self.urls = urls

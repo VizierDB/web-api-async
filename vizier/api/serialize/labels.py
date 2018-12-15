@@ -19,15 +19,40 @@
 # General object attributes
 ID = 'id'
 NAME = 'name'
+
+# HATEOAS
+HREF = 'href'
+LINKS = 'links'
+PAGE_FIRST = 'page:first'
+PAGE_LAST = 'page:last'
+PAGE_NEXT = 'page:next'
+PAGE_PREV = 'page:prev'
+SELF = 'self'
+REL = 'rel'
+
+# Datasets
+ANNOTATED_CELLS = 'annotatedCells'
+COLUMN = 'column'
+COLUMNS = 'columns'
+OFFSET = 'offset'
+ROWINDEX = 'index'
+ROW = 'row'
+ROWS = 'rows'
+ROWCOUNT = 'rowCount'
+
 # Timestamps
+TIMESTAMPS = 'timestamps'
 CREATED_AT = 'createdAt'
 FINISHED_AT = 'finishedAt'
 STARTED_AT = 'startedAt'
+
 # Module and workflow state
 STATE = 'state'
+
 # Modules
 DATASETS = 'datasets'
 OUTPUTS = 'outputs'
 PROVENANCE = 'provenance'
+
 # Task state changes
 RESULT = 'result'

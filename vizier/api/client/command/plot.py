@@ -33,7 +33,7 @@ def create_plot(
         Dataset name
     chart_name: string
         Name of the chart
-    series: list()
+    series: list
         Specification of data series. Each data series is specified by a
         dictionary that contains the mandadtory element 'column' and
         the optional elements 'range' and 'label'

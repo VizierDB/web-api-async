@@ -131,7 +131,7 @@ class RemoteWorkflowController(WorkflowController):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(), optional
+        datasets : dict, optional
             Dictionary of resulting datasets. The user-specified name is the key
             for the dataset identifier.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional

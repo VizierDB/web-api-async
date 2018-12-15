@@ -19,6 +19,7 @@ serialize workflow modules.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.labels as labels
 
 
@@ -37,7 +38,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         Branch handle
     module: vizier.viztrail.module.base.ModuleHandle
         Module handle
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
     include_self: bool, optional
         Indicate if self link is included
@@ -60,10 +61,10 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
             'arguments': cmd.arguments.to_list()
         },
         'text': module.external_form,
-        'timestamps': {
-            'createdAt': timestamp.created_at.isoformat()
+        labels.TIMESTAMPS: {
+            labels.CREATED_AT: timestamp.created_at.isoformat()
         },
-        'links': serialize.HATEOAS({
+        labels.LINKS: serialize.HATEOAS({
             'branch:head': urls.get_branch_head(
                 project_id=project_id,
                 branch_id=branch_id
@@ -71,7 +72,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         })
     }
     if include_self:
-        obj['links'].extend(serialize.HATEOAS({
+        obj[labels.LINKS].extend(serialize.HATEOAS({
             'self': urls.get_workflow_module(
                 project_id=project_id,
                 branch_id=branch_id,
@@ -79,14 +80,25 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
             )
         }))
     if not timestamp.started_at is None:
-        obj['timestamps']['startedAt'] = timestamp.started_at.isoformat()
+        obj[labels.TIMESTAMPS][labels.STARTED_AT] = timestamp.started_at.isoformat()
     # Add outputs and datasets if module is not active. Else add cancel link
     if not module.is_active:
-        obj['outputs'] = serialize.OUTPUTS(module.outputs)
+        datasets = list()
+        for name in module.datasets:
+            datasets.append(
+                serialds.DATASET_DESCRIPTOR(
+                    dataset=module.datasets[name],
+                    name=name,
+                    project=project,
+                    urls=urls
+                )
+            )
+        obj[labels.DATASETS] = datasets
+        obj[labels.OUTPUTS] = serialize.OUTPUTS(module.outputs)
         if not timestamp.finished_at is None:
-            obj['timestamps']['finishedAt'] = timestamp.finished_at.isoformat()
+            obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()
     else:
-        obj['links'].extend(serialize.HATEOAS({
+        obj[labels.LINKS].extend(serialize.HATEOAS({
             'cancel': urls.cancel_workflow(
                 project_id=project_id,
                 branch_id=branch_id
@@ -106,7 +118,7 @@ def MODULE_HANDLE_LIST(project, branch, modules, urls):
         Branch handle
     modules: list(vizier.viztrail.module.base.ModuleHandle)
         Module handle
-    urls: vizier.api.webservice.routes.UrlFactory
+    urls: vizier.api.routes.UrlFactory
         Factory for resource urls
 
     Returns

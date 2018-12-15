@@ -19,6 +19,11 @@ accessible via the web service.
 """
 
 
+"""Pagination query parameter."""
+PAGE_LIMIT = 'limit'
+PAGE_OFFSET = 'offset'
+
+
 class UrlFactory:
     """Factory to create urls for all routes that the webservice supports."""
 
@@ -302,6 +307,97 @@ class UrlFactory:
         string
         """
         return self.get_project(project_id) + '/tasks/' + task_id
+
+    # --------------------------------------------------------------------------
+    # Datasets
+    # --------------------------------------------------------------------------
+    def get_dataset(self, project_id, dataset_id):
+        """Url to retrieve dataset rows.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(proejct_id) + '/datasets/' + dataset_id
+
+    def dataset_pagination(self, project_id, dataset_id, offset=0, limit=None):
+        """Get Url for dataset row pagination.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id : string
+            Unique dataset identifier
+        offset: int, optional
+            Pagination offset. The returned Url always includes an offset
+            parameter
+        limit: int, optional
+            Dataset row limit. Only included if not None
+
+        Returns
+        -------
+        string
+        """
+        query = PAGE_OFFSET + '=' + str(offset)
+        if not limit is None:
+            query += '&' + PAGE_LIMIT + '=' + str(limit)
+        return self.get_dataset(project_id, dataset_id) + '?' + query
+
+    def download_dataset(self, project_id, dataset_id):
+        """Url to download a dataset in csv format.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset(proejct_id, dataset_id) + '/csv'
+
+    def get_dataset_annotations(self, project_id, dataset_id):
+        """Url to retrieve dataset annotations.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset(proejct_id, dataset_id) + '/annotations'
+
+    def update_dataset_annotations(self, project_id, dataset_id):
+        """Url to update dataset annotations.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset_annotations(proejct_id, dataset_id)
 
     # --------------------------------------------------------------------------
     # Files

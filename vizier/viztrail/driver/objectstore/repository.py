@@ -62,7 +62,7 @@ class OSViztrailRepository(ViztrailRepository):
 
         Parameters
         ---------
-        properties: dict()
+        properties: dict
             Dictionary of configuration parameters
         """
         # Raise an exception if the pase directory argument is not given

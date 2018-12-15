@@ -152,7 +152,7 @@ def CHART_VIEW(view, rows):
     ----------
     view: vizier.plot.view.ChartViewHandle
         Handle defining the dataset chart view
-    rows: list()
+    rows: list
         List of rows in the query result
 
     Returns
@@ -185,7 +185,7 @@ def CHART_VIEW_DATA(view, rows):
     ----------
     view: vizier.plot.view.ChartViewHandle
         Handle defining the dataset chart view
-    rows: list()
+    rows: list
         List of rows in the query result
 
     Returns
@@ -247,7 +247,7 @@ def DATASET(dataset, rows, config, urls, offset=0, limit=-1):
     ----------
     dataset : vizier.datastore.base.DatasetHandle
         Handle for dataset
-    rows: list()
+    rows: list
         List of rows from the dataset
     config : vizier.config.AppConfig
         Application configuration parameters
@@ -347,7 +347,7 @@ def DATASET_CHART_VIEW(view, rows, self_ref):
     ----------
     view: vizier.plot.view.ChartViewHandle
         Handle defining the dataset chart view
-    rows: list()
+    rows: list
         List of rows in the query result
     self_ref: string
         Self-reference url for chart view data.

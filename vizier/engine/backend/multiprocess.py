@@ -104,10 +104,10 @@ class MultiProcessBackend(SynchronousBackend):
             workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict()
+        context: dict
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
-        resources: dict(), optional
+        resources: dict, optional
             Optional information about resources that were generated during a
             previous execution of the command
         """
@@ -167,7 +167,7 @@ def callback_function(result, tasks):
     ----------
     result: (string, vizier.engine.task.processor.ExecResult)
         Tupe of task identifier and execution result
-    tasks: dict()
+    tasks: dict
         Task index of the backend
     """
     task_id, exec_result = result
