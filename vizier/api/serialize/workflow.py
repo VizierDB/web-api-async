@@ -63,6 +63,48 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
     }
 
 
+def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
+    """Dictionary serialization for a workflow descriptor.
+
+    Parameters
+    ----------
+    project: vizier.engine.project.ProjectHandle
+        Handle for the containing project
+    branch : vizier.viztrail.branch.BranchHandle
+        Branch handle
+    woekflow: vizier.viztrail.workflow.WorkflowDescriptor
+        Workflow descriptor
+    urls: vizier.api.webservice.routes.UrlFactory
+        Factory for resource urls
+
+    Returns
+    -------
+    dict
+    """
+    project_id = project.identifier
+    branch_id = branch.identifier
+    workflow_id = workflow.identifier
+    return {
+        'id': workflow_id,
+        'createdAt': workflow.created_at.isoformat(),
+        'action': workflow.action,
+        'packageId': workflow.package_id,
+        'commandId': workflow.command_id,
+        'links': serialize.HATEOAS({
+            'self': urls.get_workflow(
+                project_id=project_id,
+                branch_id=branch_id,
+                workflow_id=workflow_id
+            ),
+            'workflow:branch': urls.get_branch(
+                project_id=project_id,
+                branch_id=branch_id
+            ),
+            'workflow:project': urls.get_project(project_id)
+        })
+    }
+
+
 def WORKFLOW_HANDLE(project, branch, workflow, urls):
     """Dictionary serialization for a workflow handle.
 
@@ -84,10 +126,14 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     project_id = project.identifier
     branch_id = branch.identifier
     workflow_id = workflow.identifier
+    descriptor = workflow.descriptor
     read_only = (branch.head.identifier != workflow_id)
     return {
         'id': workflow_id,
-        'createdAt': workflow.descriptor.created_at.isoformat(),
+        'createdAt': descriptor.created_at.isoformat(),
+        'action': descriptor.action,
+        'packageId': descriptor.package_id,
+        'commandId': descriptor.command_id,
         'state': workflow.get_state().state,
         'modules': [
             serialmd.MODULE_HANDLE(

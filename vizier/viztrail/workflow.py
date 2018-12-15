@@ -27,6 +27,7 @@ from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS
 
 
 """Workflow modification action identifier."""
+ACTION_APPEND = 'apd'
 ACTION_CREATE = 'cre'
 ACTION_DELETE = 'del'
 ACTION_INSERT = 'ins'

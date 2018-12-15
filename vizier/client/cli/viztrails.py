@@ -18,44 +18,50 @@
 repository.
 """
 
+from vizier.client.api.base import VizierApiClient
 from vizier.client.cli.command import Command
 from vizier.core.timestamp import utc_to_local
 from vizier.viztrail.base import PROPERTY_NAME
 
 
 """Annotation keys for default values."""
+KEY_DEFAULT_BRANCH = 'branch'
 KEY_DEFAULT_PROJECT = 'project'
 
 
 """Default error messages."""
+MSG_NO_DEFAULT_BRANCH = 'Default branch not set'
 MSG_NO_DEFAULT_PROJECT = 'Default project not set'
 
 
 """Default timestamp format."""
-TIME_FORMAT = '%d-%m-%Y %H:%M'
+TIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 
 class ViztrailsCommands(Command):
     """"Collection of commands that interact with the viztrails repository."""
-    def __init__(self, api, defaults):
+    def __init__(self, urls, defaults):
         """Initialize the viztrails repository manager from the API object.
 
         Parameters
         ----------
-        api: vizier.api.base.VizierApi
-            API for vizier instance
+        urls: vizier.api.webservice.routes.UrlFactory
+            Factory for request urls
         defaults: vizier.core.annotation.base.ObjectAnnotationSet
             Annotation set for default values
         """
-        self.viztrails = api.projects
+        self.api = VizierApiClient(urls)
         self.defaults = defaults
         # Set the default project
         project_id = self.defaults.find_one(KEY_DEFAULT_PROJECT)
         if not project_id is None:
-            self.default_project = self.viztrails.get_project(project_id)
-            self.default_branch = self.default_project.get_default_branch()
+            self.default_project = project_id
         else:
             self.default_project = None
+        branch_id = self.defaults.find_one(KEY_DEFAULT_BRANCH)
+        if not branch_id is None:
+            self.default_branch = branch_id
+        else:
             self.default_branch = None
 
     def create_branch(self, name):
@@ -127,6 +133,12 @@ class ViztrailsCommands(Command):
             # list projects
             elif tokens[0] == 'list' and tokens[1] == 'projects':
                 return self.list_projects()
+            # list workflows
+            elif tokens[0] == 'list' and tokens[1] == 'workflows':
+                return self.list_workflows()
+            # show workflow
+            elif tokens[0] == 'show' and tokens[1] == 'workflow':
+                return self.show_workflow()
         elif len(tokens) == 3:
             # create branch <name>
             if tokens[0] == 'create' and tokens[1] == 'branch':
@@ -152,6 +164,12 @@ class ViztrailsCommands(Command):
             # set project <project-id>
             elif tokens[0] == 'set' and tokens[1] == 'project':
                 return self.set_project(tokens[2])
+            # show workflow <workflow-id>
+            elif tokens[0] == 'show' and tokens[1] == 'workflow':
+                return self.show_workflow(workflow_id=tokens[2])
+            # show workflow <workflow-id>
+            elif tokens[0] == 'run' and tokens[1] == 'python':
+                return self.run_python(code=tokens[2])
         return False
 
     def help(self):
@@ -164,27 +182,28 @@ class ViztrailsCommands(Command):
         print '  delete project <project-id>'
         print '  list branches'
         print '  list projects'
+        print '  list workflows'
         print '  rename branch <name>'
         print '  rename project <name>'
         print '  set project <project-id>'
         print '  set branch <branch-id>'
+        print '  show workflow {<workflow-id>}'
+        print '  run python [<file> | <script-code>]'
 
     def list_branches(self):
         """Print listing of branches for default project in tabular format."""
         if self.default_project is None:
             print MSG_NO_DEFAULT_PROJECT
             return True
-        branches = self.viztrails.list_branches(
-            project_id=self.default_project.identifier
-        )
+        branches = self.api.list_branches(self.default_project)
         rows = list()
         rows.append(['Identifier', 'Name', 'Created at', 'Last modified'])
         for branch in branches:
             rows.append([
                 branch.identifier,
                 branch.name,
-                utc_to_local(branch.created_at).strftime(TIME_FORMAT),
-                utc_to_local(branch.last_modified_at).strftime(TIME_FORMAT)
+                ts(branch.created_at),
+                ts(branch.last_modified_at)
             ])
         print
         self.output(rows)
@@ -193,26 +212,62 @@ class ViztrailsCommands(Command):
 
     def list_projects(self):
         """Print listing of active projects in tabular format."""
-        viztrails = self.viztrails.list_projects()
+        projects = self.api.list_projects()
         rows = list()
         rows.append(['Identifier', 'Name', 'Created at', 'Last modified'])
-        for vt in viztrails:
+        for project in projects:
             rows.append([
-                vt.identifier,
-                vt.name,
-                utc_to_local(vt.created_at).strftime(TIME_FORMAT),
-                utc_to_local(vt.last_modified_at).strftime(TIME_FORMAT)
+                project.identifier,
+                project.name,
+                ts(project.created_at),
+                ts(project.last_modified_at)
             ])
         print
         self.output(rows)
-        print '\n' + str(len(viztrails)) + ' project(s)\n'
+        print '\n' + str(len(projects)) + ' project(s)\n'
+        return True
+
+    def list_workflows(self):
+        """Print listing of workflows in the history of the default branch in
+        tabular format.
+        """
+        if self.default_project is None:
+            print MSG_NO_DEFAULT_PROJECT
+            return True
+        if self.default_branch is None:
+            print MSG_NO_DEFAULT_BRANCH
+            return True
+        branch = self.api.get_branch(
+            project_id=self.default_project,
+            branch_id=self.default_branch
+        )
+        rows = list()
+        rows.append(['Identifier', 'Action', 'Command', 'Created at'])
+        for workflow in branch.workflows:
+            rows.append([
+                workflow.identifier,
+                workflow.action.upper(),
+                workflow.command,
+                ts(workflow.created_at)
+            ])
+        print
+        self.output(rows)
+        print '\n' + str(len(branch.workflows)) + ' workflow(s)\n'
         return True
 
     def print_defaults(self):
         """Print the current defaults."""
         if not self.default_project is None:
-            print 'Project ' + self.default_project.name + ' (' + self.default_project.identifier + ')'
-            print 'On branch ' + self.default_branch.name + ' (' + self.default_branch.identifier + ')'
+            project = self.api.get_project(project_id=self.default_project)
+            print 'Project \'' + project.name + '\' (' + project.identifier + ')'
+            if not self.default_branch is None:
+                branch = self.api.get_branch(
+                    project_id=project.identifier,
+                    branch_id=self.default_branch
+                )
+                print 'On branch \'' + branch.name + '\' (' + branch.identifier + ')'
+            else:
+                print MSG_NO_DEFAULT_BRANCH
         else:
             print MSG_NO_DEFAULT_PROJECT
         return True
@@ -244,27 +299,77 @@ class ViztrailsCommands(Command):
         if self.default_project is None:
             print MSG_NO_DEFAULT_PROJECT
             return True
-        branch = self.viztrails.set_default_branch(
-            project_id=self.default_project.identifier,
-            branch_id=branch_id
-        )
+        branch = None
+        for br in self.api.list_branches(project_id=self.default_project):
+            if br.identifier == branch_id:
+                branch = br
+                break
         if not branch is None:
-            print 'On branch ' + branch.name
+            self.defaults.add(
+                key=KEY_DEFAULT_BRANCH,
+                value=branch_id,
+                replace=True
+            )
+            print 'On branch \'' + branch.name + '\''
         else:
             print 'Unknown branch ' + branch_id
         return True
 
     def set_project(self, project_id):
         """Set the default project."""
-        vt = self.viztrails.get_project(project_id=project_id)
-        if not vt is None:
-            self.default_project = vt
+        project = self.api.get_project(project_id=project_id)
+        if not project is None:
+            self.default_project = project_id
             self.defaults.add(
                 key=KEY_DEFAULT_PROJECT,
                 value=project_id,
                 replace=True
             )
-            print 'Default project is now ' + vt.name
+            self.defaults.delete(key=KEY_DEFAULT_BRANCH)
+            print 'Default project is now \'' + project.name + '\''
         else:
             print 'Unknown project: ' + project_id
         return True
+
+    def show_workflow(self, workflow_id=None):
+        """List all modules for a given workflow. If the workflow identifier is
+        not given the branch head is used as the workflow.
+        """
+        if self.default_project is None:
+            print MSG_NO_DEFAULT_PROJECT
+            return True
+        if self.default_branch is None:
+            print MSG_NO_DEFAULT_BRANCH
+            return True
+        workflow = self.api.get_workflow(
+            project_id=self.default_project,
+            branch_id=self.default_branch,
+            workflow_id=workflow_id
+        )
+        print 'Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')'
+        for i in range(len(workflow.modules)):
+            module = workflow.modules[i]
+            print '\n[' + str(i+1) + '] (' + module.state.upper() + ') ' + module.identifier
+            timestamps = 'Created @ ' + ts(module.timestamp.created_at)
+            if not module.timestamp.started_at is None:
+                timestamps += ', Started @ ' + ts(module.timestamp.started_at)
+            if not module.timestamp.finished_at is None:
+                timestamps += ', Finished @ ' + ts(module.timestamp.finished_at)
+            print timestamps
+            print '--'
+            print module.external_form
+            if len(module.outputs) > 0:
+                print '--'
+                for line in module.outputs:
+                    print line
+            print '.'
+        return True
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def ts(timestamp):
+    """Convert datatime timestamp to string."""
+    return  utc_to_local(timestamp).strftime(TIME_FORMAT)

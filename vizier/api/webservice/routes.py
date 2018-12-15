@@ -22,7 +22,7 @@ accessible via the web service.
 class UrlFactory:
     """Factory to create urls for all routes that the webservice supports."""
 
-    def __init__(self, config):
+    def __init__(self, base_url, api_doc_url=None):
         """Intialize the base url for the web service.
 
         Parameters
@@ -30,9 +30,8 @@ class UrlFactory:
         config: vizier.config.AppConfig
             Application configuration parameters
         """
-        self.config = config
-        # Construct base Url from server url, port, and application path.
-        self.base_url = config.app_base_url
+        self.base_url = base_url
+        self.api_doc_url = api_doc_url
         # Ensure that base_url does not end with a slash
         while len(self.base_url) > 0:
             if self.base_url[-1] == '/':
@@ -61,7 +60,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.config.webservice.doc_url
+        return self.api_doc_url
 
     # --------------------------------------------------------------------------
     # Projects
@@ -230,6 +229,24 @@ class UrlFactory:
         """
         return self.get_branch_head(project_id, branch_id) + '/cancel'
 
+    def get_workflow(self, project_id, branch_id, workflow_id):
+        """Url to get the handle for a specified workflow.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+        workflow_id: string
+            Unique workflow identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_branch(project_id, branch_id) + '/workflows/' + workflow_id
+
     def get_workflow_module(self, project_id, branch_id, module_id):
         """Url to get the current state of the specified module in the head of
         the identified project branch.
@@ -266,6 +283,25 @@ class UrlFactory:
         string
         """
         return self.get_branch_head(project_id, branch_id)
+
+    # --------------------------------------------------------------------------
+    # Tasks
+    # --------------------------------------------------------------------------
+    def set_task_state(self, project_id, task_id):
+        """Url to modify the state of a given task.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        task_id: string
+            Unique task identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id) + '/tasks/' + task_id
 
     # --------------------------------------------------------------------------
     # Files

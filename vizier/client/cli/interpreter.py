@@ -16,7 +16,7 @@
 
 """Simple command line interpreter to test functionality of the vizier Api."""
 
-from vizier.client.cli.filestore import FilestoreCommands
+from vizier.client.cli import VERSION_INFO
 from vizier.client.cli.viztrails import ViztrailsCommands
 
 
@@ -24,20 +24,19 @@ class CommandInterpreter(object):
     """The command interpreter allows to run simple commands against an instance
     of the vizier Api.
     """
-    def __init__(self, api, defaults):
-        """Initialize the vizier Api instance.
+    def __init__(self, urls, defaults):
+        """Initialize the Url factory for requests and the object with the
+        default values.
 
         Parameters
         ----------
-        api: vizier.api.base.VizierApi
-            API for vizier instance
+        urls: vizier.api.webservice.routes.UrlFactory
+            Factory for request urls
         defaults: vizier.core.annotation.base.ObjectAnnotationSet
             Annotation set for default values
         """
-        self.api = api
         self.commands = [
-            FilestoreCommands(api),
-            ViztrailsCommands(api=api, defaults=defaults)
+            ViztrailsCommands(urls=urls, defaults=defaults)
         ]
 
     def eval(self, tokens):
@@ -51,7 +50,7 @@ class CommandInterpreter(object):
         """
         # Check if the line equals 'help'.
         if len(tokens) == 1 and tokens[0] == 'help':
-            print 'Vizier Command Line Interface'
+            print 'Vizier Command Line Interface - Version ' + VERSION_INFO
             for cmd in self.commands:
                 cmd.help()
         else:
@@ -62,6 +61,7 @@ class CommandInterpreter(object):
                 print 'Unknown command ' + ' '.join(tokens)
             except Exception as ex:
                 print str(ex)
+
     def prompt(self):
         """The current interpreter prompt.
 

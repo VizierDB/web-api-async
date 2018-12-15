@@ -19,10 +19,10 @@
 import os
 import sys
 
-from vizier.core.annotation.persistent import PersistentAnnotationSet
-from vizier.api.base import VizierApi
+from vizier.api.webservice.routes import UrlFactory
 from vizier.client.cli.interpreter import CommandInterpreter
 from vizier.config import AppConfig
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 
 
 def get_base_directory():
@@ -38,17 +38,15 @@ def get_base_directory():
 def main(args):
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
-    # Initialize the vizier Api.
+    # Initialize the url factory and read default values.
     app_dir = get_base_directory()
     config = AppConfig(configuration_file=os.path.join(app_dir, 'config.yaml'))
-    api = VizierApi(
-        filestore=config.filestore.create_instance(),
-        viztrails_repository=config.viztrails.create_instance()
-    )
-    # Run the command interpreter on the given arguments
     defaults_file = os.path.join(app_dir, 'defaults.json')
     defaults = PersistentAnnotationSet(object_path=defaults_file)
-    CommandInterpreter(api=api, defaults=defaults).eval(args)
+    CommandInterpreter(
+        urls=UrlFactory(base_url=config.app_base_url),
+        defaults=defaults
+    ).eval(args)
 
 if __name__ == '__main__':
     main(args=sys.argv[1:])

@@ -19,6 +19,7 @@ serialize branches.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.workflow as workflow
 
 
 def BRANCH_DESCRIPTOR(project, branch, urls):
@@ -41,6 +42,8 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
     branch_id = branch.identifier
     return {
         'id': branch_id,
+        'createdAt': branch.provenance.created_at.isoformat(),
+        'lastModifiedAt': branch.last_modified_at.isoformat(),
         'isDefault': project.viztrail.is_default_branch(branch_id),
         'properties': serialize.ANNOTATIONS(branch.properties),
         'links': serialize.HATEOAS({
@@ -51,3 +54,36 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
             'branch:update': urls.update_branch(project_id, branch_id)
         })
     }
+
+
+def BRANCH_HANDLE(project, branch, urls):
+    """Dictionary serialization for branch handle. Extends branch descriptor
+    with timestamps and workflow descriptors from branch history.
+
+    Parameters
+    ----------
+    project: vizier.engine.project.ProjectHandle
+        Handle for the containing project
+    branch : vizier.viztrail.branch.BranchHandle
+        Branch handle
+    urls: vizier.api.webservice.routes.UrlFactory
+        Factory for resource urls
+
+    Returns
+    -------
+    dict
+    """
+    project_id = project.identifier
+    branch_id = branch.identifier
+    # Use the branch descriptor as basis
+    obj = BRANCH_DESCRIPTOR(project=project, branch=branch, urls=urls)
+    # Add descriptors for workflows in the branch history
+    obj['workflows'] = [
+        workflow.WORKFLOW_DESCRIPTOR(
+            project=project,
+            branch=branch,
+            workflow=wf,
+            urls=urls
+        ) for wf in branch.get_history()
+    ]
+    return obj

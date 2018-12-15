@@ -186,15 +186,19 @@ class OSBranchHandle(BranchHandle):
         """
         workflow_modules = list(modules)
         if not pending_modules is None:
-            for pending_module in pending_modules:
+            for pm in pending_modules:
+                # Make sure the started_at timestamp is set if the module is
+                # running
+                if pm.is_running and pm.timestamp.started_at is None:
+                    pm.timestamp.started_at = pm.timestamp.created_at
                 module = OSModuleHandle.create_module(
-                    command=pending_module.command,
-                    external_form=pending_module.external_form,
-                    state=pending_module.state,
-                    timestamp=pending_module.timestamp,
-                    datasets=pending_module.datasets,
-                    outputs=pending_module.outputs,
-                    provenance=pending_module.provenance,
+                    command=pm.command,
+                    external_form=pm.external_form,
+                    state=pm.state,
+                    timestamp=pm.timestamp,
+                    datasets=pm.datasets,
+                    outputs=pm.outputs,
+                    provenance=pm.provenance,
                     module_folder=self.modules_folder,
                     object_store=self.object_store
                 )

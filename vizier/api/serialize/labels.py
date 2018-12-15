@@ -14,4 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION_INFO = '0.2.0'
+
+"""Definition of frequently used element names."""
+# General object attributes
+ID = 'id'
+NAME = 'name'
+# Timestamps
+CREATED_AT = 'createdAt'
+FINISHED_AT = 'finishedAt'
+STARTED_AT = 'startedAt'
+# Module and workflow state
+STATE = 'state'
+# Modules
+DATASETS = 'datasets'
+OUTPUTS = 'outputs'
+PROVENANCE = 'provenance'
+# Task state changes
+RESULT = 'result'

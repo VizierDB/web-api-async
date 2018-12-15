@@ -31,7 +31,8 @@ from vizier.viztrail.module.base import MODULE_ERROR, MODULE_PENDING
 from vizier.viztrail.module.base import MODULE_RUNNING, MODULE_SUCCESS
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-from vizier.viztrail.workflow import ACTION_DELETE, ACTION_INSERT, ACTION_REPLACE
+from vizier.viztrail.workflow import ACTION_APPEND, ACTION_DELETE
+from vizier.viztrail.workflow import ACTION_INSERT, ACTION_REPLACE
 
 
 class ExtendedTaskHandle(TaskHandle):
@@ -162,7 +163,11 @@ class ProjectHandle(WorkflowController):
                     command=command,
                     context=task_context(datasets)
                 )
-                ts_finish = get_current_time()
+                ts = ModuleTimestamp(
+                    created_at=ts_start,
+                    started_at=ts_start,
+                    finished_at=get_current_time()
+                )
                 # Depending on the execution outcome create a handle for the
                 # executed module
                 if result.is_success:
@@ -170,11 +175,7 @@ class ProjectHandle(WorkflowController):
                         state=MODULE_SUCCESS,
                         command=command,
                         external_form=external_form,
-                        timestamp=ModuleTimestamp(
-                            created_at=ts_start,
-                            started_at=ts_start,
-                            finished_at=ts_finish
-                        ),
+                        timestamp=ts,
                         datasets=self.get_database_state(
                             workflow=head,
                             module_index=len(modules) - 1,
@@ -188,11 +189,12 @@ class ProjectHandle(WorkflowController):
                         state=MODULE_ERROR,
                         command=command,
                         external_form=external_form,
+                        timestamp=ts,
                         outputs=result.outputs
                     )
                 workflow = branch.append_workflow(
                     modules=modules,
-                    action=ACTION_INSERT,
+                    action=ACTION_APPEND,
                     command=command,
                     pending_modules=[module]
                 )
@@ -209,7 +211,7 @@ class ProjectHandle(WorkflowController):
                     state = self.backend.next_task_state()
                 workflow = branch.append_workflow(
                     modules=modules,
-                    action=ACTION_INSERT,
+                    action=ACTION_APPEND,
                     command=command,
                     pending_modules=[
                         ModuleHandle(

@@ -515,41 +515,48 @@ paths:
                 404:
                     description: Unknown project, branch, or workflow
     #
-    # Notebooks
+    # Tasks
     #
-    /notebooks:
-        get:
-            summary: Get notebook
-            description: Shortcut to get a notebook handle for a given project workflow
-            operationId: getNotebook
+    /projects/{projectId}/tasks/{taskId}:
+        put:
+            summary: Update task state
+            description: Update the state of a running task
+            operationId: updateTaskState
             tags:
-                - notebook
+                - task
             parameters:
-                - name: project
-                  in: query
+                - name: projectId
+                  in: path
                   required: true
                   description: The unique project identifier
                   type: string
-                - name: branch
-                  in: query
-                  required: false
-                  description: Unique identifier of the project branch (defaults to master)
+                - name: taskId
+                  in: path
+                  required: true
+                  description: Unique identifier of the task
                   type: string
-                - name: workflow
-                  in: query
-                  required: false
-                  description: Unique workflow identifier (defaults to head)
-                  type: integer
+                - name: modifier
+                  in: body
+                  required: true
+                  description: Definition of module
+                  schema:
+                      $ref: '#/definitions/TaskModifier'
             produces:
                 - application/json
             responses:
                 200:
-                    description: List of file handles
+                    description: Modified workflow handle
                     schema:
-                        $ref: '#/definitions/NotebookHandle'
+                        type: object
+                        required:
+                            - result
+                        properties:
+                            result:
+                                type: integer
+                400:
+                    description: Invalid task modifier
                 404:
-                    description: Unknown project, branch, or workflow
-
+                    description: Unknown project or task
     #
     # Files
     #
@@ -778,11 +785,17 @@ definitions:
         description: Fundamental branch information
         required:
             - id
+            - createdAt
+            - lastModifiedAt
             - isDefault
             - properties
             - links
         properties:
             id:
+                type: string
+            createdAt:
+                type: string
+            lastModifiedAt:
                 type: string
             isDefault:
                 type: boolean
@@ -799,15 +812,18 @@ definitions:
         description: Complete branch information
         required:
             - id
-            - project
+            - createdAt
+            - lastModifiedAt
             - workflows
             - properties
             - links
         properties:
             id:
                 type: string
-            project:
-                $ref: '#/definitions/ProjectDescriptor'
+            createdAt:
+                type: string
+            lastModifiedAt:
+                type: string
             workflows:
                 type: array
                 items:
@@ -816,21 +832,6 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/ObjectProperty"
-            links:
-                type: array
-                items:
-                    $ref: "#/definitions/Reference"
-    BranchListing:
-        type: object
-        description: Listing of branch descriptors
-        required:
-            - branches
-            - links
-        properties:
-            branches:
-                type: array
-                items:
-                    $ref: "#/definitions/BranchDescriptor"
             links:
                 type: array
                 items:
@@ -850,7 +851,7 @@ definitions:
                 properties:
                     branch:
                         type: string
-                    version:
+                    workflowId:
                         type: string
                     moduleId:
                         type: string
@@ -971,11 +972,14 @@ definitions:
         description: Descriptor containing dataset metadata
         required:
             - id
+            - name
             - columns
             - rows
             - links
         properties:
             id:
+                type: string
+            name:
                 type: string
             columns:
                 type: array
@@ -1026,7 +1030,7 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/Reference"
-    DatasetReference:
+    DatasetIdentifier:
         type: object
         description: Named dataset associated with workflow state
         required:
@@ -1104,29 +1108,7 @@ definitions:
                     finishedAt:
                         type: string
             outputs:
-                type: object
-                required:
-                    - stdout
-                    - stderr
-                properties:
-                    stdout:
-                        type: array
-                        items:
-                            type: object
-                            required:
-                                - type
-                                - data
-                            properties:
-                                type:
-                                    type: string
-                                data:
-                                    type: string
-                                result:
-                                    type: object
-                    stderr:
-                        type: array
-                        items:
-                            type: string
+                $ref: '#/definitions/ModuleOutputs'
             datasets:
                 type: array
                 items:
@@ -1135,6 +1117,20 @@ definitions:
                 type: array
                 items:
                     $ref: '#/definitions/Reference'
+    ModuleOutputs:
+        type: object
+        required:
+            - stdout
+            - stderr
+        properties:
+            stdout:
+                type: array
+                items:
+                    $ref: '#/definitions/OutputObject'
+            stderr:
+                type: array
+                items:
+                    $ref: '#/definitions/OutputObject'
     ModuleStatement:
         type: object
         description: Definition of a command to evaluate against a workflow state
@@ -1149,27 +1145,6 @@ definitions:
                 type: string
             arguments:
                 type: array
-    NotebookHandle:
-        type: object
-        description: Full information about project and workflow modules
-        required:
-            - project
-            - workflow
-            - modules
-            - datasets
-        properties:
-            project:
-                $ref: '#/definitions/ProjectHandle'
-            workflow:
-                $ref: '#/definitions/WorkflowHandle'
-            modules:
-                type: array
-                items:
-                    $ref: '#/definitions/ModuleHandle'
-            datasets:
-                type: array
-                items:
-                    $ref: '#/definitions/DatasetDescriptor'
     ObjectProperty:
         type: object
         description: Key-value pair for user-defined object properties
@@ -1198,16 +1173,16 @@ definitions:
                             type: string
                         value:
                             type: string
-    OutputLine:
+    OutputObject:
         type: object
-        description: Typed output text
+        description: Object in module output stream
         required:
-            - text
             - type
+            - value
         properties:
-            text:
-                type: string
             type:
+                type: string
+            value:
                 type: string
     PackageDeclaration:
         type: object
@@ -1418,6 +1393,44 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/Reference"
+    TaskModifier:
+        type: object
+        description: Change the state of a running task
+        required:
+            - state
+        properties:
+            state:
+                type: integer
+            startedAt:
+                type: string
+            finishedAt:
+                type: string
+            outputs:
+                $ref: '#/definitions/ModuleOutputs'
+            datasets:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetDescriptor'
+            provenance:
+                type: object
+                required:
+                    - read
+                    - write
+                properties:
+                    read:
+                        type: array
+                        items:
+                            $ref: '#/definitions/DatasetIdentifier'
+                    write:
+                        type: array
+                        items:
+                            $ref: '#/definitions/DatasetIdentifier'
+                    delete:
+                        type: array
+                        items:
+                            type: string
+                    resources:
+                        type: object
     UpdateAnnotationStatement:
         type: object
         description: Update statement for resource annotation
@@ -1438,16 +1451,15 @@ definitions:
         type: object
         description: Fundamental workflow metadata and references
         required:
-            - version
+            - id
             - createdAt
             - action
             - packageId
             - commandId
-            - statement
             - links
         properties:
-            version:
-                type: integer
+            id:
+                type: string
             createdAt:
                 type: string
             action:
@@ -1455,8 +1467,6 @@ definitions:
             packageId:
                 type: string
             commandId:
-                type: string
-            statement:
                 type: string
             links:
                 type: array
@@ -1468,6 +1478,9 @@ definitions:
         required:
             - identifier
             - createdAt
+            - action
+            - packageId
+            - commandId
             - state
             - modules
             - datasets
@@ -1478,6 +1491,10 @@ definitions:
             identifier:
                 type: string
             createdAt:
+                type: string
+            action:
+                type: string
+            packageId:
                 type: string
             state:
                 type: integer

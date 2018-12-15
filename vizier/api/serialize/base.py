@@ -18,6 +18,8 @@
 serialize web resources.
 """
 
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject
+
 
 def ANNOTATIONS(annotations):
     """Serialize the content of an object annotation set.
@@ -52,6 +54,10 @@ def HATEOAS(links):
     return [{'rel': key, 'href': links[key]} for key in links]
 
 
+# ------------------------------------------------------------------------------
+# Output streams
+# ------------------------------------------------------------------------------
+
 def OUTPUT(out):
     """Get dictionary serialization for an output object.
 
@@ -65,3 +71,22 @@ def OUTPUT(out):
     dict
     """
     return {'type': out.type, 'value': out.value}
+
+
+def OUTPUTS(output_streams):
+    """Get dictionary serialization for a pair of STDOUT and STDERR output
+    stream.
+
+    Parameters
+    ----------
+    output_streams: vizier.viztrail.module.output.ModuleOutputs
+        Module output streams
+
+    Returns
+    -------
+    dict()
+    """
+    return {
+        'stdout': [OUTPUT(out) for out in output_streams.stdout],
+        'stderr': [OUTPUT(out) for out in output_streams.stderr]
+    }

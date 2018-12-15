@@ -16,6 +16,7 @@ setup(
     'jsonschema',
 	'pyyaml',
 	'py4j>=0.10.6',
+    'requests',
 	'spylon>=0.3.0'
     ]
 )

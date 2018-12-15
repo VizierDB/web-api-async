@@ -28,16 +28,20 @@ store, data store, viztrail repository and the workflow execution engine.
 
 from vizier.api.webservice.routes import UrlFactory
 from vizier.core import VERSION_INFO
-from vizier.core.timestamp import get_current_time
+from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.branch import BranchProvenance
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.branch as serialbr
+import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.files as serialfs
+import vizier.api.serialize.labels as labels
 import vizier.api.serialize.module as serialmd
 import vizier.api.serialize.project as serialpr
 import vizier.api.serialize.workflow as serialwf
+import vizier.viztrail.module.base as states
 
 
 class VizierApi(object):
@@ -60,7 +64,7 @@ class VizierApi(object):
             Viztrail manager for the API instance
         """
         self.engine = config.get_api_engine()
-        self.urls = UrlFactory(config)
+        self.urls = UrlFactory(base_url=config.app_base_url, api_doc_url=config.webservice.doc_url)
         self.service_descriptor = {
             'name': config.webservice.name,
             'version': VERSION_INFO,
@@ -251,13 +255,40 @@ class VizierApi(object):
         if branch_id is None and workflow_id is None and module_id is None:
             # Create an empty branch if the branch point is not specified
             branch = project.viztrail.create_branch(properties=properties)
-            return serialbr.BRANCH_DESCRIPTOR(
-                branch=branch,
-                project=project,
-                urls=self.urls
-            )
         else:
-            return None
+            # Ensure that the branch point exist and get the index position of
+            # the source module
+            source_branch = project.viztrail.get_branch(branch_id)
+            if source_branch is None:
+                raise ValueError('unknown source branch \'' + str(branch_id) + '\'')
+            workflow = source_branch.get_workflow(workflow_id)
+            if workflow is None:
+                    raise ValueError('unknown workflow \'' + str(workflow_id) + '\'')
+            module_index = -1
+            for i in range(len(workflow.modules)):
+                module = workflow.modules[i]
+                if module.identifier == module_id:
+                    module_index = i
+                    break
+            if module_index == -1:
+                raise ValueError('unknown module \'' + str(module_id) + '\'')
+            modules = [m.identifier for m in workflow.modules[:module_index+1]]
+            # Create a new branch that contains all source modules including
+            # the specified one.
+            branch = project.viztrail.create_branch(
+                provenance=BranchProvenance(
+                    source_branch=source_branch.identifier,
+                    workflow_id=workflow_id,
+                    module_id=module_id
+                ),
+                properties=properties,
+                modules=modules
+            )
+        return serialbr.BRANCH_DESCRIPTOR(
+            branch=branch,
+            project=project,
+            urls=self.urls
+        )
 
     def delete_branch(self, project_id, branch_id):
         """Delete the branch with the given identifier from the given
@@ -304,14 +335,20 @@ class VizierApi(object):
         dict
             Serialization of the project workflow
         """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
+        # Retrieve the project and branch from the repository to ensure that
+        # they exist.
+        project = self.engine.get_project(project_id)
+        if project is None:
             return None
-        # Return serialization if branch does exist, otherwise None
-        if branch_id in viztrail.branches:
-            branch = viztrail.branches[branch_id]
-            return serialize.BRANCH_HANDLE(viztrail, branch, self.urls)
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
+            return None
+        # Return serialization of the branch handle
+        return serialbr.BRANCH_HANDLE(
+            project=project,
+            branch=branch,
+            urls=self.urls
+        )
 
     def update_branch(self, project_id, branch_id, properties):
         """Update properties for a given project workflow branch. Returns the
@@ -332,11 +369,11 @@ class VizierApi(object):
         -------
         dict
         """
-        # Retrieve the project from the repository to ensure that it exists
+        # Retrieve the project and branch from the repository to ensure that
+        # they exist.
         project = self.engine.get_project(project_id)
         if project is None:
             return None
-        # Get the specified branch
         branch = project.viztrail.get_branch(branch_id)
         if branch is None:
             return None
@@ -407,7 +444,7 @@ class VizierApi(object):
             urls=self.urls
         )
 
-    def cancel_workflow(project_id, branch_id):
+    def cancel_workflow(self, project_id, branch_id):
         """Cancel execution for all running and pending modules in the head
         workflow of a given project branch.
 
@@ -433,7 +470,12 @@ class VizierApi(object):
         if branch is None:
             return None
         # Cancel excecution and return the workflow handle
-        return project.cancel_exec(branch_id)
+        return serialwf.WORKFLOW_HANDLE(
+            project=project,
+            branch=branch,
+            workflow=project.cancel_exec(branch_id),
+            urls=self.urls
+        )
 
     def delete_workflow_module(self, project_id, branch_id, module_id):
         """Delete a module in the head workflow of the identified project
@@ -513,12 +555,18 @@ class VizierApi(object):
                 urls=self.urls
             )
         else:
-            return serialwf.WORKFLOW_HANDLE(
-                project=project,
-                branch=branch,
-                workflow=branch.head,
-                urls=self.urls
-            )
+            if workflow_id is None:
+                workflow = branch.head
+            else:
+                workflow = branch.get_workflow(workflow_id)
+            if not workflow is None:
+                return serialwf.WORKFLOW_HANDLE(
+                    project=project,
+                    branch=branch,
+                    workflow=workflow,
+                    urls=self.urls
+                )
+        return None
 
     def get_workflow_module(self, project_id, branch_id, module_id):
         """Get handle for a module in the head workflow of a given project
@@ -671,6 +719,87 @@ class VizierApi(object):
                 modules=modules,
                 urls=self.urls
             )
+        return None
+
+    # --------------------------------------------------------------------------
+    # Tasks
+    # --------------------------------------------------------------------------
+    def update_task_state(self, project_id, task_id, state, body):
+        """Update that state pf a given task. The contents of the request body
+        depend on the value of the new task state.
+
+        Raises a ValueError if the request body is invalid. The result is None
+        if the project or task are unknown. Otherwise, the result is a
+        dictionary with a single result value. The result is 0 if the task state
+        did not change. A positive value signals a successful task state change.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        task_id: string
+            Unique task identifier
+        state: int
+            The new state of the task
+        body: dict()
+            State-dependent additional information
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project from the repository to ensure thatit exists.
+        project = self.engine.get_project(project_id)
+        if project is None:
+            return None
+        # Depending on the requested state change call the respective method
+        # after extracting additional parameters from the request body.
+        result = None
+        if state == states.MODULE_RUNNING:
+            if labels.STARTED_AT in body:
+                result = project.set_running(
+                    task_id=task_id,
+                    started_at=to_datetime(body[labels.STARTED_AT])
+                )
+            else:
+                result = project.set_running(task_id=task_id)
+        elif state == states.MODULE_ERROR:
+            finished_at = None
+            if labels.FINISHED_AT in body:
+                finished_at = to_datetime(body[labels.FINISHED_AT])
+            outputs = None
+            if labels.OUTPUTS in body:
+                outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
+            result = project.set_error(
+                task_id=task_id,
+                finished_at=finished_at,
+                outputs=outputs
+            )
+        elif state == states.MODULE_SUCCESS:
+            finished_at = None
+            if labels.FINISHED_AT in body:
+                finished_at = to_datetime(body[labels.FINISHED_AT])
+            outputs = None
+            if labels.OUTPUTS in body:
+                outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
+            datasets = None
+            if labels.DATASETS in body:
+                datasets = deserialize.DATASETS(body[labels.DATASETS])
+            provenance = None
+            if labels.PROVENANCE in body:
+                provenance = deserialize.PROVENANCE(body[labels.PROVENANCE])
+            result = project.set_success(
+                task_id=task_id,
+                finished_at=finished_at,
+                datasets=datasets,
+                outputs=outputs,
+                provenance=provenance
+            )
+        else:
+            raise ValueError('invalid state change')
+        # Create state change result
+        if not result is None:
+            return {serialize.RESULT: len(result)}
         return None
 
     # --------------------------------------------------------------------------

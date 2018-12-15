@@ -28,6 +28,8 @@ from werkzeug.utils import secure_filename
 from vizier.api.webservice.base import VizierApi
 from vizier.config import AppConfig
 
+import vizier.api.serialize.labels as labels
+
 
 # -----------------------------------------------------------------------------
 #
@@ -202,13 +204,14 @@ def create_branch(project_id):
     workflow_id = None
     module_id = None
     if 'source' in obj:
-        for key in obj:
+        source = obj['source']
+        for key in source:
             if key == 'branchId':
-                branch_id = obj[key]
+                branch_id = source[key]
             elif key == 'workflowId':
-                workflow_id = obj[key]
+                workflow_id = source[key]
             elif key ==  'moduleId':
-                module_id = obj[key]
+                module_id = source[key]
             else:
                 raise InvalidRequest('invalid element \'' + key + '\' for branch point')
     # Get the properties for the new branch
@@ -240,6 +243,17 @@ def delete_branch(project_id, branch_id):
         raise InvalidRequest(str(ex))
     if success:
         return '', 204
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+
+
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>')
+def get_branch(project_id, branch_id):
+    """Get handle for a branch in a given project."""
+    # Get the branch handle. The result is None if the project or the branch
+    # do not exist.
+    branch = api.get_branch(project_id, branch_id)
+    if not branch is None:
+        return jsonify(branch)
     raise ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
@@ -464,6 +478,45 @@ def replace_workflow_module(project_id, branch_id, module_id):
     except ValueError as ex:
         raise InvalidRequest(str(ex))
     raise ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+
+
+# ------------------------------------------------------------------------------
+# Tasks
+# ------------------------------------------------------------------------------
+
+@app.route('/projects/<string:project_id>/tasks/<string:task_id>', methods=['PUT'])
+def update_task_state(project_id, task_id):
+    """Update the state of a running task."""
+    # Abort with BAD REQUEST if request body is not in Json format or does not
+    # contain the expected elements.
+    obj = validate_json_request(
+        request,
+        required=[labels.STATE],
+        optional=[
+            labels.STARTED_AT,
+            labels.FINISHED_AT,
+            labels.OUTPUTS,
+            labels.DATASETS,
+            labels.PROVENANCE
+        ]
+    )
+    # Update task state. The contents of the request body depend on the value of
+    # the new task state. The request body is evaluated by the API. The API will
+    # raise a ValueError if the request body is invalid. The result is None if
+    # the project or task are unknown.
+    try:
+        # Result is None if project, branch or module are not found.
+        result = api.update_task_state(
+            project_id=project_id,
+            task_id=task_id,
+            state=obj[labels.STATE],
+            body=obj
+        )
+        if not result is None:
+            return jsonify(result)
+    except ValueError as ex:
+        raise InvalidRequest(str(ex))
+    raise ResourceNotFound('unknown project \'' + project_id + '\' or task \'' + task_id + '\'')
 
 
 # ------------------------------------------------------------------------------

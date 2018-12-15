@@ -19,6 +19,7 @@ serialize workflow modules.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.labels as labels
 
 
 def MODULE_HANDLE(project, branch, module, urls, include_self=True):
@@ -81,10 +82,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         obj['timestamps']['startedAt'] = timestamp.started_at.isoformat()
     # Add outputs and datasets if module is not active. Else add cancel link
     if not module.is_active:
-        obj['outputs'] = {
-            'stdout': [serialize.OUTPUT(out) for out in module.outputs.stdout],
-            'stderr': [serialize.OUTPUT(out) for out in module.outputs.stderr]
-        }
+        obj['outputs'] = serialize.OUTPUTS(module.outputs)
         if not timestamp.finished_at is None:
             obj['timestamps']['finishedAt'] = timestamp.finished_at.isoformat()
     else:
@@ -125,3 +123,31 @@ def MODULE_HANDLE_LIST(project, branch, modules, urls):
             ) for m in modules
         ]
     }
+
+
+def PROVENANCE(prov):
+    """Serialize a module provenance object.
+
+    Parameters
+    ----------
+    proc: vizier.viztrail.module.provenance.ModuleProvenance
+        Module provenance information
+
+    Returns
+    -------
+    dict
+    """
+    obj = {}
+    if not prov.read is None:
+        obj['read'] = list()
+        for name in prov.read:
+            obj['read'].append({labels.ID: prov.read[name], labels.NAME: name})
+    if not prov.write is None:
+        obj['write'] = list()
+        for name in prov.write:
+            obj['write'].append({labels.ID: prov.write[name], labels.NAME: name})
+    if not prov.delete is None:
+        obj['delete'] = prov.delete
+    if not prov.resources is None:
+        obj['resources'] = prov.resources
+    return obj
