@@ -18,8 +18,9 @@
 
 from vizier.api.client.base import VizierApiClient
 from vizier.api.client.cli import VERSION_INFO
-from vizier.api.client.cli.settings import SettingCommands
-from vizier.api.client.cli.viztrails import ViztrailsCommands
+from vizier.api.client.cli.notebook import NotebookCommands
+from vizier.api.client.cli.setting import SettingCommands
+from vizier.api.client.cli.viztrail import ViztrailsCommands
 
 
 class CommandInterpreter(object):
@@ -40,7 +41,8 @@ class CommandInterpreter(object):
         self.api = VizierApiClient(urls=urls, defaults=defaults)
         self.commands = [
             SettingCommands(api=self.api),
-            ViztrailsCommands(api=self.api)
+            ViztrailsCommands(api=self.api),
+            NotebookCommands(api=self.api)
         ]
 
     def eval(self, tokens):

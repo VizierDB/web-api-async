@@ -58,7 +58,7 @@ class SettingCommands(Command):
 
     def help(self):
         """Print help statement."""
-        print 'Settings'
+        print '\nSettings'
         print '  defaults'
         print '  set project <project-id>'
         print '  set branch <branch-id>'
@@ -111,6 +111,7 @@ class SettingCommands(Command):
                 value=project_id,
                 replace=True
             )
+            print 'Default project is now \'' + project.name + '\''
             if not project.default_branch is None:
                 print 'Default branch is ' + project.default_branch
                 self.api.defaults.add(
@@ -120,7 +121,6 @@ class SettingCommands(Command):
                 )
             else:
                 self.api.defaults.delete(key=KEY_DEFAULT_BRANCH)
-            print 'Default project is now \'' + project.name + '\''
         else:
             print 'Unknown project: ' + project_id
         return True

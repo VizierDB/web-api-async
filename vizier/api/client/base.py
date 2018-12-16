@@ -69,6 +69,97 @@ class VizierApiClient(object):
             else:
                 self.default_branch = None
 
+    def create_branch(self, project_id, properties):
+        """Create a new project resource at the server.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        properties: dict
+            Dictionary of project properties
+
+        Results
+        -------
+        vizier.api.client.resources.branch.BranchResource
+        """
+        # Get the request url and create the request body
+        url = self.urls.create_branch(project_id)
+        data = {labels.PROPERTIES: serialize.PROPERTIES(properties)}
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful
+        r = requests.post(url, json=data)
+        r.raise_for_status()
+        # The result is the new branch descriptor
+        return BranchResource.from_dict(json.loads(r.text))
+
+    def create_project(self, properties):
+        """Create a new project resource at the server.
+
+        Parameters
+        ----------
+        properties: dict
+            Dictionary of project properties
+
+        Results
+        -------
+        vizier.api.client.resources.project.ProjectResource
+        """
+        # Get the request url and create the request body
+        url = self.urls.create_project()
+        data = {labels.PROPERTIES: serialize.PROPERTIES(properties)}
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful
+        r = requests.post(url, json=data)
+        r.raise_for_status()
+        # The result is the new project descriptor
+        return ProjectResource.from_dict(json.loads(r.text))
+
+    def delete_branch(self, project_id, branch_id):
+        """Delete the project branch at the server.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Results
+        -------
+        bool
+        """
+        # Get the request url
+        url = self.urls.delete_branch(
+            project_id=project_id,
+            branch_id=branch_id
+        )
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful. Otherwise return True.
+        r = requests.delete(url)
+        r.raise_for_status()
+        return True
+
+    def delete_project(self, project_id):
+        """Delete the project resource at the server.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Results
+        -------
+        bool
+        """
+        # Get the request url
+        url = self.urls.delete_project(project_id)
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful. Otherwise return True.
+        r = requests.delete(url)
+        r.raise_for_status()
+        return True
+
     def get_branch(self, project_id, branch_id):
         """Fetch a project branch from the remote web service API.
 
@@ -89,6 +180,30 @@ class VizierApiClient(object):
         data = json.loads(response.read())
         # Convert result into instance of the project resource class
         return BranchResource.from_dict(data)
+
+    def get_default_branch(self):
+        """Get the identifier of the selected default branch. Raises ValueError
+        if the branch is not selected.
+
+        Returns
+        -------
+        string
+        """
+        if self.default_branch is None:
+            raise ValueError(MSG_NO_DEFAULT_BRANCH)
+        return self.default_branch
+
+    def get_default_project(self):
+        """Get the identifier of the selected default project. Raises a
+        ValueError if the project is not set.
+
+        Returns
+        -------
+        string
+        """
+        if self.default_project is None:
+            raise ValueError(MSG_NO_DEFAULT_PROJECT)
+        return self.default_project
 
     def get_project(self, project_id):
         """Fetch list of project from remote web service API.
@@ -174,6 +289,37 @@ class VizierApiClient(object):
             projects.append(ProjectResource.from_dict(obj))
         return projects
 
+    def load_from_file(project_id, branch_id, name, file):
+        """
+        """
+        pass
+
+    def update_branch(self, project_id, branch_id, properties):
+        """Update the properties of a given project branch.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+        properties: dict
+            Properties update statements
+
+        Returns
+        -------
+        vizier.api.client.resources.branch.BranchResource
+        """
+        # Get the request url and create the request body
+        url = self.urls.update_branch(project_id, branch_id)
+        data = {labels.PROPERTIES: serialize.PROPERTIES(properties)}
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful
+        r = requests.put(url, json=data)
+        r.raise_for_status()
+        # The result is the new project descriptor
+        return BranchResource.from_dict(json.loads(r.text))
+
     def update_project(self, project_id, properties):
         """Update the properties of a given project.
 
@@ -195,5 +341,5 @@ class VizierApiClient(object):
         # request was not successful
         r = requests.put(url, json=data)
         r.raise_for_status()
-        # the result is the new project descriptor
+        # The result is the new project descriptor
         return ProjectResource.from_dict(json.loads(r.text))

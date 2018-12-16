@@ -19,7 +19,6 @@ repository.
 """
 
 from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
-from vizier.api.client.base import MSG_NO_DEFAULT_BRANCH, MSG_NO_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
 from vizier.core.timestamp import utc_to_local
 from vizier.viztrail.base import PROPERTY_NAME
@@ -40,36 +39,29 @@ class ViztrailsCommands(Command):
             Vizier API client
         """
         self.api = api
-        self.default_project = api.default_project
-        self.default_branch = api.default_branch
 
     def create_branch(self, name):
         """Create a new branch in the default project."""
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        branch = self.viztrails.create_branch(
-            project_id=self.default_project.identifier,
+        project_id = self.api.get_default_project()
+        branch = self.api.create_branch(
+            project_id=project_id,
             properties={PROPERTY_NAME: name}
         )
-        print 'Branch ' + name + ' created with identifier ' + branch.identifier
+        print 'Branch ' + name + ' created (' + branch.identifier + ')'
         return True
 
     def create_project(self, name):
         """Create a new project with given name."""
-        vt = self.viztrails.create_project(
+        project = self.api.create_project(
             properties={PROPERTY_NAME: name}
         )
-        print 'Project ' + name + ' created with identifier ' + vt.identifier
+        print 'Project ' + name + ' created (' + project.identifier + ')'
         return True
 
     def delete_branch(self, branch_id):
         """Delete branch with given idnetifier from default project."""
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        result = self.viztrails.delete_branch(
-            project_id=self.default_project.identifier,
+        result = self.api.delete_branch(
+            project_id=self.api.get_default_project(),
             branch_id=branch_id
         )
         if result:
@@ -80,12 +72,12 @@ class ViztrailsCommands(Command):
 
     def delete_project(self, project_id):
         """Delete project with given idnetifier."""
-        result = self.viztrails.delete_project(project_id=project_id)
+        result = self.api.delete_project(project_id)
         if result:
-            if not self.default_project is None:
-                if self.default_project.identifier == project_id:
-                    self.default_project = None
-                    self.defaults.delete(KEY_DEFAULT_PROJECT)
+            default_project = self.api.get_default_project()
+            if not default_project is None:
+                if default_project == project_id:
+                    self.api.defaults.delete(KEY_DEFAULT_PROJECT)
             print 'Project deleted'
         else:
             print 'Unknown project ' + project_id
@@ -154,14 +146,10 @@ class ViztrailsCommands(Command):
         print '  rename project <name>'
         print '  show [history | notebooks]'
         print '  show notebook {<workflow-id>}'
-        print '  run python [<file> | <script-code>]'
 
     def list_branches(self):
         """Print listing of branches for default project in tabular format."""
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        branches = self.api.list_branches(self.default_project)
+        branches = self.api.list_branches(self.api.get_default_project())
         rows = list()
         rows.append(['Identifier', 'Name', 'Created at', 'Last modified'])
         for branch in branches:
@@ -197,15 +185,9 @@ class ViztrailsCommands(Command):
         """Print listing of workflows in the history of the default branch in
         tabular format.
         """
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        if self.default_branch is None:
-            print MSG_NO_DEFAULT_BRANCH
-            return True
         branch = self.api.get_branch(
-            project_id=self.default_project,
-            branch_id=self.default_branch
+            project_id=self.api.get_default_project(),
+            branch_id=self.api.get_default_branch()
         )
         rows = list()
         rows.append(['Identifier', 'Action', 'Command', 'Created at'])
@@ -223,9 +205,9 @@ class ViztrailsCommands(Command):
 
     def rename_branch(self, name):
         """Rename the default branch."""
-        self.viztrails.update_branch_properties(
-            project_id=self.default_project.identifier,
-            branch_id=self.default_branch.identifier,
+        self.api.update_branch(
+            project_id=self.api.get_default_project(),
+            branch_id=self.api.get_default_branch(),
             properties={PROPERTY_NAME: name}
         )
         print 'Branch renamed to ' + name
@@ -233,11 +215,8 @@ class ViztrailsCommands(Command):
 
     def rename_project(self, name):
         """Rename the default project."""
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
         self.api.update_project(
-            project_id=self.default_project,
+            project_id=self.api.get_default_project(),
             properties={PROPERTY_NAME: name}
         )
         print 'Project renamed to ' + name
@@ -247,15 +226,9 @@ class ViztrailsCommands(Command):
         """List all modules for a given workflow. If the workflow identifier is
         not given the branch head is used as the workflow.
         """
-        if self.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
-            return True
-        if self.default_branch is None:
-            print MSG_NO_DEFAULT_BRANCH
-            return True
         workflow = self.api.get_workflow(
-            project_id=self.default_project,
-            branch_id=self.default_branch,
+            project_id=self.api.get_default_project(),
+            branch_id=self.api.get_default_branch(),
             workflow_id=workflow_id
         )
         print 'Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')'
