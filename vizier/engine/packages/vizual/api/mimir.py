@@ -30,30 +30,14 @@ from vizier.core.util import is_valid_name
 from vizier.datastore.base import get_index_for_column
 from vizier.datastore.mimir import MimirDatasetColumn
 from vizier.datastore.mimir import COL_PREFIX, ROW_ID
-from vizier.workflow.vizual.base import DefaultVizualEngine
+from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 
 
-class MimirVizualEngine(DefaultVizualEngine):
+class MimirVizualEngine(VizualApi):
     """Implementation for VizUAL DB Engine unsing Mimir. Translates most VizUAL
     commands into SQL views.
     """
-    def __init__(self, datastore, fileserver):
-        """Initialize the Mimir datastore that is used to retrieve and update
-        datasets and the file server managing CSV files.
-
-        Parameters
-        ----------
-        datastore: vizier.datastore.mimir.MimirDatastore
-            Datastore to retireve and update datasets.
-        fileserver:  vizier.filestore.base.FileSever
-            File server to access uploaded  CSV files
-        """
-        super(MimirVizualEngine, self).__init__(
-            datastore,
-            fileserver
-        )
-
-    def delete_column(self, identifier, column):
+    def delete_column(self, identifier, column_id, datastore):
         """Delete a column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -63,14 +47,14 @@ class MimirVizualEngine(DefaultVizualEngine):
         ----------
         identifier: string
             Unique dataset identifier
-        column: int
+        column_id: int
             Unique column identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of deleted columns (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -98,7 +82,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return 1, ds.identifier
 
-    def delete_row(self, identifier, row):
+    def delete_row(self, identifier, row_index, datastore):
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -106,17 +90,18 @@ class MimirVizualEngine(DefaultVizualEngine):
 
         Parameters
         ----------
-        identifier : string
+        identifier: string
             Unique dataset identifier
-        row : int
+        row_index: int
             Row index for deleted row
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of deleted rows (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
+        raise NotImplementedError
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
         if dataset is None:
@@ -147,15 +132,12 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return 1, ds.identifier
 
-    def filter_columns(self, identifier, columns, names):
+    def filter_columns(self, identifier, columns, names, datastore):
         """Dataset projection operator. Returns a copy of the dataset with the
         given identifier that contains only those columns listed in columns.
         The list of names contains optional new names for the filtered columns.
         A value of None in names indicates that the name of the corresponding
         column is not changed.
-
-        Returns the number of rows in the dataset and the identifier of the
-        projected dataset.
 
         Raises ValueError if no dataset with given identifier exists or if any
         of the filter columns are unknown.
@@ -168,10 +150,12 @@ class MimirVizualEngine(DefaultVizualEngine):
             List of column identifier for columns in the result.
         names: list(string)
             Optional new names for filtered columns.
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -208,7 +192,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return len(dataset.row_ids), ds.identifier
 
-    def insert_column(self, identifier, position, name):
+    def insert_column(self, identifier, position, name, datastore):
         """Insert column with given name at given position in dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -217,18 +201,18 @@ class MimirVizualEngine(DefaultVizualEngine):
 
         Parameters
         ----------
-        identifier : string
+        identifier: string
             Unique dataset identifier
-        position : int
+        position: int
             Index position at which the column will be inserted
-        name : string
+        name: string, optional
             New column name
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of inserted columns (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Raise ValueError if given colum name is invalid
         if not is_valid_name(name):
@@ -270,7 +254,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return 1, ds.identifier
 
-    def insert_row(self, identifier, position):
+    def insert_row(self, identifier, position, datastore):
         """Insert row at given position in a dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -278,16 +262,16 @@ class MimirVizualEngine(DefaultVizualEngine):
 
         Parameters
         ----------
-        identifier : string
+        identifier: string
             Unique dataset identifier
-        position : int
+        position: int
             Index position at which the row will be inserted
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of inserted rows (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -322,7 +306,48 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return 1, ds.identifier
 
-    def move_column(self, identifier, column, position):
+    def load_dataset(
+        self, datastore, filestore, file_id=None, uri=None, username=None,
+        password=None, resources=None, reload=False
+    ):
+        """Create (or load) a new dataset from a given file or Uri. It is
+        guaranteed that either the file identifier or the uri are not None but
+        one of them will be None. The user name and password may only be given
+        if an uri is given.
+
+        The resources refer to any resoures (e.g., file identifier) that have
+        been generated by a previous execution of the respective task. This
+        allows to associate an identifier with a downloaded file to avoid future
+        downloads (unless the reload flag is True).
+
+        Parameters
+        ----------
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        filestore: vizier.filestore.Filestore
+            Filestore to retrieve uploaded datasets
+        file_id: string, optional
+            Identifier for a file in an associated filestore
+        uri: string, optional
+            Identifier for a web resource
+        username: string, optional
+            User name for authentication when accessing restricted resources
+        password: string, optional
+            Password for authentication when accessing restricted resources
+        resources: dict, optional
+            Dictionary of additional resources (i.e., key,value pairs) that were
+            generated during a previous execution of the associated module
+        reload: bool, optional
+            Flag to force download of a remote resource even if it was
+            downloaded previously
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        raise NotImplementedError
+
+    def move_column(self, identifier, column_id, position, datastore):
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -332,16 +357,16 @@ class MimirVizualEngine(DefaultVizualEngine):
         ----------
         identifier: string
             Unique dataset identifier
-        column: int
+        column_id: int
             Unique column identifier
         position: int
             Target position for the column
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of moved columns (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -371,7 +396,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         else:
             return 0, identifier
 
-    def move_row(self, identifier, row, position):
+    def move_row(self, identifier, row_index, position, datastore):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -381,16 +406,16 @@ class MimirVizualEngine(DefaultVizualEngine):
         ----------
         identifier: string
             Unique dataset identifier
-        row: int
+        row_index: int
             Row index for deleted row
         position: int
             Target position for the row
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of moved rows (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -418,7 +443,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         else:
             return 0, identifier
 
-    def rename_column(self, identifier, column, name):
+    def rename_column(self, identifier, column_id, name, datastore):
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -426,18 +451,18 @@ class MimirVizualEngine(DefaultVizualEngine):
 
         Parameters
         ----------
-        identifier : string
+        identifier: string
             Unique dataset identifier
-        column : int
+        column_id: int
             Unique column identifier
-        name : string
+        name: string
             New column name
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of renamed columns (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Raise ValueError if given colum name is invalid
         if not is_valid_name(name):
@@ -468,14 +493,14 @@ class MimirVizualEngine(DefaultVizualEngine):
         else:
             return 0, identifier
 
-    def sort_dataset(self, identifier, columns, reversed):
+    def sort_dataset(self, identifier, columns, reversed, datastore):
         """Sort the dataset with the given identifier according to the order by
         statement. The order by statement is a pair of lists. The first list
         contains the identifier of columns to sort on. The second list contains
         boolean flags, one for each entry in columns, indicating whether sort
         order is revered for the corresponding column or not.
 
-        Returns the number of rows in the database and the identifier of the
+        Returns the number of rows in the dataset and the identifier of the
         sorted dataset.
 
         Raises ValueError if no dataset with given identifier exists or if any
@@ -490,10 +515,12 @@ class MimirVizualEngine(DefaultVizualEngine):
         reversed: list(bool)
             Flags indicating whether the sort order of the corresponding column
             is reveresed.
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)
@@ -528,7 +555,7 @@ class MimirVizualEngine(DefaultVizualEngine):
         )
         return len(rows), ds.identifier
 
-    def update_cell(self, identifier, column, row, value):
+    def update_cell(self, identifier, column_id, row_index, value, datastore):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -538,18 +565,18 @@ class MimirVizualEngine(DefaultVizualEngine):
         ----------
         identifier : string
             Unique dataset identifier
-        column : int
-            Unique column identifier for updated cell (starting at 0)
-        row : int
+        column_id: int
+            Unique column identifier for updated cell
+        row_index: int
             Row index for updated cell (starting at 0)
-        value : string
+        value: string
             New cell value
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
 
         Returns
         -------
-        int, string
-            Number of updated rows (i.e., 1) and identifier of resulting
-            dataset
+        vizier.engine.packages.vizual.api.VizualApiResult
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = self.datastore.get_dataset(identifier)

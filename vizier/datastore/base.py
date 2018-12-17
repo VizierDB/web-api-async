@@ -62,48 +62,6 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_dataset(self, identifier):
-        """Delete dataset with given identifier. Returns True if dataset existed
-        and False otherwise.
-
-        Parameters
-        ----------
-        identifier : string
-            Unique dataset identifier.
-
-        Returns
-        -------
-        bool
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def download_dataset(self, uri, username=None, password=None, filestore=None):
-        """Create a new dataset from a given file. This method returns the
-        handle of the created dataset and optional the handle for the downloaded
-        file. The latter can be used to determine in future re-execution of
-        load commands whether to download the dataset file again or not.
-
-        Raises ValueError if the given file could not be loaded as a dataset.
-
-        Parameters
-        ----------
-        uri : string
-            Unique resource identifier for external resource that is accessed
-        username: string, optional
-            Optional user name for authentication
-        password: string, optional
-            Optional password for authentication
-        filestore: vizier.filestore.base.Filestore, optional
-            Optional filestore to save a local copy of the downloaded resource
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetHandle, vizier.filestore.base.FileHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def get_dataset(self, identifier):
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.

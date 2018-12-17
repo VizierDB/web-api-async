@@ -71,7 +71,7 @@ def para_make_input_certain(index):
 MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
     module_name='vizier.engine.packages.mimir.processor',
-    class_name='unknown',
+    class_name='MimirProcessor',
     commands=[
         pckg.command_declaration(
             identifier=MIMIR_DOMAIN,
