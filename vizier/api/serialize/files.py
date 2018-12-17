@@ -41,7 +41,7 @@ def FILE_HANDLE(f_handle, project, urls):
     project_id = project.identifier
     file_id = f_handle.identifier
     # At the moment the self reference and the download Url are identical
-    download_url = urls.file_download(project_id, file_id)
+    download_url = urls.download_file(project_id, file_id)
     obj = {
         'id': file_id,
         'name': f_handle.file_name,

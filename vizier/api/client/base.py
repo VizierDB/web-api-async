@@ -21,6 +21,7 @@ import requests
 import urllib2
 
 from vizier.api.client.resources.branch import BranchResource
+from vizier.api.client.resources.notebook import Notebook
 from vizier.api.client.resources.project import ProjectResource
 from vizier.api.client.resources.workflow import WorkflowResource
 
@@ -205,6 +206,35 @@ class VizierApiClient(object):
             raise ValueError(MSG_NO_DEFAULT_PROJECT)
         return self.default_project
 
+    def get_notebook(self, project_id=None, branch_id=None):
+        """Get the notebook that is defined by the workflow that is at the
+        head of the given branch. If values for project or branch identifier
+        are omitted the default values will be used.
+
+        Parameters
+        ----------
+        project_id: string, optional
+            Unique project identifier
+        branch_id: string, optional
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.api.client.resources.notebook.Notebook
+        """
+        # Use the default project if not project identifier is given
+        if project_id is None:
+            project_id = self.get_default_project()
+        # Use the default branch if not branch identifier is given
+        if branch_id is None:
+            branch_id = self.get_default_branch()
+        return Notebook(
+            workflow=self.get_workflow(
+                project_id=project_id,
+                branch_id=branch_id
+            )
+        )
+
     def get_project(self, project_id):
         """Fetch list of project from remote web service API.
 
@@ -235,7 +265,6 @@ class VizierApiClient(object):
         Returns
         -------
         vizier.api.client.resources.workflow.WorkflowResource
-
         """
         # Fetch workflow handle from server
         if workflow_id is None:
@@ -289,11 +318,6 @@ class VizierApiClient(object):
             projects.append(ProjectResource.from_dict(obj))
         return projects
 
-    def load_from_file(project_id, branch_id, name, file):
-        """
-        """
-        pass
-
     def update_branch(self, project_id, branch_id, properties):
         """Update the properties of a given project branch.
 
@@ -343,3 +367,31 @@ class VizierApiClient(object):
         r.raise_for_status()
         # The result is the new project descriptor
         return ProjectResource.from_dict(json.loads(r.text))
+
+    def upload_file(self, filename, project_id=None):
+        """Upload a file from local disk to the given project. If no project
+        identifier is given the default project is used. Returns the identifier
+        for the uploaded file.
+
+        Parameters
+        ----------
+        filename: string
+            Path to file on local disk
+        project_id: string, optional
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        # Use the default project if not project identifier is given
+        if project_id is None:
+            project_id = self.get_default_project()
+        # Get the request Url and create the request body
+        url = self.urls.upload_file(project_id)
+        files = {'file': open(filename,'rb')}
+        # Send request. The result is the handle for the uploaded file.
+        r = requests.post(url, files=files)
+        r.raise_for_status()
+        # The result is the new project descriptor
+        return json.loads(r.text)['id']

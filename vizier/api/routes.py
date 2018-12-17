@@ -402,7 +402,7 @@ class UrlFactory:
     # --------------------------------------------------------------------------
     # Files
     # --------------------------------------------------------------------------
-    def file_download(self, project_id, file_id):
+    def download_file(self, project_id, file_id):
         """File download url.
 
         Parameters
@@ -418,7 +418,7 @@ class UrlFactory:
         """
         return self.get_project(project_id) + '/files/' + file_id
 
-    def file_upload(self, project_id):
+    def upload_file(self, project_id):
         """File upload url for the given project.
 
         Parameters
@@ -430,4 +430,4 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_project(project_id) + '/upload'
+        return self.get_project(project_id) + '/files'

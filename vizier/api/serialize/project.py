@@ -50,7 +50,7 @@ def PROJECT_DESCRIPTOR(project, urls):
             'project:delete': urls.delete_project(project_id),
             'project:update': urls.update_project(project_id),
             'branch:create': urls.create_branch(project_id),
-            'file:upload': urls.file_upload(project_id)
+            'file:upload': urls.upload_file(project_id)
         })
     }
 

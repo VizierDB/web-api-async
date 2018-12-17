@@ -17,6 +17,9 @@
 """Implementation of commands that interact with a notebook."""
 
 from vizier.api.client.cli.command import Command
+from vizier.engine.packages.base import FILE_ID
+
+import vizier.api.client.command.vizual as vizual
 
 
 class NotebookCommands(Command):
@@ -64,9 +67,13 @@ class NotebookCommands(Command):
     def load_dataset_from_file(self, name, file):
         """Create a new dataset from a given file."""
         # Ensure that the specified file exists
-        self.api.load_from_file(
-            project_id=self.api.get_default_project(),
-            branch_id=self.api.get_default_branch(),
-            name=name,
-            file=file
+        file_id = self.api.upload_file(filename=file)
+        notebook = self.api.get_notebook()
+        modules = notebook.append_cell(
+            command=vizual.load_dataset(
+                dataset_name=name,
+                file_id={FILE_ID: file_id}
+            )
         )
+        print modules
+        return True
