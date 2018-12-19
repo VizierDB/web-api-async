@@ -42,7 +42,6 @@ VIZUAL_UPD_CELL = 'UPDATE_CELL'
 # VizUAL command arguments
 PARA_COLUMNS = 'columns'
 PARA_FILE = 'file'
-PARA_FILEID = 'fileid'
 PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'

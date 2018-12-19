@@ -231,22 +231,30 @@ class ViztrailsCommands(Command):
             branch_id=self.api.get_default_branch(),
             workflow_id=workflow_id
         )
+        if workflow.is_empty:
+            print 'Notebook is empty'
+            return True
         print 'Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')'
         for i in range(len(workflow.modules)):
             module = workflow.modules[i]
-            print '\n[' + str(i+1) + '] (' + module.state.upper() + ') ' + module.identifier
+            cell_id = '[' + str(i+1) + '] '
+            indent = ' ' * len(cell_id)
+            print '\n' + cell_id + '(' + module.state.upper() + ') ' + module.identifier
             timestamps = 'Created @ ' + ts(module.timestamp.created_at)
             if not module.timestamp.started_at is None:
                 timestamps += ', Started @ ' + ts(module.timestamp.started_at)
             if not module.timestamp.finished_at is None:
                 timestamps += ', Finished @ ' + ts(module.timestamp.finished_at)
-            print timestamps
-            print '--'
-            print module.external_form
+            print indent + timestamps
+            print indent + '--'
+            print indent + module.external_form
             if len(module.outputs) > 0:
-                print '--'
+                print indent + '--'
                 for line in module.outputs:
-                    print line
+                    print indent + line
+            if len(module.datasets) > 0:
+                print indent + '--'
+                print indent + 'Datasets: ' + ', '.join(module.datasets)
             print '.'
         return True
 

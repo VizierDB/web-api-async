@@ -1,6 +1,6 @@
 {
     "python": {
-        "className": "", 
+        "className": "PyCellTaskProcessor", 
         "command": [
             {
                 "format": [
@@ -26,6 +26,6 @@
             }
         ], 
         "id": "python", 
-        "moduleName": ""
+        "moduleName": "vizier.engine.packages.pycell.processor"
     }
 }

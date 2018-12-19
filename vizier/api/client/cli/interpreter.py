@@ -60,13 +60,13 @@ class CommandInterpreter(object):
             for cmd in self.commands:
                 cmd.help()
         else:
-            try:
-                for cmd in self.commands:
-                    if cmd.eval(tokens):
-                        return
-                print 'Unknown command ' + ' '.join(tokens)
-            except Exception as ex:
-                print str(ex)
+            #try:
+            for cmd in self.commands:
+                if cmd.eval(tokens):
+                    return
+            print 'Unknown command ' + ' '.join(tokens)
+            #except Exception as ex:
+            #    print str(ex)
 
     def prompt(self):
         """The current interpreter prompt.

@@ -54,6 +54,25 @@ def DATASETS(obj):
     return result
 
 
+def HATEOAS(links):
+    """Convert a list of references into a dictionary. The reference relation
+    is the key for the dictionary and the reference href element the value.
+
+    Parameters
+    ----------
+    links: list
+        List of dictionaries that represent HATEOS links.
+
+    Returns
+    -------
+    dict
+    """
+    result = dict()
+    for ref in links:
+        result[ref[labels.REL]] = ref[labels.HREF]
+    return result
+    
+
 def OUTPUTS(obj):
     """Convert a set of module output streams from the default dictionary
     serialization into a ModuleOutputs object.

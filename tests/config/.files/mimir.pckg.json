@@ -1,6 +1,6 @@
 {
     "mimir": {
-        "className": "", 
+        "className": "MimirProcessor", 
         "command": [
             {
                 "format": [
@@ -170,21 +170,23 @@
                     }, 
                     {
                         "datatype": "string", 
-                        "enum": [
-                            {
-                                "is_default": false, 
-                                "text": "GOOGLE"
-                            }, 
-                            {
-                                "is_default": false, 
-                                "text": "OSM"
-                            }
-                        ], 
                         "hidden": false, 
                         "id": "geocoder", 
                         "index": 5, 
                         "name": "Geocoder", 
-                        "required": true
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "GOOGLE", 
+                                "value": "GOOGLE"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "OSM", 
+                                "value": "OSM"
+                            }
+                        ]
                     }, 
                     {
                         "datatype": "bool", 
@@ -604,22 +606,24 @@
                     }, 
                     {
                         "datatype": "string", 
-                        "enum": [
-                            {
-                                "is_default": false, 
-                                "text": "int"
-                            }, 
-                            {
-                                "is_default": false, 
-                                "text": "varchar"
-                            }
-                        ], 
                         "hidden": false, 
                         "id": "type", 
                         "index": 3, 
                         "name": "Data Type", 
                         "parent": "schema", 
-                        "required": true
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "int", 
+                                "value": "int"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "varchar", 
+                                "value": "varchar"
+                            }
+                        ]
                     }, 
                     {
                         "datatype": "string", 
@@ -733,6 +737,6 @@
             }
         ], 
         "id": "mimir", 
-        "moduleName": ""
+        "moduleName": "vizier.engine.packages.mimir.processor"
     }
 }

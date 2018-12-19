@@ -1384,7 +1384,7 @@ definitions:
             - defaults
             - environment
             - links
-        build:
+        properties:
             name:
                 type: string
             startedAt:

@@ -30,7 +30,7 @@ import urllib2
 import yaml
 
 from vizier.api import VizierWebService
-from vizier.config import AppConfig, ENGINEENV_DEFAULT, ENGINEENV_MIMIR
+from vizier.config.app import AppConfig, ENGINEENV_DEFAULT, ENGINEENV_MIMIR
 from vizier.core.util import LOGGER_ENGINE
 from vizier.datastore.federated import FederatedDataStore
 from vizier.filestore.base import DefaultFileServer

@@ -114,6 +114,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
                 dataset_id=dataset_id
             )
         })
+    return obj
 
 
 def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
@@ -128,7 +129,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
         Dataset descriptor
     rows: list(vizier.datastore.dataset.DatasetRow)
         List of rows from the dataset
-    defaults : vizier.config.ConfigObject
+    defaults : vizier.config.base.ConfigObject
         Web service default values
     urls: vizier.api.routes.UrlFactory
         Factory for resource urls

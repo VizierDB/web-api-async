@@ -25,7 +25,7 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 
-"""Proeprty defining the API class if instantiated from dictionary."""
+"""Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
 
 

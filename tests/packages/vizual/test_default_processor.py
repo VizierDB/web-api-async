@@ -58,7 +58,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier},
+            file={pckg.FILE_ID: fh.identifier},
             validate=True
         )
         result = processor.compute(
@@ -82,7 +82,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier},
+            file={pckg.FILE_ID: fh.identifier},
             validate=True
         )
         result = self.processor.compute(
@@ -173,7 +173,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name='ABC',
-            file_id={pckg.FILE_ID: fh.identifier},
+            file={pckg.FILE_ID: fh.identifier},
             validate=True
         )
         result = self.processor.compute(

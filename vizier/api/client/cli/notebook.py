@@ -17,7 +17,7 @@
 """Implementation of commands that interact with a notebook."""
 
 from vizier.api.client.cli.command import Command
-from vizier.engine.packages.base import FILE_ID
+from vizier.engine.packages.base import FILE_ID, FILE_URI
 
 import vizier.api.client.command.vizual as vizual
 
@@ -51,10 +51,10 @@ class NotebookCommands(Command):
         elif len(tokens) == 5:
             # load <name> from file <file>
             if tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'file':
-                return self.load_dataset_from_file(tokens[2], tokens[4])
+                return self.load_dataset_from_file(tokens[1], tokens[4])
             # load <name> from url <url>
             elif tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'url':
-                return True
+                return self.load_dataset_from_url(tokens[1], tokens[4])
         return False
 
     def help(self):
@@ -72,7 +72,20 @@ class NotebookCommands(Command):
         modules = notebook.append_cell(
             command=vizual.load_dataset(
                 dataset_name=name,
-                file_id={FILE_ID: file_id}
+                file={FILE_ID: file_id}
+            )
+        )
+        print modules
+        return True
+
+    def load_dataset_from_url(self, name, url):
+        """Create a new dataset from a given file."""
+        # Ensure that the specified file exists
+        notebook = self.api.get_notebook()
+        modules = notebook.append_cell(
+            command=vizual.load_dataset(
+                dataset_name=name,
+                file={FILE_URI: url}
             )
         )
         print modules

@@ -26,12 +26,13 @@ import vizier.viztrail.module.base as states
 
 class ModuleResource(object):
     """A workflow module in a remote vizier instance."""
-    def __init__(self, identifier, state, external_form, outputs, timestamp):
+    def __init__(self, identifier, state, external_form, outputs, datasets, timestamp):
         """Initialize the branch attributes."""
         self.identifier = identifier
         self.state = state
         self.external_form = external_form
         self.outputs = outputs
+        self.datasets = datasets
         self.timestamp= timestamp
 
     @staticmethod
@@ -61,11 +62,16 @@ class ModuleResource(object):
             timestamp.started_at = to_datetime(ts['startedAt'])
         if 'finishedAt' in ts:
             timestamp.finished_at = to_datetime(ts['finishedAt'])
+        # Create dictionary of available datasets
+        datasets = dict()
+        for ds in obj['datasets']:
+            datasets[ds['name']] = ds
         return ModuleResource(
             identifier=obj['id'],
             state=to_external_form(obj['state']),
             external_form=obj['text'],
             outputs=outputs,
+            datasets=datasets,
             timestamp=timestamp
         )
 

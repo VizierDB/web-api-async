@@ -20,24 +20,39 @@ available at a remote vizier instance."""
 from vizier.api.client.resources.module import ModuleResource
 from vizier.core.timestamp import to_datetime
 
+import vizier.api.serialize.deserialize as deserialize
 import vizier.engine.packages.pycell.base as pycell
+import vizier.engine.packages.vizual.base as vizual
 import vizier.viztrail.workflow as wf
 
 
 PACKAGES = {
-    pycell.PACKAGE_PYTHON: pycell.PYTHON_COMMANDS
+    pycell.PACKAGE_PYTHON: pycell.PYTHON_COMMANDS,
+    vizual.PACKAGE_VIZUAL: vizual.VIZUAL_COMMANDS
 }
 
 
 class WorkflowResource(object):
     """A workflow in a remote vizier instance."""
-    def __init__(self, identifier, action, command, created_at, modules=None):
+    def __init__(self, identifier, action, command, created_at, modules=None, links=None):
         """Initialize the branch attributes."""
         self.identifier = identifier
         self.action = action
         self.command = command
         self.created_at = created_at
         self.modules = modules
+        self.links = links
+
+    @property
+    def is_empty(self):
+        """True if the notebook is empty (indicated by an action, command, or
+        created at timestamp that is None).
+
+        Returns
+        -------
+        bool
+        """
+        return self.action is None or self.command is None or self.created_at is None
 
     @staticmethod
     def from_dict(obj):
@@ -54,22 +69,30 @@ class WorkflowResource(object):
         vizier.api.client.resources.workflow.WorkflowResource
         """
         # Get the action name
-        action = to_external_form(obj['action'])
-        # Get the command name
+        action = None
         command = None
-        package = PACKAGES[obj['packageId']]['command']
-        for cmd in package:
-            if cmd['id'] == obj['commandId']:
-                command = cmd['name']
+        created_at = None
+        if 'action' in obj:
+            action = to_external_form(obj['action'])
+            created_at = to_datetime(obj['createdAt'])
+            # Get the command name
+            package = PACKAGES[obj['packageId']]['command']
+            for cmd in package:
+                if cmd['id'] == obj['commandId']:
+                    command = cmd['name']
         modules = None
         if 'modules' in obj:
             modules = [ModuleResource.from_dict(m) for m in obj['modules']]
+        links = None
+        if 'links' in obj:
+            links = deserialize.HATEOAS(links=obj['links'])
         return WorkflowResource(
             identifier=obj['id'],
             action=action,
             command=command,
-            created_at=to_datetime(obj['createdAt']),
-            modules=modules
+            created_at=created_at,
+            modules=modules,
+            links=links
         )
 
 

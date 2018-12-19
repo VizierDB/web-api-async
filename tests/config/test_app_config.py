@@ -1,6 +1,6 @@
 import unittest
 
-from vizier.config import AppConfig
+from vizier.config.app import AppConfig
 from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
 from vizier.engine.packages.plot.base import PACKAGE_PLOT
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON

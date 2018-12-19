@@ -25,11 +25,10 @@ from functools import partial
 from multiprocessing import Lock, Pool
 
 from vizier.core.timestamp import get_current_time
+from vizier.engine.backend.base import worker
 from vizier.engine.backend.synchron import SynchronousBackend
 from vizier.engine.task.base import TaskContext
-from vizier.engine.task.processor import ExecResult
 from vizier.viztrail.module.base import MODULE_RUNNING
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 
 
 class MultiProcessBackend(SynchronousBackend):
@@ -105,7 +104,7 @@ class MultiProcessBackend(SynchronousBackend):
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
         context: dict
-            Dictionary of available resource in the database state. The key is
+            Dictionary of available resources in the database state. The key is
             the resource name. Values are resource identifiers.
         resources: dict, optional
             Optional information about resources that were generated during a
@@ -191,38 +190,3 @@ def callback_function(result, tasks):
             )
     except KeyError:
         pass
-
-
-def worker(task_id, command, context, processor):
-    """The worker function executes a given task using a package task processor.
-    Returns a pair of task identifier and execution result.
-
-    Parameters
-    ----------
-    task_id: string
-        Unique task identifier
-    command : vizier.viztrail.command.ModuleCommand
-        Specification of the command that is to be executed
-    context: vizier.engine.task.base.TaskContext
-        Context for the executed task
-    processor: vizier.engine.task.processor.TaskProcessor
-        Task processor to execute the given command
-
-    Returns
-    -------
-    (string, vizier.engine.task.processor.ExecResult)
-    """
-    try:
-        result = processor.compute(
-            command_id=command.command_id,
-            arguments=command.arguments,
-            context=context
-        )
-    except Exception as ex:
-        template = "{0}:{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        result = ExecResult(
-            is_success=False,
-            outputs=ModuleOutputs(stderr=[TextOutput(message)])
-        )
-    return task_id, result

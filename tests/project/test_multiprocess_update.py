@@ -122,7 +122,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         fh = self.project.filestore.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier}
+            file={pckg.FILE_ID: fh.identifier}
         )
         self.project.append_workflow_module(branch_id=branch_id, command=cmd)
         for i in range(10):
@@ -298,12 +298,12 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         fh2 = self.project.filestore.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh1.identifier}
+            file={pckg.FILE_ID: fh1.identifier}
         )
         self.project.append_workflow_module(branch_id=branch_id, command=cmd)
         cmd = load_dataset(
             dataset_name=SECOND_DATASET_NAME,
-            file_id={pckg.FILE_ID: fh2.identifier}
+            file={pckg.FILE_ID: fh2.identifier}
         )
         self.project.append_workflow_module(branch_id=branch_id, command=cmd)
         for i in range(10):

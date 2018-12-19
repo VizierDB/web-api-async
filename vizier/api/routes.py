@@ -32,7 +32,7 @@ class UrlFactory:
 
         Parameters
         ----------
-        config: vizier.config.AppConfig
+        config: vizier.config.app.AppConfig
             Application configuration parameters
         """
         self.base_url = base_url
@@ -325,7 +325,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_project(proejct_id) + '/datasets/' + dataset_id
+        return self.get_project(project_id) + '/datasets/' + dataset_id
 
     def dataset_pagination(self, project_id, dataset_id, offset=0, limit=None):
         """Get Url for dataset row pagination.
@@ -365,7 +365,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_dataset(proejct_id, dataset_id) + '/csv'
+        return self.get_dataset(project_id, dataset_id) + '/csv'
 
     def get_dataset_annotations(self, project_id, dataset_id):
         """Url to retrieve dataset annotations.
@@ -381,7 +381,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_dataset(proejct_id, dataset_id) + '/annotations'
+        return self.get_dataset(project_id, dataset_id) + '/annotations'
 
     def update_dataset_annotations(self, project_id, dataset_id):
         """Url to update dataset annotations.
@@ -397,7 +397,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_dataset_annotations(proejct_id, dataset_id)
+        return self.get_dataset_annotations(project_id, dataset_id)
 
     # --------------------------------------------------------------------------
     # Files

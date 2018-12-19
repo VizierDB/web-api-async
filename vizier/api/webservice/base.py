@@ -54,7 +54,7 @@ class VizierApi(object):
 
         Parameters
         ----------
-        config: vizier.config.AppConfig
+        config: vizier.config.app.AppConfig
             Application configuration object
         """
         self.engine = config.get_api_engine()

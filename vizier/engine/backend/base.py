@@ -20,6 +20,9 @@ implementations for the backend are possible.
 
 from abc import abstractmethod
 
+from vizier.engine.task.processor import ExecResult
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+
 
 class NonLock(object):
     """Dummy implementation of __enter__ and __exit__ methods for backends that
@@ -146,3 +149,43 @@ class VizierBackend(object):
         int
         """
         raise NotImplementedError
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+
+def worker(task_id, command, context, processor):
+    """The worker function executes a given task using a package task processor.
+    Returns a pair of task identifier and execution result.
+
+    Parameters
+    ----------
+    task_id: string
+        Unique task identifier
+    command : vizier.viztrail.command.ModuleCommand
+        Specification of the command that is to be executed
+    context: vizier.engine.task.base.TaskContext
+        Context for the executed task
+    processor: vizier.engine.task.processor.TaskProcessor
+        Task processor to execute the given command
+
+    Returns
+    -------
+    (string, vizier.engine.task.processor.ExecResult)
+    """
+    try:
+        result = processor.compute(
+            command_id=command.command_id,
+            arguments=command.arguments,
+            context=context
+        )
+    except Exception as ex:
+        template = "{0}:{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        result = ExecResult(
+            is_success=False,
+            outputs=ModuleOutputs(stderr=[TextOutput(message)])
+        )
+    return task_id, result

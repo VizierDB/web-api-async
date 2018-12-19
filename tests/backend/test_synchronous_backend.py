@@ -75,7 +75,7 @@ class TestSynchronousBackend(unittest.TestCase):
             self.backend.can_execute(
                 vizual.load_dataset(
                     dataset_name=DATASET_NAME,
-                    file_id={pckg.FILE_ID: '000'},
+                    file={pckg.FILE_ID: '000'},
                     validate=True
                 )
             )
@@ -123,7 +123,7 @@ class TestSynchronousBackend(unittest.TestCase):
         fh = self.backend.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier},
+            file={pckg.FILE_ID: fh.identifier},
             validate=True
         )
         result = self.backend.execute(command=cmd, context=context)

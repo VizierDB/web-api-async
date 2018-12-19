@@ -79,7 +79,7 @@ class UrlFactory:
 
         Parameters
         ----------
-        config: vizier.config.AppConfig
+        config: vizier.config.app.AppConfig
             Application configuration parameters
         """
         # Construct base Url from server url, port, and application path.

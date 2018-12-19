@@ -249,7 +249,7 @@ def DATASET(dataset, rows, config, urls, offset=0, limit=-1):
         Handle for dataset
     rows: list
         List of rows from the dataset
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -369,7 +369,7 @@ def DATASET_DESCRIPTOR(dataset, config, urls):
     ----------
     dataset : vizier.datastore.base.DatasetHandle
         Handle for dataset
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -439,7 +439,7 @@ def DATASET_PAGINATION_URLS(dataset, config, urls, offset=0, limit=None):
     ----------
     dataset: vizier.datastore.base.DatasetHandle
         Handle for the dataset
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -708,7 +708,7 @@ def NOTEBOOK_HANDLE(viztrail, workflow, config, urls, dataset_cache, read_only=F
         Viztrail handle
     workflow : vizier.workflow.base.WorkflowHandle
         Workflow handle
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -913,7 +913,7 @@ def SERVICE_DESCRIPTOR(config, urls):
 
     Parameters
     ----------
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -1005,7 +1005,7 @@ def WORKFLOW_HANDLE(viztrail, workflow, config, urls, dataset_cache, read_only=F
         Viztrail handle
     workflow : vizier.workflow.base.WorkflowHandle
         Workflow handle
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -1082,7 +1082,7 @@ def WORKFLOW_MODULES(viztrail, workflow, config, urls, dataset_cache, read_only=
         Viztrail handle
     workflow : vizier.workflow.base.WorkflowHandle
         Workflow handle
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -1146,7 +1146,7 @@ def WORKFLOW_UPDATE_RESULT(
         Viztrail handle
     workflow : vizier.workflow.base.WorkflowHandle
         Workflow handle
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls
@@ -1203,7 +1203,7 @@ def add_modules(obj, viztrail, workflow, config, urls, dataset_cache, read_only=
         Viztrail handle
     workflow : vizier.workflow.base.WorkflowHandle
         Workflow handle
-    config : vizier.config.AppConfig
+    config : vizier.config.app.AppConfig
         Application configuration parameters
     urls: vizier.hateoas.UrlFactory
         Factory for resource urls

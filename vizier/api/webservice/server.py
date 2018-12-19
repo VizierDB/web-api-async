@@ -29,7 +29,7 @@ from werkzeug.utils import secure_filename
 
 from vizier.api.routes import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
-from vizier.config import AppConfig
+from vizier.config.app import AppConfig
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize

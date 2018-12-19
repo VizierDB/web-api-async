@@ -9,7 +9,7 @@ import unittest
 
 from vizier.api.client.command.pycell import python_cell
 from vizier.api.client.command.vizual import load_dataset
-from vizier.config import AppConfig
+from vizier.config.app import AppConfig
 
 import vizier.engine.packages.base as pckg
 
@@ -59,7 +59,7 @@ class TestDefaultProjectEngine(unittest.TestCase):
         fh = project.filestore.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name=DATASET_NAME,
-            file_id={pckg.FILE_ID: fh.identifier}
+            file={pckg.FILE_ID: fh.identifier}
         )
         project.append_workflow_module(branch_id=branch_id, command=cmd)
         for i in range(count):

@@ -29,8 +29,8 @@ from vizier.engine.project import ProjectHandle
 
 
 """Element names for the properties dictionary."""
-PROPERTY_DATASTORE = 'datastore'
-PROPERTY_FILESTORE = 'filestore'
+PROPERTY_DATASTORES = 'datastores'
+PROPERTY_FILESTORES = 'filestores'
 PROPERTY_VIZTRAILS = 'viztrails'
 
 PROPERTIES = [PROPERTY_DATASTORE, PROPERTY_FILESTORE, PROPERTY_VIZTRAILS]
@@ -72,8 +72,8 @@ class DefaultLocalEngine(VizierEngine):
         # factory and the viztrails repository with class loaders. These loaders
         # will be replaced with class instances when the .init() method is
         # called.
-        self.datastores = ClassLoader(values=properties[PROPERTY_DATASTORE])
-        self.filestores = ClassLoader(values=properties[PROPERTY_FILESTORE])
+        self.datastores = ClassLoader(values=properties[PROPERTY_DATASTORES])
+        self.filestores = ClassLoader(values=properties[PROPERTY_FILESTORES])
         self.viztrails = ClassLoader(values=properties[PROPERTY_VIZTRAILS])
 
     def create_project(self, properties=None):

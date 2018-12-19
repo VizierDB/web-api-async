@@ -34,7 +34,7 @@ class VizierDatastoreApi(object):
             Instance of the API engine
         urls: vizier.api.routes.UrlFactory
             Factory for resource urls
-        defaults : vizier.config.ConfigObject
+        defaults : vizier.config.base.ConfigObject
             Web service default values
         """
         self.engine = engine

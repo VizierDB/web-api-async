@@ -56,7 +56,7 @@ class TestVizualCommandValidation(unittest.TestCase):
         """Test validation of the load dataset command."""
         vizual.load_dataset(
             dataset_name='ABC',
-            file_id={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
+            file={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
             validate=True
         )
 

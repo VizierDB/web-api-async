@@ -1,0 +1,13 @@
+packages:
+    - declarations: './.files/plot.pckg.json'
+    - declarations: './.files/pycell.pckg.json'
+datastores:
+    className: 'FileSystemDatastoreFactory'
+    moduleName: 'vizier.datastore.fs.factory'
+    properties:
+        directory: './.vizierdb/ds'
+filestores:
+    className: 'DefaultFilestoreFactory'
+    moduleName: 'vizier.filestore.fs.factory'
+    properties:
+        directory: './.vizierdb/fs'

@@ -2,7 +2,7 @@
 
 import unittest
 
-from vizier.config import AppConfig
+from vizier.config.app import AppConfig
 from vizier.engine.packages.mimir.base import MIMIR_LENSES
 from vizier.engine.packages.plot.base import PLOT_COMMANDS
 from vizier.engine.packages.base import validate_package

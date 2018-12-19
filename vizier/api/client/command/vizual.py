@@ -158,14 +158,14 @@ def insert_row(dataset_name, position, validate=False):
     )
 
 
-def load_dataset(dataset_name, file_id, validate=False):
+def load_dataset(dataset_name, file, validate=False):
     """Create instance of load dataset command.
 
     Parameters
     ----------
     dataset_name: string
         Name for the new dataset
-    file_id: dict
+    file: dict
         Dictionary containing at least one of 'fileId' or 'uri' and optional
         'userName' and 'password'.
     validate: bool, optional
@@ -179,7 +179,7 @@ def load_dataset(dataset_name, file_id, validate=False):
         vizual.PACKAGE_VIZUAL,
         vizual.VIZUAL_LOAD,
         arguments =[
-            md.ARG(id=vizual.PARA_FILE, value=file_id),
+            md.ARG(id=vizual.PARA_FILE, value=file),
             md.ARG(id=pckg.PARA_NAME, value=dataset_name)
         ],
         packages=PACKAGE(validate=validate)
