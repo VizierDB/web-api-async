@@ -27,7 +27,7 @@ from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-from vizier.api.routes import PAGE_LIMIT, PAGE_OFFSET
+from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config.app import AppConfig
 

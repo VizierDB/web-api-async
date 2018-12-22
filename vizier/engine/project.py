@@ -42,27 +42,27 @@ class ExtendedTaskHandle(TaskHandle):
     Adds branch and module identifier to the task handle as well as the
     external representation of the executed command.
     """
-    def __init__(self, viztrail_id, branch_id, module_id, controller, external_form=None):
+    def __init__(self, project, branch_id, module_id, external_form=None):
         """Initialize the components of the extended task handle. Generates a
         unique identifier for the task.
 
         Parameters
         ----------
-        viztrail_id: string
-            Unique identifier of the associated viztrail
+        project: vizier.engine.project.ProjectHandle
+            Handle for the associated project
         branch_id: string
             Unique branch identifier
         module_id: string
             Unique module identifier
-        controller: vizier.engine.controller.WorkflowController
-            Controller for associates workflow engine
         external_form: string, optional
             External representation of the executed command
         """
         super(ExtendedTaskHandle, self).__init__(
             task_id=get_unique_identifier(),
-            viztrail_id=viztrail_id,
-            controller=controller
+            project_id=project.identifier,
+            datastore=project.datastore,
+            filestore=project.filestore,
+            controller=project
         )
         self.branch_id = branch_id
         self.module_id = module_id
@@ -160,6 +160,13 @@ class ProjectHandle(WorkflowController):
             if not is_active and self.backend.can_execute(command):
                 ts_start = get_current_time()
                 result = self.backend.execute(
+                    task=TaskHandle(
+                        task_id=get_unique_identifier(),
+                        project_id=self.identifier,
+                        datastore=self.datastore,
+                        filestore=self.filestore,
+                        controller=self
+                    ),
                     command=command,
                     context=task_context(datasets)
                 )
@@ -419,10 +426,9 @@ class ProjectHandle(WorkflowController):
             External representation of the executed command
         """
         task = ExtendedTaskHandle(
-            viztrail_id=self.viztrail.identifier,
+            project=self,
             branch_id=branch_id,
             module_id=module.identifier,
-            controller=self,
             external_form=external_form
         )
         self.tasks[task.task_id] = task
@@ -744,6 +750,8 @@ class ProjectHandle(WorkflowController):
             workflow, module_index = self.get_task(task_id)
             if workflow is None or module_index == -1:
                 return None
+            # Notify the backend that the task is finished
+            self.backend.task_finised(task_id)
             module = workflow.modules[module_index]
             if module.is_active:
                 module.set_error(finished_at=finished_at, outputs=outputs)
@@ -826,6 +834,8 @@ class ProjectHandle(WorkflowController):
             workflow, module_index = self.get_task(task_id)
             if workflow is None or module_index == -1:
                 return None
+            # Notify the backend that the task is finished
+            self.backend.task_finised(task_id)
             module = workflow.modules[module_index]
             if not module.is_running:
                 # The result is false if the state of the module did not change

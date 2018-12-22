@@ -1,6 +1,5 @@
 {
     "plot": {
-        "className": "", 
         "command": [
             {
                 "format": [
@@ -125,30 +124,34 @@
                     }, 
                     {
                         "datatype": "string", 
-                        "enum": [
-                            {
-                                "is_default": false, 
-                                "text": "Area Chart"
-                            }, 
-                            {
-                                "is_default": true, 
-                                "text": "Bar Chart"
-                            }, 
-                            {
-                                "is_default": false, 
-                                "text": "Line Chart"
-                            }, 
-                            {
-                                "is_default": false, 
-                                "text": "Scatter Plot"
-                            }
-                        ], 
                         "hidden": false, 
                         "id": "chartType", 
                         "index": 10, 
                         "name": "Type", 
                         "parent": "chart", 
-                        "required": true
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": false, 
+                                "text": "Area Chart", 
+                                "value": "Area Chart"
+                            }, 
+                            {
+                                "isDefault": true, 
+                                "text": "Bar Chart", 
+                                "value": "Bar Chart"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Line Chart", 
+                                "value": "Line Chart"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Scatter Plot", 
+                                "value": "Scatter Plot"
+                            }
+                        ]
                     }, 
                     {
                         "datatype": "bool", 
@@ -162,7 +165,6 @@
                 ]
             }
         ], 
-        "id": "plot", 
-        "moduleName": ""
+        "id": "plot"
     }
 }

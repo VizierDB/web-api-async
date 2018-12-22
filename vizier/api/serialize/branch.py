@@ -32,7 +32,7 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns
@@ -67,7 +67,7 @@ def BRANCH_HANDLE(project, branch, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns

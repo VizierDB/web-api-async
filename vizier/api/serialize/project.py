@@ -30,7 +30,7 @@ def PROJECT_DESCRIPTOR(project, urls):
     ----------
     project : vizier.engine.project.ProjectHandle
         Project handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns
@@ -64,7 +64,7 @@ def PROJECT_HANDLE(project, packages, urls):
         Project handle
     packages: dict(vizier.engine.packages.base.PackageIndex)
         Index of available packages
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns

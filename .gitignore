@@ -37,6 +37,10 @@ nosetests.xml
 # NPM
 node_modules
 
+# Flask
+__pycache__/
+
+
 ./config.yaml
 
 tests/env/

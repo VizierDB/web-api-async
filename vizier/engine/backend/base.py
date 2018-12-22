@@ -88,7 +88,7 @@ class VizierBackend(object):
         raise NotImplementedError
 
     @abstractmethod
-    def execute(self, command, context, resources=None):
+    def execute(self, task, command, context, resources=None):
         """Execute a given command. The command will be executed immediately if
         the backend supports synchronous excution, i.e., if the .can_excute()
         method returns True. The result is the execution result returned by the
@@ -99,6 +99,9 @@ class VizierBackend(object):
 
         Parameters
         ----------
+        task: vizier.engine.task.base.TaskHandle
+            Handle for task for which execution is requested by the controlling
+            workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
         context: dict
@@ -147,6 +150,19 @@ class VizierBackend(object):
         Returns
         -------
         int
+        """
+        raise NotImplementedError
+
+    def task_finised(self, task_id):
+        """Notify a backend that a task has finished. This is primarily of
+        interest for backends that send tasks to remote workers that in turn
+        notify the web service if a task is finished. This notification allows
+        the backend to free any resources that it maintains for a given task.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task id
         """
         raise NotImplementedError
 

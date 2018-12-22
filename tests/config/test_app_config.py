@@ -1,6 +1,7 @@
+import os
 import unittest
 
-from vizier.config.app import AppConfig
+from vizier.config.app import AppConfig, DEFAULT_SETTINGS, ENV_CONFIG
 from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
 from vizier.engine.packages.plot.base import PACKAGE_PLOT
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
@@ -15,12 +16,24 @@ class TestConfig(unittest.TestCase):
     def test_default_config(self):
         """Test the default configuration settings.
         """
-        config = AppConfig(configuration_file=CONFIG_FILE)
-        self.validate_default_settings(config, 'FileSystemDatastoreFactory')
-        # Make sure that the configuration file is found if no parameter is
-        # given
+        # Test the default configuration if not configuration file is given.
+        # Ensure that the environment variable VIZIERSERVER_CONFIG is not set.
+        if not os.getenv(ENV_CONFIG) is None:
+            raise ValueError('environment variable ' + ENV_CONFIG + ' is set')
         config = AppConfig()
-        self.validate_default_settings(config, 'MySystemDatastore')
+        self.assertTrue(PACKAGE_VIZUAL in config.packages)
+        for pckg in [PACKAGE_MIMIR, PACKAGE_PLOT, PACKAGE_PYTHON]:
+            self.assertFalse(pckg in config.packages)
+        self.assertEquals(config.webservice.server_url, DEFAULT_SETTINGS['webservice']['server_url'])
+        self.assertEquals(config.webservice.server_port, DEFAULT_SETTINGS['webservice']['server_port'])
+        self.assertEquals(config.webservice.defaults.row_limit, DEFAULT_SETTINGS['webservice']['defaults']['row_limit'])
+        self.assertEquals(config.debug, DEFAULT_SETTINGS['debug'])
+        self.assertEquals(config.engine)
+        #self.validate_default_settings(config, 'MySystemDatastore')
+        # Load configuration from a file. Ensure that default values are
+        # overwritten if present in the file
+        #config = AppConfig(configuration_file=CONFIG_FILE)
+        #self.validate_default_settings(config, 'FileSystemDatastoreFactory')
 
     def validate_default_settings(self, settings, class_name):
         """Validate expected application settings for the default configuration

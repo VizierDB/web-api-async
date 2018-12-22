@@ -30,19 +30,14 @@ class SynchronousBackend(VizierBackend):
     """Backend that only supports synchronous execution of tasks. All methods
     that are related to asynchronous task execution remain uninplemented.
     """
-    def __init__(self, datastore, filestore, commands, lock=None):
-        """Initialize the datastore and filestore. The commands dictionary
-        contains the task engines for all commands that can be executed. This
-        is a dictionary of dictionaries that are keyed by the package
-        identifier. Each internal idictionary contains the task engines keyed
-        by the command identifier.
+    def __init__(self, commands, lock=None):
+        """Initialize the commands dictionary that contains the task engines
+        for all commands that can be executed. This is a dictionary of
+        dictionaries that are keyed by the package identifier. Each internal
+        dictionary contains the task engines keyed by the command identifier.
 
         Parameters
         ----------
-        datastore: vizier.datastore.base.Datastore
-            Datastore for the project that execute the task
-        filestore: vizier.filestore.Filestore
-            Filestore for the project that executes the task
         commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
@@ -50,8 +45,6 @@ class SynchronousBackend(VizierBackend):
             Class that implements __enter__ and __exit__ methods
         """
         super(SynchronousBackend, self).__init__(lock=lock)
-        self.datastore = datastore
-        self.filestore = filestore
         self.commands = commands
 
     def can_execute(self, command):
@@ -72,7 +65,7 @@ class SynchronousBackend(VizierBackend):
         cmd = command.command_id
         return pckg in self.commands and cmd in self.commands[pckg]
 
-    def execute(self, command, context, resources=None):
+    def execute(self, task, command, context, resources=None):
         """Execute a given command. The command will be executed immediately if
         the backend supports synchronous excution, i.e., if the .can_excute()
         method returns True. The result is the execution result returned by the
@@ -83,6 +76,9 @@ class SynchronousBackend(VizierBackend):
 
         Parameters
         ----------
+        task: vizier.engine.task.base.TaskHandle
+            Handle for task for which execution is requested by the controlling
+            workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
         context: dict
@@ -104,8 +100,8 @@ class SynchronousBackend(VizierBackend):
                     command_id=command.command_id,
                     arguments=command.arguments,
                     context=TaskContext(
-                        datastore=self.datastore,
-                        filestore=self.filestore,
+                        datastore=task.datastore,
+                        filestore=task.filestore,
                         datasets=context,
                         resources=resources
                     )

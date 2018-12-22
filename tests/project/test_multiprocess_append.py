@@ -52,8 +52,6 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         datastore = FileSystemDatastore(DATASTORE_DIR)
         filestore = DefaultFilestore(FILESTORE_DIR)
         backend = MultiProcessBackend(
-            datastore=datastore,
-            filestore=filestore,
             processors={
                 pycell.PACKAGE_PYTHON: PyCellTaskProcessor(),
                 vizual.PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi())

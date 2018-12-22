@@ -24,42 +24,76 @@ or virtual environment.
 from functools import partial
 from multiprocessing import Lock, Pool
 
+from vizier.core.loader import ClassLoader
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import worker
 from vizier.engine.backend.synchron import SynchronousBackend
 from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING
 
+"""Properties when instantiating from dictionary."""
+PROPERTY_PROCESSORS = 'processors'
+PROPERTY_SYNCHRON = 'synchronCommands'
+
 
 class MultiProcessBackend(SynchronousBackend):
-    """The multi-process backend executes every task in a separate process.
-    Each task is executed by a single-process pool.
+    """The multi-process backend lauches a single-process pool for each task
+    that is being executed. There is no limit on the number of tasks that are
+    executed in parallel.
     """
-    def __init__(self, datastore, filestore, processors, synchron_commands=None):
-        """Initialize the datastore, filestore and index of package processors.
-        Accepts an optional dictionary of commands that will be executed
-        synchronously instead of forking a new process for execution.
+    def __init__(self, processors=None, synchron_commands=None, properties=None):
+        """Initialize the index of package processors. Accepts an optional
+        dictionary of commands that will be executed synchronously instead of
+        forking a new process for execution. The optional properties dictionary
+        can be used to instantiate the class from a ClassLoader.
+
+        Processors are keyed by the package identifier. Synchron commands are
+        keyed by the package identifier and the command identifier.
+
+        The properties dictionary can have two elements: 'processors' (i.e.,
+        PROPERTY_PROCESSORS) and 'synchronCommands' (i.e., PROPERTY_SYNCHRON).
+        The properties element is expected to be a dictionary where class loader
+        definitions are keyed by package identifiers. The synchronCommands
+        element is a dictionary of dictionaries. The fist level dictionaries are
+        keyed by the package identifier. The second level dictionaries are
+        keyed by the command identifier. The elements are class loader
+        definitions for task processors.
 
         Parameters
         ----------
-        datastore: vizier.datastore.base.datastore
-            Datastore to access datasets for all tasks
-        filestore: vizier.filestore.base.Filestore
-            Filestore to access uploaded files
-        processors: dict(vizier.engine.packages.task.processor.TaskProcessor)
+        processors: dict(vizier.engine.packages.task.processor.TaskProcessor), optional
             task processors that are indexed by the task identifier
-        synchron_commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
+        synchron_commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor)), optional
             Dictionary of task processors for tasks that are executed in
             synchronous mode. Processors are keyed by the pakage identifier and
             the command identifier
+        properties: dict, optional
+            Dictionary of class loader definitions to initialize the processors
+            and synchron commands dictionaries.
         """
-        super(MultiProcessBackend, self).__init__(
-            datastore=datastore,
-            filestore=filestore,
-            commands=synchron_commands if not synchron_commands is None else dict(),
-            lock=Lock()
-        )
-        self.processors = processors
+        # Initialize the local variables first. A given properties dictionary
+        # will override given processors and synchronous commands.
+        self.processors = processors if not processors is None else dict()
+        sync = synchron_commands if not synchron_commands is None else dict()
+        if not properties is None:
+            # Create instance for all defined task processors
+            if PROPERTY_PROCESSORS in properties:
+                loaders = properties[PROPERTY_PROCESSORS]
+                for package_id in loaders:
+                    loader = ClassLoader(loaders[package_id])
+                    self.processors[package_id] = loader.get_instance()
+            # Create instances for all defined synchronous commands
+            if PROPERTY_SYNCHRON in properties:
+                commands = properties[PROPERTY_SYNCHRON]
+                for package_id in commands:
+                    if not package_id in sync:
+                        sync[package_id] = dict()
+                    command = commands[package_id]
+                    for command_id in command:
+                        loader = ClassLoader(command[command_id])
+                        sync[package_id][command_id] = loader.get_instance()
+        # Initialize the set of synchronous commands in the super class.
+        super(MultiProcessBackend, self).__init__(commands=sync, lock=Lock())
         # Maintain tasks that are currently being executed and the associated
         # multiplressing pool. Values are tuples of (task handle, pool) and
         # the index is the unique task identifier. This dictionary is used to
@@ -130,8 +164,8 @@ class MultiProcessBackend(SynchronousBackend):
                 task.task_id,
                 command,
                 TaskContext(
-                    datastore=self.datastore,
-                    filestore=self.filestore,
+                    datastore=task.datastore,
+                    filestore=task.filestore,
                     datasets=context,
                     resources=resources
                 ),
@@ -152,6 +186,18 @@ class MultiProcessBackend(SynchronousBackend):
         int
         """
         return MODULE_RUNNING
+
+    def task_finised(self, task_id):
+        """The multi-process backend ignores all notifications for finished
+        tasks. All task related resources should have been released when the
+        task finished and the workflow controller was notified.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task id
+        """
+        pass
 
 
 # ------------------------------------------------------------------------------

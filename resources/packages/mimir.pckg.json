@@ -1,6 +1,5 @@
 {
     "mimir": {
-        "className": "MimirProcessor", 
         "command": [
             {
                 "format": [
@@ -736,7 +735,6 @@
                 ]
             }
         ], 
-        "id": "mimir", 
-        "moduleName": "vizier.engine.packages.mimir.processor"
+        "id": "mimir"
     }
 }

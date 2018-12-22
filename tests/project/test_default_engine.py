@@ -34,7 +34,7 @@ class TestDefaultProjectEngine(unittest.TestCase):
         # Drop directory if it exists
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
-        self.engine = AppConfig(configuration_file=CONFIG_FILE).get_api_engine()
+        self.engine = AppConfig(configuration_file=CONFIG_FILE).engine
         self.engine.init()
 
     def tearDown(self):
@@ -79,7 +79,7 @@ class TestDefaultProjectEngine(unittest.TestCase):
         self.engine.delete_project(ph2.identifier)
         self.assertIsNone(self.engine.get_project(ph2.identifier))
         # Reload the engine
-        engine = AppConfig(configuration_file=CONFIG_FILE).get_api_engine()
+        engine = AppConfig(configuration_file=CONFIG_FILE).engine
         engine.init()
         ph1 = engine.get_project(ph1.identifier)
         ph2 = engine.get_project(ph2.identifier)
@@ -104,7 +104,7 @@ class TestDefaultProjectEngine(unittest.TestCase):
         self.assert_value_is(ph1, 33)
         self.assert_value_is(ph2, 43)
         # Reload the engine
-        engine = AppConfig(configuration_file=CONFIG_FILE).get_api_engine()
+        engine = AppConfig(configuration_file=CONFIG_FILE).engine
         engine.init()
         self.assertEquals(len(engine.list_projects()), 2)
         ph1 = engine.get_project(ph1.identifier)
@@ -127,7 +127,7 @@ class TestDefaultProjectEngine(unittest.TestCase):
         while ph1.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         # Reload the engine
-        engine = AppConfig(configuration_file=CONFIG_FILE).get_api_engine()
+        engine = AppConfig(configuration_file=CONFIG_FILE).engine
         engine.init()
         ph1 = engine.get_project(ph1.identifier)
         self.assert_value_is(ph1, 38)

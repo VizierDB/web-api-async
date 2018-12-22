@@ -1,6 +1,5 @@
 {
     "vizual": {
-        "className": "VizualTaskProcessor", 
         "command": [
             {
                 "format": [
@@ -907,7 +906,6 @@
                 ]
             }
         ], 
-        "id": "vizual", 
-        "moduleName": "vizier.engine.packages.vizual.processor"
+        "id": "vizual"
     }
 }

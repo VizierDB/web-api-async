@@ -1,6 +1,5 @@
 {
     "python": {
-        "className": "", 
         "command": [
             {
                 "format": [
@@ -25,7 +24,6 @@
                 ]
             }
         ], 
-        "id": "python", 
-        "moduleName": ""
+        "id": "python"
     }
 }

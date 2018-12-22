@@ -28,15 +28,12 @@ import json
 import yaml
 from jsonschema import validate, ValidationError
 
-from vizier.core.loader import ClassLoader
-
 
 # ------------------------------------------------------------------------------
 # Package Declaration
 # ------------------------------------------------------------------------------
 
 """Components and schema of package declaration."""
-LABEL_CLASSNAME = 'className'
 LABEL_COMMAND = 'command'
 LABEL_DATATYPE = 'datatype'
 LABEL_DELIMITER = 'delimiter'
@@ -45,7 +42,6 @@ LABEL_FORMAT = 'format'
 LABEL_GROUPID = 'groupId'
 LABEL_ID = 'id'
 LABEL_LEFTSPACE = 'lspace'
-LABEL_MODULENAME = 'moduleName'
 LABEL_NAME = 'name'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
@@ -176,7 +172,7 @@ FILE_PASSWORD = 'password'
 FILE_RELOAD = 'reload'
 
 
-def package_declaration(identifier, commands, module_name, class_name, name=None, description=None):
+def package_declaration(identifier, commands, name=None, description=None):
     """Create a dictionary containing a package declaration.
 
     Parameters
@@ -185,12 +181,6 @@ def package_declaration(identifier, commands, module_name, class_name, name=None
         Unique package identifier
     commands: list
         List of package commands
-    module_name: string
-        Name of the module containing the class that contains implementation to
-        execute package commands
-    class_name: string
-        Name of class in the specified module that contains implementation to
-        execute package commands
     name: string, optional
         Optional package name
     description: string, optional
@@ -202,8 +192,6 @@ def package_declaration(identifier, commands, module_name, class_name, name=None
     """
     obj = dict({LABEL_ID: identifier})
     obj[LABEL_COMMAND] = commands
-    obj[LABEL_MODULENAME] = module_name
-    obj[LABEL_CLASSNAME] = class_name
     if not name is None:
         obj[LABEL_NAME] = name
     if not description is None:
@@ -559,7 +547,7 @@ class PackageIndex(object):
     """Index of package command declarations. Maintains a dictionary that can be
     used to instantiate objects of the associated package task engine.
     """
-    def __init__(self, package, properties=None):
+    def __init__(self, package):
         """Initialize the index from a package declaration.
 
         Validates the given package declaration. Raises ValueError if an
@@ -569,9 +557,6 @@ class PackageIndex(object):
         ----------
         package: dict
             Package declaration
-        properties: dict
-            Additional properties to create an instance of the associated
-            package engine.
         """
         # Validate the given package specification
         validate_package(package)
@@ -586,11 +571,6 @@ class PackageIndex(object):
         else:
             self.description = None
         # Create a class loader for the package engine
-        self.engine = ClassLoader.to_dict(
-            module_name=package[LABEL_MODULENAME],
-            class_name=package[LABEL_CLASSNAME],
-            properties=properties
-        )
         self.commands = dict()
         for cmd in package[LABEL_COMMAND]:
             self.commands[cmd[LABEL_ID]] = CommandDeclaration(

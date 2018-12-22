@@ -11,6 +11,7 @@ from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
+from vizier.engine.task.base import TaskHandle
 from vizier.filestore.fs.base import DefaultFilestore
 
 import vizier.api.client.command.vizual as vizual
@@ -51,9 +52,9 @@ class TestSynchronousBackend(unittest.TestCase):
         os.makedirs(SERVER_DIR)
         vizual = VizualTaskProcessor(api=DefaultVizualApi())
         pycell = PyCellTaskProcessor()
+        self.datastore = FileSystemDatastore(DATASTORE_DIR)
+        self.filestore = DefaultFilestore(FILESTORE_DIR)
         self.backend = SynchronousBackend(
-            datastore=FileSystemDatastore(DATASTORE_DIR),
-            filestore=DefaultFilestore(FILESTORE_DIR),
             commands={
                 PACKAGE_PYTHON: {PYTHON_CODE: pycell},
                 PACKAGE_VIZUAL: {
@@ -120,13 +121,23 @@ class TestSynchronousBackend(unittest.TestCase):
     def test_execute(self):
         """Test executing a sequence of supported commands."""
         context = dict()
-        fh = self.backend.filestore.upload_file(CSV_FILE)
+        fh = self.filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
             file={pckg.FILE_ID: fh.identifier},
             validate=True
         )
-        result = self.backend.execute(command=cmd, context=context)
+        result = self.backend.execute(
+            task=TaskHandle(
+                task_id='000',
+                project_id='000',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=None
+            ),
+            command=cmd,
+            context=context
+        )
         self.assertTrue(result.is_success)
         context = result.datasets
         cmd = vizual.update_cell(
@@ -136,7 +147,17 @@ class TestSynchronousBackend(unittest.TestCase):
             value=9,
             validate=True
         )
-        result = self.backend.execute(command=cmd, context=context)
+        result = self.backend.execute(
+            task=TaskHandle(
+                task_id='000',
+                project_id='000',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=None
+            ),
+            command=cmd,
+            context=context
+        )
         self.assertTrue(result.is_success)
         self.assertNotEqual(context[DATASET_NAME], result.datasets[DATASET_NAME])
         context = result.datasets
@@ -144,7 +165,17 @@ class TestSynchronousBackend(unittest.TestCase):
             source=CREATE_DATASET_PY,
             validate=True
         )
-        result = self.backend.execute(command=cmd, context=context)
+        result = self.backend.execute(
+            task=TaskHandle(
+                task_id='000',
+                project_id='000',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=None
+            ),
+            command=cmd,
+            context=context
+        )
         self.assertTrue(result.is_success)
         self.assertEquals(context[DATASET_NAME], result.datasets[DATASET_NAME])
         self.assertTrue(SECOND_DATASET_NAME in result.datasets)
@@ -156,7 +187,17 @@ class TestSynchronousBackend(unittest.TestCase):
             value=9,
             validate=True
         )
-        result = self.backend.execute(command=cmd, context=context)
+        result = self.backend.execute(
+            task=TaskHandle(
+                task_id='000',
+                project_id='000',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=None
+            ),
+            command=cmd,
+            context=context
+        )
         self.assertTrue(result.is_success)
         self.assertEquals(context[DATASET_NAME], result.datasets[DATASET_NAME])
         self.assertNotEqual(context[SECOND_DATASET_NAME], result.datasets[SECOND_DATASET_NAME])
@@ -167,6 +208,13 @@ class TestSynchronousBackend(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             self.backend.execute(
+                task=TaskHandle(
+                    task_id='000',
+                    project_id='000',
+                    datastore=self.datastore,
+                    filestore=self.filestore,
+                    controller=None
+                ),
                 command=vizual.insert_row(
                     dataset_name=DATASET_NAME,
                     position=1,
@@ -177,6 +225,13 @@ class TestSynchronousBackend(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.backend.execute(
+                task=TaskHandle(
+                    task_id='000',
+                    project_id='000',
+                    datastore=self.datastore,
+                    filestore=self.filestore,
+                    controller=None
+                ),
                 command=vizual.drop_dataset(
                     dataset_name=DATASET_NAME,
                     validate=True

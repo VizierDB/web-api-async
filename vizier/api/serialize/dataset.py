@@ -37,7 +37,7 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
         Unique column identifier for component
     row_id: int
         Unique row identifier for component
-    urls: vizier.api.routes.UrlFactory, optional
+    urls: vizier.api.routes.base.UrlFactory, optional
         Factory for resource urls
 
     Returns
@@ -76,7 +76,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
         User-defined dataset name
     project: vizier.engine.project.ProjectHandle, optional
         Handle for project containing the dataset
-    urls: vizier.api.routes.UrlFactory, optional
+    urls: vizier.api.routes.base.UrlFactory, optional
         Factory for resource urls
 
     Returns
@@ -131,7 +131,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
         List of rows from the dataset
     defaults : vizier.config.base.ConfigObject
         Web service default values
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
     offset: int, optional
         Number of rows at the beginning of the list that are skipped.

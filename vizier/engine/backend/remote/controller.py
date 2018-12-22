@@ -33,15 +33,26 @@ import vizier.viztrail.module.base as states
 class RemoteWorkflowController(WorkflowController):
     """
     """
-    def __init__(self, url_factory):
+    def __init__(self, urls, project_id):
         """
         """
-        self.url_factory = url_factory
+        self.urls = urls
+        self.project_id = project_id
 
     def get_url(self, task_id):
+        """Get url to notify the web service about state changes for the given
+        task.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task identifier
+
+        Returns
+        -------
+        string
         """
-        """
-        pass
+        self.urls.set_task_state(project_id=self.project_id, task_id=task_id)
 
     def set_error(self, task_id, finished_at=None, outputs=None):
         """Set status of a given task to error.

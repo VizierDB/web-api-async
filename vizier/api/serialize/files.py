@@ -31,7 +31,7 @@ def FILE_HANDLE(f_handle, project, urls):
         File handle
     project: vizier.engine.project.ProjectHandle
         Handle for the containing project
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns

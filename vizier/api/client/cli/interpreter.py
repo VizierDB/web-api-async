@@ -33,7 +33,7 @@ class CommandInterpreter(object):
 
         Parameters
         ----------
-        urls: vizier.api.routes.UrlFactory
+        urls: vizier.api.routes.base.UrlFactory
             Factory for request urls
         defaults: vizier.core.annotation.base.ObjectAnnotationSet
             Annotation set for default values

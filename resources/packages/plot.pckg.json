@@ -1,6 +1,5 @@
 {
     "plot": {
-        "className": "PlotProcessor", 
         "command": [
             {
                 "format": [
@@ -166,7 +165,6 @@
                 ]
             }
         ], 
-        "id": "plot", 
-        "moduleName": "vizier.engine.packages.plot.processor"
+        "id": "plot"
     }
 }

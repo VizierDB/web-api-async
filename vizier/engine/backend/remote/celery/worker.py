@@ -33,7 +33,7 @@ celery = Celery('tasks', broker='pyamqp://guest@localhost//')
 config = WorkerConfig()
 
 @celery.task
-def execute(task_id, project_id, command, context, resources, controller):
+def execute(task_id, project_id, command, context, resources):
     """
     Parameters:
     -----------
@@ -49,10 +49,9 @@ def execute(task_id, project_id, command, context, resources, controller):
     resources: dict
         Optional information about resources that were generated during a
         previous execution of the command
-    controller: vizier.engine.controller.WorkflowController
-        Object to inform workflow controller about state changes for the
-        executed task
     """
+    # Create a remote workflow controller for the given task
+    controller = config.get_controller(project_id)
     # Notify the workflow controller that the task started to run
     controller.set_running(task_id=task_id, started_at=get_current_time())
     # Get the processor and execute the command. In case of an unknown package

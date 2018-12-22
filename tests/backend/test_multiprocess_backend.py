@@ -62,14 +62,12 @@ class TestMultiprocessBackend(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        vizual = VizualTaskProcessor(api=DefaultVizualApi())
-        pycell = PyCellTaskProcessor()
+        self.datastore = datastore = FileSystemDatastore(DATASTORE_DIR)
+        self.filestore = filestore = DefaultFilestore(FILESTORE_DIR)
         self.backend = MultiProcessBackend(
-            datastore=FileSystemDatastore(DATASTORE_DIR),
-            filestore=DefaultFilestore(FILESTORE_DIR),
             processors={
-                PACKAGE_PYTHON: pycell,
-                PACKAGE_VIZUAL:  vizual,
+                PACKAGE_PYTHON: PyCellTaskProcessor(),
+                PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi()),
                 'error': FakeTaskProcessor()
             }
         )
@@ -89,7 +87,13 @@ class TestMultiprocessBackend(unittest.TestCase):
         )
         controller = FakeWorkflowController()
         self.backend.execute_async(
-            task=TaskHandle(task_id='000', viztrail_id='111', controller=controller),
+            task=TaskHandle(
+                task_id='000',
+                project_id='111',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=controller
+            ),
             command=cmd,
             context=context
         )
@@ -107,7 +111,13 @@ class TestMultiprocessBackend(unittest.TestCase):
         cmd = ModuleCommand(package_id='error', command_id='error')
         controller = FakeWorkflowController()
         self.backend.execute_async(
-            task=TaskHandle(task_id='000', viztrail_id='111', controller=controller),
+            task=TaskHandle(
+                task_id='000',
+                project_id='111',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=controller
+            ),
             command=cmd,
             context=context
         )
@@ -126,7 +136,13 @@ class TestMultiprocessBackend(unittest.TestCase):
         )
         controller = FakeWorkflowController()
         self.backend.execute_async(
-            task=TaskHandle(task_id='000', viztrail_id='111', controller=controller),
+            task=TaskHandle(
+                task_id='000',
+                project_id='111',
+                datastore=self.datastore,
+                filestore=self.filestore,
+                controller=controller
+            ),
             command=cmd,
             context=context
         )

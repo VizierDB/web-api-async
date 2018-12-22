@@ -33,7 +33,7 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns
@@ -75,7 +75,7 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
         Branch handle
     woekflow: vizier.viztrail.workflow.WorkflowDescriptor
         Workflow descriptor
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns
@@ -117,7 +117,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         Branch handle
     woekflow: vizier.viztrail.workflow.WorkflowHandle
         Workflow handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns

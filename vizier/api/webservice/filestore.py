@@ -32,7 +32,7 @@ class VizierFilestoreApi(object):
         ----------
         engine: vizier.engine.base.VizierEngine
             Instance of the API engine
-        urls: vizier.api.routes.UrlFactory
+        urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         """
         self.engine = engine

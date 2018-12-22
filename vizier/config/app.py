@@ -35,11 +35,27 @@ webservice:
         max_file_size: Maximum size for file uploads (in byte)
 packages: # List of package declarations
     - declarations: File containing declaration of package commands
-      parameters: Package specific configuration parameters
+      engine: Package specific task engine
+          moduleName: Task engine module
+          className: Task engine class name
+          properties: Task engine specific properties
 engine:
-    moduleName: Name of the module containing the used engine
-    className: Class name of the used engine
-    properties: Dictionary of engine specific configuration properties
+    backend:
+        moduleName: Name of the module containing the used backend
+        className: Class name of the used backend
+        properties: Dictionary of backend specific configuration properties
+    datastores:
+        moduleName: Name of the module containing the used engine
+        className: Class name of the used datastore factory
+        properties: Dictionary of datastore factory specific configuration properties
+    filestores:
+        moduleName: Name of the module containing the used filestore factory
+        className: Class name of the used filestore factory
+        properties: Dictionary of filestore factory specific configuration properties
+    viztrails:
+        moduleName: Name of the module containing the used viztrails repository
+        className: Class name of the used viztrails repository
+        properties: Dictionary of viztrails repository specific configuration properties
 debug: Flag indicating whether server is started in debug mode
 logs:
     server: Log file for Web Server
@@ -50,11 +66,13 @@ import os
 from vizier.config.base import ConfigObject, read_object_from_file
 from vizier.core.io.base import PARA_LONG_IDENTIFIER
 from vizier.core.loader import ClassLoader
+from vizier.engine.base import VizierEngine
 from vizier.engine.packages.base import PackageIndex
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
-from vizier.engine.packages.vizual.processor import PROPERTY_API
 
 import vizier.datastore.fs.base as ds
+import vizier.engine.backend.multiprocess as mp
+import vizier.engine.packages.vizual.processor as vz
 import vizier.filestore.fs.base as fs
 import vizier.viztrail.driver.objectstore.repository as vt
 
@@ -80,34 +98,50 @@ DEFAULT_SETTINGS = {
             'max_file_size': 16 * 1024 * 1024
         }
     },
-    'engine' : ClassLoader.to_dict(
-        module_name='vizier.engine.environments.local',
-        class_name='DefaultLocalEngine',
-        properties={
-            'datastores': ClassLoader.to_dict(
-                module_name='vizier.datastore.fs.factory',
-                class_name='FileSystemDatastoreFactory',
-                properties={
-                    ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
+    'engine' : {
+        'name': 'Default Vizier Engine',
+        'version': '0.1.0',
+        'backend': ClassLoader.to_dict(
+            module_name='vizier.engine.backend.multiprocess',
+            class_name='MultiProcessBackend',
+            properties={
+                mp.PROPERTY_PROCESSORS: {
+                    PACKAGE_VIZUAL: ClassLoader.to_dict(
+                        module_name='vizier.engine.packages.vizual.base',
+                        class_name='VizualTaskProcessor',
+                        properties={
+                            vz.PROPERTY_API: ClassLoader.to_dict(
+                                module_name='vizier.engine.packages.vizual.api.fs',
+                                class_name='DefaultVizualApi',
+                            )
+                        }
+                    )
                 }
-            ),
-            'filestores': ClassLoader.to_dict(
-                module_name='vizier.filestore.fs.factory',
-                class_name='DefaultFilestoreFactory',
-                properties={
-                    fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
-                }
-            ),
-            'viztrails': ClassLoader.to_dict(
-                module_name='vizier.viztrail.driver.objectstore.repository',
-                class_name='OSViztrailRepository',
-                properties={
-                    vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt'),
-                    PARA_LONG_IDENTIFIER: False
-                }
-            )
-        }
-    ),
+            }
+        ),
+        'datastores': ClassLoader.to_dict(
+            module_name='vizier.datastore.fs.factory',
+            class_name='FileSystemDatastoreFactory',
+            properties={
+                ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
+            }
+        ),
+        'filestores': ClassLoader.to_dict(
+            module_name='vizier.filestore.fs.factory',
+            class_name='DefaultFilestoreFactory',
+            properties={
+                fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
+            }
+        ),
+        'viztrails': ClassLoader.to_dict(
+            module_name='vizier.viztrail.driver.objectstore.repository',
+            class_name='OSViztrailRepository',
+            properties={
+                vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt'),
+                PARA_LONG_IDENTIFIER: False
+            }
+        )
+    },
     'logs': {
         'server': os.path.join(ENV_DIRECTORY, 'logs')
     },
@@ -170,37 +204,43 @@ class AppConfig(object):
         # 'packages' element (optional). Note that the list may contain a
         # reference to a VizUAL package which overrides the default package
         # declaration.
-        self.packages = {
-            PACKAGE_VIZUAL: PackageIndex(
-                package=VIZUAL_COMMANDS,
-                properties={
-                    PROPERTY_API: ClassLoader.to_dict(
-                        module_name='vizier.engine.packages.vizual.api.fs',
-                        class_name='DefaultVizualApi'
-                    )
-                }
-            )
-        }
+        self.packages = {PACKAGE_VIZUAL: PackageIndex(package=VIZUAL_COMMANDS)}
         if 'packages' in doc:
             for pckg_file in doc['packages']:
                 if not 'declarations' in pckg_file:
                     raise ValueError('missing key \'declarations\' for package')
                 pckg = read_object_from_file(pckg_file['declarations'])
                 for key in pckg:
-                    if 'parameters' in pckg_file:
-                        package_parameters = pckg_file['parameters']
-                    else:
-                        package_parameters = None
-                    self.packages[key] = PackageIndex(
-                        package=pckg[key],
-                        properties=package_parameters
-                    )
-        # Create a class loader instance for the engine.
+                    self.packages[key] = PackageIndex(package=pckg[key])
+        # Create the vizier engine
         if 'engine' in doc:
-            engine = ClassLoader(values=doc['engine'])
+            obj = doc['engine']
         else:
-            engine = ClassLoader(values=DEFAULT_SETTINGS['engine'])
-        setattr(self, 'engine', engine)
+            obj = DEFAULT_SETTINGS['engine']
+        engine = dict()
+        for key in ['name', 'version']:
+            if key in obj:
+                engine[key] = obj[key]
+            else:
+                engine[key] = DEFAULT_SETTINGS['engine'][key]
+        for key in ['datastores', 'filestores', 'viztrails', 'backend']:
+            if key in obj:
+                engine[key] = ClassLoader(obj[key])
+            else:
+                engine[key] = ClassLoader(DEFAULT_SETTINGS['engine'][key])
+        setattr(
+            self,
+            'engine',
+            VizierEngine(
+                name=engine['name'],
+                version=engine['version'],
+                datastores=engine['datastores'],
+                filestores=engine['filestores'],
+                viztrails=engine['viztrails'],
+                backend=engine['backend'],
+                packages=self.packages
+            )
+        )
         # Create objects for configuration of log files and web service.
         for key in ['logs', 'webservice']:
             if key in doc:
@@ -232,12 +272,3 @@ class AppConfig(object):
             base_url += ':' + str(self.webservice.server_port)
         base_url += self.webservice.app_path
         return base_url
-
-    def get_api_engine(self):
-        """Get the instance of the defined API engine.
-
-        Returns
-        -------
-        vizier.engine.base.VizierEngine
-        """
-        return self.engine.get_instance(packages=self.packages)

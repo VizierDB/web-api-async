@@ -38,7 +38,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         Branch handle
     module: vizier.viztrail.module.base.ModuleHandle
         Module handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
     include_self: bool, optional
         Indicate if self link is included
@@ -118,7 +118,7 @@ def MODULE_HANDLE_LIST(project, branch, modules, urls):
         Branch handle
     modules: list(vizier.viztrail.module.base.ModuleHandle)
         Module handle
-    urls: vizier.api.routes.UrlFactory
+    urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
 
     Returns
