@@ -31,10 +31,17 @@ import vizier.viztrail.module.base as states
 
 
 class RemoteWorkflowController(WorkflowController):
-    """
-    """
+    """Controller for tasks that are executed by a remote worker."""
     def __init__(self, urls, project_id):
-        """
+        """Initialize the task url factory and the identifier for the project
+        that executes a remote task.
+
+        Parameters
+        ----------
+        urls: vizier.api.routes.task.TaskUrlFactory
+            Factory for url to update task state
+        project_id: string
+            Identifier of the project that execute a remote task
         """
         self.urls = urls
         self.project_id = project_id

@@ -14,9 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The url factory is used to generate url for all resources (routes) that are
+"""The url factory is used to generate urls for all resources (routes) that are
 accessible via the web service.
 """
+
+
+"""Element keys for initialization using a properties dictionary."""
+PROPERTIES_BASEURL = 'baseUrl'
+PROPERTIES_APIDOCURL = 'apiDocUrl'
 
 
 """Pagination query parameter."""
@@ -27,16 +32,32 @@ PAGE_OFFSET = 'offset'
 class UrlFactory:
     """Factory to create urls for all routes that the webservice supports."""
 
-    def __init__(self, base_url, api_doc_url=None):
-        """Intialize the base url for the web service.
+    def __init__(self, base_url=None, api_doc_url=None, properties=None):
+        """Intialize the base url for the web service. The object can be
+        initialized from a properties dictionary that may contain the base url
+        and api doc url. Values in the properties dictionary override the other
+        two arguments. If no base url is given a ValueError is raised.
 
         Parameters
         ----------
-        config: vizier.config.app.AppConfig
-            Application configuration parameters
+        base_url: string, optional
+            Prefix for all urls
+        api_doc_url: string, optional
+            Url for the API documentation
+        properties: dict, optional
+            Dictionary that may contain the base url an the API documentation
+            url
         """
         self.base_url = base_url
         self.api_doc_url = api_doc_url
+        if not properties is None:
+            if PROPERTIES_BASEURL in properties:
+                self.base_url = properties[PROPERTIES_BASEURL]
+            if PROPERTIES_APIDOCURL in properties:
+                self.api_doc_url = properties[PROPERTIES_APIDOCURL]
+        # Raise ValueError if the base url is not set
+        if self.base_url is None:
+            raise ValueError("missing base url argument")
         # Ensure that base_url does not end with a slash
         while len(self.base_url) > 0:
             if self.base_url[-1] == '/':
@@ -288,25 +309,6 @@ class UrlFactory:
         string
         """
         return self.get_branch_head(project_id, branch_id)
-
-    # --------------------------------------------------------------------------
-    # Tasks
-    # --------------------------------------------------------------------------
-    def set_task_state(self, project_id, task_id):
-        """Url to modify the state of a given task.
-
-        Parameters
-        ----------
-        project_id: string
-            Unique project identifier
-        task_id: string
-            Unique task identifier
-
-        Returns
-        -------
-        string
-        """
-        return self.get_project(project_id) + '/tasks/' + task_id
 
     # --------------------------------------------------------------------------
     # Datasets
