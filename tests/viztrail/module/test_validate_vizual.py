@@ -64,22 +64,23 @@ class TestValidateVizual(unittest.TestCase):
         fh = db.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name='ds',
-            file={pckg.FILE_ID: fh.identifier},
+            file={
+                pckg.FILE_ID: fh.identifier,
+                pckg.FILE_NAME: fh.file_name
+            },
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS,
-            filestore=db
+            datasets=DATASETS
         )
-        self.assertEquals(cmd, 'LOAD DATASET ds FROM dataset.csv')
+        self.assertEquals(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
         cmd = load_dataset(
             dataset_name='ds',
             file={pckg.FILE_URI: 'http://some.file.url'},
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS,
-            filestore=db
+            datasets=DATASETS
         )
         self.assertEquals(cmd, 'LOAD DATASET ds FROM http://some.file.url')
         cmd = load_dataset(
@@ -88,8 +89,7 @@ class TestValidateVizual(unittest.TestCase):
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS,
-            filestore=db
+            datasets=DATASETS
         )
         self.assertEquals(cmd, 'LOAD DATASET ds FROM http://some.file.url')
         cmd = load_dataset(
@@ -98,8 +98,7 @@ class TestValidateVizual(unittest.TestCase):
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS,
-            filestore=db
+            datasets=DATASETS
         )
         self.assertEquals(cmd, 'LOAD DATASET ds FROM \'Some File\'')
 

@@ -151,8 +151,7 @@ class ProjectHandle(WorkflowController):
             # Get the external representation for the command
             external_form = command.to_external_form(
                 command=self.packages[command.package_id].get(command.command_id),
-                datasets=datasets,
-                filestore=self.filestore
+                datasets=datasets
             )
             # If the workflow is not active and the command can be executed
             # synchronously we run the command immediately and return the
@@ -357,8 +356,7 @@ class ProjectHandle(WorkflowController):
                     command = modules[module_index].command
                     external_form = command.to_external_form(
                         command=self.packages[command.package_id].get(command.command_id),
-                        datasets=datasets,
-                        filestore=self.filestore
+                        datasets=datasets
                     )
                     # Replace original modules with pending modules for those
                     # that need to be executed. The state of the first module
@@ -583,8 +581,7 @@ class ProjectHandle(WorkflowController):
                 state=self.backend.next_task_state(),
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=datasets,
-                    filestore=self.filestore
+                    datasets=datasets
                 )
             )
             # Create list of pending modules for the new workflow.
@@ -687,8 +684,7 @@ class ProjectHandle(WorkflowController):
                 state=self.backend.next_task_state(),
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=datasets,
-                    filestore=self.filestore
+                    datasets=datasets
                 ),
                 provenance=ModuleProvenance(
                     resources=modules[module_index].provenance.resources
@@ -875,8 +871,7 @@ class ProjectHandle(WorkflowController):
                     command_id = command.command_id
                     external_form = command.to_external_form(
                         command=self.packages[package_id].get(command_id),
-                        datasets=context,
-                        filestore=self.filestore
+                        datasets=context
                     )
                     # If the backend is going to run the task immediately we
                     # need to adjust the module state

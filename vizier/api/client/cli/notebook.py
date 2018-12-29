@@ -16,8 +16,10 @@
 
 """Implementation of commands that interact with a notebook."""
 
+import os
+
 from vizier.api.client.cli.command import Command
-from vizier.engine.packages.base import FILE_ID, FILE_URI
+from vizier.engine.packages.base import FILE_ID, FILE_NAME, FILE_URI
 
 import vizier.api.client.command.vizual as vizual
 
@@ -72,7 +74,10 @@ class NotebookCommands(Command):
         modules = notebook.append_cell(
             command=vizual.load_dataset(
                 dataset_name=name,
-                file={FILE_ID: file_id}
+                file={
+                    FILE_ID: file_id,
+                    FILE_NAME: os.path.basename(file)
+                }
             )
         )
         print modules

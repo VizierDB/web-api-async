@@ -20,7 +20,6 @@ filestore and datastore to persist files and datasets.
 
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
-from vizier.engine.packages.base import FILE_ID
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 
 

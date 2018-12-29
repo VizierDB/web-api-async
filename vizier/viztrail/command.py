@@ -165,7 +165,7 @@ class ModuleArguments(object):
         """
         return name in self.arguments
 
-    def to_external_form(self, command, datasets=None, filestore=None, format=None, parent_ds_name=None):
+    def to_external_form(self, command, datasets=None, format=None, parent_ds_name=None):
         """Get a string representation for the command based on the internal
         values for the module arguments.
         values.
@@ -176,8 +176,6 @@ class ModuleArguments(object):
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name
-        filestore: vizier.filestore.base.Filestore, optional
-            File store to access file handles for uploaded files
 
         Returns
         -------
@@ -210,10 +208,14 @@ class ModuleArguments(object):
                                 datasets=datasets
                             )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
-                            token = get_file_name(
-                                file_id=value,
-                                filestore=filestore
-                            )
+                            if pckg.FILE_URI in value:
+                                token = value[pckg.FILE_URI]
+                            elif pckg.FILE_NAME in value:
+                                token = format_str(value[pckg.FILE_NAME])
+                            elif pckg.FILE_ID in value:
+                                token = format_str(value[pckg.FILE_ID])
+                            else:
+                                token = '?file?'
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_LIST:
                             if pckg.LABEL_FORMAT in element:
                                 subcmd = list()
@@ -222,7 +224,6 @@ class ModuleArguments(object):
                                         command=command,
                                         format=element[pckg.LABEL_FORMAT],
                                         datasets=datasets,
-                                        filestore=filestore,
                                         parent_ds_name=ds_name
                                     )
                                     if not subtoken is None:
@@ -396,7 +397,7 @@ class ModuleCommand(object):
             'arguments': self.arguments.to_list()
         }
 
-    def to_external_form(self, command, datasets=None, filestore=None):
+    def to_external_form(self, command, datasets=None):
         """Get a string representation for the command based on the current
         arguments.
 
@@ -406,8 +407,6 @@ class ModuleCommand(object):
             Command declaration containing parameters and format declaration
         datasets: dict(vizier.datastore.dataset.DatasetDescriptor), optional
             Datasets in the current database state keyed by the dataset name
-        filestore: vizier.filestore.base.Filestore, optional
-            File store to access file handles for uploaded files
 
         Returns
         -------
@@ -415,8 +414,7 @@ class ModuleCommand(object):
         """
         return self.arguments.to_external_form(
             command=command,
-            datasets=datasets,
-            filestore=filestore
+            datasets=datasets
         )
 
 
@@ -539,34 +537,3 @@ def get_column_name(ds_name, column_id, datasets):
         except Exception:
             pass
     return '?column?'
-
-
-def get_file_name(file_id, filestore):
-    """Get the name of a load file. If the dictionary contains the uri element
-    the associated value is returned. Otherwise, if the dictionary contains the
-    file id the file handle is retrieved from the filestore and the name
-    returned (if the file exists).
-
-    Parameters
-    ----------
-    file_id: dict
-        Dictionary containing at least the fileId or an uri
-    filestore: vizier.filestore.base.Filestore
-        File store to access file handles for uploaded files
-
-    Returns
-    -------
-    string
-    """
-    if pckg.FILE_URI in file_id:
-        return file_id[pckg.FILE_URI]
-    elif pckg.FILE_ID in file_id and not filestore is None:
-        identifier = file_id[pckg.FILE_ID]
-        try:
-            fh = filestore.get_file(identifier)
-            if not fh is None:
-                return format_str(fh.name)
-        except Exception:
-            pass
-        return format_str(str(identifier))
-    return '?file?'
