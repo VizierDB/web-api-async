@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-from vizier.core.annotation.fs import PersistentAnnotationSet
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 
 
 """Base directory for properties files."""

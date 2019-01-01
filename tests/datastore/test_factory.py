@@ -36,7 +36,10 @@ class TestDefaultDatastoreFactory(unittest.TestCase):
         db = fact.get_datastore('0123')
         self.assertTrue(os.path.isdir(os.path.join(SERVER_DIR, '0123')))
         self.assertTrue(os.path.isdir(os.path.join(SERVER_DIR, '4567')))
-
+        # ValueError if no base path is given
+        with self.assertRaises(ValueError):
+            FileSystemDatastoreFactory()
+            
 
 if __name__ == '__main__':
     unittest.main()

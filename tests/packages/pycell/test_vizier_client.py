@@ -7,7 +7,7 @@ import unittest
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 
 
 SERVER_DIR = './.tmp'
@@ -27,7 +27,7 @@ class TestVizierClient(unittest.TestCase):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
         self.datastore=FileSystemDatastore(DATASTORE_DIR)
-        self.filestore=DefaultFilestore(FILESTORE_DIR)
+        self.filestore=FileSystemFilestore(FILESTORE_DIR)
 
     def tearDown(self):
         """Clean-up by dropping the server directory.

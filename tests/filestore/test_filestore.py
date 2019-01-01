@@ -10,7 +10,7 @@ import unittest
 
 from werkzeug.datastructures import FileStorage
 
-from vizier.filestore.fs.base import DefaultFilestore, METADATA_FILENAME, PARA_DIRECTORY
+from vizier.filestore.fs.base import FileSystemFilestore, METADATA_FILENAME, PARA_DIRECTORY
 import vizier.filestore.base as fs
 
 
@@ -23,7 +23,7 @@ GZIP_TSV_FILE = './.files/dataset.tsv.gz'
 TEXT_FILE = './.files/textfile.txt'
 
 
-class TestDefaultFilestore(unittest.TestCase):
+class TestFileSystemFilestore(unittest.TestCase):
 
     def setUp(self):
         """Create an empty filestore directory."""
@@ -39,7 +39,7 @@ class TestDefaultFilestore(unittest.TestCase):
 
     def test_delete_file(self):
         """Test delete file method."""
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         f = db.upload_file(CSV_FILE)
         f = db.get_file(f.identifier)
         self.assertIsNotNone(f)
@@ -49,7 +49,7 @@ class TestDefaultFilestore(unittest.TestCase):
 
     def test_get_file(self):
         """Test file get method."""
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         fh1 = db.upload_file(CSV_FILE)
         fh2 = db.get_file(fh1.identifier)
         self.assertEquals(fh1.identifier, fh2.identifier)
@@ -64,7 +64,7 @@ class TestDefaultFilestore(unittest.TestCase):
 
     def test_list_file(self):
         """Test list files method."""
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         db.upload_file(CSV_FILE)
         db.upload_file(GZIP_CSV_FILE)
         db.upload_file(TSV_FILE)
@@ -80,7 +80,7 @@ class TestDefaultFilestore(unittest.TestCase):
 
     def test_upload_file(self):
         """Test file upload."""
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         fh = db.upload_file(CSV_FILE)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
@@ -89,7 +89,7 @@ class TestDefaultFilestore(unittest.TestCase):
         self.assertTrue(os.path.isfile(fh.filepath))
         self.assertTrue(fh.is_tabular)
         # Re-load the repository
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         fh = db.get_file(fh.identifier)
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
         self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
@@ -108,14 +108,14 @@ class TestDefaultFilestore(unittest.TestCase):
         self.assertTrue(fh.compressed)
         self.assertEquals(fh.delimiter, '\t')
         # Re-load the repository
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         self.assertEquals(len(db.list_files()), 5)
         fh = db.upload_file(TEXT_FILE)
         self.assertFalse(fh.is_tabular)
 
     def test_upload_stream(self):
         """Test file upload from an open file object."""
-        db = DefaultFilestore(SERVER_DIR)
+        db = FileSystemFilestore(SERVER_DIR)
         file = FileStorage(filename=CSV_FILE)
         fh = db.upload_stream(file=file, file_name=os.path.basename(CSV_FILE))
         self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))

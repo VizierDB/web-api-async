@@ -20,24 +20,31 @@ import os
 import shutil
 
 from vizier.filestore.factory import FilestoreFactory
-from vizier.filestore.fs.base import DefaultFilestore, PARA_DIRECTORY
+from vizier.filestore.fs.base import FileSystemFilestore, PARA_DIRECTORY
 
 
-class DefaultFilestoreFactory(FilestoreFactory):
+class FileSystemFilestoreFactory(FilestoreFactory):
     """Filestore factory implementation for the default filestore."""
-    def __init__(self, properties):
+    def __init__(self, base_path=None, properties=None):
         """Initialize the reference to the base directory that contains all
         filestore folders.
 
-        Expects a dictionary with a single entry that contains the base path
-        for all created datastores.
+        Expects a base path or a dictionary with a single entry that contains
+        the base path for all created datastores. Raises ValueError if no base
+        path is given.
 
         Parameters
         ----------
-        properties: dict
+        base_path: string, optional
+            File store base path
+        properties: dict, optional
             Dictionary of configuration properties
         """
-        self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
+        self.base_path = base_path
+        if not properties is None:
+            self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
+        if self.base_path is None:
+            raise ValueError('no base path given')
 
     def delete_filestore(self, identifier):
         """Delete a filestore. This method is normally called when the project
@@ -65,7 +72,7 @@ class DefaultFilestoreFactory(FilestoreFactory):
 
         Returns
         -------
-        vizier.filestore.fs.base.DefaultFilestore
+        vizier.filestore.fs.base.FileSystemFilestore
         """
         filestore_dir = os.path.join(self.base_path, identifier)
-        return DefaultFilestore(filestore_dir)
+        return FileSystemFilestore(filestore_dir)

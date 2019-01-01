@@ -35,30 +35,15 @@ class NonLock(object):
         pass
 
 
-class VizierBackend(object):
-    """The backend interface defines two main methods: execute and cancel. The
-    first method is used by the API to request execution of a command that
-    defines a module in a data curation workflow. The second method is used
-    by the API to cancel execution (on user request).
-
-    Each backend should provide an implementation-specific lock. The lock is
-    used by the workflow controller to serialize execution for those parts of
-    the code that are used by the controller and the backend.
-
-    If tasks are executed remotely the lock is a dummy lock. Only for
-    multi-process execution the lock shoulc be the default multi-process-lock.
+class TaskExecEngine(object):
+    """The execution engine is an abstract class that supports synchronous
+    execution of tasks. The engine forms the basis for the execution backend.
+    In general, not every command may be able to be executed synchronously.
+    The idea is to have at least two implementations. One implementation
+    maintains a list of commands that can be executed syncronously. The other
+    implementation is used for backends that do not support synchronous
+    execution of any command.
     """
-    def __init__(self, lock=None):
-        """Initialize the implementation-specific lock. Use a dummy lock if
-        the subclass does not provide a lock.
-
-        Parameters
-        ----------
-        lock: class
-            Class that implements __enter__ and __exit__ methods
-        """
-        self.lock = lock if not lock is None else NonLock()
-
     @abstractmethod
     def can_execute(self, command):
         """Test whether a given command can be executed in synchronous mode. If
@@ -73,17 +58,6 @@ class VizierBackend(object):
         Returns
         -------
         bool
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def cancel_task(self, task_id):
-        """Request to cancel execution of the given task.
-
-        Parameters
-        ----------
-        task_id: string
-            Unique task identifier
         """
         raise NotImplementedError
 
@@ -116,6 +90,114 @@ class VizierBackend(object):
         vizier.engine.task.processor.ExecResult
         """
         raise NotImplementedError
+
+
+class NonSynchronousEngine(TaskExecEngine):
+    """Implementation of a task engine for backends that do not support
+    synchronous execution of tasks.
+    """
+    def can_execute(self, command):
+        """Returns False since no command can be executed synchronously.
+
+        Parameters
+        ----------
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the command that is to be executed
+
+        Returns
+        -------
+        bool
+        """
+        return False
+
+
+class VizierBackend(object):
+    """The backend interface defines two main methods: execute and cancel. The
+    first method is used by the API to request execution of a command that
+    defines a module in a data curation workflow. The second method is used
+    by the API to cancel execution (on user request).
+
+    Each backend should provide an implementation-specific lock. The lock is
+    used by the workflow controller to serialize execution for those parts of
+    the code that are used by the controller and the backend.
+
+    If tasks are executed remotely the lock is a dummy lock. Only for
+    multi-process execution the lock shoulc be the default multi-process-lock.
+    """
+    def __init__(self, synchronous, lock=None):
+        """Initialize the implementation-specific lock. Use a dummy lock if
+        the subclass does not provide a lock.
+
+        Parameters
+        ----------
+        synchronous: vizier.engine.backend.base.TaskExecEngine
+            Engine for synchronous task execution
+        lock: class
+            Class that implements __enter__ and __exit__ methods
+        """
+        self.synchronous = synchronous if not synchronous is None else NonSynchronousEngine()
+        self.lock = lock if not lock is None else NonLock()
+
+    def can_execute(self, command):
+        """Test whether a given command can be executed in synchronous mode. If
+        the result is True the command can be executed in the same process as
+        the calling method.
+
+        Parameters
+        ----------
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the command that is to be executed
+
+        Returns
+        -------
+        bool
+        """
+        return self.synchronous.can_execute(command)
+
+    @abstractmethod
+    def cancel_task(self, task_id):
+        """Request to cancel execution of the given task.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task identifier
+        """
+        raise NotImplementedError
+
+    def execute(self, task, command, context, resources=None):
+        """Execute a given command. The command will be executed immediately if
+        the backend supports synchronous excution, i.e., if the .can_excute()
+        method returns True. The result is the execution result returned by the
+        respective package task processor.
+
+        Raises ValueError if the given command cannot be excuted in synchronous
+        mode.
+
+        Parameters
+        ----------
+        task: vizier.engine.task.base.TaskHandle
+            Handle for task for which execution is requested by the controlling
+            workflow engine
+        command : vizier.viztrail.command.ModuleCommand
+            Specification of the command that is to be executed
+        context: dict
+            Dictionary of available resource in the database state. The key is
+            the resource name. Values are resource identifiers.
+        resources: dict, optional
+            Optional information about resources that were generated during a
+            previous execution of the command
+
+        Returns
+        ------
+        vizier.engine.task.processor.ExecResult
+        """
+        return self.synchronous.execute(
+            task=task,
+            command=command,
+            context=context,
+            resources=resources
+        )
 
     @abstractmethod
     def execute_async(self, task, command, context, resources=None):

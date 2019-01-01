@@ -41,7 +41,7 @@ METADATA_FILENAME = 'properties.json'
 PARA_DIRECTORY = 'directory'
 
 
-class DefaultFilestore(Filestore):
+class FileSystemFilestore(Filestore):
     """Default file server implementation. Keeps all files subfolders of a
     given base directory. Each subfolder contains the uploaded file (named
     file.dat for convenience), and the metadata file properties.json.

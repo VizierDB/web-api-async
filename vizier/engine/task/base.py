@@ -87,7 +87,7 @@ class TaskHandle(object):
     The given controller is used to signal state changes to the controlling
     workflow engine.
     """
-    def __init__(self, task_id, project_id, datastore, filestore, controller):
+    def __init__(self, task_id, project_id, controller=None):
         """Initialize the components of the task handle.
 
         Parameters
@@ -96,15 +96,9 @@ class TaskHandle(object):
             Unique task identifier
         project_id: string
             Unique project identifier
-        datastore: vizier.datastore.base.Datastore
-            Datastore for project
-        filestore: vizier.filestore.base.Filestore
-            Filestore for project
-        controller: vizier.engine.controller.WorkflowController
+        controller: vizier.engine.controller.WorkflowController, optional
             Controller for associates workflow engine
         """
         self.task_id = task_id
         self.project_id = project_id
-        self.datastore = datastore
-        self.filestore = filestore
         self.controller = controller

@@ -22,15 +22,15 @@ The synchronized backend can also be used as a base class for the asynchronous
 backend.
 """
 
-from vizier.engine.backend.base import VizierBackend
+from abc import abstractmethod
+
+from vizier.engine.backend.base import TaskExecEngine
 from vizier.engine.task.base import TaskContext
 
 
-class SynchronousBackend(VizierBackend):
-    """Backend that only supports synchronous execution of tasks. All methods
-    that are related to asynchronous task execution remain uninplemented.
-    """
-    def __init__(self, commands, lock=None):
+class SynchronousTaskEngine(TaskExecEngine):
+    """Backend that only supports synchronous execution of tasks."""
+    def __init__(self, commands, contexts=None):
         """Initialize the commands dictionary that contains the task engines
         for all commands that can be executed. This is a dictionary of
         dictionaries that are keyed by the package identifier. Each internal
@@ -41,11 +41,11 @@ class SynchronousBackend(VizierBackend):
         commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
-        lock: class
-            Class that implements __enter__ and __exit__ methods
+        contexts: vizier.engine.backend.cache.ContextCache
+            Cache for project contexts
         """
-        super(SynchronousBackend, self).__init__(lock=lock)
         self.commands = commands
+        self.contexts = contexts
 
     def can_execute(self, command):
         """Test whether a given command can be executed in synchronous mode. If
@@ -96,12 +96,14 @@ class SynchronousBackend(VizierBackend):
             package = self.commands[command.package_id]
             if command.command_id in package:
                 processor = package[command.command_id]
+                # Get the project context from the cache
+                project_context = self.contexts.get_context(task.project_id)
                 return processor.compute(
                     command_id=command.command_id,
                     arguments=command.arguments,
                     context=TaskContext(
-                        datastore=task.datastore,
-                        filestore=task.filestore,
+                        datastore=project_context.datastore,
+                        filestore=project_context.filestore,
                         datasets=context,
                         resources=resources
                     )

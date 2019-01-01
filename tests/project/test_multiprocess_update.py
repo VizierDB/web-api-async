@@ -15,7 +15,7 @@ from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.engine.project import ProjectHandle
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
 
 import vizier.engine.packages.base as pckg
@@ -69,7 +69,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
         datastore = FileSystemDatastore(DATASTORE_DIR)
-        filestore = DefaultFilestore(FILESTORE_DIR)
+        filestore = FileSystemFilestore(FILESTORE_DIR)
         backend = MultiProcessBackend(
             processors={
                 pycell.PACKAGE_PYTHON: PyCellTaskProcessor(),

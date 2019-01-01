@@ -60,7 +60,7 @@ DEFAULT_SETTINGS = {
     ),
     'filestores': ClassLoader.to_dict(
         module_name='vizier.filestore.fs.factory',
-        class_name='DefaultFilestoreFactory',
+        class_name='FileSystemFilestoreFactory',
         properties={
             fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
         }

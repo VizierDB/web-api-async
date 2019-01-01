@@ -8,7 +8,7 @@ from vizier.api.client.command.plot import create_plot
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.plot.processor import PlotProcessor
 from vizier.engine.task.base import TaskContext
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 
 
 SERVER_DIR = './.tmp'
@@ -29,7 +29,7 @@ class TestDefaultPlotProcessor(unittest.TestCase):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
         self.datastore=FileSystemDatastore(DATASTORE_DIR)
-        self.filestore=DefaultFilestore(FILESTORE_DIR)
+        self.filestore=FileSystemFilestore(FILESTORE_DIR)
 
     def tearDown(self):
         """Clean-up by dropping the server directory.

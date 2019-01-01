@@ -7,7 +7,7 @@ import unittest
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.api.fs import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URI
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 
 
 SERVER_DIR = './.tmp'
@@ -34,7 +34,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         os.makedirs(SERVER_DIR)
         self.api = DefaultVizualApi()
         self.datastore=FileSystemDatastore(DATASTORE_DIR)
-        self.filestore=DefaultFilestore(FILESTORE_DIR)
+        self.filestore=FileSystemFilestore(FILESTORE_DIR)
 
 
     def tearDown(self):

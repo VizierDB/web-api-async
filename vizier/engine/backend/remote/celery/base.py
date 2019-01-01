@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from vizier.engine.backend.synchron import SynchronousBackend
+from vizier.engine.backend.base import VizierBackend
 from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.engine.backend.remote.celery.worker import execute
 
 
-class CeleryBackend(SynchronousBackend):
+class CeleryBackend(VizierBackend):
     """The backend interface defines two main methods: execute and cancel. The
     first method is used by the API to request execution of a command that
     defines a module in a data curation workflow. The second method is used

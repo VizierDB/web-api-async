@@ -4,15 +4,16 @@ import os
 import shutil
 import unittest
 
-from vizier.datastore.fs.base import FileSystemDatastore
-from vizier.engine.backend.synchron import SynchronousBackend
+from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.engine.backend.cache import ContextCache
+from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.engine.task.base import TaskHandle
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 
 import vizier.api.client.command.vizual as vizual
 import vizier.api.client.command.pycell as pycell
@@ -40,7 +41,7 @@ for row in ds.rows:
 """
 
 
-class TestSynchronousBackend(unittest.TestCase):
+class TestSynchronousTaskEngine(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of the default vizier processor for an empty server
@@ -52,16 +53,18 @@ class TestSynchronousBackend(unittest.TestCase):
         os.makedirs(SERVER_DIR)
         vizual = VizualTaskProcessor(api=DefaultVizualApi())
         pycell = PyCellTaskProcessor()
-        self.datastore = FileSystemDatastore(DATASTORE_DIR)
-        self.filestore = DefaultFilestore(FILESTORE_DIR)
-        self.backend = SynchronousBackend(
+        self.backend = SynchronousTaskEngine(
             commands={
                 PACKAGE_PYTHON: {PYTHON_CODE: pycell},
                 PACKAGE_VIZUAL: {
                     VIZUAL_LOAD: vizual,
                     VIZUAL_UPD_CELL: vizual
                 }
-            }
+            },
+            contexts=ContextCache(
+                datastores=FileSystemDatastoreFactory(DATASTORE_DIR),
+                filestores=FileSystemFilestoreFactory(FILESTORE_DIR)
+            )
         )
 
     def tearDown(self):
@@ -121,7 +124,7 @@ class TestSynchronousBackend(unittest.TestCase):
     def test_execute(self):
         """Test executing a sequence of supported commands."""
         context = dict()
-        fh = self.filestore.upload_file(CSV_FILE)
+        fh = self.backend.contexts.get_context('000').filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
             file={pckg.FILE_ID: fh.identifier},
@@ -130,10 +133,7 @@ class TestSynchronousBackend(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000',
-                datastore=self.datastore,
-                filestore=self.filestore,
-                controller=None
+                project_id='000'
             ),
             command=cmd,
             context=context
@@ -150,10 +150,7 @@ class TestSynchronousBackend(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000',
-                datastore=self.datastore,
-                filestore=self.filestore,
-                controller=None
+                project_id='000'
             ),
             command=cmd,
             context=context
@@ -168,10 +165,7 @@ class TestSynchronousBackend(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000',
-                datastore=self.datastore,
-                filestore=self.filestore,
-                controller=None
+                project_id='000'
             ),
             command=cmd,
             context=context
@@ -190,10 +184,7 @@ class TestSynchronousBackend(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000',
-                datastore=self.datastore,
-                filestore=self.filestore,
-                controller=None
+                project_id='000'
             ),
             command=cmd,
             context=context
@@ -210,10 +201,7 @@ class TestSynchronousBackend(unittest.TestCase):
             self.backend.execute(
                 task=TaskHandle(
                     task_id='000',
-                    project_id='000',
-                    datastore=self.datastore,
-                    filestore=self.filestore,
-                    controller=None
+                    project_id='000'
                 ),
                 command=vizual.insert_row(
                     dataset_name=DATASET_NAME,
@@ -227,10 +215,7 @@ class TestSynchronousBackend(unittest.TestCase):
             self.backend.execute(
                 task=TaskHandle(
                     task_id='000',
-                    project_id='000',
-                    datastore=self.datastore,
-                    filestore=self.filestore,
-                    controller=None
+                    project_id='000'
                 ),
                 command=vizual.drop_dataset(
                     dataset_name=DATASET_NAME,

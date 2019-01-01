@@ -9,7 +9,7 @@ from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi, RESOURCE_DATASET
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor, PROPERTY_API
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 
 import vizier.api.client.command.vizual as vizual
 import vizier.engine.packages.base as pckg
@@ -35,7 +35,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         os.makedirs(SERVER_DIR)
         self.processor = VizualTaskProcessor(api=DefaultVizualApi())
         self.datastore=FileSystemDatastore(DATASTORE_DIR)
-        self.filestore=DefaultFilestore(FILESTORE_DIR)
+        self.filestore=FileSystemFilestore(FILESTORE_DIR)
 
     def tearDown(self):
         """Clean-up by dropping the server directory.

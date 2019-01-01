@@ -5,14 +5,14 @@ import shutil
 import unittest
 
 from vizier.filestore.fs.base import PARA_DIRECTORY
-from vizier.filestore.fs.factory import DefaultFilestoreFactory
+from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 
 
 SERVER_DIR = './.tmp'
 CSV_FILE = './.files/dataset.csv'
 
 
-class TestDefaultFilestoreFactory(unittest.TestCase):
+class TestFileSystemFilestoreFactory(unittest.TestCase):
 
     def setUp(self):
         """Create an empty file server repository."""
@@ -27,7 +27,7 @@ class TestDefaultFilestoreFactory(unittest.TestCase):
 
     def test_create_and_delete_filestore(self):
         """Test the basic functionality of the file store factory."""
-        fact = DefaultFilestoreFactory(properties={PARA_DIRECTORY: SERVER_DIR})
+        fact = FileSystemFilestoreFactory(properties={PARA_DIRECTORY: SERVER_DIR})
         db = fact.get_filestore('0123')
         fh = db.upload_file(CSV_FILE)
         self.assertTrue(os.path.isdir(os.path.join(SERVER_DIR, '0123')))
@@ -40,6 +40,9 @@ class TestDefaultFilestoreFactory(unittest.TestCase):
         db = fact.get_filestore('0123')
         self.assertTrue(os.path.isdir(os.path.join(SERVER_DIR, '0123')))
         self.assertTrue(os.path.isdir(os.path.join(SERVER_DIR, '4567')))
+        # ValueError if no base path is given
+        with self.assertRaises(ValueError):
+            FileSystemFilestoreFactory()
 
 
 if __name__ == '__main__':

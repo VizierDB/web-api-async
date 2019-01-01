@@ -7,7 +7,7 @@ datastores:
     properties:
         directory: './.vizierdb/ds'
 filestores:
-    className: 'DefaultFilestoreFactory'
+    className: 'FileSystemFilestoreFactory'
     moduleName: 'vizier.filestore.fs.factory'
     properties:
         directory: './.vizierdb/fs'

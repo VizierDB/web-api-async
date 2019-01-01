@@ -25,19 +25,26 @@ from vizier.datastore.fs.base import FileSystemDatastore, PARA_DIRECTORY
 
 class FileSystemDatastoreFactory(DatastoreFactory):
     """Datastore factory for file system based datastores."""
-    def __init__(self, properties):
+    def __init__(self, base_path=None, properties=None):
         """Initialize the reference to the base directory that contains all
         datastore folders.
 
-        Expects a dictionary with a single entry that contains the base path
-        for all created datastores.
+        Expects a base path or a dictionary with a single entry that contains
+        the base path for all created datastores. Raises ValueError if no base
+        path is given.
 
         Parameters
         ----------
-        properties: dict
+        base_path: string, optional
+            Datastore base path
+        properties: dict, optional
             Dictionary of configuration properties
         """
-        self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
+        self.base_path = base_path
+        if not properties is None:
+            self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
+        if self.base_path is None:
+            raise ValueError('no base path given')
 
     def delete_datastore(self, identifier):
         """Delete a datastore. This method is normally called when the project

@@ -8,7 +8,7 @@ from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.datastore.fs.base import DATA_FILE, DESCRIPTOR_FILE, METADATA_FILE
 from vizier.datastore.fs.base import validate_dataset
-from vizier.filestore.fs.base import DefaultFilestore
+from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.filestore.base import FileHandle, FORMAT_TSV
 
 BASE_DIR = './.tmp'
@@ -91,7 +91,7 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertFalse(os.path.isfile(os.path.join(dataset_dir, METADATA_FILE)))
         self.validate_class_size_dataset(ds)
         # Download file into a given filestore
-        fs = DefaultFilestore(FSSTORE_DIR)
+        fs = FileSystemFilestore(FSSTORE_DIR)
         ds, fh = store.download_dataset(
             uri=URI,
             filestore=fs
