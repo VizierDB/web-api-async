@@ -18,6 +18,7 @@
 
 import sys
 
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.stream import OutputStream
@@ -109,7 +110,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 outputs.stderr.append(TextOutput(text))
                 is_success = False
         if is_success:
-            datasets = dict(client.datasets)
+            datasets = client.descriptors
             read = dict()
             for name in client.read:
                 read[name] = context.datasets[name] if name in context.datasets else None
@@ -122,15 +123,17 @@ class PyCellTaskProcessor(TaskProcessor):
                 for key in mapping:
                     if mapping[key] is None:
                         continue
-                    if not isinstance(key, basestring) or not isinstance(mapping[key], basestring):
-                        raise RuntimeError('not a valid mapping dictionary')
+                    if not isinstance(key, basestring):
+                        raise RuntimeError('invalid key for mapping dictionary')
+                    if not isinstance(mapping[key], basestring) and not isinstance(mapping[key], DatasetDescriptor):
+                        raise RuntimeError('invalid element of type \'' + str(type(mapping[key])) + '\' in mapping dictionary')
             provenance = ModuleProvenance(
                 read=read,
                 write=write,
                 delete=client.delete
             )
         else:
-            datasets = context.datasets
+            datasets = None
             provenance = ModuleProvenance()
         # Return execution result
         return ExecResult(

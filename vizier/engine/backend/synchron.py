@@ -30,7 +30,7 @@ from vizier.engine.task.base import TaskContext
 
 class SynchronousTaskEngine(TaskExecEngine):
     """Backend that only supports synchronous execution of tasks."""
-    def __init__(self, commands, contexts=None):
+    def __init__(self, commands, projects):
         """Initialize the commands dictionary that contains the task engines
         for all commands that can be executed. This is a dictionary of
         dictionaries that are keyed by the package identifier. Each internal
@@ -41,11 +41,11 @@ class SynchronousTaskEngine(TaskExecEngine):
         commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
-        contexts: vizier.engine.backend.cache.ContextCache
-            Cache for project contexts
+        projects: dict(vizier.engine.project.ProjectHandle)
+            Cache for project handles
         """
         self.commands = commands
-        self.contexts = contexts
+        self.projects = projects
 
     def can_execute(self, command):
         """Test whether a given command can be executed in synchronous mode. If
@@ -96,14 +96,14 @@ class SynchronousTaskEngine(TaskExecEngine):
             package = self.commands[command.package_id]
             if command.command_id in package:
                 processor = package[command.command_id]
-                # Get the project context from the cache
-                project_context = self.contexts.get_context(task.project_id)
+                # Get the project handle from the cache
+                project = self.projects[task.project_id]
                 return processor.compute(
                     command_id=command.command_id,
                     arguments=command.arguments,
                     context=TaskContext(
-                        datastore=project_context.datastore,
-                        filestore=project_context.filestore,
+                        datastore=project.datastore,
+                        filestore=project.filestore,
                         datasets=context,
                         resources=resources
                     )

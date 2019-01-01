@@ -45,7 +45,7 @@ class ModuleProvenance(object):
     The module provenance carries a dictionary of key,value-pairs (resources)
     that were generated during previous executions of the module. This allows
     in a limited way to pass some state in between re-executions of the same
-    module. THe main intent is to pass information about downloaded files and
+    module. The main intent is to pass information about downloaded files and
     the resulting dataset identifier to avoid re-downloading the files but to
     use the previously generated local copy instead.
     """
@@ -56,9 +56,11 @@ class ModuleProvenance(object):
         Parameters
         ----------
         read: dict, optional
-            Dictionary of datasets that the module used as input
+            Dictionary of datasets that the module used as input. The key is the
+            dataset name and the value the dataset identifier.
         write: dict, optional
-            Dictionary of datasets that the module modified
+            Dictionary of datasets that the module modified. The key is the
+            dataset name and the value the dataset identifier.
         delete: list or set, optional
             List of names for datasets that have been deleted by a module
         resources: dict, optional

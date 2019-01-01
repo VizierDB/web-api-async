@@ -25,20 +25,6 @@ class ViztrailRepository(object):
     """Repository for viztrails. This is an abstract class that defines all
     necessary methods to maintain and manipulate viztrails.
     """
-    def __init__(self, viztrails=None):
-        """Initialize the viztrail index.
-
-        Parameters
-        ---------
-        viztrails: list(vizier.viztrail.base.ViztrailHandle)
-            List of viztrails that are maintained by the repository
-        """
-        self.viztrails = dict()
-        # Initialize the viztrail index from the given list
-        if not viztrails is None:
-            for vt in viztrails:
-                self.viztrails[vt.identifier] = vt
-
     @abstractmethod
     def create_viztrail(self, properties=None):
         """Create a new viztrail. The initial set of properties is an optional
@@ -72,6 +58,7 @@ class ViztrailRepository(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_viztrail(self, viztrail_id):
         """Retrieve the viztrail with the given identifier. The result is None
         if no viztrail with given identifier exists.
@@ -85,25 +72,9 @@ class ViztrailRepository(object):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        if viztrail_id in self.viztrails:
-            return self.viztrails[viztrail_id]
-        else:
-            return None
+        raise NotImplementedError
 
-    def has_viztrail(self, viztrail_id):
-        """Returns True if a viztrail with the given identifier exists.
-
-        Parameters
-        ----------
-        viztrail_id : string
-            Unique viztrail identifier
-
-        Returns
-        -------
-        bool
-        """
-        return viztrail_id in self.viztrails
-
+    @abstractmethod
     def list_viztrails(self):
         """List handles for all viztrails in the repository.
 
@@ -111,4 +82,4 @@ class ViztrailRepository(object):
         -------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        return self.viztrails.values()
+        raise NotImplementedError

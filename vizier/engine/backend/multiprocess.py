@@ -36,7 +36,7 @@ class MultiProcessBackend(VizierBackend):
     that is being executed. There is no limit on the number of tasks that are
     executed in parallel.
     """
-    def __init__(self, processors, contexts, synchronous=None):
+    def __init__(self, projects, processors, synchronous=None):
         """Initialize the index of package processors. Accepts an optional
         dictionary of commands that will be executed synchronously instead of
         forking a new process for execution. The optional properties dictionary
@@ -56,6 +56,8 @@ class MultiProcessBackend(VizierBackend):
 
         Parameters
         ----------
+        projects: dict(vizier.engine.project.ProjectHandle)
+            Cache for project handles
         processors: dict(vizier.engine.packages.task.processor.TaskProcessor)
             task processors that are indexed by the task identifier
         synchronous: vizier.engine.backend.base.TaskExecEngine, optional
@@ -68,7 +70,7 @@ class MultiProcessBackend(VizierBackend):
             lock=Lock()
         )
         self.processors = processors
-        self.contexts = contexts
+        self.projects = projects
         # Maintain tasks that are currently being executed and the associated
         # multiplressing pool. Values are tuples of (task handle, pool) and
         # the index is the unique task identifier. This dictionary is used to
@@ -133,7 +135,7 @@ class MultiProcessBackend(VizierBackend):
         # from the dictionary
         task_callback_function = partial(callback_function, tasks=self.tasks)
         # Get the project context from the cache
-        project_context = self.contexts.get_context(task.project_id)
+        project = self.projects[task.project_id]
         # Execute task using worker function
         pool.apply_async(
             worker,
@@ -141,8 +143,8 @@ class MultiProcessBackend(VizierBackend):
                 task.task_id,
                 command,
                 TaskContext(
-                    datastore=project_context.datastore,
-                    filestore=project_context.filestore,
+                    datastore=project.datastore,
+                    filestore=project.filestore,
                     datasets=context,
                     resources=resources
                 ),

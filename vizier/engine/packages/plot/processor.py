@@ -115,7 +115,6 @@ class PlotProcessor(TaskProcessor):
         rows = ChartQuery().exec_query(ds, view)
         # Add chart view handle as module output
         return ExecResult(
-            datasets=context.datasets,
             outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows)]),
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},

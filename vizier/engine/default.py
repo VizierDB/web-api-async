@@ -14,34 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The vizier engine defines the interface that is used by the API for creating,
-deleting, and manipulating projects. Different instantiations of the engine
-will use different implementations for datasores, filestores, vitrails
-repositories and backends.
-
-The idea is to have a set of pre-defined 'configurations' for vizier engines
-that can be used in different environments (i.e., when running vizier on a local
-machine, with a set of celery workers, running each project in its own
-container, etc). The configuration that is used by a vizier instance is
-specified in the configuration file and loaded when the instance is started.
+"""The default vizier engine is used for configurations where the viztrails
+repository as well as the datastores and filestores for all projects are
+accessible via a central interface. This configuration is assumed to be the
+default, oposed to configurations where each project is maintained in a separate
+container of vitrual environment and the datastore and filestore is only
+accessible via a specific interface.
 """
 
 from vizier.engine.base import VizierEngine
 
 
-class VizierEngine(VizierEngine):
-    """Engine that is used by the API to create and manipulate projects. The
-    engine is a wrapper around the datastore, filestore, and viztrails factories
-    and repositories, as well as the execution backend. Different configurations
-    for a vizier instance will use different classes for the wrapped objects.
-    Each configuration should have a descriptive name and version information.
-
-    The engine maintains the viztrail repository.
-
-    When the engine is initialized it expects class loaders for the wrapped
-    objects. It is assumed that the init() method is called by the web service
-    before the first resource is accessed. The init() method will replace the
-    class loaders with instances of the repsective classes.
+class DefaultVizierEngine(VizierEngine):
+    """Default vizier engines for configurations where viztrails, datastores,
+    and filestores are maintained and accessible via a single interface.
     """
     def __init__(
         self, name, version, datastores, filestores, viztrails, backend,
@@ -64,24 +50,38 @@ class VizierEngine(VizierEngine):
             Descriptive name for the configuration
         version: string
             Version information for the configurations
-        datastores: vizier.core.loader.ClassLoader
-            Class loader for datastore factory
-        filestores: vizier.core.loader.ClassLoader
-            Class loader for filestore factory
-        viztrails: vizier.core.loader.ClassLoader
-            Class loader for viztrails repository
-        backend: vizier.core.loader.ClassLoader
-            Class loader for execution backend
+        datastores: vizier.datastore.factory.DatastoreFactory
+            Factory for project datastores
+        filestores: vizier.filestore.factory.FilestoreFactory
+            Factory for project filestores
+        viztrails: vizier.vizual.repository.ViztrailRepository
+            Repository for viztrails
+        backend: vizier.engine.backend.base.VizierBackend
+            Backend for workflow execution
         packages: dict(vizier.engine.packages.base.PackageIndex)
             Index of loaded packages
         """
-        self.name = name
-        self.version = version
+        super(DefaultVizierEngine, self).__init__(
+            name=name,
+            version=version,
+            backend=backend,
+            packages=packages
+        )
         self.datastores = datastores
         self.filestores = filestores
         self.viztrails = viztrails
-        self.backend = backend
-        self.packages = packages
+        # Create index of project handles from existing viztrails
+        self.projects = dict()
+        for viztrail in self.viztrails.list_viztrails():
+            identifier = viztrail.identifier
+            project = ProjectHandle(
+                viztrail=viztrail,
+                datastore=self.datastores.get_datastore(identifier),
+                filestore=self.filestores.get_filestore(identifier),
+                backend=self.backend,
+                packages=self.packages
+            )
+            self.projects[project.identifier] = project
 
     def create_project(self, properties=None):
         """Create a new project. Will create a viztrail in the underlying
@@ -102,17 +102,10 @@ class VizierEngine(VizierEngine):
         viztrail = self.viztrails.create_viztrail(properties=properties)
         datastore = self.datastores.get_datastore(viztrail.identifier)
         filestore = self.filestores.get_filestore(viztrail.identifier)
-        backend = MultiProcessBackend(
-            datastore=datastore,
-            filestore=filestore,
-            processors=self.processors
-        )
         project = ProjectHandle(
             viztrail=viztrail,
             datastore=datastore,
-            filestore=filestore,
-            backend=backend,
-            packages=self.packages
+            filestore=filestore
         )
         self.projects[project.identifier] = project
         return project
@@ -139,6 +132,27 @@ class VizierEngine(VizierEngine):
             return True
         return False
 
+    def get_branch(self, project_id, branch_id):
+        """Get the branch with the given identifier for the specified project.
+        The result is None if the project of branch does not exist.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+
+        Returns
+        -------
+        vizier.viztrail.branch.BranchHandle
+        """
+        # If the project is not in the internal cache it does not exist
+        if not project_id in self.projects:
+            return None
+        # Return the handle for the specified branch
+        return self.projects[project_id].get_branch(branch_id)
+
     def get_project(self, project_id):
         """Get the handle for the given project. Returns None if the project
         does not exist.
@@ -150,28 +164,6 @@ class VizierEngine(VizierEngine):
         if project_id in self.projects:
             return self.projects[project_id]
         return None
-
-    def init(self):
-        """Initialize the engine by replacing (i) the initialized class loaders
-        with class instances, and (ii) loading the existing project into the
-        memory cache.
-        """
-        self.datastores = self.datastores.get_instance()
-        self.filestores = self.filestores.get_instance()
-        self.viztrails = self.viztrails.get_instance()
-        self.backend = self.backend.get_instance()
-        # Create index of project handles from existing viztrails
-        self.projects = dict()
-        for viztrail in self.viztrails.list_viztrails():
-            identifier = viztrail.identifier
-            project = ProjectHandle(
-                viztrail=viztrail,
-                datastore=self.datastores.get_datastore(identifier),
-                filestore=self.filestores.get_filestore(identifier),
-                backend=self.backend,
-                packages=self.packages
-            )
-            self.projects[project.identifier] = project
 
     def list_projects(self):
         """Get a list of all project handles.

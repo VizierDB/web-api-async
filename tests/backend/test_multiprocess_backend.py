@@ -5,7 +5,7 @@ import shutil
 import time
 import unittest
 
-from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.backend.cache import ContextCache
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
@@ -14,9 +14,10 @@ from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
+from vizier.engine.project import ProjectHandle
 from vizier.engine.task.base import TaskHandle
 from vizier.engine.task.processor import TaskProcessor
-from vizier.filestore.fs.factory import FileSystemFilestoreFactory
+from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.client.command.vizual as vizual
@@ -29,6 +30,8 @@ SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
 CSV_FILE = './.files/dataset.csv'
+
+PROJECT_ID = '111'
 
 
 class FakeTaskProcessor(TaskProcessor):
@@ -69,10 +72,11 @@ class TestMultiprocessBackend(unittest.TestCase):
                 PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi()),
                 'error': FakeTaskProcessor()
             },
-            contexts=ContextCache(
-                datastores=FileSystemDatastoreFactory(DATASTORE_DIR),
-                filestores=FileSystemFilestoreFactory(FILESTORE_DIR)
-            )
+            projects={PROJECT_ID: ProjectHandle(
+                viztrail=None,
+                datastore=FileSystemDatastore(DATASTORE_DIR),
+                filestore=FileSystemFilestore(FILESTORE_DIR)
+            )}
         )
 
     def tearDown(self):
@@ -92,7 +96,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id='111',
+                project_id=PROJECT_ID,
                 controller=controller
             ),
             command=cmd,
@@ -114,7 +118,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id='111',
+                project_id=PROJECT_ID,
                 controller=controller
             ),
             command=cmd,
@@ -137,7 +141,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id='111',
+                project_id=PROJECT_ID,
                 controller=controller
             ),
             command=cmd,

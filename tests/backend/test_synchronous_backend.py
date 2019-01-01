@@ -4,16 +4,18 @@ import os
 import shutil
 import unittest
 
-from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.backend.cache import ContextCache
 from vizier.engine.backend.synchron import SynchronousTaskEngine
+from vizier.engine.base import task_context
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
+from vizier.engine.project import ProjectHandle
 from vizier.engine.task.base import TaskHandle
-from vizier.filestore.fs.factory import FileSystemFilestoreFactory
+from vizier.filestore.fs.base import FileSystemFilestore
 
 import vizier.api.client.command.vizual as vizual
 import vizier.api.client.command.pycell as pycell
@@ -25,6 +27,8 @@ SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
 CSV_FILE = './.files/dataset.csv'
+
+PROJECT_ID = '000'
 
 DATASET_NAME = 'people'
 SECOND_DATASET_NAME = 'my_people'
@@ -61,10 +65,11 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                     VIZUAL_UPD_CELL: vizual
                 }
             },
-            contexts=ContextCache(
-                datastores=FileSystemDatastoreFactory(DATASTORE_DIR),
-                filestores=FileSystemFilestoreFactory(FILESTORE_DIR)
-            )
+            projects={PROJECT_ID: ProjectHandle(
+                viztrail=None,
+                datastore=FileSystemDatastore(DATASTORE_DIR),
+                filestore=FileSystemFilestore(FILESTORE_DIR)
+            )}
         )
 
     def tearDown(self):
@@ -124,7 +129,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
     def test_execute(self):
         """Test executing a sequence of supported commands."""
         context = dict()
-        fh = self.backend.contexts.get_context('000').filestore.upload_file(CSV_FILE)
+        fh = self.backend.projects[PROJECT_ID].filestore.upload_file(CSV_FILE)
         cmd = vizual.load_dataset(
             dataset_name=DATASET_NAME,
             file={pckg.FILE_ID: fh.identifier},
@@ -133,13 +138,14 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000'
+                project_id=PROJECT_ID
             ),
             command=cmd,
             context=context
         )
         self.assertTrue(result.is_success)
-        context = result.datasets
+        state = result.get_database_state(prev_state=dict())
+        context = task_context(state)
         cmd = vizual.update_cell(
             dataset_name=DATASET_NAME,
             column=1,
@@ -150,14 +156,15 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000'
+                project_id=PROJECT_ID
             ),
             command=cmd,
             context=context
         )
         self.assertTrue(result.is_success)
-        self.assertNotEqual(context[DATASET_NAME], result.datasets[DATASET_NAME])
-        context = result.datasets
+        state = result.get_database_state(prev_state=state)
+        self.assertNotEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
+        context = task_context(state)
         cmd = pycell.python_cell(
             source=CREATE_DATASET_PY,
             validate=True
@@ -165,15 +172,16 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000'
+                project_id=PROJECT_ID
             ),
             command=cmd,
             context=context
         )
         self.assertTrue(result.is_success)
-        self.assertEquals(context[DATASET_NAME], result.datasets[DATASET_NAME])
-        self.assertTrue(SECOND_DATASET_NAME in result.datasets)
-        context = result.datasets
+        state = result.get_database_state(prev_state=state)
+        self.assertTrue(SECOND_DATASET_NAME in state)
+        self.assertEquals(context[DATASET_NAME], task_context(state)[DATASET_NAME])
+        context = task_context(state)
         cmd = vizual.update_cell(
             dataset_name=SECOND_DATASET_NAME,
             column=1,
@@ -184,14 +192,15 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         result = self.backend.execute(
             task=TaskHandle(
                 task_id='000',
-                project_id='000'
+                project_id=PROJECT_ID
             ),
             command=cmd,
             context=context
         )
         self.assertTrue(result.is_success)
-        self.assertEquals(context[DATASET_NAME], result.datasets[DATASET_NAME])
-        self.assertNotEqual(context[SECOND_DATASET_NAME], result.datasets[SECOND_DATASET_NAME])
+        state = result.get_database_state(prev_state=state)
+        self.assertEquals(context[DATASET_NAME], task_context(state)[DATASET_NAME])
+        self.assertNotEqual(context[SECOND_DATASET_NAME], task_context(state)[SECOND_DATASET_NAME])
 
     def test_execute_unsupported_command(self):
         """Test executing commands that are not supported for synchronous
@@ -201,7 +210,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
             self.backend.execute(
                 task=TaskHandle(
                     task_id='000',
-                    project_id='000'
+                    project_id=PROJECT_ID
                 ),
                 command=vizual.insert_row(
                     dataset_name=DATASET_NAME,
@@ -215,7 +224,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
             self.backend.execute(
                 task=TaskHandle(
                     task_id='000',
-                    project_id='000'
+                    project_id=PROJECT_ID
                 ),
                 command=vizual.drop_dataset(
                     dataset_name=DATASET_NAME,
