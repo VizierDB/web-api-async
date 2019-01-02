@@ -40,7 +40,11 @@ class TestModuleState(unittest.TestCase):
             module_folder=MODULE_DIR,
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')},
+                resources={'fileid': '0123456789'}
+            ),
             timestamp=ModuleTimestamp()
         )
         module.set_canceled()
@@ -51,7 +55,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -65,7 +70,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         # Set canceled with timestamp and output information
         ts = get_current_time()
         module.set_canceled(
@@ -81,7 +87,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         module = OSModuleHandle.load_module(
             identifier=module.identifier,
             module_path=module.module_path
@@ -95,7 +102,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
 
     def test_error(self):
         """Update module state from pending to error."""
@@ -107,7 +115,11 @@ class TestModuleState(unittest.TestCase):
             module_folder=MODULE_DIR,
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'}),
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')},
+                resources={'fileid': '0123456789'}
+            ),
             timestamp=ModuleTimestamp()
         )
         module.set_error()
@@ -118,7 +130,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -132,7 +145,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         # Set canceled with timestamp and output information
         ts = get_current_time()
         module.set_error(
@@ -148,7 +162,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
         module = OSModuleHandle.load_module(
             identifier=module.identifier,
             module_path=module.module_path
@@ -162,7 +177,8 @@ class TestModuleState(unittest.TestCase):
         self.assertEquals(len(module.outputs.stdout), 0)
         self.assertIsNotNone(module.provenance.read)
         self.assertIsNotNone(module.provenance.write)
-        self.assertIsNone(module.provenance.resources)
+        self.assertIsNotNone(module.provenance.resources)
+        self.assertEquals(module.provenance.resources['fileid'], '0123456789')
 
     def test_running(self):
         """Update module state from pending to running."""
@@ -177,7 +193,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': 'ID2'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')},
                 resources={'fileid': '0123456789'}
             )
         )
@@ -230,7 +246,10 @@ class TestModuleState(unittest.TestCase):
             timestamp=ModuleTimestamp(),
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')}
+            )
         )
         self.assertTrue(module.is_pending)
         module.set_running(external_form='TEST MODULE')
@@ -254,7 +273,10 @@ class TestModuleState(unittest.TestCase):
             timestamp=ModuleTimestamp(),
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')}
+            )
         )
         self.assertTrue(module.is_pending)
         module.set_running(external_form='TEST MODULE')
@@ -287,7 +309,10 @@ class TestModuleState(unittest.TestCase):
             finished_at=ts,
             datasets={'DS1': DS2},
             outputs=ModuleOutputs(stdout=[TextOutput('XYZ')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')}
+            )
         )
         self.assertTrue(module.is_success)
         self.assertIsNotNone(module.timestamp.started_at)
@@ -301,11 +326,17 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.provenance.read)
         self.assertEquals(module.provenance.read['DS1'], 'ID1')
         self.assertIsNotNone(module.provenance.write)
-        self.assertEquals(module.provenance.write['DS1'], 'ID2')
+        self.assertEquals(module.provenance.write['DS1'].identifier, 'ID2')
         module = OSModuleHandle.load_module(
             identifier=module.identifier,
             module_path=module.module_path
         )
+        self.assertEquals(len(module.datasets), 0)
+        module = OSModuleHandle.load_module(
+            identifier=module.identifier,
+            module_path=module.module_path,
+            prev_state=dict()
+        )
         self.assertTrue(module.is_success)
         self.assertIsNotNone(module.timestamp.started_at)
         self.assertIsNotNone(module.timestamp.finished_at)
@@ -318,7 +349,7 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.provenance.read)
         self.assertEquals(module.provenance.read['DS1'], 'ID1')
         self.assertIsNotNone(module.provenance.write)
-        self.assertEquals(module.provenance.write['DS1'], 'ID2')
+        self.assertEquals(module.provenance.write['DS1'].identifier, 'ID2')
 
     def test_state(self):
         """Ensure that only one of the state flag is True at the same time."""
@@ -331,7 +362,10 @@ class TestModuleState(unittest.TestCase):
             timestamp=ModuleTimestamp(),
             datasets={'DS1': DS1},
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
-            provenance=ModuleProvenance(read={'DS1': 'ID1'}, write={'DS1': 'ID2'})
+            provenance=ModuleProvenance(
+                read={'DS1': 'ID1'},
+                write={'DS1': DatasetDescriptor(identifier='ID2')}
+            )
         )
         # Pending
         self.assertTrue(module.is_pending)

@@ -556,11 +556,10 @@ class VizualTaskProcessor(TaskProcessor):
         del datasets[ds_name]
         datasets[new_name] = ds
         return ExecResult(
-            datasets={new_name: ds},
             outputs=ModuleOutputs(stdout=[TextOutput('D1 dataset renamed')]),
             provenance=ModuleProvenance(
                 read=dict(),
-                write={new_name: ds.identifier},
+                write={new_name: ds},
                 delete=[ds_name]
             )
         )
@@ -684,18 +683,11 @@ class VizualTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        # Create updated database state with updated output dataset
-        datasets = dict()
-        if not output_dataset is None:
-            # if an output was generated associate the dataset name with the
-            # identifier of the generated dataset
-            datasets[output_dataset.identifier] = output_dataset
         return ExecResult(
-            datasets=datasets,
             outputs=ModuleOutputs(stdout=[TextOutput(line) for line in stdout]),
             provenance=ModuleProvenance(
                 read={dataset_name: input_dataset.identifier} if not input_dataset is None else None,
-                write={dataset_name: output_dataset.identifier} if not output_dataset is None else None,
+                write={dataset_name: output_dataset} if not output_dataset is None else None,
                 resources=resources
             )
         )

@@ -22,11 +22,12 @@ from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
-from vizier.viztrail.module.base import ModuleHandle, MODULE_RUNNING, MODULE_SUCCESS
-from vizier.viztrail.module.base import MODULE_CANCELED, MODULE_ERROR, MODULE_PENDING
+from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
+
+import vizier.viztrail.module.base as mstate
 
 
 """Json labels for serialized object."""
@@ -144,7 +145,7 @@ class OSModuleHandle(ModuleHandle):
             identifier=identifier,
             command=command,
             external_form=external_form,
-            state=state if not state is None else MODULE_PENDING,
+            state=state if not state is None else mstate.MODULE_PENDING,
             timestamp=timestamp,
             datasets=datasets,
             outputs= outputs,
@@ -155,8 +156,8 @@ class OSModuleHandle(ModuleHandle):
 
     @staticmethod
     def create_module(
-        command, external_form, state, timestamp, datasets, outputs, provenance,
-        module_folder, object_store=None
+        command, external_form, state, timestamp, outputs, provenance,
+        module_folder, datasets=None, object_store=None
     ):
         """Create a new materialized module instance for the given values.
 
@@ -196,7 +197,6 @@ class OSModuleHandle(ModuleHandle):
             external_form=external_form,
             state=state,
             timestamp=timestamp,
-            datasets=datasets,
             outputs=outputs,
             provenance=provenance
         )
@@ -212,14 +212,14 @@ class OSModuleHandle(ModuleHandle):
             module_path=object_store.join(module_folder, identifier),
             state=state,
             timestamp=timestamp,
-            datasets=datasets,
+            datasets=datasets if not datasets is None else dict(),
             outputs=outputs,
             provenance=provenance,
             object_store=object_store
         )
 
     @staticmethod
-    def load_module(identifier, module_path, object_store=None):
+    def load_module(identifier, module_path, prev_state=None, object_store=None):
         """Load module from given object store.
 
         Parameters
@@ -228,6 +228,10 @@ class OSModuleHandle(ModuleHandle):
             Unique module identifier
         module_path: string
             Resource path for module object
+        prev_state: dict(string: vizier.datastore.dataset.DatasetDescriptor)
+            Dataset descriptors keyed by the user-provided name that exist in
+            the database state of the previous moudle (in sequence of occurrence
+            in the workflow)
         object_store: vizier.core.io.base.ObjectStore, optional
             Object store implementation to access and maintain resources
 
@@ -252,7 +256,7 @@ class OSModuleHandle(ModuleHandle):
                 ),
                 external_form='fatal error: object not found',
                 module_path=module_path,
-                state=MODULE_ERROR,
+                state=mstate.MODULE_ERROR,
                 object_store=object_store
             )
         # Create module command
@@ -276,9 +280,6 @@ class OSModuleHandle(ModuleHandle):
             started_at=started_at,
             finished_at=finished_at
         )
-        # Create dataset index. In the resulting dictionary datasets are
-        # keyed by their name
-        datasets = get_dataset_index(obj[KEY_DATASETS])
         # Create module output streams.
         outputs = ModuleOutputs(
             stdout=get_output_stream(obj[KEY_OUTPUTS][KEY_STDOUT]),
@@ -287,10 +288,25 @@ class OSModuleHandle(ModuleHandle):
         # Create module provenance information
         read_prov = None
         if KEY_PROVENANCE_READ in obj[KEY_PROVENANCE]:
-            read_prov = get_dataset_index(obj[KEY_PROVENANCE][KEY_PROVENANCE_READ])
+            read_prov = dict()
+            for ds in obj[KEY_PROVENANCE][KEY_PROVENANCE_READ]:
+                read_prov[ds[KEY_DATASET_NAME]] = ds[KEY_DATASET_ID]
         write_prov = None
         if KEY_PROVENANCE_WRITE in obj[KEY_PROVENANCE]:
-            write_prov = get_dataset_index(obj[KEY_PROVENANCE][KEY_PROVENANCE_WRITE])
+            write_prov = dict()
+            for ds in obj[KEY_PROVENANCE][KEY_PROVENANCE_WRITE]:
+                descriptor = DatasetDescriptor(
+                    identifier=ds[KEY_DATASET_ID],
+                    columns=[
+                        DatasetColumn(
+                            identifier=col[KEY_COLUMN_ID],
+                            name=col[KEY_COLUMN_NAME],
+                            data_type=col[KEY_COLUMN_TYPE]
+                        ) for col in ds[KEY_DATASET_COLUMNS]
+                    ],
+                    row_count=ds[KEY_DATASET_ROWCOUNT]
+                )
+                write_prov[ds[KEY_DATASET_NAME]] = descriptor
         delete_prov = None
         if KEY_PROVENANCE_DELETE in obj[KEY_PROVENANCE]:
             delete_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE]
@@ -303,6 +319,13 @@ class OSModuleHandle(ModuleHandle):
             delete=delete_prov,
             resources=res_prov
         )
+        # Create dictionary of dataset descriptors only if previous state is
+        # given and the module is in SUCCESS state. Otherwise, the database
+        # state is empty.
+        if obj[KEY_STATE] == mstate.MODULE_SUCCESS and not prev_state is None:
+            datasets = provenance.get_database_state(prev_state)
+        else:
+            datasets = dict()
         # Return module handle
         return OSModuleHandle(
             identifier=identifier,
@@ -331,7 +354,7 @@ class OSModuleHandle(ModuleHandle):
             Output streams for module
         """
         # Update state, timestamp and output information. Clear database state.
-        self.state = MODULE_CANCELED
+        self.state = mstate.MODULE_CANCELED
         self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.datasets = dict()
@@ -352,7 +375,7 @@ class OSModuleHandle(ModuleHandle):
             Output streams for module
         """
         # Update state, timestamp and output information. Clear database state.
-        self.state = MODULE_ERROR
+        self.state = mstate.MODULE_ERROR
         self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.datasets = dict()
@@ -374,7 +397,7 @@ class OSModuleHandle(ModuleHandle):
         # state,
         if not external_form is None:
             self.external_form = external_form
-        self.state = MODULE_RUNNING
+        self.state = mstate.MODULE_RUNNING
         self.timestamp.started_at = started_at if not started_at is None else get_current_time()
         self.outputs = ModuleOutputs()
         self.datasets = dict()
@@ -404,7 +427,7 @@ class OSModuleHandle(ModuleHandle):
         """
         # Update state, timestamp, database state, outputs and provenance
         # information.
-        self.state = MODULE_SUCCESS
+        self.state = mstate.MODULE_SUCCESS
         self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
         # If the module is set to success straight from pending state the
         # started_at timestamp may not have been set.
@@ -423,7 +446,6 @@ class OSModuleHandle(ModuleHandle):
             external_form=self.external_form,
             state=self.state,
             timestamp=self.timestamp,
-            datasets=self.datasets,
             outputs=self.outputs,
             provenance=self.provenance
         )
@@ -442,7 +464,7 @@ class OSModuleHandle(ModuleHandle):
         try:
             self.write_module()
         except Exception as ex:
-            self.state = MODULE_ERROR
+            self.state = mstate.MODULE_ERROR
             self.outputs = ModuleOutputs(stderr=[TextOutput(str(ex))])
             self.datasets = dict()
 
@@ -450,43 +472,6 @@ class OSModuleHandle(ModuleHandle):
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
-
-def get_dataset_index(datasets):
-    """Convert a list of dataset references in default serialization format into
-    a dictionary. The elements of the dictionary are either dataset descriptors
-    or strings representing the dataset identifier. The user-provided dataset
-    name is the key for the dictionary.
-
-    Parameters
-    ----------
-    datasets: list(dict)
-        List of datasets in default serialization format
-
-    Returns
-    -------
-    dict
-    """
-    result = dict()
-    for ds in datasets:
-        identifier = ds[KEY_DATASET_ID]
-        name = ds[KEY_DATASET_NAME]
-        if KEY_DATASET_COLUMNS in ds or KEY_DATASET_ROWCOUNT in ds:
-            descriptor = DatasetDescriptor(
-                identifier=identifier,
-                columns=[
-                    DatasetColumn(
-                        identifier=col[KEY_COLUMN_ID],
-                        name=col[KEY_COLUMN_NAME],
-                        data_type=col[KEY_COLUMN_TYPE]
-                    ) for col in ds[KEY_DATASET_COLUMNS]
-                ],
-                row_count=ds[KEY_DATASET_ROWCOUNT]
-            )
-            result[name] = descriptor
-        else:
-            result[name] = identifier
-    return result
-
 
 def get_module_path(modules_folder, module_id, object_store):
     """Use a single method to get the module path. This should make it easier to
@@ -535,7 +520,7 @@ def get_output_stream(items):
     return result
 
 
-def serialize_module(command, external_form, state, timestamp, datasets, outputs, provenance):
+def serialize_module(command, external_form, state, timestamp, outputs, provenance):
     """Get dictionary serialization of a module.
 
     Parameters
@@ -548,8 +533,6 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
     timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
         Module timestamp
-    datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
-        Dictionary of resulting dataset descriptors.
     outputs: vizier.viztrail.module.output.ModuleOutputs
         Module output streams STDOUT and STDERR
     provenance: vizier.viztrail.module.provenance.ModuleProvenance
@@ -575,11 +558,19 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
             } for name in provenance.read
         ]
     if not provenance.write is None:
-        prov[KEY_PROVENANCE_WRITE] = [{
-                KEY_DATASET_NAME: name,
-                KEY_DATASET_ID: provenance.write[name]
-            } for name in provenance.write
-        ]
+        prov[KEY_PROVENANCE_WRITE] = list()
+        for ds_name in provenance.write:
+            ds = provenance.write[ds_name]
+            prov[KEY_PROVENANCE_WRITE].append({
+                KEY_DATASET_NAME: ds_name,
+                KEY_DATASET_ID: ds.identifier,
+                KEY_DATASET_COLUMNS: [{
+                    KEY_COLUMN_ID: col.identifier,
+                    KEY_COLUMN_NAME: col.name,
+                    KEY_COLUMN_TYPE: col.data_type
+                } for col in ds.columns],
+                KEY_DATASET_ROWCOUNT: ds.row_count
+            })
     if not provenance.delete is None:
         prov[KEY_PROVENANCE_DELETE] = list(provenance.delete)
     if not provenance.resources is None:
@@ -604,15 +595,5 @@ def serialize_module(command, external_form, state, timestamp, datasets, outputs
                 } for obj in outputs.stdout]
         },
         KEY_TIMESTAMP: ts,
-        KEY_DATASETS: [{
-                KEY_DATASET_NAME: ds,
-                KEY_DATASET_ID: datasets[ds].identifier,
-                KEY_DATASET_COLUMNS: [{
-                    KEY_COLUMN_ID: col.identifier,
-                    KEY_COLUMN_NAME: col.name,
-                    KEY_COLUMN_TYPE: col.data_type
-                } for col in datasets[ds].columns],
-                KEY_DATASET_ROWCOUNT: datasets[ds].row_count
-            } for ds in datasets],
         KEY_PROVENANCE: prov
     }

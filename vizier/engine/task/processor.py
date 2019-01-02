@@ -25,14 +25,10 @@ from abc import abstractmethod
 
 class ExecResult(object):
     """Wrapper containing results for executed task. Contains the output
-    streams, the new database state, and provenance information.
+    streams, and provenance information.
 
     Attributes
     ----------
-    datasets : dict(vizier.datastore.dataset.DatasetDescriptor)
-        Mapping of dataset names to dataset descriptors for those datasets that
-        were changed by the operation. Datasets are keyed by there unique
-        identifer.
     is_error: bool
         Flag indicating if the execution resulted in an error
     is_success: bool
@@ -43,19 +39,13 @@ class ExecResult(object):
         Provenance information about datasets that were read and writen during
         task execution.
     """
-    def __init__(
-        self, is_success=True, datasets=None, outputs=None, provenance=None
-    ):
+    def __init__(self, is_success=True, outputs=None, provenance=None):
         """Initialize the result components.
 
         Parameters
         ----------
         is_success: bool
             Flag indicating if execution was successful
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Mapping of dataset names to dataset descriptors for those datasets
-            that were changed by the operation. Datasets are keyed by there
-            unique identifer.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Outputs to STDOUT and STDERR generated during task execution
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
@@ -66,44 +56,6 @@ class ExecResult(object):
         self.datasets = datasets
         self.outputs = outputs
         self.provenance = provenance
-
-    def get_database_state(self, prev_state):
-        """Adjust the database state after module execution. The dictionary of
-        datasets contains names and identifier of datasets in the previous state
-        of the database. To avoid reading descriptors for unchanged datasets
-        from storage the database state of the previous module is used.
-
-        The dataset state is adjusted based on the provenance information.
-
-        Returns a dictionary that contains dataset descriptors for all datasets
-        in the new database state. Dataset descriptors are keyed by the
-        user-provided dataset name.
-
-        Parameters
-        ----------
-        prev_state: dict(vizier.datastore.dataset.DatasetDescriptor)
-            Dataset descriptors in previous state keyed by the user-provided
-            name
-
-        Returns
-        -------
-        dict(vizier.datastore.dataset.DatasetDescriptor)
-        """
-        next_state = dict(prev_state)
-        # Adjust state if provenance is given
-        if not self.provenance is None:
-            # Remove deleted datasets
-            if not self.provenance.delete is None:
-                for name in self.provenance.delete:
-                    if name in next_state:
-                        del next_state[name]
-            # Add descriptors for written datasets
-            if not self.provenance.write is None:
-                for name in self.provenance.write:
-                    ds_id = self.provenance.write[name]
-                    if not ds_id is None:
-                        next_state[name] = self.datasets[ds_id]
-        return next_state
 
     @property
     def is_error(self):

@@ -579,7 +579,7 @@ class VizierEngine(WorkflowController):
                 datasets = modules[module_index - 1].datasets
             else:
                 datasets = dict()
-            # Create handle for the inserted module. The state on the module
+            # Create handle for the inserted module. The state of the module
             # depends on the state of the backend.
             inserted_module = ModuleHandle(
                 command=command,

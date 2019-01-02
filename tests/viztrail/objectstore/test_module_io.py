@@ -8,7 +8,7 @@ import unittest
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.viztrail.driver.objectstore.module import OSModuleHandle
-from vizier.viztrail.module.base import MODULE_PENDING
+from vizier.viztrail.module.base import MODULE_PENDING, MODULE_SUCCESS
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
@@ -52,14 +52,31 @@ class TestOSModuleIO(unittest.TestCase):
             external_form='TEST MODULE',
             state=MODULE_PENDING,
             outputs=ModuleOutputs(),
-            provenance=ModuleProvenance(),
+            provenance=ModuleProvenance(write=DATASETS),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
             datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
-            module_path=mod0.module_path
+            module_path=mod0.module_path,
+            prev_state=dict()
+        )
+        self.assertEquals(len(m.datasets), 0)
+        mod0 = OSModuleHandle.create_module(
+            command=python_cell(source='print 2+2'),
+            external_form='TEST MODULE',
+            state=MODULE_SUCCESS,
+            outputs=ModuleOutputs(),
+            provenance=ModuleProvenance(write=DATASETS),
+            timestamp=ModuleTimestamp(),
+            module_folder=MODULE_DIR,
+            datasets=DATASETS
+        )
+        m = OSModuleHandle.load_module(
+            identifier=mod0.identifier,
+            module_path=mod0.module_path,
+            prev_state=dict()
         )
         self.assertEquals(len(m.datasets), 2)
         self.assertEquals(m.datasets['DS1'].identifier, 'ID1')
@@ -82,8 +99,7 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -99,8 +115,7 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(stderr=[TextOutput('Some text')]),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -118,8 +133,7 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('Some text'), OutputObject(type='chart', value='123')]),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -142,8 +156,7 @@ class TestOSModuleIO(unittest.TestCase):
             ),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -170,6 +183,8 @@ class TestOSModuleIO(unittest.TestCase):
         )
         self.assertIsNone(m.provenance.read)
         self.assertIsNone(m.provenance.write)
+        self.assertIsNone(m.provenance.delete)
+        self.assertIsNone(m.provenance.resources)
         # Modules that only has read provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -181,8 +196,7 @@ class TestOSModuleIO(unittest.TestCase):
                 resources={'fileId': '0123456789'}
             ),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -200,19 +214,19 @@ class TestOSModuleIO(unittest.TestCase):
             state=MODULE_PENDING,
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(
-                write={'DS2': 'ID2'}
+                write=DATASETS
             ),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
         self.assertIsNotNone(m.provenance.write)
-        self.assertEquals(len(m.provenance.write), 1)
-        self.assertEquals(m.provenance.write['DS2'], 'ID2')
+        self.assertEquals(len(m.provenance.write), 2)
+        self.assertEquals(m.provenance.write['DS1'].identifier, 'ID1')
+        self.assertEquals(m.provenance.write['DS2'].identifier, 'ID2')
         self.assertIsNone(m.provenance.read)
         # Module with read and write provenance
         mod0 = OSModuleHandle.create_module(
@@ -222,12 +236,11 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': 'ID1A','DS2': 'ID2'},
+                write=DATASETS,
                 delete=['A', 'B']
             ),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -238,8 +251,8 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEquals(m.provenance.read['DS1'], 'ID1')
         self.assertIsNotNone(m.provenance.write)
         self.assertEquals(len(m.provenance.write), 2)
-        self.assertEquals(m.provenance.write['DS1'], 'ID1A')
-        self.assertEquals(m.provenance.write['DS2'], 'ID2')
+        self.assertEquals(m.provenance.write['DS1'].identifier, 'ID1')
+        self.assertEquals(m.provenance.write['DS2'].identifier, 'ID2')
         self.assertEquals(m.provenance.delete, ['A', 'B'])
 
     def test_read_write_module(self):
@@ -284,8 +297,7 @@ class TestOSModuleIO(unittest.TestCase):
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -323,8 +335,7 @@ class TestOSModuleIO(unittest.TestCase):
                 created_at=created_at,
                 started_at=started_at
             ),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
+            module_folder=MODULE_DIR
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,

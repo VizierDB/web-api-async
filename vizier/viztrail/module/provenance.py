@@ -25,22 +25,17 @@ provenance object allows to carry state from previous executions for a module.
 
 class ModuleProvenance(object):
     """The module provenance object maintains information about the datasets
-    that a module has read and written in previous executions as wellas the
+    that a module has read and written in previous executions as well as the
     datasets that the module has deleted. Read/write information is maintained
-    in two dictionaries where the key is the dataset name and the value the
-    dataset identifier. Delete information is maintained as a list or set of
-    dataset names.
+    in two dictionaries where the key is the dataset name. For datasets that a
+    module read only the dataset identifier is maintained. For datasets that
+    were created (written) by a module the dataset descriptor is maintained.
+    Delete information is maintained as a list or set of dataset names.
 
-    Note that the dataset identifier that is associated with a name in either
-    of the two maintained dictionaries may be None. This situation results for
-    example from the executio of a python cell that attempted to read a dataset
-    that did not exist or create a dataset that already existed.
-
-    If provenance information is unknown (e.g., because the module has not been
-    executed yet or it is treated as a black box) both dictionaries are None.
-
-    Use method .requires_exec() if a module needs to be executed for a given
-    database state.
+    Note that the value that is associated with a name in either of the read
+    or write dictionary may be None. This situation results for example from
+    the execution of a python cell that attempted to read a dataset that did
+    not exist or create a dataset that already existed.
 
     The module provenance carries a dictionary of key,value-pairs (resources)
     that were generated during previous executions of the module. This allows
@@ -48,6 +43,14 @@ class ModuleProvenance(object):
     module. The main intent is to pass information about downloaded files and
     the resulting dataset identifier to avoid re-downloading the files but to
     use the previously generated local copy instead.
+
+    Provenance information is used to decide whether a module needs to be
+    re-executed when a workflow is modified by inserting, replacing, or deleting
+    modules.  Use method .requires_exec() if a module needs to be executed for
+    a given database state. If provenance information is unknown (e.g., because
+    the module has not been executed yet or it is treated as a black box) all
+    the provenance dictionaries and lists are None. In that case the module
+    will always require execution.
     """
     def __init__(self, read=None, write=None, delete=None, resources=None):
         """Initialize the datasets that were read and written by a previous
@@ -55,15 +58,15 @@ class ModuleProvenance(object):
 
         Parameters
         ----------
-        read: dict, optional
+        read: dict(string:string), optional
             Dictionary of datasets that the module used as input. The key is the
             dataset name and the value the dataset identifier.
-        write: dict, optional
+        write: dict(string:vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of datasets that the module modified. The key is the
             dataset name and the value the dataset identifier.
-        delete: list or set, optional
+        delete: list(string) or set(string), optional
             List of names for datasets that have been deleted by a module
-        resources: dict, optional
+        resources: dict(string: scalar), optional
             Resources and other information that was generated during execution
         """
         self.read = read
@@ -71,32 +74,41 @@ class ModuleProvenance(object):
         self.delete = delete
         self.resources = resources
 
-    def adjust_state(self, datasets, datastore):
-        """Adjust a given database state by adding/replacing datasets in the
-        given dictionary with those in the write dependencies of this provenance
-        object.
+    def get_database_state(self, prev_state):
+        """Adjust the database state after module execution. The dictionary of
+        datasets contains names and identifier of datasets in the previous state
+        of the database. To avoid reading descriptors for unchanged datasets
+        from storage the database state of the previous module is used.
+
+        The dataset state is adjusted based on the provenance information.
+
+        Returns a dictionary that contains dataset descriptors for all datasets
+        in the new database state. Dataset descriptors are keyed by the
+        user-provided dataset name.
 
         Parameters
         ----------
-        datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
-            Dictionary of identifier for datasets in the current state. The key
-            is the dataset name.
-        datastore: vizier.datastore.base.Datastore
-            Datastore to access descriptors for previously generated datasets.
+        prev_state: dict(vizier.datastore.dataset.DatasetDescriptor)
+            Dataset descriptors in previous state keyed by the user-provided
+            name
 
         Returns
         -------
         dict(vizier.datastore.dataset.DatasetDescriptor)
         """
-        result = dict(datasets)
-        if not self.write is None:
-            for ds_name in self.write:
-                result[ds_name] = datastore.get_descriptor(self.write[ds_name])
+        next_state = dict(prev_state)
+        # Remove deleted datasets
         if not self.delete is None:
-            for ds_name in self.delete:
-                if ds_name in result:
-                    del result[ds_name]
-        return result
+            for name in self.delete:
+                if name in next_state:
+                    del next_state[name]
+        # Add descriptors for written datasets
+        if not self.write is None:
+            for name in self.write:
+                ds = self.write[name]
+                if not ds is None:
+                    next_state[name] = ds
+        return next_state
 
     def requires_exec(self, datasets):
         """Test if a module requires execution based on the provenance
