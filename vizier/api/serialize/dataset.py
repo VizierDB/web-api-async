@@ -27,7 +27,7 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for project containing the dataset
     dataset: vizier.datastore.dataset.DatasetDescriptor
         Dataset descriptor
@@ -74,7 +74,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
         Dataset descriptor
     name : string, optional
         User-defined dataset name
-    project: vizier.engine.project.ProjectHandle, optional
+    project: vizier.engine.project.base.ProjectHandle, optional
         Handle for project containing the dataset
     urls: vizier.api.routes.base.UrlFactory, optional
         Factory for resource urls
@@ -123,7 +123,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for project containing the dataset
     dataset : vizier.datastore.dataset.DatasetDescriptor
         Dataset descriptor

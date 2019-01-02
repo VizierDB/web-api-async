@@ -1,4 +1,4 @@
-# Copyright (C) 2018 New York University,
+# Copyright (C) 2019 New York University,
 #                    University at Buffalo,
 #                    Illinois Institute of Technology.
 #
@@ -14,59 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The default vizier engine is used for configurations where the viztrails
-repository as well as the datastores and filestores for all projects are
-accessible via a central interface. This configuration is assumed to be the
-default, oposed to configurations where each project is maintained in a separate
-container of vitrual environment and the datastore and filestore is only
-accessible via a specific interface.
+"""The common project cache solely uses the functionality of a provided
+viztrails repository to manipulate the cached objects.
 """
 
-from vizier.engine.base import VizierEngine
+from vizier.engine.project.base import ProjectHandle
+from vizier.engine.project.cache.base import ProjectCache
 
 
-class DefaultVizierEngine(VizierEngine):
-    """Default vizier engines for configurations where viztrails, datastores,
-    and filestores are maintained and accessible via a single interface.
+class CommonProjectCache(ProjectCache):
+    """The common project cache is a simple wrapper around a viztrail
+    repository, a datastore factory, and a filestore factory.
     """
-    def __init__(
-        self, name, version, datastores, filestores, viztrails, backend,
-        packages
-    ):
-        """Initialize the engine from a dictionary. Expects a dictionary with
-        three elements: 'datastore', 'filestore', and 'viztrails'. The value
-        for each of these components is a class loader dictionary.
-
-        The datastore dictionary is expected to load an instance of the
-        datastore factory class. The filestore dictionary is expected to load
-        and instance of the filestore factory. The viztrail instance is expected
-        to load an instance of an viztrails repository. This additional step of
-        indirection is added to aviod that the class is fully instantiated
-        multiple times when loades as part of a Flask application.
+    def __init__(self, datastores, filestores, viztrails):
+        """Initialize the cache components and load all projects in the given
+        viztrails repository. Maintains all projects in an dictionary keyed by
+        their identifier.
 
         Parameters
         ----------
-        name: string
-            Descriptive name for the configuration
-        version: string
-            Version information for the configurations
         datastores: vizier.datastore.factory.DatastoreFactory
             Factory for project datastores
         filestores: vizier.filestore.factory.FilestoreFactory
             Factory for project filestores
         viztrails: vizier.vizual.repository.ViztrailRepository
             Repository for viztrails
-        backend: vizier.engine.backend.base.VizierBackend
-            Backend for workflow execution
-        packages: dict(vizier.engine.packages.base.PackageIndex)
-            Index of loaded packages
         """
-        super(DefaultVizierEngine, self).__init__(
-            name=name,
-            version=version,
-            backend=backend,
-            packages=packages
-        )
         self.datastores = datastores
         self.filestores = filestores
         self.viztrails = viztrails
@@ -77,11 +50,9 @@ class DefaultVizierEngine(VizierEngine):
             project = ProjectHandle(
                 viztrail=viztrail,
                 datastore=self.datastores.get_datastore(identifier),
-                filestore=self.filestores.get_filestore(identifier),
-                backend=self.backend,
-                packages=self.packages
+                filestore=self.filestores.get_filestore(identifier)
             )
-            self.projects[project.identifier] = project
+            self.projects[viztrail.identifier] = project
 
     def create_project(self, properties=None):
         """Create a new project. Will create a viztrail in the underlying
@@ -97,7 +68,7 @@ class DefaultVizierEngine(VizierEngine):
 
         Returns
         -------
-        vizier.viztrail.engine.project.ProjectHandle
+        vizier.engine.project.base.ProjectHandle
         """
         viztrail = self.viztrails.create_viztrail(properties=properties)
         datastore = self.datastores.get_datastore(viztrail.identifier)
@@ -151,25 +122,25 @@ class DefaultVizierEngine(VizierEngine):
         if not project_id in self.projects:
             return None
         # Return the handle for the specified branch
-        return self.projects[project_id].get_branch(branch_id)
+        return self.projects[project_id].viztrail.get_branch(branch_id)
 
     def get_project(self, project_id):
-        """Get the handle for the given project. Returns None if the project
-        does not exist.
+        """Get the handle for project. Returns None if the project does not
+        exist.
 
         Returns
         -------
-        vizier.viztrail.engine.project.ProjectHandle
+        vizier.engine.project.base.ProjectHandle
         """
         if project_id in self.projects:
             return self.projects[project_id]
         return None
 
     def list_projects(self):
-        """Get a list of all project handles.
+        """Get a list of handles for all projects.
 
         Returns
         -------
-        list(vizier.viztrail.engine.project.ProjectHandle)
+        list(vizier.engine.project.base.ProjectHandle)
         """
         return self.projects.values()

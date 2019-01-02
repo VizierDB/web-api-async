@@ -29,7 +29,7 @@ def FILE_HANDLE(f_handle, project, urls):
     ----------
     f_handle : vizier.filestore.base.FileHandle
         File handle
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls

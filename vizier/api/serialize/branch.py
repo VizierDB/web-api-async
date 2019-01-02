@@ -28,7 +28,7 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
@@ -63,7 +63,7 @@ def BRANCH_HANDLE(project, branch, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle

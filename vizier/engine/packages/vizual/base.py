@@ -387,7 +387,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.constant_format('SET'),
                 pckg.constant_format('[', rspace=False),
                 pckg.variable_format(pckg.PARA_COLUMN),
-                pckg.constant_format(','),
+                pckg.constant_format(',', lspace=False),
                 pckg.variable_format(PARA_ROW),
                 pckg.constant_format(']', lspace=False),
                 pckg.constant_format('='),

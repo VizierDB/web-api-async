@@ -110,35 +110,40 @@ class PyCellTaskProcessor(TaskProcessor):
                 outputs.stderr.append(TextOutput(text))
                 is_success = False
         if is_success:
-            datasets = client.descriptors
+            # Create provenance information. Ensure that all dictionaries
+            # contain elements of expected types, i.e, ensure that the user did
+            # not attempt anything tricky.
             read = dict()
             for name in client.read:
-                read[name] = context.datasets[name] if name in context.datasets else None
+                if not isinstance(name, basestring):
+                    raise RuntimeError('invalid key for mapping dictionary')
+                if name in context.datasets:
+                    read[name] = context.datasets[name]
+                    if not isinstance(read[name], basestring):
+                        raise RuntimeError('invalid element in mapping dictionary')
+                else:
+                    read[name] = None
             write = dict()
             for name in client.write:
-                write[name] = client.datasets[name] if name in client.datasets else None
-            # Ensure that all three variables are valid dictionaries and the
-            # user did not attempt anything tricky
-            for mapping in [datasets, read, write]:
-                for key in mapping:
-                    if mapping[key] is None:
-                        continue
-                    if not isinstance(key, basestring):
-                        raise RuntimeError('invalid key for mapping dictionary')
-                    if not isinstance(mapping[key], basestring) and not isinstance(mapping[key], DatasetDescriptor):
-                        raise RuntimeError('invalid element of type \'' + str(type(mapping[key])) + '\' in mapping dictionary')
+                if not isinstance(name, basestring):
+                    raise RuntimeError('invalid key for mapping dictionary')
+                ds_id = client.datasets[name]
+                if not ds_id is None:
+                    if not isinstance(ds_id, basestring):
+                        raise RuntimeError('invalid value in mapping dictionary')
+                    write[name] = context.datastore.get_descriptor(ds_id)
+                else:
+                    write[name] = None
             provenance = ModuleProvenance(
                 read=read,
                 write=write,
                 delete=client.delete
             )
         else:
-            datasets = None
             provenance = ModuleProvenance()
         # Return execution result
         return ExecResult(
             is_success=is_success,
-            datasets=datasets,
             outputs=outputs,
             provenance=provenance
         )

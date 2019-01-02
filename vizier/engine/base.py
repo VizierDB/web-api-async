@@ -26,8 +26,6 @@ its own container, etc). The engine that is used by a vizier instance is
 specified in the configuration file and loaded when the instance is started.
 """
 
-from abc import abstractmethod
-
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_unique_identifier
 from vizier.engine.controller import WorkflowController
@@ -48,7 +46,7 @@ class ExtendedTaskHandle(TaskHandle):
     Adds branch and module identifier to the task handle as well as the
     external representation of the executed command.
     """
-    def __init__(self, project_id, branch_id, module_id, external_form=None):
+    def __init__(self, project_id, branch_id, module_id, controller):
         """Initialize the components of the extended task handle. Generates a
         unique identifier for the task.
 
@@ -60,11 +58,13 @@ class ExtendedTaskHandle(TaskHandle):
             Unique branch identifier
         module_id: string
             Unique module identifier
+        controller: vizier.engine.base.VizierEngine
+            Reference to the vizier engine
         """
         super(ExtendedTaskHandle, self).__init__(
             task_id=get_unique_identifier(),
             project_id=project_id,
-            controller=project
+            controller=controller
         )
         self.branch_id = branch_id
         self.module_id = module_id
@@ -80,7 +80,7 @@ class VizierEngine(WorkflowController):
     should have a descriptive name and version information (for display purposes
     in the front-end).
     """
-    def __init__(self, name, version, backend, packages):
+    def __init__(self, name, version, projects, backend, packages):
         """Initialize the engine components.
 
         Parameters
@@ -89,6 +89,8 @@ class VizierEngine(WorkflowController):
             Descriptive name for the configuration
         version: string
             Version information for the configurations
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for project handles
         backend: vizier.engine.backend.base.VizierBackend
             Backend to execute workflow modules
         packages: dict(vizier.engine.package.base.PackageIndex)
@@ -96,6 +98,7 @@ class VizierEngine(WorkflowController):
         """
         self.name = name
         self.version = version
+        self.projects = projects
         self.backend = backend
         self.packages = packages
         # Maintain an internal dictionary of running tasks
@@ -124,7 +127,7 @@ class VizierEngine(WorkflowController):
         vizier.viztrail.module.base.ModuleHandle
         """
         # Get the handle for the specified branch
-        branch = self.get_branch(project_id=project_id, branch_id=branch_id)
+        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
         if branch is None:
             return None
         with self.backend.lock:
@@ -174,7 +177,7 @@ class VizierEngine(WorkflowController):
                         command=command,
                         external_form=external_form,
                         timestamp=ts,
-                        datasets=result.get_database_state(
+                        datasets=result.provenance.get_database_state(
                             modules[-1].datasets if len(modules) > 0 else dict()
                         ),
                         outputs=result.outputs,
@@ -249,7 +252,7 @@ class VizierEngine(WorkflowController):
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch.
-            branch = self.get_branch(project_id=project_id, branch_id=branch_id)
+            branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
             if branch is None:
                 return None
             workflow = branch.head
@@ -266,41 +269,6 @@ class VizierEngine(WorkflowController):
                     self.backend.cancel_task(task_id)
                     del self.tasks[task_id]
             return workflow
-
-    @abstractmethod
-    def create_project(self, properties=None):
-        """Create a new project. Will create a viztrail in the underlying
-        viztrail repository. The initial set of properties is an optional
-        dictionary of (key,value)-pairs where all values are expected to either
-        be scalar values or a list of scalar values. The properties are passed
-        to the create method for the viztrail repository.
-
-        Parameters
-        ----------
-        properties: dict, optional
-            Set of properties for the new viztrail
-
-        Returns
-        -------
-        vizier.viztrail.engine.project.ProjectHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def delete_project(self, project_id):
-        """Delete all resources that are associated with the given project.
-        Returns True if the project existed and False otherwise.
-
-        Parameters
-        ----------
-        project_id: string
-            Unique project identifier
-
-        Returns
-        -------
-        bool
-        """
-        raise NotImplementedError
 
     def delete_workflow_module(self, project_id, branch_id, module_id):
         """Delete the module with the given identifier from the workflow at the
@@ -326,7 +294,7 @@ class VizierEngine(WorkflowController):
         list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
-        branch = self.get_branch(project_id=project_id, branch_id=branch_id)
+        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
         if branch is None:
             return None
         with self.backend.lock:
@@ -364,10 +332,9 @@ class VizierEngine(WorkflowController):
                     if module_index == module_count - 1:
                         break
                     else:
-                        datasets = modules[module_index].provenance.adjust_state(
-                            datasets,
-                            datastore=self.datastore
-                        )
+                        m = modules[module_index]
+                        datasets = m.provenance.get_database_state(datasets)
+                        m.datasets = datasets
                         module_index += 1
                 if module_index < module_count:
                     # The module that module_index points to has to be executed.
@@ -387,7 +354,8 @@ class VizierEngine(WorkflowController):
                         ModuleHandle(
                             command=command,
                             state=self.backend.next_task_state(),
-                            external_form=external_form
+                            external_form=external_form,
+                            provenance=modules[module_index].provenance
                         )
                     ]
                     for i in range(module_index + 1, module_count):
@@ -448,7 +416,8 @@ class VizierEngine(WorkflowController):
         task = ExtendedTaskHandle(
             project_id=project_id,
             branch_id=branch_id,
-            module_id=module.identifier
+            module_id=module.identifier,
+            controller=self
         )
         self.tasks[task.task_id] = task
         self.backend.execute_async(
@@ -457,40 +426,6 @@ class VizierEngine(WorkflowController):
             context=task_context(datasets),
             resources=module.provenance.resources
         )
-
-    @abstractmethod
-    def get_branch(self, project_id, branch_id):
-        """Get the branch with the given identifier for the specified project.
-        The result is None if the project of branch does not exist.
-
-        Parameters
-        ----------
-        project_id: string
-            Unique project identifier
-        branch_id: string
-            Unique branch identifier
-
-        Returns
-        -------
-        vizier.viztrail.branch.BranchHandle
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_project(self, project_id):
-        """Get the handle for the given project. Returns None if the project
-        does not exist.
-
-        Parameters
-        ---------
-        project_id: string
-            Unique project identifier
-
-        Returns
-        -------
-        vizier.viztrail.engine.project.ProjectHandle
-        """
-        raise NotImplementedError
 
     def get_task_module(self, task):
         """Get the workflow and module index for the given task. Returns None
@@ -508,7 +443,7 @@ class VizierEngine(WorkflowController):
         vizier.viztrail.workflow.WorkflowHandle, int
         """
         # Get the handle for the head workflow of the specified branch
-        branch = self.get_branch(
+        branch = self.projects.get_branch(
             project_id=task.project_id,
             branch_id=task.branch_id
         )
@@ -555,7 +490,7 @@ class VizierEngine(WorkflowController):
         list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
-        branch = self.get_branch(project_id=project_id, branch_id=branch_id)
+        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
         if branch is None:
             return None
         with self.backend.lock:
@@ -615,16 +550,6 @@ class VizierEngine(WorkflowController):
             )
             return workflow.modules[module_index:]
 
-    @abstractmethod
-    def list_projects(self):
-        """Get a list of all project handles.
-
-        Returns
-        -------
-        list(vizier.viztrail.engine.project.ProjectHandle)
-        """
-        raise NotImplementedError
-
     def replace_workflow_module(self, project_id, branch_id, module_id, command):
         """Replace an existing module in the workflow at the head of the
         specified viztrail branch. The modified workflow is executed and the
@@ -650,7 +575,7 @@ class VizierEngine(WorkflowController):
         list(vizier.viztrail.module.base.ModuleHandle)
         """
         # Get the handle for the specified branch and the branch head
-        branch = self.get_branch(project_id=project_id, branch_id=branch_id)
+        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
         if branch is None:
             return None
         with self.backend.lock:
@@ -800,7 +725,7 @@ class VizierEngine(WorkflowController):
             else:
                 return False
 
-    def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
+    def set_success(self, task_id, finished_at=None, outputs=None, provenance=None):
         """Set status of the module that is associated with the given task
         identifier to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
@@ -819,9 +744,6 @@ class VizierEngine(WorkflowController):
             Unique task identifier
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting datasets. The user-specified name is the key
-            for the dataset descriptor.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
@@ -850,7 +772,8 @@ class VizierEngine(WorkflowController):
                 # The result is false if the state of the module did not change
                 return False
             # Adjust the module context
-            context = datasets if not datasets is None else dict()
+            datasets = workflow.modules[module_index - 1].datasets if module_index > 0 else dict()
+            context = provenance.get_database_state(datasets)
             module.set_success(
                 finished_at=finished_at,
                 datasets=context,
@@ -864,10 +787,7 @@ class VizierEngine(WorkflowController):
                     # occur.
                     raise RuntimeError('invalid workflow state')
                 elif not next_module.provenance.requires_exec(context):
-                    context = next_module.provenance.adjust_state(
-                        context,
-                        datastore=self.datastore
-                    )
+                    context = next_module.provenance.get_database_state(context)
                     next_module.set_success(
                         finished_at=finished_at,
                         datasets=context,

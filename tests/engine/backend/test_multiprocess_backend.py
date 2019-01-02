@@ -5,7 +5,7 @@ import shutil
 import time
 import unittest
 
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.cache import ContextCache
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
@@ -14,10 +14,12 @@ from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
-from vizier.engine.project import ProjectHandle
+from vizier.engine.project.base import ProjectHandle
+from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.engine.task.base import TaskHandle
 from vizier.engine.task.processor import TaskProcessor
-from vizier.filestore.fs.base import FileSystemFilestore
+from vizier.filestore.fs.factory import FileSystemFilestoreFactory
+from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.client.command.vizual as vizual
@@ -27,8 +29,9 @@ import vizier.engine.packages.base as pckg
 
 
 SERVER_DIR = './.tmp'
-FILESTORE_DIR = './.tmp/fs'
-DATASTORE_DIR = './.tmp/ds'
+DATASTORES_DIR = SERVER_DIR + '/ds'
+FILESTORES_DIR = SERVER_DIR + '/fs'
+VIZTRAILS_DIR = SERVER_DIR + '/vt'
 CSV_FILE = './.files/dataset.csv'
 
 PROJECT_ID = '111'
@@ -66,17 +69,19 @@ class TestMultiprocessBackend(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
+        projects = CommonProjectCache(
+            datastores=FileSystemDatastoreFactory(DATASTORES_DIR),
+            filestores=FileSystemFilestoreFactory(FILESTORES_DIR),
+            viztrails=OSViztrailRepository(base_path=VIZTRAILS_DIR)
+        )
+        self.PROJECT_ID = projects.create_project().identifier
         self.backend = MultiProcessBackend(
             processors={
                 PACKAGE_PYTHON: PyCellTaskProcessor(),
                 PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi()),
                 'error': FakeTaskProcessor()
             },
-            projects={PROJECT_ID: ProjectHandle(
-                viztrail=None,
-                datastore=FileSystemDatastore(DATASTORE_DIR),
-                filestore=FileSystemFilestore(FILESTORE_DIR)
-            )}
+            projects=projects
         )
 
     def tearDown(self):
@@ -96,7 +101,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id=PROJECT_ID,
+                project_id=self.PROJECT_ID,
                 controller=controller
             ),
             command=cmd,
@@ -118,7 +123,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id=PROJECT_ID,
+                project_id=self.PROJECT_ID,
                 controller=controller
             ),
             command=cmd,
@@ -141,7 +146,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend.execute_async(
             task=TaskHandle(
                 task_id='000',
-                project_id=PROJECT_ID,
+                project_id=self.PROJECT_ID,
                 controller=controller
             ),
             command=cmd,

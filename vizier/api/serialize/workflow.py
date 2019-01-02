@@ -29,7 +29,7 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
@@ -69,7 +69,7 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
@@ -111,7 +111,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle

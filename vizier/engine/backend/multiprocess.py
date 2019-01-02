@@ -56,7 +56,7 @@ class MultiProcessBackend(VizierBackend):
 
         Parameters
         ----------
-        projects: dict(vizier.engine.project.ProjectHandle)
+        projects: vizier.engine.project.cache.base.ProjectCache
             Cache for project handles
         processors: dict(vizier.engine.packages.task.processor.TaskProcessor)
             task processors that are indexed by the task identifier
@@ -135,7 +135,7 @@ class MultiProcessBackend(VizierBackend):
         # from the dictionary
         task_callback_function = partial(callback_function, tasks=self.tasks)
         # Get the project context from the cache
-        project = self.projects[task.project_id]
+        project = self.projects.get_project(task.project_id)
         # Execute task using worker function
         pool.apply_async(
             worker,
@@ -204,7 +204,6 @@ def callback_function(result, tasks):
         if exec_result.is_success:
             task.controller.set_success(
                 task_id=task_id,
-                datasets=exec_result.datasets,
                 outputs=exec_result.outputs,
                 provenance=exec_result.provenance
             )

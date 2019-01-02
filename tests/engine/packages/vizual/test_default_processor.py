@@ -70,9 +70,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             )
         )
         self.assertIsNotNone(result.provenance.write)
-        self.assertTrue(DATASET_NAME in result.datasets)
-        dataset_id = result.datasets[DATASET_NAME]
-        self.assertEquals(result.provenance.write[DATASET_NAME], dataset_id)
+        self.assertTrue(DATASET_NAME in result.provenance.write)
+        dataset_id = result.provenance.write[DATASET_NAME].identifier
         self.assertIsNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.resources)
         self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
@@ -93,7 +92,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
                 filestore=self.filestore
             )
         )
-        return result.datasets
+        return result.provenance.write
 
     def test_delete_column(self):
         """Test functionality to delete a column."""
@@ -120,16 +119,16 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             validate=True
         )
         datasets = self.load_dataset()
+        dataset_id = datasets[DATASET_NAME].identifier
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets=datasets
+                datasets={DATASET_NAME: dataset_id}
             )
         )
-        self.assertFalse(DATASET_NAME in result.datasets)
         self.assertFalse(DATASET_NAME in result.provenance.read)
         self.assertTrue(DATASET_NAME in result.provenance.delete)
         self.assertFalse(DATASET_NAME in result.provenance.write)
@@ -185,9 +184,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             )
         )
         self.assertIsNotNone(result.provenance.write)
-        self.assertTrue('abc' in result.datasets)
-        dataset_id = result.datasets['abc']
-        self.assertEquals(result.provenance.write['abc'], dataset_id)
+        self.assertTrue('abc' in result.provenance.write)
+        dataset_id = result.provenance.write['abc'].identifier
         self.assertIsNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.resources)
         self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
@@ -201,8 +199,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
                 resources=result.provenance.resources
             )
         )
-        self.assertEquals(result.datasets['abc'], dataset_id)
-        self.assertEquals(result.provenance.write['abc'], dataset_id)
+        self.assertEquals(result.provenance.write['abc'].identifier, dataset_id)
         self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
 
     def test_move_column(self):
@@ -243,17 +240,17 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             validate=True
         )
         datasets = self.load_dataset()
+        dataset_id = datasets[DATASET_NAME].identifier
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets=datasets
+                datasets={DATASET_NAME: dataset_id}
             )
         )
-        self.assertFalse(DATASET_NAME in result.datasets)
-        self.assertTrue('xyz' in result.datasets)
+        self.assertFalse(DATASET_NAME in result.provenance.write)
         self.assertFalse(DATASET_NAME in result.provenance.read)
         self.assertTrue(DATASET_NAME in result.provenance.delete)
         self.assertFalse(DATASET_NAME in result.provenance.write)
@@ -286,21 +283,19 @@ class TestDefaultVizualProcessor(unittest.TestCase):
     def validate_command(self, cmd):
         """Validate execution of the given command."""
         datasets = self.load_dataset()
-        dataset_id = datasets[DATASET_NAME]
+        dataset_id = datasets[DATASET_NAME].identifier
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets=datasets
+                datasets={DATASET_NAME: dataset_id}
             )
         )
-        self.assertEquals(datasets[DATASET_NAME], dataset_id)
-        self.assertNotEqual(result.datasets[DATASET_NAME], dataset_id)
+        self.assertNotEqual(result.provenance.write[DATASET_NAME].identifier, dataset_id)
         self.assertIsNotNone(result.provenance.read)
         self.assertEquals(result.provenance.read[DATASET_NAME], dataset_id)
-        self.assertEquals(result.provenance.write[DATASET_NAME], result.datasets[DATASET_NAME])
         self.assertIsNotNone(result.provenance.write)
         with self.assertRaises(ValueError):
             result = self.processor.compute(

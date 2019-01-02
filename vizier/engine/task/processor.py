@@ -22,6 +22,9 @@ declared in the package in a vizier workflow.
 
 from abc import abstractmethod
 
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.module.provenance import ModuleProvenance
+
 
 class ExecResult(object):
     """Wrapper containing results for executed task. Contains the output
@@ -53,9 +56,8 @@ class ExecResult(object):
             during task execution.
         """
         self.is_success = is_success
-        self.datasets = datasets
-        self.outputs = outputs
-        self.provenance = provenance
+        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        self.provenance = provenance if not provenance is None else ModuleProvenance()
 
     @property
     def is_error(self):

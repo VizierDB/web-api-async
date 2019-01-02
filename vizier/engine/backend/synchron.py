@@ -26,6 +26,8 @@ from abc import abstractmethod
 
 from vizier.engine.backend.base import TaskExecEngine
 from vizier.engine.task.base import TaskContext
+from vizier.engine.task.processor import ExecResult
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 
 
 class SynchronousTaskEngine(TaskExecEngine):
@@ -41,7 +43,7 @@ class SynchronousTaskEngine(TaskExecEngine):
         commands: dict(dict(vizier.engine.packages.task.processor.TaskProcessor))
             Dictionary of task processors for executable tasks that are keyed
             by the pakage identifier and the command identifier
-        projects: dict(vizier.engine.project.ProjectHandle)
+        projects: vizier.engine.project.cache.base.ProjectCache
             Cache for project handles
         """
         self.commands = commands
@@ -97,15 +99,23 @@ class SynchronousTaskEngine(TaskExecEngine):
             if command.command_id in package:
                 processor = package[command.command_id]
                 # Get the project handle from the cache
-                project = self.projects[task.project_id]
-                return processor.compute(
-                    command_id=command.command_id,
-                    arguments=command.arguments,
-                    context=TaskContext(
-                        datastore=project.datastore,
-                        filestore=project.filestore,
-                        datasets=context,
-                        resources=resources
+                project = self.projects.get_project(task.project_id)
+                try:
+                    return processor.compute(
+                        command_id=command.command_id,
+                        arguments=command.arguments,
+                        context=TaskContext(
+                            datastore=project.datastore,
+                            filestore=project.filestore,
+                            datasets=context,
+                            resources=resources
+                        )
                     )
-                )
+                except Exception as ex:
+                    template = "{0}:{1!r}"
+                    message = template.format(type(ex).__name__, ex.args)
+                    return ExecResult(
+                        is_success=False,
+                        outputs=ModuleOutputs(stderr=[TextOutput(message)])
+                    )
         raise ValueError('cannot execute given command')

@@ -28,7 +28,7 @@ def PROJECT_DESCRIPTOR(project, urls):
 
     Parameters
     ----------
-    project : vizier.engine.project.ProjectHandle
+    project : vizier.engine.project.base.ProjectHandle
         Project handle
     urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
@@ -60,7 +60,7 @@ def PROJECT_HANDLE(project, packages, urls):
 
     Parameters
     ----------
-    project : vizier.engine.project.ProjectHandle
+    project : vizier.engine.project.base.ProjectHandle
         Project handle
     packages: dict(vizier.engine.packages.base.PackageIndex)
         Index of available packages

@@ -18,6 +18,7 @@
 
 from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -559,7 +560,13 @@ class VizualTaskProcessor(TaskProcessor):
             outputs=ModuleOutputs(stdout=[TextOutput('D1 dataset renamed')]),
             provenance=ModuleProvenance(
                 read=dict(),
-                write={new_name: ds},
+                write={
+                    new_name: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                    )
+                },
                 delete=[ds_name]
             )
         )
@@ -683,11 +690,19 @@ class VizualTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
+        if not output_dataset is None:
+            ds = DatasetDescriptor(
+                identifier=output_dataset.identifier,
+                columns=output_dataset.columns,
+                row_count=output_dataset.row_count
+            )
+        else:
+            ds = None
         return ExecResult(
             outputs=ModuleOutputs(stdout=[TextOutput(line) for line in stdout]),
             provenance=ModuleProvenance(
                 read={dataset_name: input_dataset.identifier} if not input_dataset is None else None,
-                write={dataset_name: output_dataset} if not output_dataset is None else None,
+                write={dataset_name: ds},
                 resources=resources
             )
         )

@@ -41,12 +41,10 @@ class VizierDBClient(object):
         """
         self.datastore = datastore
         self.datasets = dict(datasets)
-        # Keep track of datasets that are read and written. For created and
-        # updated datasets we also maintain the descriptor
+        # Keep track of datasets that are read and written.
         self.read = set()
         self.write = set()
         self.delete = None
-        self.descriptors = dict()
 
     def create_dataset(self, name, dataset):
         """Create a new dataset with given name.
@@ -109,11 +107,6 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
-        self.descriptors[ds.identifier] = DatasetDescriptor(
-            identifier=ds.identifier,
-            columns=ds.columns,
-            row_count=ds.row_count
-        )
         return DatasetClient(dataset=ds)
 
     def drop_dataset(self, name):
@@ -315,9 +308,4 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
-        self.descriptors[ds.identifier] = DatasetDescriptor(
-            identifier=ds.identifier,
-            columns=ds.columns,
-            row_count=ds.row_count
-        )
         return DatasetClient(dataset=ds)

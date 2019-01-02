@@ -32,7 +32,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
@@ -112,7 +112,7 @@ def MODULE_HANDLE_LIST(project, branch, modules, urls):
 
     Parameters
     ----------
-    project: vizier.engine.project.ProjectHandle
+    project: vizier.engine.project.base.ProjectHandle
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
