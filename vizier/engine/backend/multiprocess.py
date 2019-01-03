@@ -59,7 +59,7 @@ class MultiProcessBackend(VizierBackend):
         projects: vizier.engine.project.cache.base.ProjectCache
             Cache for project handles
         processors: dict(vizier.engine.packages.task.processor.TaskProcessor)
-            task processors that are indexed by the task identifier
+            Task processors that are indexed by the task identifier
         synchronous: vizier.engine.backend.base.TaskExecEngine, optional
             Engine for synchronous task execution
         """

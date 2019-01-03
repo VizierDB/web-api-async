@@ -6,16 +6,12 @@ import time
 import unittest
 
 from vizier.api.client.command.vizual import load_dataset, update_cell
-from vizier.datastore.fs.factory import FileSystemDatastoreFactory
-from vizier.engine.base import VizierEngine
-from vizier.engine.backend.multiprocess import MultiProcessBackend
-from vizier.engine.backend.synchron import SynchronousTaskEngine
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
-from vizier.engine.packages.vizual.processor import VizualTaskProcessor
-from vizier.engine.project.cache.common import CommonProjectCache
-from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.config.engine.dev import DevEngineFactory
+from vizier.core.loader import ClassLoader
+from vizier.engine.packages.vizual.processor import PROPERTY_API
 
+import vizier.config.engine.base as load
+import vizier.config.engine.dev as dev
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual
 
@@ -28,6 +24,37 @@ VIZTRAILS_DIR = SERVER_DIR + '/vt'
 EMPLOYEE_FILE = './.files/employee.csv'
 PEOPLE_FILE = './.files/people.csv'
 
+CONFIG = {
+    dev.PARA_DATASTORES: DATASTORES_DIR,
+    dev.PARA_FILESTORES: FILESTORES_DIR,
+    dev.PARA_VIZTRAILS: VIZTRAILS_DIR,
+    dev.PARA_PACKAGES: [
+        {
+            load.PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
+            load.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
+                module_name='vizier.engine.packages.vizual.processor',
+                class_name='VizualTaskProcessor',
+                properties={
+                    PROPERTY_API: ClassLoader.to_dict(
+                        module_name='vizier.engine.packages.vizual.api.fs',
+                        class_name='DefaultVizualApi'
+                    )
+                }
+            )
+        }
+    ],
+    dev.PARA_SYNCHRONOUS: [
+        {
+            dev.PARA_SYNCHRONOUS_PACKAGE: vizual.PACKAGE_VIZUAL,
+            dev.PARA_SYNCHRONOUS_COMMAND: vizual.VIZUAL_LOAD
+        },
+        {
+            dev.PARA_SYNCHRONOUS_PACKAGE: vizual.PACKAGE_VIZUAL,
+            dev.PARA_SYNCHRONOUS_COMMAND: vizual.VIZUAL_UPD_CELL
+        }
+    ]
+}
+
 
 class TestVizierEngineSynchron(unittest.TestCase):
 
@@ -37,42 +64,12 @@ class TestVizierEngineSynchron(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        self.engine = self.create_engine()
+        self.engine = DevEngineFactory.get_engine(CONFIG)
 
     def tearDown(self):
         """Remove the server directory."""
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
-
-    def create_engine(self):
-        """Create instance of the default vizier engine."""
-        projects = CommonProjectCache(
-            datastores=FileSystemDatastoreFactory(DATASTORES_DIR),
-            filestores=FileSystemFilestoreFactory(FILESTORES_DIR),
-            viztrails=OSViztrailRepository(base_path=VIZTRAILS_DIR)
-        )
-        vizual_processor = VizualTaskProcessor(api=DefaultVizualApi())
-        return VizierEngine(
-            name='Test Engine',
-            version='0.0.1',
-            projects=projects,
-            backend=MultiProcessBackend(
-                processors={vizual.PACKAGE_VIZUAL: vizual_processor},
-                projects=projects,
-                synchronous=SynchronousTaskEngine(
-                    commands={
-                        vizual.PACKAGE_VIZUAL: {
-                            vizual.VIZUAL_LOAD: vizual_processor,
-                            vizual.VIZUAL_UPD_CELL: vizual_processor
-                        }
-                    },
-                    projects=projects
-                )
-            ),
-            packages={
-                vizual.PACKAGE_VIZUAL: pckg.PackageIndex(vizual.VIZUAL_COMMANDS)
-            }
-        )
 
     def test_create_synchronous_workflow(self):
         """Create workflow by appending a sequence of modules that are executed
@@ -132,7 +129,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = self.create_engine()
+        self.engine = DevEngineFactory.get_engine(CONFIG)
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         self.assertEquals(len(modules), 3)
@@ -213,7 +210,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = self.create_engine()
+        self.engine = DevEngineFactory.get_engine(CONFIG)
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         for m in modules:
@@ -298,7 +295,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = self.create_engine()
+        self.engine = DevEngineFactory.get_engine(CONFIG)
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         self.assertEquals(len(modules), 5)

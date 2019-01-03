@@ -33,29 +33,9 @@ webservice:
         row_limit: Default row limit for requests that read datasets
         max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
         max_file_size: Maximum size for file uploads (in byte)
-packages: # List of package declarations
-    - declarations: File containing declaration of package commands
-      engine: Package specific task engine
-          moduleName: Task engine module
-          className: Task engine class name
-          properties: Task engine specific properties
 engine:
-    backend:
-        moduleName: Name of the module containing the used backend
-        className: Class name of the used backend
-        properties: Dictionary of backend specific configuration properties
-    datastores:
-        moduleName: Name of the module containing the used engine
-        className: Class name of the used datastore factory
-        properties: Dictionary of datastore factory specific configuration properties
-    filestores:
-        moduleName: Name of the module containing the used filestore factory
-        className: Class name of the used filestore factory
-        properties: Dictionary of filestore factory specific configuration properties
-    viztrails:
-        moduleName: Name of the module containing the used viztrails repository
-        className: Class name of the used viztrails repository
-        properties: Dictionary of viztrails repository specific configuration properties
+    identifier: Unique configuration identifier
+    properties: Configuration specific parameters
 debug: Flag indicating whether server is started in debug mode
 logs:
     server: Log file for Web Server
