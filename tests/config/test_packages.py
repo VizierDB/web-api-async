@@ -23,8 +23,8 @@ class TestLoadPackages(unittest.TestCase):
                 )
             },
             {
-                PARA_PACKAGE_DECLARATION: './.files/plot.pckg.json',
-                'somethingDifferent': ClassLoader.to_dict(
+                'somethingDifferent': './.files/plot.pckg.json',
+                PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
                     module_name='vizier.engine.packages.plot.processor',
                     class_name='PlotProcessor'
                 )
@@ -44,11 +44,7 @@ class TestLoadPackages(unittest.TestCase):
                 )
             },
             {
-                PARA_PACKAGE_DECLARATION: './.files/plot.pckg.json',
-                PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
-                    module_name='vizier.engine.packages.plot.processor',
-                    class_name='PlotProcessor'
-                )
+                PARA_PACKAGE_DECLARATION: './.files/plot.pckg.json'
             },
             {
                 PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
@@ -67,6 +63,7 @@ class TestLoadPackages(unittest.TestCase):
         packages, processors = load_packages(elements)
         for key in [PACKAGE_PLOT, PACKAGE_PYTHON, PACKAGE_VIZUAL]:
             self.assertTrue(key in packages)
+        for key in [PACKAGE_PYTHON, PACKAGE_VIZUAL]:
             self.assertTrue(key in processors)
 
 

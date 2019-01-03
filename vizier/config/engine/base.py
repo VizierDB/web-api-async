@@ -50,12 +50,15 @@ def load_packages(elements):
     packages = dict()
     processors = dict()
     for el in elements:
-        for key in [PARA_PACKAGE_DECLARATION, PARA_PACKAGE_ENGINE]:
-            if not key in el:
-                raise ValueError('missing package element \'' + key + '\'')
+        if not PARA_PACKAGE_DECLARATION in el:
+            raise ValueError('missing package element \'' + PARA_PACKAGE_DECLARATION + '\'')
         pckg = read_object_from_file(el[PARA_PACKAGE_DECLARATION])
-        engine = ClassLoader(values=el[PARA_PACKAGE_ENGINE]).get_instance()
+        if PARA_PACKAGE_ENGINE in el:
+            engine = ClassLoader(values=el[PARA_PACKAGE_ENGINE]).get_instance()
+        else:
+            engine = None
         for key in pckg:
             packages[key] = PackageIndex(package=pckg[key])
-            processors[key] = engine
+            if not engine is None:
+                processors[key] = engine
     return packages, processors

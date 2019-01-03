@@ -9,19 +9,13 @@ import unittest
 
 from vizier.api.client.command.pycell import python_cell
 from vizier.api.client.command.vizual import load_dataset
-from vizier.datastore.fs.factory import FileSystemDatastoreFactory
-from vizier.engine.backend.multiprocess import MultiProcessBackend
-from vizier.engine.base import VizierEngine
-from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
-from vizier.engine.packages.vizual.processor import VizualTaskProcessor
-from vizier.engine.project.cache.common import CommonProjectCache
-from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.config.engine.dev import DevEngineFactory
+from vizier.core.loader import ClassLoader
+from vizier.engine.packages.vizual.processor import PROPERTY_API
 
+import vizier.config.engine.base as conf
+import vizier.config.engine.dev as dev
 import vizier.engine.packages.base as pckg
-import vizier.engine.packages.pycell.base as pycell
-import vizier.engine.packages.vizual.base as vizual
 
 
 SERVER_DIR = './.tmp'
@@ -58,6 +52,34 @@ ds.rows[0].set_value('Age', age + 10)
 vizierdb.update_dataset('""" + DATASET_NAME + """', ds)
 """
 
+CONFIG = {
+    dev.PARA_DATASTORES: DATASTORES_DIR,
+    dev.PARA_FILESTORES: FILESTORES_DIR,
+    dev.PARA_VIZTRAILS: VIZTRAILS_DIR,
+    dev.PARA_PACKAGES: [
+        {
+            conf.PARA_PACKAGE_DECLARATION: './.files/python.pckg.json',
+            conf.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
+                module_name='vizier.engine.packages.pycell.processor',
+                class_name='PyCellTaskProcessor'
+            )
+        },
+        {
+            conf.PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
+            conf.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
+                module_name='vizier.engine.packages.vizual.processor',
+                class_name='VizualTaskProcessor',
+                properties={
+                    PROPERTY_API: ClassLoader.to_dict(
+                        module_name='vizier.engine.packages.vizual.api.fs',
+                        class_name='DefaultVizualApi'
+                    )
+                }
+            )
+        }
+    ]
+}
+
 
 class TestMultiprocessBackendUpdate(unittest.TestCase):
 
@@ -69,27 +91,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        projects = CommonProjectCache(
-            datastores=FileSystemDatastoreFactory(DATASTORES_DIR),
-            filestores=FileSystemFilestoreFactory(FILESTORES_DIR),
-            viztrails=OSViztrailRepository(base_path=VIZTRAILS_DIR)
-        )
-        self.engine = VizierEngine(
-            name='Test Engine',
-            version='0.0.1',
-            projects=projects,
-            backend=MultiProcessBackend(
-                processors={
-                    pycell.PACKAGE_PYTHON: PyCellTaskProcessor(),
-                    vizual.PACKAGE_VIZUAL: VizualTaskProcessor(api=DefaultVizualApi())
-                },
-                projects=projects,
-            ),
-            packages={
-                pycell.PACKAGE_PYTHON: pckg.PackageIndex(pycell.PYTHON_COMMANDS),
-                vizual.PACKAGE_VIZUAL: pckg.PackageIndex(vizual.VIZUAL_COMMANDS)
-            }
-        )
+        self.engine = DevEngineFactory.get_engine(CONFIG)
 
     def tearDown(self):
         """Clean-up by dropping the server directory.

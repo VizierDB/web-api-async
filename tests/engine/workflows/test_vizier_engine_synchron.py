@@ -10,7 +10,7 @@ from vizier.config.engine.dev import DevEngineFactory
 from vizier.core.loader import ClassLoader
 from vizier.engine.packages.vizual.processor import PROPERTY_API
 
-import vizier.config.engine.base as load
+import vizier.config.engine.base as conf
 import vizier.config.engine.dev as dev
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual
@@ -30,8 +30,8 @@ CONFIG = {
     dev.PARA_VIZTRAILS: VIZTRAILS_DIR,
     dev.PARA_PACKAGES: [
         {
-            load.PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
-            load.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
+            conf.PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
+            conf.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
                 module_name='vizier.engine.packages.vizual.processor',
                 class_name='VizualTaskProcessor',
                 properties={
