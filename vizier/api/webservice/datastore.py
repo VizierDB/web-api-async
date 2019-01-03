@@ -25,19 +25,19 @@ class VizierDatastoreApi(object):
     """The Vizier datastore API implements the methods that correspond to
     requests that access and manipulate datasets and their annotations.
     """
-    def __init__(self, engine, urls, defaults):
+    def __init__(self, projects, urls, defaults):
         """Initialize the API components.
 
         Parameters
         ----------
-        engine: vizier.engine.base.VizierEngine
-            Instance of the API engine
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for project handles
         urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         defaults : vizier.config.base.ConfigObject
             Web service default values
         """
-        self.engine = engine
+        self.projects = projects
         self.urls = urls
         self.defaults = defaults
 
@@ -140,7 +140,7 @@ class VizierDatastoreApi(object):
         """
         # Retrieve the project and dataset from the repository to ensure that
         # it exists.
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         return project.datastore.get_dataset(dataset_id)
@@ -176,7 +176,7 @@ class VizierDatastoreApi(object):
         """
         # Retrieve the project and dataset from the repository to ensure that
         # it exists.
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         # Update annotations using that datastore that is associated with the

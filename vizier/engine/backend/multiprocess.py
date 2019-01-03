@@ -166,7 +166,7 @@ class MultiProcessBackend(VizierBackend):
         """
         return MODULE_RUNNING
 
-    def task_finised(self, task_id):
+    def task_finished(self, task_id):
         """The multi-process backend ignores all notifications for finished
         tasks. All task related resources should have been released when the
         task finished and the workflow controller was notified.

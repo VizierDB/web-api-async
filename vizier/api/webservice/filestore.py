@@ -25,17 +25,17 @@ class VizierFilestoreApi(object):
     """The Vizier filestore API implements the methods that correspond to
     requests that upload and download files.
     """
-    def __init__(self, engine, urls):
+    def __init__(self, projects, urls):
         """Initialize the API components.
 
         Parameters
         ----------
-        engine: vizier.engine.base.VizierEngine
-            Instance of the API engine
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for project handles
         urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         """
-        self.engine = engine
+        self.projects = projects
         self.urls = urls
 
     def get_file(self, project_id, file_id):
@@ -54,7 +54,7 @@ class VizierFilestoreApi(object):
         vizier.filestore.base.FileHandle
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         return project.filestore.get_file(file_id)
@@ -80,7 +80,7 @@ class VizierFilestoreApi(object):
         vizier.filestore.base.FileHandle
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         # Upload file to projects filestore and return a serialization of the

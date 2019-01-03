@@ -29,17 +29,20 @@ class VizierProjectApi(object):
     """The Vizier project API implements the methods that correspond to
     requests that access and manipulate projects.
     """
-    def __init__(self, engine, urls):
+    def __init__(self, projects, packages, urls):
         """Initialize the API components.
 
         Parameters
         ----------
-        engine: vizier.engine.base.VizierEngine
-            Instance of the API engine
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for project handles
+        packages: dict(vizier.engine.package.base.PackageIndex)
+            Dictionary of supported packages
         urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         """
-        self.engine = engine
+        self.projects = projects
+        self.packages = packages
         self.urls = urls
 
     def create_project(self, properties):
@@ -56,7 +59,7 @@ class VizierProjectApi(object):
         dict
         """
         # Create a new project and return the serialized descriptor
-        project = self.engine.create_project(properties=properties)
+        project = self.projects.create_project(properties=properties)
         return serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
 
     def delete_project(self, project_id):
@@ -75,7 +78,7 @@ class VizierProjectApi(object):
         """
         # Delete entry in repository. The result indicates whether the project
         # existed or not.
-        return self.engine.delete_project(project_id)
+        return self.projects.delete_project(project_id)
 
     def get_project(self, project_id):
         """Get comprehensive information for the project with the given
@@ -93,13 +96,13 @@ class VizierProjectApi(object):
         dict
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         # Get serialization for project handle.
         return serialpr.PROJECT_HANDLE(
             project=project,
-            packages=self.engine.packages,
+            packages=self.packages,
             urls=self.urls
         )
 
@@ -114,7 +117,7 @@ class VizierProjectApi(object):
         return {
             'projects': [
                 serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
-                    for project in self.engine.list_projects()
+                    for project in self.projects.list_projects()
             ],
             labels.LINKS: serialize.HATEOAS({
                 'self': self.urls.list_projects(),
@@ -141,7 +144,7 @@ class VizierProjectApi(object):
             Serialization of the project handle
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         # Update properties that are associated with the viztrail. Make sure

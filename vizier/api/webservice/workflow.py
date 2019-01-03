@@ -72,7 +72,7 @@ class VizierWorkflowApi(object):
         # Retrieve the project and branch from the repository to ensure that
         # they exist. Run this part first to ensure that all requested resources
         # exist before validating the command.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -81,7 +81,8 @@ class VizierWorkflowApi(object):
         # Create module command (will ensure that it is a valid command) and
         # append it to the workflow at the branch head. The result is the handle
         # for the appended module.
-        module = project.append_workflow_module(
+        module = self.engine.append_workflow_module(
+            project_id=project_id,
             branch_id=branch_id,
             command=ModuleCommand(
                 package_id=package_id,
@@ -116,7 +117,7 @@ class VizierWorkflowApi(object):
         """
         # Retrieve the project and branch from the repository to ensure that
         # they exist.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -126,7 +127,10 @@ class VizierWorkflowApi(object):
         return serialwf.WORKFLOW_HANDLE(
             project=project,
             branch=branch,
-            workflow=project.cancel_exec(branch_id),
+            workflow=self.engine.cancel_exec(
+                project_id=project_id,
+                branch_id=branch_id
+            ),
             urls=self.urls
         )
 
@@ -152,14 +156,15 @@ class VizierWorkflowApi(object):
         """
         # Retrieve the project and branch from the repository to ensure that
         # they exist.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
         if branch is None:
             return None
         # Delete the module
-        modules = project.delete_workflow_module(
+        modules = self.engine.delete_workflow_module(
+            project_id=project_id,
             branch_id=branch_id,
             module_id=module_id
         )
@@ -194,7 +199,7 @@ class VizierWorkflowApi(object):
         """
         # Retrieve the project and branch from the repository to ensure that
         # they exist.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -241,7 +246,7 @@ class VizierWorkflowApi(object):
         dict
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         # Get the specified branch to ensure that it exists
@@ -289,7 +294,7 @@ class VizierWorkflowApi(object):
         # Retrieve the project and branch from the repository to ensure that
         # they exist. Run this part first to ensure that all requested resources
         # exist before validating the command.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -298,7 +303,8 @@ class VizierWorkflowApi(object):
         # Create module command (will ensure that it is a valid command) and
         # insert it into the workflow at the branch head. The result is the list
         # of affected modules.
-        modules = project.insert_workflow_module(
+        modules = self.engine.insert_workflow_module(
+            project_id=project_id,
             branch_id=branch_id,
             before_module_id=before_module_id,
             command=ModuleCommand(
@@ -346,7 +352,7 @@ class VizierWorkflowApi(object):
         # Retrieve the project and branch from the repository to ensure that
         # they exist. Run this part first to ensure that all requested resources
         # exist before validating the command.
-        project = self.engine.get_project(project_id)
+        project = self.engine.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -355,7 +361,8 @@ class VizierWorkflowApi(object):
         # Create module command (will ensure that it is a valid command) and
         # replace it in the workflow at the branch head. The result is the list
         # of affected modules.
-        modules = project.replace_workflow_module(
+        modules = self.engine.replace_workflow_module(
+            project_id=project_id,
             branch_id=branch_id,
             module_id=module_id,
             command=ModuleCommand(

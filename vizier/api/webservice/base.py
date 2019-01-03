@@ -49,34 +49,67 @@ class VizierApi(object):
     that are necessary for the Web Service, i.e., file store, data store,
     viztrail repository, and workflow execution engine.
     """
-    def __init__(self, config):
+    def __init__(self, config, init=False):
         """Initialize the API components.
 
         Parameters
         ----------
         config: vizier.config.app.AppConfig
             Application configuration object
+        init: bool, optional
+            Defer initialization if False
         """
-        self.engine = config.engine
-        self.urls = UrlFactory(base_url=config.app_base_url, api_doc_url=config.webservice.doc_url)
-        # Set the API components
-        self.branches = VizierBranchApi(engine=self.engine, urls=self.urls)
-        self.datasets = VizierDatastoreApi(
-            engine=self.engine,
-            urls=self.urls,
-            defaults=config.webservice.defaults
+        self.config = config
+        # Set the API components to None for now. It is assumed that the .init()
+        # method is called before any of the components are accessed for the
+        # first time
+        self.engine = None
+        self.branches = None
+        self.datasets = None
+        self.files = None
+        self.projects = None
+        self.tasks = None
+        self.workflows = None
+        self.urls = None
+        self.service_descriptor = None
+        if init:
+            self.init()
+
+    def init(self):
+        """Initialize the API before the first request."""
+        # Initialize the API compinents
+        self.urls = UrlFactory(
+            base_url=self.config.app_base_url,
+            api_doc_url=self.config.webservice.doc_url
         )
-        self.files = VizierFilestoreApi(engine=self.engine, urls=self.urls)
-        self.projects = VizierProjectApi(engine=self.engine, urls=self.urls)
+        self.engine = self.config.get_engine()
+        self.branches = VizierBranchApi(
+            projects=self.engine.projects,
+            urls=self.urls
+        )
+        self.datasets = VizierDatastoreApi(
+            projects=self.engine.projects,
+            urls=self.urls,
+            defaults=self.config.webservice.defaults
+        )
+        self.files = VizierFilestoreApi(
+            projects=self.engine.projects,
+            urls=self.urls
+        )
+        self.projects = VizierProjectApi(
+            projects=self.engine.projects,
+            packages=self.engine.packages,
+            urls=self.urls
+        )
         self.tasks = VizierTaskApi(engine=self.engine)
         self.workflows = VizierWorkflowApi(engine=self.engine, urls=self.urls)
         # Initialize the service descriptor
         self.service_descriptor = {
-            'name': config.webservice.name,
+            'name': self.config.webservice.name,
             'version': VERSION_INFO,
             'startedAt': get_current_time().isoformat(),
             'defaults': {
-                'maxFileSize': config.webservice.defaults.max_file_size
+                'maxFileSize': self.config.webservice.defaults.max_file_size
             },
             'environment': {
                 'name': self.engine.name,
@@ -89,10 +122,6 @@ class VizierApi(object):
                 'project:list': self.urls.list_projects()
             })
         }
-
-    def init(self):
-        """Initialize the API before the first request."""
-        self.engine.init()
 
     # --------------------------------------------------------------------------
     # Service

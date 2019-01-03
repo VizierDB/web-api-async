@@ -29,17 +29,17 @@ class VizierBranchApi(object):
     """The Vizier branch API implements the methods that correspond to
     requests that access and manipulate project branches.
     """
-    def __init__(self, engine, urls):
+    def __init__(self, projects, urls):
         """Initialize the API components.
 
         Parameters
         ----------
-        engine: vizier.engine.base.VizierEngine
-            Instance of the API engine
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for project handles
         urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         """
-        self.engine = engine
+        self.projects = projects
         self.urls = urls
 
     def create_branch(
@@ -74,7 +74,7 @@ class VizierBranchApi(object):
         dict
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         if branch_id is None and workflow_id is None and module_id is None:
@@ -136,7 +136,7 @@ class VizierBranchApi(object):
         bool
         """
         # Retrieve the project from the repository to ensure that it exists
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return False
         # Delete viztrail branch. The result indicates if the branch existed
@@ -162,7 +162,7 @@ class VizierBranchApi(object):
         """
         # Retrieve the project and branch from the repository to ensure that
         # they exist.
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)
@@ -196,7 +196,7 @@ class VizierBranchApi(object):
         """
         # Retrieve the project and branch from the repository to ensure that
         # they exist.
-        project = self.engine.get_project(project_id)
+        project = self.projects.get_project(project_id)
         if project is None:
             return None
         branch = project.viztrail.get_branch(branch_id)

@@ -675,7 +675,7 @@ class VizierEngine(WorkflowController):
             if workflow is None or module_index == -1:
                 return None
             # Notify the backend that the task is finished
-            self.backend.task_finised(task_id)
+            self.backend.task_finished(task_id)
             module = workflow.modules[module_index]
             if module.is_active:
                 module.set_error(finished_at=finished_at, outputs=outputs)
@@ -766,7 +766,7 @@ class VizierEngine(WorkflowController):
             if workflow is None or module_index == -1:
                 return None
             # Notify the backend that the task is finished
-            self.backend.task_finised(task_id)
+            self.backend.task_finished(task_id)
             module = workflow.modules[module_index]
             if not module.is_running:
                 # The result is false if the state of the module did not change

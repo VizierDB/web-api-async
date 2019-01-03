@@ -41,19 +41,17 @@ class VizierTaskApi(object):
         """
         self.engine = engine
 
-    def update_task_state(self, project_id, task_id, state, body):
+    def update_task_state(self, task_id, state, body):
         """Update that state pf a given task. The contents of the request body
         depend on the value of the new task state.
 
         Raises a ValueError if the request body is invalid. The result is None
-        if the project or task are unknown. Otherwise, the result is a
-        dictionary with a single result value. The result is 0 if the task state
-        did not change. A positive value signals a successful task state change.
+        if the task is unknown. Otherwise, the result is a dictionary with a
+        single result value. The result is 0 if the task state did not change.
+        A positive value signals a successful task state change.
 
         Parameters
         ----------
-        project_id : string
-            Unique project identifier
         task_id: string
             Unique task identifier
         state: int
@@ -65,21 +63,17 @@ class VizierTaskApi(object):
         -------
         dict
         """
-        # Retrieve the project from the repository to ensure thatit exists.
-        project = self.engine.get_project(project_id)
-        if project is None:
-            return None
         # Depending on the requested state change call the respective method
         # after extracting additional parameters from the request body.
         result = None
         if state == states.MODULE_RUNNING:
             if labels.STARTED_AT in body:
-                result = project.set_running(
+                result = self.engine.set_running(
                     task_id=task_id,
                     started_at=to_datetime(body[labels.STARTED_AT])
                 )
             else:
-                result = project.set_running(task_id=task_id)
+                result = self.engine.set_running(task_id=task_id)
         elif state == states.MODULE_ERROR:
             finished_at = None
             if labels.FINISHED_AT in body:
@@ -87,7 +81,7 @@ class VizierTaskApi(object):
             outputs = None
             if labels.OUTPUTS in body:
                 outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
-            result = project.set_error(
+            result = self.engine.set_error(
                 task_id=task_id,
                 finished_at=finished_at,
                 outputs=outputs
@@ -105,7 +99,7 @@ class VizierTaskApi(object):
             provenance = None
             if labels.PROVENANCE in body:
                 provenance = deserialize.PROVENANCE(body[labels.PROVENANCE])
-            result = project.set_success(
+            result = self.engine.set_success(
                 task_id=task_id,
                 finished_at=finished_at,
                 datasets=datasets,

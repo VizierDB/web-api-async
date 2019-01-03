@@ -235,7 +235,7 @@ class VizierBackend(object):
         """
         raise NotImplementedError
 
-    def task_finised(self, task_id):
+    def task_finished(self, task_id):
         """Notify a backend that a task has finished. This is primarily of
         interest for backends that send tasks to remote workers that in turn
         notify the web service if a task is finished. This notification allows
