@@ -15,11 +15,12 @@
 # limitations under the License.
 
 """Application configuration object. Contains all application settings and the
-list of available packages.
+configuration parameters for the vizier engine.
 
-The app configuration has three main parts: API and Web service configuration,
-list of available packages, and the workflow execution environment. The
-structure of the configuration object is as follows:
+The app configuration has four main parts: API and Web service configuration,
+the vizier engine configuration, the path to the server log, and the
+debug flag for running the server in debugging mode. The structure of the
+configuration object is as follows:
 
 webservice:
     server_url: Url of the server (e.g., http://localhost)
@@ -34,7 +35,7 @@ webservice:
         max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
         max_file_size: Maximum size for file uploads (in byte)
 engine:
-    identifier: Unique configuration identifier
+    identifier: Unique engine configuration identifier
     properties: Configuration specific parameters
 debug: Flag indicating whether server is started in debug mode
 logs:
@@ -44,17 +45,9 @@ logs:
 import os
 
 from vizier.config.base import ConfigObject, read_object_from_file
-from vizier.core.io.base import PARA_LONG_IDENTIFIER
+from vizier.config.engine.factory import VizierEngineFactory
 from vizier.core.loader import ClassLoader
 from vizier.engine.base import VizierEngine
-from vizier.engine.packages.base import PackageIndex
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
-
-import vizier.datastore.fs.base as ds
-import vizier.engine.backend.multiprocess as mp
-import vizier.engine.packages.vizual.processor as vz
-import vizier.filestore.fs.base as fs
-import vizier.viztrail.driver.objectstore.repository as vt
 
 
 """Environment Variable containing path to config file."""
@@ -63,7 +56,9 @@ ENV_CONFIG = 'VIZIERSERVER_CONFIG'
 """Default directory for API data."""
 ENV_DIRECTORY = './.vizierdb'
 
-"""Default settings."""
+"""Default settings. The default settings do not include the configuration for
+the vizier engine.
+"""
 DEFAULT_SETTINGS = {
     'webservice': {
         'server_url': 'http://localhost',
@@ -77,50 +72,6 @@ DEFAULT_SETTINGS = {
             'max_row_limit': -1,
             'max_file_size': 16 * 1024 * 1024
         }
-    },
-    'engine' : {
-        'name': 'Default Vizier Engine',
-        'version': '0.1.0',
-        'backend': ClassLoader.to_dict(
-            module_name='vizier.engine.backend.multiprocess',
-            class_name='MultiProcessBackend',
-            properties={
-                mp.PROPERTY_PROCESSORS: {
-                    PACKAGE_VIZUAL: ClassLoader.to_dict(
-                        module_name='vizier.engine.packages.vizual.base',
-                        class_name='VizualTaskProcessor',
-                        properties={
-                            vz.PROPERTY_API: ClassLoader.to_dict(
-                                module_name='vizier.engine.packages.vizual.api.fs',
-                                class_name='DefaultVizualApi',
-                            )
-                        }
-                    )
-                }
-            }
-        ),
-        'datastores': ClassLoader.to_dict(
-            module_name='vizier.datastore.fs.factory',
-            class_name='FileSystemDatastoreFactory',
-            properties={
-                ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
-            }
-        ),
-        'filestores': ClassLoader.to_dict(
-            module_name='vizier.filestore.fs.factory',
-            class_name='FileSystemFilestoreFactory',
-            properties={
-                fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
-            }
-        ),
-        'viztrails': ClassLoader.to_dict(
-            module_name='vizier.viztrail.driver.objectstore.repository',
-            class_name='OSViztrailRepository',
-            properties={
-                vt.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'vt'),
-                PARA_LONG_IDENTIFIER: False
-            }
-        )
     },
     'logs': {
         'server': os.path.join(ENV_DIRECTORY, 'logs')
@@ -178,49 +129,15 @@ class AppConfig(object):
                     doc = read_object_from_file(config_file)
                     break
         if doc is None:
-            doc = DEFAULT_SETTINGS
-        # Registry of available packages. By default, only the VizUAL package is
-        # pre-loaded. Additional packages are loaded from files specified in the
-        # 'packages' element (optional). Note that the list may contain a
-        # reference to a VizUAL package which overrides the default package
-        # declaration.
-        self.packages = {PACKAGE_VIZUAL: PackageIndex(package=VIZUAL_COMMANDS)}
-        if 'packages' in doc:
-            for pckg_file in doc['packages']:
-                if not 'declarations' in pckg_file:
-                    raise ValueError('missing key \'declarations\' for package')
-                pckg = read_object_from_file(pckg_file['declarations'])
-                for key in pckg:
-                    self.packages[key] = PackageIndex(package=pckg[key])
+            raise ValueError('no configuration object found')
         # Create the vizier engine
         if 'engine' in doc:
-            obj = doc['engine']
+            for key in ['identifier', 'properties']:
+                if not key in doc['engine']:
+                    raise ValueError('missing key \'' + key + '\' for engine configuration')
+            setattr(self, 'engine', doc['engine'])
         else:
-            obj = DEFAULT_SETTINGS['engine']
-        engine = dict()
-        for key in ['name', 'version']:
-            if key in obj:
-                engine[key] = obj[key]
-            else:
-                engine[key] = DEFAULT_SETTINGS['engine'][key]
-        for key in ['datastores', 'filestores', 'viztrails', 'backend']:
-            if key in obj:
-                engine[key] = ClassLoader(obj[key])
-            else:
-                engine[key] = ClassLoader(DEFAULT_SETTINGS['engine'][key])
-        setattr(
-            self,
-            'engine',
-            VizierEngine(
-                name=engine['name'],
-                version=engine['version'],
-                datastores=engine['datastores'],
-                filestores=engine['filestores'],
-                viztrails=engine['viztrails'],
-                backend=engine['backend'],
-                packages=self.packages
-            )
-        )
+            raise ValueError('missing engine configuration')
         # Create objects for configuration of log files and web service.
         for key in ['logs', 'webservice']:
             if key in doc:
@@ -252,3 +169,15 @@ class AppConfig(object):
             base_url += ':' + str(self.webservice.server_port)
         base_url += self.webservice.app_path
         return base_url
+
+    def get_engine(self):
+        """Get the instance of the specified vizual engine.
+
+        Returns
+        -------
+        vizier.engine.base.VizierEngine
+        """
+        return VizierEngineFactory.get_engine(
+            identifier=self.engine['identifier'],
+            properties=self.engine['properties']
+        )

@@ -16,7 +16,7 @@ class TestLoadPackages(unittest.TestCase):
         """Test loading packages from invalid configurations."""
         elements = [
             {
-                PARA_PACKAGE_DECLARATION: './.files/pycell.pckg.json',
+                PARA_PACKAGE_DECLARATION: './.files/python.pckg.json',
                 PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
                     module_name='vizier.engine.packages.pycell.processor',
                     class_name='PyCellTaskProcessor'
@@ -37,7 +37,7 @@ class TestLoadPackages(unittest.TestCase):
         """Test loading packages from a configuration dictionary."""
         elements = [
             {
-                PARA_PACKAGE_DECLARATION: './.files/pycell.pckg.json',
+                PARA_PACKAGE_DECLARATION: './.files/python.pckg.json',
                 PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
                     module_name='vizier.engine.packages.pycell.processor',
                     class_name='PyCellTaskProcessor'

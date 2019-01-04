@@ -213,4 +213,6 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import yaml
+    print yaml.dump(CONFIG, indent=4)
     unittest.main()

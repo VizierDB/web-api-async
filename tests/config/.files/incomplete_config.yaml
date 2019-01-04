@@ -5,8 +5,6 @@ webservice:
     doc_url: 'http://vizier-db.info/doc/api/v1'
     defaults:
         max_file_size: 1024
-engine:
-    identifier: 'ABC'
 debug: True
 logs:
     server: 'logs'

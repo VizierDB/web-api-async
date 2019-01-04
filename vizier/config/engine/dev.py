@@ -19,6 +19,7 @@ datastore and filestore factory and the objectstore viztrail repository.
 
 The structure of the configuration parameters is as follows:
 
+backend: Name of the backend: MULTIPROCESS or CELERY
 datastores: Path to datastores base directory
 filestores: Path to filestores base directory
 packages: List of packages
@@ -28,6 +29,9 @@ synchronous: List of commands that are executed synchronously
     - packageId: Unique package identifier
       commandId: Unique command identifier
 viztrails: Path to viztrails repository base directory
+
+The name of the backend is optional. By default, the multi-process backend is
+used.
 
 The list synchronous commands is optional. If specified that same processors
 will be used to execute synchronous and assunchronous commands.
@@ -47,6 +51,7 @@ from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
 DEV_ENGINE = 'DEV'
 
 """Configuration parameters."""
+PARA_BACKEND = 'backend'
 PARA_DATASTORES = 'datastores'
 PARA_FILESTORES = 'filestores'
 PARA_PACKAGES = 'packages'
@@ -61,6 +66,10 @@ MANDATORY_PARAMETERS = [
     PARA_PACKAGES,
     PARA_VIZTRAILS
 ]
+
+"""Supported backends."""
+BACKEND_MULTIPROCESS = 'MULTIPROCESS'
+DEFAULT_BACKEND = BACKEND_MULTIPROCESS
 
 
 class DevEngineFactory(object):
@@ -117,14 +126,23 @@ class DevEngineFactory(object):
                 commands=commands,
                 projects=projects
             )
+        # Create the backend
+        if PARA_BACKEND in properties:
+            backend_name = properties[PARA_BACKEND]
+        else:
+            backend_name = DEFAULT_BACKEND
+        if backend_name == BACKEND_MULTIPROCESS:
+            backend = MultiProcessBackend(
+                processors=processors,
+                projects=projects,
+                synchronous=synchronous
+            )
+        else:
+            raise ValueError('unknown backend \'' + str(backend_name) + '\'')
         return VizierEngine(
             name='Development Engine',
             version='0.0.1',
             projects=projects,
-            backend=MultiProcessBackend(
-                processors=processors,
-                projects=projects,
-                synchronous=synchronous
-            ),
+            backend=backend,
             packages=packages
         )

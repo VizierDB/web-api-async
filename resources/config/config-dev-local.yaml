@@ -1,0 +1,35 @@
+webservice:
+    server_url: 'http://localhost'
+    server_port: 5000
+    server_local_port: 5000
+    app_path: '/vizier-db/api/v1'
+    doc_url: 'http://cds-swg1.cims.nyu.edu/doc/vizier-db'
+    name: 'Development Server API'
+    defaults:
+        max_file_size: 16777216
+engine:
+    identifier: 'DEV'
+    properties:
+        filestores: './.vizierdb/fs'
+        datastores: './.vizierdb/ds'
+        viztrails: './.vizierdb/ds'
+        packages:
+            - declaration: './resources/packages/python.pckg.json'
+              engine:
+                  className: 'PyCellTaskProcessor'
+                  moduleName: 'vizier.engine.packages.pycell.processor'
+            - declaration: './resources/packages/plot.pckg.json'
+              engine:
+                  className: 'PlotProcessor'
+                  moduleName: 'vizier.engine.packages.plot.processor'
+            - declaration: './resources/packages/vizual.pckg.json'
+              engine:
+                  className: 'VizualTaskProcessor'
+                  moduleName: 'vizier.engine.packages.vizual.processor'
+                  properties:
+                        api:
+                            className: 'DefaultVizualApi'
+                            moduleName: 'vizier.engine.packages.vizual.api.fs'
+debug: True
+logs:
+    server: './.vizierdb/logs'

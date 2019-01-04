@@ -1,7 +1,7 @@
 Vizier API Configuration
 ========================
 
-The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution environment for data curation workflows, (iii) the list of available packages and their respective configuration parameters, and (iv) additional server specific information (e.g., the log file folder).
+The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution engine for data curation workflows, and (iii) additional server specific information (e.g., the log file folder).
 
 
 Configuration Parameters
@@ -22,28 +22,13 @@ webservice:
         row_limit: Default row limit for requests that read datasets
         max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
         max_file_size: Maximum size for file uploads (in byte)
-packages: # List of package declarations
-    - declarations: File containing declaration of package commands
-      parameters: Package specific configuration parameters
 engine:
-    moduleName: Name of the module containing the used engine
-    className: Class name of the used engine
-    properties: Dictionary of engine specific configuration properties
+    identifier: Unique engine configuration identifier
+    properties: Configuration specific parameters
 debug: Flag indicating whether server is started in debug mode
 logs:
     server: Log file for Web Server
 ```
-
-Note that a package declaration file can contain multiple packages. The *parameters* that are associated with a *declarations* element in the *packages* list will be passed to the constructor of the package engine for each of the packages in the file.
-
-
-Packages of Workflow Commands
------------------------------
-
-The commands that are available to be executed by workflow modules are defined in separate packages. Each package is represented by a dictionary that contains the definition of the commands (i.e., modules) that the package supports. Refer to [Workflow Modules](https://github.com/VizierDB/web-api/blob/master/doc/workflow-modules.md) for details on the structure of module definitions.
-
-By default, the API only supports the VizUAL and the system packages. All other packages have to be loaded explicitly when the application configuration object is created (see below). Packages are loaded from files that contain serializations of dictionaries with command definitions (either in Yaml or Json format). For an example have a look at the [Mimir Package Definition](https://github.com/VizierDB/web-api/blob/master/config/mimir.pckg.json).
-
 
 Vizier Engine
 -------------
@@ -66,6 +51,18 @@ The configuration parameter for the default viztrails repository are:
 - *directory*: Path to base directory on file system where viztrails resources are being stored
 - *keepDeletedFiles*: Boolean flag that indicates whether files are being physicaly deleted (False) or kept (True) when a viztrail or branch is deleted. Default is False.
 - *useLongIdentifier*: Use long unique identifier if True or short eight character identifier if False. Default is False
+
+
+
+Packages of Workflow Commands
+-----------------------------
+
+The commands that are available to be executed by workflow modules are defined in separate packages. Each package is represented by a dictionary that contains the definition of the commands (i.e., modules) that the package supports. Refer to [Workflow Modules](https://github.com/VizierDB/web-api/blob/master/doc/workflow-modules.md) for details on the structure of module definitions.
+
+By default, the API only supports the VizUAL and the system packages. All other packages have to be loaded explicitly when the application configuration object is created (see below). Packages are loaded from files that contain serializations of dictionaries with command definitions (either in Yaml or Json format). For an example have a look at the [Mimir Package Definition](https://github.com/VizierDB/web-api/blob/master/config/mimir.pckg.json).
+
+Note that a package declaration file can contain multiple packages. The *parameters* that are associated with a *declarations* element in the *packages* list will be passed to the constructor of the package engine for each of the packages in the file.
+
 
 
 Initialization
