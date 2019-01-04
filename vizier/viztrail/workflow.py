@@ -115,6 +115,17 @@ class WorkflowHandle(object):
         self.modules = modules
         self.descriptor = descriptor
 
+    @property
+    def created_at(self):
+        """Shortcut to get the timestamp of creation from the associated
+        descriptor.
+
+        Returns
+        -------
+        datetime.datetime
+        """
+        return self.descriptor.created_at
+
     def get_state(self):
         """The workflow state is either SUCCESS or the state of the first module
         that is not in SUCCESS state.

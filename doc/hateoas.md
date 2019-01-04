@@ -52,6 +52,7 @@ self
 workflow:append
 workflow:branch
 workflow:append
+workflow:cancel
 
 
 

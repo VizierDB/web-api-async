@@ -156,6 +156,10 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 project_id=project_id,
                 branch_id=branch_id
             ),
+            'workflow:cancel': urls.cancel_workflow(
+                project_id=project_id,
+                branch_id=branch_id
+            ),
             'workflow:project': urls.get_project(project_id)
         })
     }

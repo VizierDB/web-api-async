@@ -30,6 +30,8 @@ engine:
                         api:
                             className: 'DefaultVizualApi'
                             moduleName: 'vizier.engine.packages.vizual.api.fs'
+        options:
+            useShortIdentifier: True
 debug: True
 logs:
     server: './.vizierdb/logs'

@@ -128,9 +128,6 @@ class ViztrailsCommands(Command):
             # show workflow <workflow-id>
             elif tokens[0] == 'show' and tokens[1] == 'notebook':
                 return self.show_notebook(workflow_id=tokens[2])
-            # show workflow <workflow-id>
-            elif tokens[0] == 'run' and tokens[1] == 'python':
-                return self.run_python(code=tokens[2])
         return False
 
     def help(self):
@@ -247,7 +244,8 @@ class ViztrailsCommands(Command):
                 timestamps += ', Finished @ ' + ts(module.timestamp.finished_at)
             print indent + timestamps
             print indent + '--'
-            print indent + module.external_form
+            for line in module.external_form.split('\n'):
+                print indent + line
             if len(module.outputs) > 0:
                 print indent + '--'
                 for line in module.outputs:

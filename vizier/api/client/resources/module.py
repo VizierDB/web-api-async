@@ -22,11 +22,15 @@ from vizier.core.timestamp import to_datetime
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 import vizier.viztrail.module.base as states
+import vizier.api.serialize.deserialize as deserialize
 
 
 class ModuleResource(object):
     """A workflow module in a remote vizier instance."""
-    def __init__(self, identifier, state, external_form, outputs, datasets, timestamp):
+    def __init__(
+        self, identifier, state, external_form, outputs, datasets, timestamp,
+        links
+    ):
         """Initialize the branch attributes."""
         self.identifier = identifier
         self.state = state
@@ -34,6 +38,7 @@ class ModuleResource(object):
         self.outputs = outputs
         self.datasets = datasets
         self.timestamp= timestamp
+        self.links = links
 
     @staticmethod
     def from_dict(obj):
@@ -51,10 +56,11 @@ class ModuleResource(object):
         """
         # Create a list of outputs.
         outputs = list()
-        for out in obj['outputs']['stdout']:
-            outputs.append(out['value'])
-        for out in obj['outputs']['stderr']:
-            outputs.append(out['value'])
+        if 'outputs' in obj:
+            for out in obj['outputs']['stdout']:
+                outputs.append(out['value'])
+            for out in obj['outputs']['stderr']:
+                outputs.append(out['value'])
         # Create the timestamp
         ts = obj['timestamps']
         timestamp = ModuleTimestamp(created_at=to_datetime(ts['createdAt']))
@@ -64,15 +70,17 @@ class ModuleResource(object):
             timestamp.finished_at = to_datetime(ts['finishedAt'])
         # Create dictionary of available datasets
         datasets = dict()
-        for ds in obj['datasets']:
-            datasets[ds['name']] = ds
+        if 'datasets' in obj:
+            for ds in obj['datasets']:
+                datasets[ds['name']] = ds
         return ModuleResource(
             identifier=obj['id'],
             state=to_external_form(obj['state']),
             external_form=obj['text'],
             outputs=outputs,
             datasets=datasets,
-            timestamp=timestamp
+            timestamp=timestamp,
+            links=deserialize.HATEOAS(links=obj['links'])
         )
 
 

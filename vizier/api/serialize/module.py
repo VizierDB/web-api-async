@@ -77,6 +77,11 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
                 project_id=project_id,
                 branch_id=branch_id,
                 module_id=module_id
+            ),
+            'module:delete': urls.get_workflow_module(
+                project_id=project_id,
+                branch_id=branch_id,
+                module_id=module_id
             )
         }))
     if not timestamp.started_at is None:
@@ -99,7 +104,7 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
             obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()
     else:
         obj[labels.LINKS].extend(serialize.HATEOAS({
-            'cancel': urls.cancel_workflow(
+            'workflow:cancel': urls.cancel_workflow(
                 project_id=project_id,
                 branch_id=branch_id
             )

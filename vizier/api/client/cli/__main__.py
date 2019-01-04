@@ -16,13 +16,19 @@
 
 """Run the vizier command line interpreter."""
 
+import json
 import os
 import sys
 
 from vizier.api.routes.base import UrlFactory
 from vizier.api.client.cli.interpreter import CommandInterpreter
-from vizier.config.app import AppConfig
+from vizier.config.base import read_object_from_file
 from vizier.core.annotation.persistent import PersistentAnnotationSet
+
+
+"""Configuration files."""
+CONFIG_DIR = '.vizierdb'
+CONFIG_FILE = 'cli.json'
 
 
 def get_base_directory():
@@ -32,7 +38,7 @@ def get_base_directory():
     -------
     string
     """
-    return os.path.abspath('.vizierdb')
+    return os.path.abspath(CONFIG_DIR)
 
 
 def main(args):
@@ -40,13 +46,23 @@ def main(args):
     """
     # Initialize the url factory and read default values.
     app_dir = get_base_directory()
-    config = AppConfig(configuration_file=os.path.join(app_dir, 'config.yaml'))
-    defaults_file = os.path.join(app_dir, 'defaults.json')
-    defaults = PersistentAnnotationSet(object_path=defaults_file)
-    CommandInterpreter(
-        urls=UrlFactory(base_url=config.app_base_url),
-        defaults=defaults
-    ).eval(args)
+    config_file = os.path.join(app_dir, CONFIG_FILE)
+    if len(args) == 2 and args[0] == 'init':
+        url = args[1]
+        if not os.path.isdir(app_dir):
+            os.makedirs(app_dir)
+        with open(config_file, 'w') as f:
+            json.dump({'url': url}, f)
+    elif not os.path.isfile(config_file):
+        raise ValueError('missing config file')
+    else:
+        config = read_object_from_file(config_file)
+        defaults_file = os.path.join(app_dir, 'defaults.json')
+        defaults = PersistentAnnotationSet(object_path=defaults_file)
+        CommandInterpreter(
+            urls=UrlFactory(base_url=config['url']),
+            defaults=defaults
+        ).eval(args)
 
 if __name__ == '__main__':
     main(args=sys.argv[1:])

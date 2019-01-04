@@ -42,6 +42,17 @@ class ProjectHandle(object):
         self.datastore = datastore
         self.filestore = filestore
 
+    @property
+    def created_at(self):
+        """Shortcut to get the timestamp of creation from the associated
+        viztrail.
+
+        Returns
+        -------
+        datetime.datetime
+        """
+        return self.viztrail.created_at
+
     def get_default_branch(self):
         """Shortcut to access the handle for the default branch of the viztrail.
 
@@ -50,7 +61,7 @@ class ProjectHandle(object):
         vizier.viztrail.branch.BranchHandle
         """
         return self.viztrail.get_default_branch()
-        
+
     @property
     def identifier(self):
         """Unique project identifier. The project identifier is the same
@@ -61,6 +72,17 @@ class ProjectHandle(object):
         string
         """
         return self.viztrail.identifier
+
+    @property
+    def last_modified_at(self):
+        """Shortcut to get the last modified timestamp from the associated
+        viztrail.
+
+        Returns
+        -------
+        datetime.datetime
+        """
+        return self.viztrail.last_modified_at
 
     @property
     def name(self):

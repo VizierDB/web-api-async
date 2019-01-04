@@ -17,6 +17,9 @@
 import json
 import requests
 
+from vizier.api.client.resources.module import ModuleResource
+from vizier.api.client.resources.workflow import WorkflowResource
+
 
 class Notebook(object):
     def __init__(self, workflow):
@@ -46,3 +49,36 @@ class Notebook(object):
         r.raise_for_status()
         # The result is the new branch descriptor
         return json.loads(r.text)
+
+    def cancel_exec(self):
+        """Cancel exection of tasks for the notebook.
+
+        Returns
+        -------
+        vizier.api.client.resources.workflow.WorkflowResource
+        """
+        url = self.workflow.links['workflow:cancel']
+        r = requests.post(url)
+        r.raise_for_status()
+        # The result is the workflow handle
+        return WorkflowResource.from_dict(json.loads(r.text))
+
+    def delete_module(self, module_id):
+        """Delete the notebook module with the given identifier.
+
+        Returns
+        -------
+        list(vizier.api.client.resources.module.ModuleResource)
+        """
+        modules = list()
+        for m in self.workflow.modules:
+            if m.identifier == module_id:
+                url = m.links['module:delete']
+                r = requests.delete(url)
+                r.raise_for_status()
+                # The result is the workflow handle
+                for obj in json.loads(r.text)['modules']:
+                    modules.append(ModuleResource.from_dict(obj))
+                return modules
+            else:
+                modules.append(m)

@@ -50,7 +50,7 @@ The configuration parameter for the default viztrails repository are:
 
 - *directory*: Path to base directory on file system where viztrails resources are being stored
 - *keepDeletedFiles*: Boolean flag that indicates whether files are being physicaly deleted (False) or kept (True) when a viztrail or branch is deleted. Default is False.
-- *useLongIdentifier*: Use long unique identifier if True or short eight character identifier if False. Default is False
+- *useShortIdentifier*: Use short eight character identifier if True or long 32 character identifiers if False. Default is False
 
 
 
