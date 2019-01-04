@@ -62,7 +62,7 @@ class VizierDatastoreApi(object):
         """
         # Retrieve the dataset. The result is None if the dataset or the project
         # do not exist.
-        dataset = self.get_dataset_handle(project_id, dataset_id)
+        project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
         anno = dataset.get_annotations(column_id=column_id, row_id=row_id)
@@ -96,7 +96,7 @@ class VizierDatastoreApi(object):
         """
         # Retrieve the dataset. The result is None if the dataset or the project
         # do not exist.
-        dataset = self.get_dataset_handle(project_id, dataset_id)
+        project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
         # Determine offset and limits
@@ -107,17 +107,17 @@ class VizierDatastoreApi(object):
         if not limit is None:
             result_size = int(limit)
         else:
-            result_size = self.self.defaults.row_limit
-        if result_size < 0 and self.self.defaults.max_row_limit > 0:
-            result_size = self.self.defaults.max_row_limit
-        elif self.self.defaults.max_row_limit >= 0:
-            result_size = min(result_size, self.self.defaults.max_row_limit)
+            result_size = self.defaults.row_limit
+        if result_size < 0 and self.defaults.max_row_limit > 0:
+            result_size = self.defaults.max_row_limit
+        elif self.defaults.max_row_limit >= 0:
+            result_size = min(result_size, self.defaults.max_row_limit)
         # Serialize the dataset schema and cells
         return serialize.DATASET_HANDLE(
             project=project,
             dataset=dataset,
             rows=dataset.fetch_rows(offset=offset, limit=result_size),
-            config=self.defaults,
+            defaults=self.defaults,
             urls=self.urls,
             offset=offset,
             limit=limit
@@ -136,14 +136,15 @@ class VizierDatastoreApi(object):
 
         Returns
         -------
+        vizier.engine.project.base.ProjectHandle
         vizier.datastore.base.DatasetHandle
         """
         # Retrieve the project and dataset from the repository to ensure that
         # it exists.
         project = self.projects.get_project(project_id)
         if project is None:
-            return None
-        return project.datastore.get_dataset(dataset_id)
+            return None, None
+        return project, project.datastore.get_dataset(dataset_id)
 
     def update_annotation(
         self, project_id, dataset_id, column_id=-1, row_id=-1, anno_id=-1,

@@ -82,3 +82,21 @@ class Notebook(object):
                 return modules
             else:
                 modules.append(m)
+
+    def get_dataset(self, identifier):
+        """Get handle for dataset with given identifier.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        ???
+        """
+        url = self.workflow.datasets[identifier].links['self']
+        r = requests.get(url)
+        r.raise_for_status()
+        # The result is the workflow handle
+        return json.loads(r.text)

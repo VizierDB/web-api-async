@@ -618,7 +618,7 @@ def download_dataset(project_id, dataset_id):
     """
     # Get the handle for the dataset with given identifier. The result is None
     # if no dataset with given identifier exists.
-    dataset = api.datasets.get_dataset_handle(project_id, dataset_id)
+    _, dataset = api.datasets.get_dataset_handle(project_id, dataset_id)
     if dataset is None:
         raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
     # Read the dataset into a string buffer in memory

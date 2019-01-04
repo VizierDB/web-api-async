@@ -17,6 +17,7 @@
 """Resource object representing a workflow from a project branch that is
 available at a remote vizier instance."""
 
+from vizier.api.client.resources.dataset import DatasetDescriptor
 from vizier.api.client.resources.module import ModuleResource
 from vizier.core.timestamp import to_datetime
 
@@ -34,13 +35,17 @@ PACKAGES = {
 
 class WorkflowResource(object):
     """A workflow in a remote vizier instance."""
-    def __init__(self, identifier, action, command, created_at, modules=None, links=None):
+    def __init__(
+        self, identifier, action, command, created_at, modules=None,
+        datasets=None, links=None
+    ):
         """Initialize the branch attributes."""
         self.identifier = identifier
         self.action = action
         self.command = command
         self.created_at = created_at
         self.modules = modules
+        self.datasets = datasets
         self.links = links
 
     @property
@@ -83,6 +88,12 @@ class WorkflowResource(object):
         modules = None
         if 'modules' in obj:
             modules = [ModuleResource.from_dict(m) for m in obj['modules']]
+        datasets = None
+        if 'datasets' in obj:
+            datasets = {
+                ds['id']: DatasetDescriptor.from_dict(ds)
+                    for ds in obj['datasets']
+                }
         links = None
         if 'links' in obj:
             links = deserialize.HATEOAS(links=obj['links'])
@@ -92,6 +103,7 @@ class WorkflowResource(object):
             command=command,
             created_at=created_at,
             modules=modules,
+            datasets=datasets,
             links=links
         )
 

@@ -91,11 +91,9 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         datasets = list()
         for name in module.datasets:
             datasets.append(
-                serialds.DATASET_DESCRIPTOR(
-                    dataset=module.datasets[name],
-                    name=name,
-                    project=project,
-                    urls=urls
+                serialds.DATASET_IDENTIFIER(
+                    identifier=module.datasets[name].identifier,
+                    name=name
                 )
             )
         obj[labels.DATASETS] = datasets

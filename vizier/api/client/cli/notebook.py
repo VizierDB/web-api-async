@@ -79,6 +79,8 @@ class NotebookCommands(Command):
                 return self.delete_cell(module_id=tokens[2])
             elif tokens[0] == 'run' and tokens[1] == 'python':
                 return self.run_python(tokens[2])
+            elif tokens[0] == 'show' and tokens[1] == 'dataset':
+                return self.show_dataset(name=tokens[2])
         elif len(tokens) == 5:
             # load <name> from file <file>
             if tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'file':
@@ -96,6 +98,7 @@ class NotebookCommands(Command):
         print '  load <name> from file <file>'
         print '  load <name> from url <url>'
         print '  run python [<script> | <file>]'
+        print '  show dataset <name> {in <module-id>}'
 
     def load_dataset_from_file(self, name, file):
         """Create a new dataset from a given file."""
@@ -136,4 +139,27 @@ class NotebookCommands(Command):
             source = script
         notebook = self.api.get_notebook()
         modules = notebook.append_cell(pycell.python_cell(source))
+        return True
+
+    def show_dataset(self, name, module_id=None):
+        """Create a new dataset from a given file."""
+        # Ensure that the specified file exists
+        notebook = self.api.get_notebook()
+        module = None
+        if module_id is None and len(notebook.workflow.modules) > 0:
+            module = notebook.workflow.modules[-1]
+        else:
+            for m in notebook.workflow.modules:
+                if m.identifier == module_id:
+                    module = m
+                    break
+        if not module is None and name in module.datasets:
+            ds = notebook.get_dataset(module.datasets[name])
+            rows = [[col['name'] for col in ds['columns']]]
+            for row in ds['rows']:
+                values = [str(val) for val in row['values']]
+                rows.append(values)
+            self.output(rows)
+        else:
+            print 'unknown dataset \'' + name + '\''
         return True

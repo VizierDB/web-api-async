@@ -20,6 +20,7 @@ serialize workflow resources.
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
+import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.module as serialmd
 
 
@@ -129,6 +130,28 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     workflow_id = workflow.identifier
     descriptor = workflow.descriptor
     read_only = (branch.head.identifier != workflow_id)
+    # Create lists of module handles and dataset handles
+    modules = list()
+    datasets = dict()
+    for m in workflow.modules:
+        modules.append(
+            serialmd.MODULE_HANDLE(
+                project=project,
+                branch=branch,
+                module=m,
+                urls=urls,
+                include_self=(not read_only)
+            )
+        )
+        for name in m.datasets:
+            ds = m.datasets[name]
+            if not ds.identifier in datasets:
+                datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
+                    dataset=ds,
+                    name=name,
+                    project=project,
+                    urls=urls
+                )
     return {
         'id': workflow_id,
         'createdAt': descriptor.created_at.isoformat(),
@@ -136,16 +159,8 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         'packageId': descriptor.package_id,
         'commandId': descriptor.command_id,
         'state': workflow.get_state().state,
-        'modules': [
-            serialmd.MODULE_HANDLE(
-                project=project,
-                branch=branch,
-                module=m,
-                urls=urls,
-                include_self=(not read_only)
-            ) for m in workflow.modules
-        ],
-        'datasets': list(),
+        'modules': modules,
+        'datasets': datasets.values(),
         'readOnly': read_only,
         labels.LINKS: serialize.HATEOAS({
             'workflow:append': urls.workflow_append(

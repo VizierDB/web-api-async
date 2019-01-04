@@ -86,7 +86,11 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     obj = {
         labels.ID: dataset.identifier,
         labels.COLUMNS: [
-            {labels.ID: col.identifier, labels.NAME: col.name} for col in dataset.columns
+            {
+                labels.ID: col.identifier,
+                labels.NAME: col.name,
+                labels.DATATYPE: col.data_type,
+            } for col in dataset.columns
         ],
         labels.ROWCOUNT: dataset.row_count
     }
@@ -149,9 +153,11 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     serialized_rows = list()
     annotated_cells = list()
     for row in rows:
-        obj = row.to_dict()
-        obj[labels.ROWINDEX] = len(serialized_rows) + offset
-        serialized_rows.append(obj)
+        serialized_rows.append({
+            labels.ID: row.identifier,
+            labels.ROWINDEX: len(serialized_rows) + offset,
+            labels.ROWVALUES: row.values
+        })
         for i in range(len(dataset.columns)):
             if row.cell_annotations[i] == True:
                 annotated_cells.append({
@@ -161,7 +167,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     # Serialize the dataset schema and cells
     obj[labels.ROWS] = serialized_rows
     obj[labels.ROWCOUNT] = dataset.row_count
-    obj[labels.OFFSET] = serialized_rows
+    obj[labels.OFFSET] = offset
     obj[labels.ANNOTATED_CELLS] = annotated_cells
     # Add pagination references
     links = obj[labels.LINKS]
@@ -176,6 +182,8 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
         max_rows_per_request = -1
     # List of pagination Urls
     # FIRST: Always include Url's to access the first page
+    project_id = project.identifier
+    dataset_id = dataset.identifier
     links.extend(
         serialize.HATEOAS({
             labels.PAGE_FIRST: urls.dataset_pagination(
@@ -229,4 +237,25 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
                 })
             )
     # Return pagination Url list
-    return page_urls
+    return obj
+
+
+def DATASET_IDENTIFIER(identifier, name):
+    """Dictionary serialization for a dataset that is associated with a
+    workflow module.
+
+    Parameters
+    ----------
+    identifier: string
+        Unique dataset identifier
+    name : string
+        User-defined dataset name
+
+    Returns
+    -------
+    dict
+    """
+    return {
+        labels.ID: identifier,
+        labels.NAME: name
+    }

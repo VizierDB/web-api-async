@@ -72,7 +72,7 @@ class ModuleResource(object):
         datasets = dict()
         if 'datasets' in obj:
             for ds in obj['datasets']:
-                datasets[ds['name']] = ds
+                datasets[ds['name']] = ds['id']
         return ModuleResource(
             identifier=obj['id'],
             state=to_external_form(obj['state']),

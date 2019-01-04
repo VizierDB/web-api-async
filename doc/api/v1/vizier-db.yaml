@@ -981,10 +981,13 @@ definitions:
         required:
             - id
             - name
+            - type
         properties:
             id:
                 type: integer
             name:
+                type: string
+            type:
                 type: string
     DatasetDescriptor:
         type: object
@@ -1131,7 +1134,7 @@ definitions:
             datasets:
                 type: array
                 items:
-                    $ref: '#/definitions/DatasetDescriptor'
+                    $ref: '#/definitions/DatasetIdentifier'
             links:
                 type: array
                 items:

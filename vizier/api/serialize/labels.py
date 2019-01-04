@@ -39,11 +39,13 @@ REL = 'rel'
 ANNOTATED_CELLS = 'annotatedCells'
 COLUMN = 'column'
 COLUMNS = 'columns'
+DATATYPE = 'type'
 OFFSET = 'offset'
 ROWINDEX = 'index'
 ROW = 'row'
 ROWS = 'rows'
 ROWCOUNT = 'rowCount'
+ROWVALUES = 'values'
 
 # Timestamps
 TIMESTAMPS = 'timestamps'

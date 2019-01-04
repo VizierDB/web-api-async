@@ -24,8 +24,8 @@ DATASETS = {
     'DS2': DatasetDescriptor(
         identifier='ID2',
         columns=[
-            DatasetColumn(identifier=0, name='ABC'),
-            DatasetColumn(identifier=1, name='xyz')
+            DatasetColumn(identifier=0, name='ABC', data_type='int'),
+            DatasetColumn(identifier=1, name='xyz', data_type='real')
         ],
         row_count=100
     )
@@ -82,13 +82,18 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEquals(m.datasets['DS1'].identifier, 'ID1')
         self.assertEquals(len(m.datasets['DS1'].columns), 0)
         self.assertEquals(m.datasets['DS1'].row_count, 0)
-        self.assertEquals(m.datasets['DS2'].identifier, 'ID2')
-        self.assertEquals(len(m.datasets['DS2'].columns), 2)
-        self.assertEquals(m.datasets['DS2'].columns[0].identifier, 0)
-        self.assertEquals(m.datasets['DS2'].columns[0].name, 'ABC')
-        self.assertEquals(m.datasets['DS2'].columns[1].identifier, 1)
-        self.assertEquals(m.datasets['DS2'].columns[1].name, 'xyz')
-        self.assertEquals(m.datasets['DS2'].row_count, 100)
+        ds2 = m.datasets['DS2']
+        self.assertEquals(ds2.identifier, 'ID2')
+        self.assertEquals(len(ds2.columns), 2)
+        col0 = ds2.columns[0]
+        self.assertEquals(col0.identifier, 0)
+        self.assertEquals(col0.name, 'ABC')
+        self.assertEquals(col0.data_type, 'int')
+        col1 = ds2.columns[1]
+        self.assertEquals(col1.identifier, 1)
+        self.assertEquals(col1.name, 'xyz')
+        self.assertEquals(col1.data_type, 'real')
+        self.assertEquals(ds2.row_count, 100)
 
     def test_outputs(self):
         """Test reading and writing modules with output information."""
