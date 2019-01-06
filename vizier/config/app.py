@@ -45,16 +45,12 @@ logs:
 import os
 
 from vizier.config.base import ConfigObject, read_object_from_file
-from vizier.config.engine.factory import VizierEngineFactory
+from vizier.config.base import ENV_DIRECTORY
 from vizier.core.loader import ClassLoader
-from vizier.engine.base import VizierEngine
 
 
 """Environment Variable containing path to config file."""
 ENV_CONFIG = 'VIZIERSERVER_CONFIG'
-
-"""Default directory for API data."""
-ENV_DIRECTORY = './.vizierdb'
 
 """Default settings. The default settings do not include the configuration for
 the vizier engine.
@@ -169,15 +165,3 @@ class AppConfig(object):
             base_url += ':' + str(self.webservice.server_port)
         base_url += self.webservice.app_path
         return base_url
-
-    def get_engine(self):
-        """Get the instance of the specified vizual engine.
-
-        Returns
-        -------
-        vizier.engine.base.VizierEngine
-        """
-        return VizierEngineFactory.get_engine(
-            identifier=self.engine['identifier'],
-            properties=self.engine['properties']
-        )

@@ -33,6 +33,7 @@ from vizier.api.webservice.project import VizierProjectApi
 from vizier.api.webservice.task import VizierTaskApi
 from vizier.api.webservice.workflow import VizierWorkflowApi
 from vizier.api.routes.base import UrlFactory
+from vizier.config.engine.factory import VizierEngineFactory
 from vizier.core import VERSION_INFO
 from vizier.core.timestamp import get_current_time
 
@@ -82,7 +83,10 @@ class VizierApi(object):
             base_url=self.config.app_base_url,
             api_doc_url=self.config.webservice.doc_url
         )
-        self.engine = self.config.get_engine()
+        self.engine = VizierEngineFactory.get_engine(
+            identifier=self.config.engine['identifier'],
+            properties=self.config.engine['properties']
+        )
         self.branches = VizierBranchApi(
             projects=self.engine.projects,
             urls=self.urls

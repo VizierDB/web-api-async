@@ -16,8 +16,9 @@
 
 """Remote Celery worker to execute workflow commands."""
 
-from celery import Celery, Task
+from celery import Task
 
+from vizier.config.engine.celery import celery_app
 from vizier.config.worker import WorkerConfig
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import worker
@@ -27,12 +28,10 @@ from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 
 
 """Initialize global objects."""
-# The celery app
-celery = Celery('tasks', broker='pyamqp://guest@localhost//')
 # Read worker configuration information
-config = WorkerConfig()
+config = None
 
-@celery.task
+@celery_app.task
 def execute(task_id, project_id, command, context, resources):
     """
     Parameters:
@@ -88,3 +87,7 @@ def execute(task_id, project_id, command, context, resources):
             task_id=task_id,
             outputs=exec_result.outputs
         )
+
+
+if __name__ == '__main__':
+    config = WorkerConfig()

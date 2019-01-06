@@ -43,7 +43,7 @@ class TestConfig(unittest.TestCase):
         # Engine
         engine = config.get_engine()
         for pckg in [PACKAGE_PYTHON, PACKAGE_VIZUAL]:
-            self.assertTrue(PACKAGE_VIZUAL in engine.packages)
+            self.assertTrue(pckg in engine.packages)
         for pckg in [PACKAGE_MIMIR, PACKAGE_PLOT]:
             self.assertFalse(pckg in engine.packages)
 

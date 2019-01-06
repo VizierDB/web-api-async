@@ -10,6 +10,7 @@ webservice:
 engine:
     identifier: 'DEV'
     properties:
+        backend: 'CELERY'
         filestores: './.vizierdb/fs'
         datastores: './.vizierdb/ds'
         viztrails: './.vizierdb/ds'

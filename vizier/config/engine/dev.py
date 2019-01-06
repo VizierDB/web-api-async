@@ -27,6 +27,10 @@ packages: List of packages
       engine: Class loader for package processor
 options:
     useShortIdentifier: Use eight character identifier if True
+routing: Routing information for the Celery backend
+    - packageId
+      commandId
+      queue: Name of the queue
 synchronous: List of commands that are executed synchronously
     - packageId: Unique package identifier
       commandId: Unique command identifier
@@ -39,11 +43,13 @@ The list synchronous commands is optional. If specified that same processors
 will be used to execute synchronous and assunchronous commands.
 """
 from vizier.config.engine.base import load_packages
+from vizier.config.engine.celery import config_routes
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.base import VizierEngine
 from vizier.engine.backend.multiprocess import MultiProcessBackend
+from vizier.engine.backend.remote.celery.base import CeleryBackend
 from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
@@ -60,6 +66,7 @@ PARA_FILESTORES = 'filestores'
 PARA_OPTIONS = 'options'
 PARA_OPTIONS_USESHORTID = 'useShortIdentifier'
 PARA_PACKAGES = 'packages'
+PARA_ROUTING = 'routing'
 PARA_SYNCHRONOUS = 'synchronous'
 PARA_SYNCHRONOUS_COMMAND = 'commandId'
 PARA_SYNCHRONOUS_PACKAGE = 'packageId'
@@ -73,6 +80,7 @@ MANDATORY_PARAMETERS = [
 ]
 
 """Supported backends."""
+BACKEND_CELERY = 'CELERY'
 BACKEND_MULTIPROCESS = 'MULTIPROCESS'
 DEFAULT_BACKEND = BACKEND_MULTIPROCESS
 
@@ -150,6 +158,15 @@ class DevEngineFactory(object):
             backend = MultiProcessBackend(
                 processors=processors,
                 projects=projects,
+                synchronous=synchronous
+            )
+        elif backend_name == BACKEND_CELERY:
+            # Create and configure routing information (if given)
+            routes = None
+            if PARA_ROUTING in properties:
+                routes = config_routes(properties[PARA_ROUTING])
+            backend = CeleryBackend(
+                routes=routes,
                 synchronous=synchronous
             )
         else:

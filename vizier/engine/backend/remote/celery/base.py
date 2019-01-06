@@ -32,10 +32,21 @@ class CeleryBackend(VizierBackend):
     If tasks are executed remotely the lock is a dummy lock. Only for
     multi-process execution the lock shoulc be the default multi-process-lock.
     """
-    def __init__(self):
+    def __init__(self, routes=None, synchronous=None):
         """
+
+        Parameters
+        ----------
+        routes: dict, optional
+            Mapping of package commands to queue names
+        synchronous: vizier.engine.backend.base.TaskExecEngine, optional
+            Engine for synchronous task execution
         """
-        pass
+        # Initialize the synchronous command execution engine
+        super(CeleryBackend, self).__init__(synchronous=synchronous)
+        self.routes = routes
+        # Keep dictionary of celery tasks in order to be able to cancel a task
+        self.tasks = dict()
 
     def cancel_task(self, task_id):
         """Request to cancel execution of the given task.
@@ -45,7 +56,8 @@ class CeleryBackend(VizierBackend):
         task_id: string
             Unique task identifier
         """
-        raise NotImplementedError
+        if task_id in self.tasks:
+            del self.tasks[task_id]
 
     def execute_async(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
@@ -68,13 +80,34 @@ class CeleryBackend(VizierBackend):
             Optional information about resources that were generated during a
             previous execution of the command
         """
-        execute.delay(
-            task_id=task.task_id,
-            project_id=task.viztrail_id,
-            command=command,
-            context=context,
-            resources=resources
-        )
+        queue = None
+        if not self.routes is None and command.package_id in self.routes:
+            pckg_routes = self.routes[command.package_id]
+            if command.command_id in pckg_routes:
+                queue = pckg_routes[command.command_id]
+        if not queue is None:
+            async_task = execute.apply_async(
+                kwargs=dict(
+                    task_id=task.task_id,
+                    project_id=task.project_id,
+                    command=command,
+                    context=context,
+                    resources=resources
+                ),
+                queue=queue.name,
+                routing_key=queue.routing_key
+            )
+        else:
+            async_task = execute.apply_async(
+                kwargs=dict(
+                    task_id=task.task_id,
+                    project_id=task.project_id,
+                    command=command,
+                    context=context,
+                    resources=resources
+                )
+            )
+        self.tasks[task.task_id] = async_task
 
     def next_task_state(self):
         """Get the module state of the next task that will be submitted for
@@ -88,3 +121,16 @@ class CeleryBackend(VizierBackend):
         int
         """
         return MODULE_PENDING
+
+    def task_finished(self, task_id):
+        """The multi-process backend ignores all notifications for finished
+        tasks. All task related resources should have been released when the
+        task finished and the workflow controller was notified.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task id
+        """
+        if task_id in self.tasks:
+            del self.tasks[task_id]

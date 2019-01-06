@@ -17,14 +17,14 @@
 """Remote worker configuration object. Contains all settings to create instances
 of the local filestore and datastore as well as the list of available packages.
 
-packages: # List of package declarations
-    - declarations: File containing declaration of package commands
-      parameters: Package specific configuration parameters
-filestore:
+packages: # List of package processors
+    - declaration: Path to package declaration file
+      engine: Class loader for package processor
+filestores:
     moduleName: Name of the module containing the used engine
     className: Class name of the used engine
     properties: Dictionary of engine specific configuration properties
-datastore:
+datastores:
     moduleName: Name of the module containing the used engine
     className: Class name of the used engine
     properties: Dictionary of engine specific configuration properties
@@ -34,16 +34,10 @@ logs:
 
 import os
 
-from vizier.config.app import ENV_DIRECTORY
 from vizier.config.base import ConfigObject, read_object_from_file
+from vizier.config.base import ENV_DIRECTORY
+from vizier.config.engine.base import load_packages
 from vizier.core.loader import ClassLoader
-from vizier.engine.packages.base import PackageIndex
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_COMMANDS
-from vizier.engine.packages.vizual.processor import PROPERTY_API
-
-import vizier.datastore.fs.base as ds
-import vizier.filestore.fs.base as fs
-import vizier.viztrail.driver.objectstore.repository as vt
 
 
 """Environment Variable containing path to config file."""
@@ -51,20 +45,6 @@ ENV_CONFIG = 'VIZIERWORKER_CONFIG'
 
 """Default settings."""
 DEFAULT_SETTINGS = {
-    'datastores': ClassLoader.to_dict(
-        module_name='vizier.datastore.fs.factory',
-        class_name='FileSystemDatastoreFactory',
-        properties={
-            ds.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'ds')
-        }
-    ),
-    'filestores': ClassLoader.to_dict(
-        module_name='vizier.filestore.fs.factory',
-        class_name='FileSystemFilestoreFactory',
-        properties={
-            fs.PARA_DIRECTORY: os.path.join(ENV_DIRECTORY, 'fs')
-        }
-    ),
     'logs': {
         'worker': os.path.join(ENV_DIRECTORY, 'logs')
     }
@@ -121,49 +101,20 @@ class WorkerConfig(object):
                     doc = read_object_from_file(config_file)
                     break
         if doc is None:
-            doc = DEFAULT_SETTINGS
-        # Registry of available packages. By default, only the VizUAL package is
-        # pre-loaded. Additional packages are loaded from files specified in the
-        # 'packages' element (optional). Note that the list may contain a
-        # reference to a VizUAL package which overrides the default package
-        # declaration.
-        self.packages = {
-            PACKAGE_VIZUAL: PackageIndex(
-                package=VIZUAL_COMMANDS,
-                properties={
-                    PROPERTY_API: ClassLoader.to_dict(
-                        module_name='vizier.engine.packages.vizual.api.fs',
-                        class_name='DefaultVizualApi'
-                    )
-                }
-            )
-        }
+            raise ValueError('no configuration object found')
+        # Create registry of available packages.
         if 'packages' in doc:
-            for pckg_file in doc['packages']:
-                if not 'declarations' in pckg_file:
-                    raise ValueError('missing key \'declarations\' for package')
-                pckg = read_object_from_file(pckg_file['declarations'])
-                for key in pckg:
-                    if 'parameters' in pckg_file:
-                        package_parameters = pckg_file['parameters']
-                    else:
-                        package_parameters = None
-                    self.packages[key] = PackageIndex(
-                        package=pckg[key],
-                        properties=package_parameters
-                    )
-        # Create processors for the loaded packages
-        self.processors = dict()
-        for key in self.packages:
-            loader = ClassLoader(self.packages[key].engine)
-            self.processors[key] = loader.get_instance()
+            _, processors = load_packages(doc['packages'])
+            self.processors = processors
+        else:
+            raise ValueError('missing package information')
         # Create a class loader instance for the engine.
         for key in ['filestores', 'datastores']:
             if key in doc:
                 loader = ClassLoader(values=doc[key])
+                setattr(self, key, loader.get_instance())
             else:
-                loader = ClassLoader(values=DEFAULT_SETTINGS[key])
-            setattr(self, key, loader.get_instance())
+                raise ValueError('missing configuration information \'' + key + '\'')
         # Create object for configuration of log files.
         if 'logs' in doc:
             obj = ConfigObject(

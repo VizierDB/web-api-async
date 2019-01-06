@@ -1,8 +1,6 @@
 import unittest
 
 from vizier.config.worker import WorkerConfig
-from vizier.engine.packages.mimir.base import PACKAGE_MIMIR
-from vizier.engine.packages.plot.base import PACKAGE_PLOT
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 
@@ -15,6 +13,8 @@ class TestConfig(unittest.TestCase):
         """Test the default configuration settings.
         """
         config = WorkerConfig(configuration_file=CONFIG_FILE)
+        for pckg in [PACKAGE_PYTHON, PACKAGE_VIZUAL]:
+            self.assertTrue(pckg in config.processors)
 
 
 if __name__ == '__main__':

@@ -21,6 +21,10 @@ import os
 import yaml
 
 
+"""Default directory for API data."""
+ENV_DIRECTORY = './.vizierdb'
+
+
 class ConfigObject(object):
     """Create a Python class instance from a given dictionary of variables and
     a dictionary of default values. Performs a nested merge of dictionaries in
