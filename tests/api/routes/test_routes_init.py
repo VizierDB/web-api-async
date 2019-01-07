@@ -50,19 +50,15 @@ class TestUrlFactoryInit(unittest.TestCase):
 
     def test_tasks_url_factory(self):
         """Initialize the task url factory."""
-        fact = TaskUrlFactory(urls=UrlFactory(base_url='http://abc.com/////'))
-        self.assertEquals(fact.urls.base_url, 'http://abc.com')
-        self.assertEquals(fact.set_task_state(project_id='PID', task_id='TID'), 'http://abc.com/projects/PID/tasks/TID')
+        fact = TaskUrlFactory(base_url='http://abc.com/////')
+        self.assertEquals(fact.base_url, 'http://abc.com')
+        self.assertEquals(fact.set_task_state(task_id='TID'), 'http://abc.com/tasks/TID')
         # Initialize from class loader
         fact = TaskUrlFactory(
-            urls=UrlFactory(base_url='http://abc.com/////'),
-            properties=ClassLoader.to_dict(
-                module_name='vizier.api.routes.base',
-                class_name='UrlFactory',
-                properties={PROPERTIES_BASEURL: 'XYZ'}
-            )
+            base_url='http://abc.com/////',
+            properties={PROPERTIES_BASEURL: 'XYZ'}
         )
-        self.assertEquals(fact.urls.base_url, 'XYZ')
+        self.assertEquals(fact.base_url, 'XYZ')
         # Value error is no url factory is given
         with self.assertRaises(ValueError):
             TaskUrlFactory()

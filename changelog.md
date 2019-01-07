@@ -61,4 +61,10 @@
 
 ### 0.4.4 - 2018-06-18
 
-* Upload files from URL 
+* Upload files from URL
+
+
+### 0.5.0 - ???
+
+* Change definition and handling of packages
+* Allow concurrent execution of workflow modules

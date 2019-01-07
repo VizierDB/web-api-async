@@ -14,4 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-broker_url = 'pyamqp://guest@localhost//'
+#broker_url = 'pyamqp://guest@localhost//'
+broker_url = 'amqp://vizierapp:vizierapp@localhost/vizierapp'

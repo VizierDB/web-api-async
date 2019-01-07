@@ -1,5 +1,6 @@
 Flask>=1.0
 flask-cors
+celery
 jsonschema
 pyyaml
 py4j>=0.10.6

@@ -26,32 +26,28 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.api.serialize.labels as labels
 
 
-def DATASETS(obj):
-    """Convert a list of dictionaries into a dictionary of dataset descriptors
-    keyed by the dataset name.
+def DATASET(obj):
+    """Convert a dictionary into a dataset descriptor.
 
     Parameters
     ----------
     obj: list
-        Default serialization for a list of dataset descriptors
+        Default serialization for a dataset descriptors
 
     Returns
     -------
-    dict(vizier.datastore.dataset.DatasetDescriptor)
+    vizier.datastore.dataset.DatasetDescriptor
     """
-    result = dict()
-    for ds in obj:
-        name = ds[labels.NAME]
-        result[name] = DatasetDescriptor(
-            identifier=ds[labels.ID],
-            columns=[
-                DatasetColumn(
-                    identifier=col[labels.ID],
-                    name=col[labels.NAME]
-                ) for col in ds['columns']],
-            row_count=ds['rows']
-        )
-    return result
+    return DatasetDescriptor(
+        identifier=ds[labels.ID],
+        columns=[
+            DatasetColumn(
+                identifier=col[labels.ID],
+                name=col[labels.NAME],
+                data_type=col['type']
+            ) for col in ds['columns']],
+        row_count=ds['rows']
+    )
 
 
 def HATEOAS(links):
@@ -71,7 +67,7 @@ def HATEOAS(links):
     for ref in links:
         result[ref[labels.REL]] = ref[labels.HREF]
     return result
-    
+
 
 def OUTPUTS(obj):
     """Convert a set of module output streams from the default dictionary
@@ -170,7 +166,10 @@ def PROVENANCE(obj):
     if 'write' in obj:
         write = dict()
         for ds in obj['write']:
-            write[ds[labels.NAME]] = ds[labels.ID]
+            if 'dataset' in ds:
+                write[ds[labels.NAME]] = DATASET(ds['dataset'])
+            else:
+                write[ds[labels.NAME]] = None
     # names of datasets that were deleted
     delete=None
     if 'delete' in obj:

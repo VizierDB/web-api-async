@@ -706,9 +706,10 @@ class VizierEngine(WorkflowController):
         with self.backend.lock:
             # Get task handle and remove it from the internal index. The result
             # is None if the task does not exist.
-            task = pop_task(tasks=self.tasks, task_id=task_id)
-            if task is None:
+            # Check if a task with the given identifier exists
+            if not task_id in self.tasks:
                 return None
+            task = self.tasks[task_id]
             # Get the handle for the head workflow of the specified branch and
             # the index for the module matching the identifier in the task.
             workflow, module_index = self.get_task_module(task)
@@ -717,7 +718,6 @@ class VizierEngine(WorkflowController):
             module = workflow.modules[module_index]
             if module.is_pending:
                 module.set_running(
-                    external_form=external_form,
                     started_at=started_at
                 )
                 return True
@@ -751,7 +751,7 @@ class VizierEngine(WorkflowController):
 
         Returns
         -------
-        list(vizier.viztrail.module.base.ModuleHandle)
+        bool
         """
         with self.backend.lock:
             # Get task handle and remove it from the internal index. The result
@@ -808,6 +808,10 @@ class VizierEngine(WorkflowController):
                         next_module.set_running(
                             external_form=external_form,
                             started_at=get_current_time()
+                        )
+                    else:
+                        next_module.update_property(
+                            external_form=external_form
                         )
                     self.execute_module(
                         project_id=task.project_id,

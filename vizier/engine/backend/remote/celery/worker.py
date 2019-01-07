@@ -18,30 +18,65 @@
 
 from celery import Task
 
+from vizier.api.routes.task import TaskUrlFactory
 from vizier.config.engine.celery import celery_app
 from vizier.config.worker import WorkerConfig
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import worker
+from vizier.engine.backend.remote.controller import RemoteWorkflowController
 from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult
+from vizier.viztrail.command import ModuleCommand
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 
 
+class WorkerEnv(object):
+    """Wrapper for package processors, datastore and filestore factories, and
+    controller factory.
+    """
+    def __init__(self, processors, datastores, filestores, controller_url):
+        """
+        """
+        self.processors = processors
+        self.datastores = datastores
+        self.filestores = filestores
+        self.controller_url = controller_url
+
+    def get_controller(self, project_id):
+        """
+        """
+        return RemoteWorkflowController(
+            urls=TaskUrlFactory(base_url=self.controller_url)
+        )
+
+
 """Initialize global objects."""
-# Read worker configuration information
-config = None
+# The worker environment will only be initialized when the Celery worker is
+# started
+try:
+    config = WorkerConfig()
+    env = WorkerEnv(
+        processors=config.processors,
+        datastores=config.datastores.get_instance(),
+        filestores=config.filestores.get_instance(),
+        controller_url=config.controller.url
+    )
+except ValueError as ex:
+    pass
+
 
 @celery_app.task
-def execute(task_id, project_id, command, context, resources):
-    """
+def execute(task_id, project_id, command_doc, context, resources):
+    """Execute the givven command.
+
     Parameters:
     -----------
     task_id: string
         Unique task identifier
     project_id: string
         Unique project identifier
-    command : vizier.viztrail.command.ModuleCommand
-        Specification of the command that is to be executed
+    command_doc : dict
+        Dictionary serialization of the module command
     context: dict
         Dictionary of available resources in the database state. The key is
         the resource name. Values are resource identifiers.
@@ -50,19 +85,20 @@ def execute(task_id, project_id, command, context, resources):
         previous execution of the command
     """
     # Create a remote workflow controller for the given task
-    controller = config.get_controller(project_id)
+    controller = env.get_controller(project_id)
     # Notify the workflow controller that the task started to run
     controller.set_running(task_id=task_id, started_at=get_current_time())
     # Get the processor and execute the command. In case of an unknown package
     # the result is set to error.
-    if command.package_id in config.processors:
-        processor = config.processors[command.package_id]
-        exec_result = worker(
+    command = ModuleCommand.from_dict(command_doc)
+    if command.package_id in env.processors:
+        processor = env.processors[command.package_id]
+        _, exec_result = worker(
             task_id=task_id,
             command=command,
             context=TaskContext(
-                datastore=self.datastores.get_datastore(project_id),
-                filestore=self.filestores.get_filestore(project_id),
+                datastore=env.datastores.get_datastore(project_id),
+                filestore=env.filestores.get_filestore(project_id),
                 datasets=context,
                 resources=resources
             ),
@@ -78,7 +114,6 @@ def execute(task_id, project_id, command, context, resources):
     if exec_result.is_success:
         controller.set_success(
             task_id=task_id,
-            datasets=exec_result.datasets,
             outputs=exec_result.outputs,
             provenance=exec_result.provenance
         )
@@ -87,7 +122,3 @@ def execute(task_id, project_id, command, context, resources):
             task_id=task_id,
             outputs=exec_result.outputs
         )
-
-
-if __name__ == '__main__':
-    config = WorkerConfig()

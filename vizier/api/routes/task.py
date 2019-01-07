@@ -18,42 +18,43 @@
 workers to update the status of a task.
 """
 
-from vizier.core.loader import ClassLoader
+from vizier.api.routes.base import PROPERTIES_BASEURL
 
 
 class TaskUrlFactory:
     """Factory to create urls for route that is used update workflow status."""
-
-    def __init__(self, urls=None, properties=None):
-        """Intialize the internal components. The factory has a reference to a
-        url factory to be able to generate project urls. Initialization can be
-        done via a properties dictionary. A given properties dictionary
-        overrides a given url factory object. The dictionary is expected to
-        contain a class loader definition. If both parameters are None a
-        ValueError is raised.
+    def __init__(self, base_url=None, properties=None):
+        """Intialize the internal components. The factory maintains the base url
+        of the web service. A given properties dictionary overrides a given url.
+        The dictionary is expected to contain the base url property. If no
+        base url is given a ValueError is raised.
 
         Parameters
         ----------
-        urls: vizier.api.routes.base.UrlFactory, optional
-            Factory for project urls
+        base_url: string
+            Base url for web service
         properties: dict, optional
             Initialize the factory from a dictionary.
         """
-        # Raise value error if both arguments are None
-        if urls is None and properties is None:
-            raise ValueError('invalid arguments')
-        self.urls = urls
+        self.base_url = base_url
         if not properties is None:
-            # The properties are expected to contain a class loader definition
-            self.urls = ClassLoader(values=properties).get_instance()
+            if PROPERTIES_BASEURL in properties:
+                self.base_url = properties[PROPERTIES_BASEURL]
+        # Raise ValueError if the base url is not set
+        if self.base_url is None:
+            raise ValueError("missing base url argument")
+        # Ensure that base_url does not end with a slash
+        while len(self.base_url) > 0:
+            if self.base_url[-1] == '/':
+                self.base_url = self.base_url[:-1]
+            else:
+                break
 
-    def set_task_state(self, project_id, task_id):
+    def set_task_state(self, task_id):
         """Url to modify the state of a given task.
 
         Parameters
         ----------
-        project_id: string
-            Unique project identifier
         task_id: string
             Unique task identifier
 
@@ -61,4 +62,4 @@ class TaskUrlFactory:
         -------
         string
         """
-        return self.urls.get_project(project_id) + '/tasks/' + task_id
+        return self.base_url + '/tasks/' + task_id

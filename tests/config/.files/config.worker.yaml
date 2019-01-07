@@ -21,3 +21,5 @@ filestores:
     moduleName: 'vizier.filestore.fs.factory'
     properties:
         directory: './.vizierdb/fs'
+controller:
+    url: 'http://vizier-db.org/test'

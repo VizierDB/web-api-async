@@ -17,7 +17,7 @@
 """Remote worker configuration object. Contains all settings to create instances
 of the local filestore and datastore as well as the list of available packages.
 
-packages: # List of package processors
+packages: List of package processors
     - declaration: Path to package declaration file
       engine: Class loader for package processor
 filestores:
@@ -28,6 +28,8 @@ datastores:
     moduleName: Name of the module containing the used engine
     className: Class name of the used engine
     properties: Dictionary of engine specific configuration properties
+controller:
+    url : Base Url for the controlling web servie
 logs:
     server: Log file for Web Server
 """
@@ -45,6 +47,9 @@ ENV_CONFIG = 'VIZIERWORKER_CONFIG'
 
 """Default settings."""
 DEFAULT_SETTINGS = {
+    'controller': {
+        'url': 'http://localhost:5000/vizier-db/api/v1'
+    },
     'logs': {
         'worker': os.path.join(ENV_DIRECTORY, 'logs')
     }
@@ -112,9 +117,18 @@ class WorkerConfig(object):
         for key in ['filestores', 'datastores']:
             if key in doc:
                 loader = ClassLoader(values=doc[key])
-                setattr(self, key, loader.get_instance())
+                setattr(self, key, loader)
             else:
                 raise ValueError('missing configuration information \'' + key + '\'')
+        # Create object for controlling web service.
+        if 'controller' in doc:
+            obj = ConfigObject(
+                values=doc['controller'],
+                default_values=DEFAULT_SETTINGS['controller']
+            )
+        else:
+            obj = ConfigObject(values=DEFAULT_SETTINGS['controller'])
+        setattr(self, 'controller', obj)
         # Create object for configuration of log files.
         if 'logs' in doc:
             obj = ConfigObject(

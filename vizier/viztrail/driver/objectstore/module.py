@@ -439,6 +439,17 @@ class OSModuleHandle(ModuleHandle):
         # Materialize module state
         self.write_safe()
 
+    def update_property(self, external_form):
+        """Update the value for the external command representation
+
+        Parameters
+        ----------
+        external_form: string, optional
+            Adjusted external representation for the module command.
+        """
+        self.external_form = external_form
+        self.write_safe()
+
     def write_module(self):
         """Write current module state to object store."""
         obj = serialize_module(

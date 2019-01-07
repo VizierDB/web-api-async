@@ -384,6 +384,25 @@ class ModuleCommand(object):
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
 
+    @staticmethod
+    def from_dict(doc):
+        """Create module command instance from dictionary serialization.
+
+        Parameters
+        ----------
+        doc: dict
+            Dictionary serialization as created by .to_dict() method.
+
+        Returns
+        -------
+        vizier.viztrail.command.ModuleCommand
+        """
+        return ModuleCommand(
+            package_id=doc['package'],
+            command_id=doc['command'],
+            arguments=doc['arguments']
+        )
+
     def to_dict(self):
         """Get a dictionary representation of the command specification.
 

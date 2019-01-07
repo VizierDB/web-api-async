@@ -32,19 +32,15 @@ import vizier.viztrail.module.base as states
 
 class RemoteWorkflowController(WorkflowController):
     """Controller for tasks that are executed by a remote worker."""
-    def __init__(self, urls, project_id):
-        """Initialize the task url factory and the identifier for the project
-        that executes a remote task.
+    def __init__(self, urls):
+        """Initialize the task url factory.
 
         Parameters
         ----------
         urls: vizier.api.routes.task.TaskUrlFactory
             Factory for url to update task state
-        project_id: string
-            Identifier of the project that execute a remote task
         """
         self.urls = urls
-        self.project_id = project_id
 
     def get_url(self, task_id):
         """Get url to notify the web service about state changes for the given
@@ -59,7 +55,7 @@ class RemoteWorkflowController(WorkflowController):
         -------
         string
         """
-        self.urls.set_task_state(project_id=self.project_id, task_id=task_id)
+        return self.urls.set_task_state(task_id=task_id)
 
     def set_error(self, task_id, finished_at=None, outputs=None):
         """Set status of a given task to error.
@@ -99,7 +95,6 @@ class RemoteWorkflowController(WorkflowController):
         result = json.loads(r.text)[labels.RESULT]
         return (result > 0)
 
-    @abstractmethod
     def set_running(self, task_id, started_at=None):
         """Set status of a given task to running.
 
@@ -134,7 +129,6 @@ class RemoteWorkflowController(WorkflowController):
         result = json.loads(r.text)[labels.RESULT]
         return (result > 0)
 
-    @abstractmethod
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
         """Set status of the module that is associated with the given task
         identifier to success.
@@ -169,15 +163,6 @@ class RemoteWorkflowController(WorkflowController):
             data[labels.FINISHED_AT] = finished_at.isoformat()
         if not outputs is None:
             data[labels.OUTPUTS] = serialize.OUTPUTS(outputs)
-        if not datasets is None:
-            data['datasets'] = list()
-            for name in datasets:
-                data['datasets'].append(
-                    serialds.DATASET_DESCRIPTOR(
-                        dataset=datasets[name],
-                        name=name
-                    )
-                )
         if not provenance is None:
             data[labels.PROVENANCE] = serialmd.PROVENANCE(provenance)
         # Send request

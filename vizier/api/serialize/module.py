@@ -160,7 +160,19 @@ def PROVENANCE(prov):
     if not prov.write is None:
         obj['write'] = list()
         for name in prov.write:
-            obj['write'].append({labels.ID: prov.write[name], labels.NAME: name})
+            doc = {labels.NAME: name}
+            ds = prov.write[name]
+            if not ds is None:
+                doc['dataset'] = {
+                    labels.ID: ds.identifier,
+                    'columns': [{
+                        labels.ID: col.identifier,
+                        labels.NAME: col.name,
+                        'type': col.data_type
+                    } for col in ds.columns],
+                    'rows': ds.row_count
+                }
+            obj['write'].append(doc)
     if not prov.delete is None:
         obj['delete'] = prov.delete
     if not prov.resources is None:

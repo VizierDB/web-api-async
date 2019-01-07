@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from vizier.config.engine.celery import celery_app
 from vizier.engine.backend.base import VizierBackend
 from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.engine.backend.remote.celery.worker import execute
@@ -57,7 +58,9 @@ class CeleryBackend(VizierBackend):
             Unique task identifier
         """
         if task_id in self.tasks:
+            async_task = self.tasks[task_id]
             del self.tasks[task_id]
+            celery_app.control.revoke(task_id=async_task.id, terminate=True)
 
     def execute_async(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
@@ -90,7 +93,7 @@ class CeleryBackend(VizierBackend):
                 kwargs=dict(
                     task_id=task.task_id,
                     project_id=task.project_id,
-                    command=command,
+                    command_doc=command.to_dict(),
                     context=context,
                     resources=resources
                 ),
@@ -102,7 +105,7 @@ class CeleryBackend(VizierBackend):
                 kwargs=dict(
                     task_id=task.task_id,
                     project_id=task.project_id,
-                    command=command,
+                    command_doc=command.to_dict(),
                     context=context,
                     resources=resources
                 )

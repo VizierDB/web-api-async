@@ -47,8 +47,11 @@ def main(args):
     # Initialize the url factory and read default values.
     app_dir = get_base_directory()
     config_file = os.path.join(app_dir, CONFIG_FILE)
-    if len(args) == 2 and args[0] == 'init':
-        url = args[1]
+    if len(args) in [1,2] and args[0] == 'init':
+        if len(args) == 2:
+            url = args[1]
+        else:
+            url = 'http://localhost:5000/vizier-db/api/v1'
         if not os.path.isdir(app_dir):
             os.makedirs(app_dir)
         with open(config_file, 'w') as f:

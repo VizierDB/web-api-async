@@ -13,6 +13,7 @@ class TestConfig(unittest.TestCase):
         """Test the default configuration settings.
         """
         config = WorkerConfig(configuration_file=CONFIG_FILE)
+        self.assertEquals(config.controller.url, 'http://vizier-db.org/test')
         for pckg in [PACKAGE_PYTHON, PACKAGE_VIZUAL]:
             self.assertTrue(pckg in config.processors)
 

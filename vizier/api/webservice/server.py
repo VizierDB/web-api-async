@@ -489,8 +489,8 @@ def replace_workflow_module(project_id, branch_id, module_id):
 # Tasks
 # ------------------------------------------------------------------------------
 
-@app.route('/projects/<string:project_id>/tasks/<string:task_id>', methods=['PUT'])
-def update_task_state(project_id, task_id):
+@app.route('/tasks/<string:task_id>', methods=['PUT'])
+def update_task_state(task_id):
     """Update the state of a running task."""
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
@@ -501,7 +501,6 @@ def update_task_state(project_id, task_id):
             labels.STARTED_AT,
             labels.FINISHED_AT,
             labels.OUTPUTS,
-            labels.DATASETS,
             labels.PROVENANCE
         ]
     )
@@ -510,9 +509,8 @@ def update_task_state(project_id, task_id):
     # raise a ValueError if the request body is invalid. The result is None if
     # the project or task are unknown.
     try:
-        # Result is None if project, branch or module are not found.
+        # Result is None if task is not found.
         result = api.tasks.update_task_state(
-            project_id=project_id,
             task_id=task_id,
             state=obj[labels.STATE],
             body=obj
@@ -521,7 +519,7 @@ def update_task_state(project_id, task_id):
             return jsonify(result)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or task \'' + task_id + '\'')
+    raise srv.ResourceNotFound('unknown task \'' + task_id + '\'')
 
 
 # ------------------------------------------------------------------------------

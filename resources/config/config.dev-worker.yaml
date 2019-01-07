@@ -1,9 +1,9 @@
 packages:
-            - declaration: './.files/python.pckg.json'
+            - declaration: './resources/packages/python.pckg.json'
               engine:
                   className: 'PyCellTaskProcessor'
                   moduleName: 'vizier.engine.packages.pycell.processor'
-            - declaration: './.files/vizual.pckg.json'
+            - declaration: './resources/packages/vizual.pckg.json'
               engine:
                   className: 'VizualTaskProcessor'
                   moduleName: 'vizier.engine.packages.vizual.processor'

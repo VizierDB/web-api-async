@@ -270,3 +270,14 @@ class ModuleHandle(ModuleState):
             previous execution of the module.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def update_property(self, external_form):
+        """Update the value for the external command representation
+
+        Parameters
+        ----------
+        external_form: string, optional
+            Adjusted external representation for the module command.
+        """
+        raise NotImplementedError

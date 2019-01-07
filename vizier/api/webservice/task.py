@@ -21,7 +21,6 @@ tasks in vizier projects.
 from vizier.core.timestamp import to_datetime
 from vizier.viztrail.base import PROPERTY_NAME
 
-import vizier.api.serialize.base as serialize
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.viztrail.module.base as states
@@ -93,16 +92,12 @@ class VizierTaskApi(object):
             outputs = None
             if labels.OUTPUTS in body:
                 outputs = deserialize.OUTPUTS(body[labels.OUTPUTS])
-            datasets = None
-            if labels.DATASETS in body:
-                datasets = deserialize.DATASETS(body[labels.DATASETS])
             provenance = None
             if labels.PROVENANCE in body:
                 provenance = deserialize.PROVENANCE(body[labels.PROVENANCE])
             result = self.engine.set_success(
                 task_id=task_id,
                 finished_at=finished_at,
-                datasets=datasets,
                 outputs=outputs,
                 provenance=provenance
             )
@@ -110,5 +105,5 @@ class VizierTaskApi(object):
             raise ValueError('invalid state change')
         # Create state change result
         if not result is None:
-            return {serialize.RESULT: len(result)}
+            return {labels.RESULT: result}
         return None
