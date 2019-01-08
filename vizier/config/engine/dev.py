@@ -46,12 +46,15 @@ from vizier.config.engine.base import load_packages
 from vizier.config.engine.celery import config_routes
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import get_short_identifier, get_unique_identifier
+from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.base import VizierEngine
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.backend.remote.celery.base import CeleryBackend
 from vizier.engine.backend.synchron import SynchronousTaskEngine
+from vizier.engine.container import VizierContainerEngine
 from vizier.engine.project.cache.common import CommonProjectCache
+from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
 
@@ -61,7 +64,9 @@ DEV_ENGINE = 'DEV'
 
 """Configuration parameters."""
 PARA_BACKEND = 'backend'
+PARA_DATASTORE = 'datastore'
 PARA_DATASTORES = 'datastores'
+PARA_FILESTORE = 'filestore'
 PARA_FILESTORES = 'filestores'
 PARA_OPTIONS = 'options'
 PARA_OPTIONS_USESHORTID = 'useShortIdentifier'
@@ -91,8 +96,8 @@ class DevEngineFactory(object):
     @staticmethod
     def get_engine(properties):
         """Create instance of development engine using the default datastore,
-        filestore and viztrails factories. The development engine uses a
-        multi-process backend.
+        filestore and viztrails factories.  The development engine may use a
+        multi-process backend or a celery backend.
 
         Parameters
         ----------
@@ -132,49 +137,99 @@ class DevEngineFactory(object):
                 )
             )
         )
-        # Create an optional task processor for synchronous tasks if given
-        synchronous = None
-        if PARA_SYNCHRONOUS in properties:
-            commands = dict()
-            for el in properties[PARA_SYNCHRONOUS]:
-                for key in [PARA_SYNCHRONOUS_COMMAND, PARA_SYNCHRONOUS_PACKAGE]:
-                    if not key in el:
-                        raise ValueError('missing element \'' + key + '\' for synchronous command')
-                package_id = el[PARA_SYNCHRONOUS_PACKAGE]
-                command_id = el[PARA_SYNCHRONOUS_COMMAND]
-                if not package_id in commands:
-                    commands[package_id] = dict()
-                commands[package_id][command_id] = processors[package_id]
-            synchronous = SynchronousTaskEngine(
-                commands=commands,
-                projects=projects
-            )
-        # Create the backend
-        if PARA_BACKEND in properties:
-            backend_name = properties[PARA_BACKEND]
-        else:
-            backend_name = DEFAULT_BACKEND
-        if backend_name == BACKEND_MULTIPROCESS:
-            backend = MultiProcessBackend(
-                processors=processors,
-                projects=projects,
-                synchronous=synchronous
-            )
-        elif backend_name == BACKEND_CELERY:
-            # Create and configure routing information (if given)
-            routes = None
-            if PARA_ROUTING in properties:
-                routes = config_routes(properties[PARA_ROUTING])
-            backend = CeleryBackend(
-                routes=routes,
-                synchronous=synchronous
-            )
-        else:
-            raise ValueError('unknown backend \'' + str(backend_name) + '\'')
         return VizierEngine(
             name='Development Engine',
             version='0.0.1',
             projects=projects,
-            backend=backend,
+            backend=create_backend(
+                properties=properties,
+                projects=projects,
+                processors=processors
+            ),
             packages=packages
         )
+
+    @staticmethod
+    def get_container_engine(properties):
+        """Create instance of development container engine using the default
+        datastore and filestore. The development engine may use a multi-process
+        backend or a celery backend.
+
+        Parameters
+        ----------
+        properties: dict, optional
+            Configuration-specific parameters
+
+        Returns
+        -------
+        vizier.engine.container.VizierContainerEngine
+        """
+        # Ensure that configuration parameters are given
+        if properties is None:
+            raise ValueError('missing configuration parameters')
+        # Ensure that mandatory parameters are given
+        for key in [PARA_DATASTORE, PARA_FILESTORE, PARA_PACKAGES]:
+            if not key in properties:
+                raise ValueError('missing patameter \'' + key + '\'')
+        # Load package information
+        packages, processors = load_packages(properties[PARA_PACKAGES])
+        # The development engine uses a common project cache with file system
+        # based factories for datastores, filestores, and viztrails
+        return VizierContainerEngine(
+            datastore=FileSystemDatastore(base_path=properties[PARA_DATASTORE]),
+            filestore=FileSystemFilestore(base_path=properties[PARA_FILESTORE]),
+            backend=create_backend(
+                properties=properties,
+                processors=processors
+            )
+        )
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def create_backend(properties, processors, projects=None):
+    """
+    """
+    # Create an optional task processor for synchronous tasks if given
+    synchronous = None
+    if PARA_SYNCHRONOUS in properties and not projects is None:
+        commands = dict()
+        for el in properties[PARA_SYNCHRONOUS]:
+            for key in [PARA_SYNCHRONOUS_COMMAND, PARA_SYNCHRONOUS_PACKAGE]:
+                if not key in el:
+                    raise ValueError('missing element \'' + key + '\' for synchronous command')
+            package_id = el[PARA_SYNCHRONOUS_PACKAGE]
+            command_id = el[PARA_SYNCHRONOUS_COMMAND]
+            if not package_id in commands:
+                commands[package_id] = dict()
+            commands[package_id][command_id] = processors[package_id]
+        synchronous = SynchronousTaskEngine(
+            commands=commands,
+            projects=projects
+        )
+    # Create the backend
+    if PARA_BACKEND in properties:
+        backend_name = properties[PARA_BACKEND]
+    else:
+        backend_name = DEFAULT_BACKEND
+    if backend_name == BACKEND_MULTIPROCESS:
+        backend = MultiProcessBackend(
+            processors=processors,
+            projects=projects,
+            synchronous=synchronous
+        )
+    elif backend_name == BACKEND_CELERY:
+        # Create and configure routing information (if given)
+        routes = None
+        if PARA_ROUTING in properties:
+            routes = config_routes(properties[PARA_ROUTING])
+        backend = CeleryBackend(
+            routes=routes,
+            synchronous=synchronous
+        )
+    else:
+        raise ValueError('unknown backend \'' + str(backend_name) + '\'')
+
+    return backend

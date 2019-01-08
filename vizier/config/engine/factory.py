@@ -24,9 +24,31 @@ from vizier.config.engine.dev import DevEngineFactory, DEV_ENGINE
 
 
 class VizierEngineFactory(object):
-    """The get engine method returns a vizier engine for a given configuration.
-    Modify the method to add new configurations.
-    """
+    """Factory for vizier engines that are used by various applications."""
+    @staticmethod
+    def get_container_engine(identifier, properties=None):
+        """Create an instance of the vizier container engine that is used by a
+        single- project container. The engine is created from a given dictionary
+        containing configuration parameters. Each configuration is identified by
+        a unique key.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique configuration identifier
+        properties: dict, optional
+            Configuration-specific parameters
+
+        Returns
+        -------
+        vizier.engine.container.VizierContainerEngine
+        """
+        # For each new configuration add a clause the the if-statement
+        if identifier == DEV_ENGINE:
+            return DevEngineFactory.get_container_engine(properties)
+        else:
+            raise ValueError('unknown configuration identifer \'' + str(identifier) + '\'')
+
     @staticmethod
     def get_engine(identifier, properties=None):
         """Create an instance of the vizier engine for a given configuration.

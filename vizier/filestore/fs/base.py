@@ -133,7 +133,8 @@ class FileSystemFilestore(Filestore):
         -------
         vizier.filestore.base.FileHandle
         """
-        file_dir =self.get_file_dir(identifier)
+        file_dir = self.get_file_dir(identifier)
+        print 'Get file in base dir ' + self.base_path
         if os.path.isdir(file_dir):
             file_name, mimetype, encoding = read_metadata_file(file_dir)
             return FileHandle(
@@ -162,7 +163,7 @@ class FileSystemFilestore(Filestore):
         -------
         string
         """
-        file_dir = os.path.join(self.base_path, identifier)
+        file_dir = os.path.join(os.path.abspath(self.base_path), identifier)
         if create and not os.path.isdir(file_dir):
             os.makedirs(file_dir)
         return file_dir

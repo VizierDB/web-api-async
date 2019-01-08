@@ -1369,14 +1369,6 @@ definitions:
                 type: string
             href:
                 type: string
-    ResourceName:
-        type: object
-        description: Name of a resource
-        required:
-            - name
-        properties:
-            name:
-                type: string
     ServiceDescriptor:
         type: object
         description: Basic service properties

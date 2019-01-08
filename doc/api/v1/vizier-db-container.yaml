@@ -1,0 +1,604 @@
+swagger: "2.0"
+
+info:
+  version: 0.1.0
+  title: Vizier DB - Web API for Container Server
+  description: API to to manipulate projects and to access project resources for project servers
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+schemes:
+  - http
+#host: cds-swg1.cims.nyu.edu
+host: localhost:5005
+basePath: /vizier-db-container/api/v1
+
+paths:
+    #
+    # Overview
+    #
+    /:
+        get:
+            summary: Service description
+            description: Essential information about the web service and relevant links
+            operationId: serviceOverview
+            tags:
+                - service
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Service descriptor
+                    schema:
+                        $ref: '#/definitions/ServiceDescriptor'
+    #
+    # Tasks
+    #
+    /tasks/execute:
+        post:
+            summary: Execute task
+            description: Execute a task against a given project context
+            operationId: executeTask
+            tags:
+                - task
+            parameters:
+                - name: module
+                  in: body
+                  required: true
+                  description: Definition of module
+                  schema:
+                      $ref: '#/definitions/TaskStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Operation result
+                    schema:
+                        $ref: '#/definitions/TaskRequestResult'
+                400:
+                    description: Invalid task statement
+    /tasks/{taskId}/cancel:
+        post:
+            summary: Cancel workflow
+            description: Cancel execution of all running or pending modules in the branch head
+            operationId: cancelWorkflow
+            tags:
+                - task
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  description: The unique task identifier
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Operation result
+                    schema:
+                        $ref: '#/definitions/TaskRequestResult'
+                404:
+                    description: Unknown task
+    #
+    # Datasets
+    #
+    /datasets/{datasetId}:
+        get:
+            summary: Get dataset
+            description: Get columns and cell values for dataset
+            operationId: getDataset
+            tags:
+                - dataset
+            parameters:
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: offset
+                  in: query
+                  required: false
+                  description: Row offset for pagination
+                  type: integer
+                - name: limit
+                  in: query
+                  required: false
+                  description: Row limit for pagination
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetHandle'
+                404:
+                    description: Unknown dataset
+    /datasets/{datasetId}/annotations:
+        get:
+            summary: Get dataset annotations
+            description: Get all annotations that are associated with dataset components
+            operationId: getDatasetAnnotations
+            tags:
+                - dataset
+            parameters:
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: column
+                  in: query
+                  required: false
+                  description: Unique column identifier
+                  type: integer
+                - name: row
+                  in: query
+                  required: false
+                  description: Unique row identifier
+                  type: integer
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetAnnotations'
+                404:
+                    description: Unknown dataset
+        post:
+            summary: Update dataset annotations
+            description: Update an annotations that is associated with a dataset component
+            operationId: updateDatasetAnnotation
+            tags:
+                - dataset
+            parameters:
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: annotation
+                  in: body
+                  description: Update annotation statement
+                  required: true
+                  schema:
+                      $ref: '#/definitions/UpdateAnnotationStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetAnnotations'
+                400:
+                    description: Invalid request
+                404:
+                    description: Unknown dataset
+    /datasets/{datasetsIdentifier}/csv:
+        get:
+            summary: Get CSV file
+            description: Get dataset in CSF format
+            operationId: downloadDataset
+            tags:
+                - dataset
+            parameters:
+                - name: datasetsIdentifier
+                  in: path
+                  required: true
+                  description: The unique datasets identifier
+                  type: string
+            produces:
+                - text/csv
+            responses:
+                200:
+                    description: CSV file
+                404:
+                    description: Unknown datasets
+    #
+    # Views
+    #
+    /projects/{projectId}/branches/{branchId}/workflows/{workflowId}/modules/{moduleId}/views/{viewId}:
+        get:
+            summary: Get dataset view
+            description: Access content of a dataset view for a given workflow module version
+            operationId: getDatasetChartView
+            tags:
+                - chart
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: branchId
+                  in: path
+                  required: true
+                  description: Unique identifier of the project branch
+                  type: string
+                - name: workflowId
+                  in: path
+                  required: true
+                  description: Unique workflow identifier
+                  type: string
+                - name: moduleId
+                  in: path
+                  required: true
+                  description: Identifier of module
+                  type: string
+                - name: viewId
+                  in: path
+                  required: true
+                  description: Identifier of chart view
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset chart view content
+                    schema:
+                        $ref: '#/definitions/DatasetChartView'
+                404:
+                    description: Unknown project, branch, workflow, module, or view
+    #
+    # Files
+    #
+    /files:
+        post:
+            summary: Upload file
+            description: Upload file from local disk
+            operationId: uploadFile
+            tags:
+                - file
+            parameters:
+                - name: file
+                  in: formData
+                  required: true
+                  description: File data
+                  type: file
+            consumes:
+                - multipart/form-data
+            produces:
+                - application/json
+            responses:
+                201:
+                    description: Upload successful
+                    schema:
+                        $ref: "#/definitions/FileHandle"
+                400:
+                    description: Invalid file or request
+                413:
+                    description: Uploaded file size exceeds limit
+    /files/{fileId}:
+        get:
+            summary: Download file
+            description: Download file from file server
+            operationId: downloadFile
+            tags:
+                - file
+            parameters:
+                - name: fileId
+                  in: path
+                  required: true
+                  description: Unique file identifier
+                  type: string
+            produces:
+                - text/csv
+                - application/gzip
+            responses:
+                200:
+                    description: File
+                404:
+                    description: Unknown file
+definitions:
+    DatasetAnnotations:
+        type: object
+        description: Annotations for a dataset component
+        required:
+            - annotations
+            - links
+        properties:
+            column:
+                type: integer
+            row:
+                type: integer
+            annotations:
+                type: array
+                items:
+                    required:
+                        - id
+                        - key
+                        - value
+                    properties:
+                        id:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetChartView:
+        type: object
+        description: Dataset chart view content
+        required:
+            - name
+            - data
+            - links
+        properties:
+            name:
+                type: string
+            data:
+                type: object
+                required:
+                    - series
+                    - xAxis
+                properties:
+                    series:
+                        type: array
+                        items:
+                            type: object
+                            required:
+                                - label
+                                - data
+                            properties:
+                                label:
+                                    type: string
+                                data:
+                                    type: array
+                                    items:
+                                        type: integer
+                    xAxis:
+                        type: object
+                        required:
+                            - data
+                        properties:
+                            data:
+                                type: array
+                                items:
+                                    type: integer
+                    chart:
+                        type: object
+                        required:
+                            - type
+                            - grouped
+                        properties:
+                            type:
+                                type: string
+                            grouped:
+                                type: boolean
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetColumn:
+        type: object
+        description: Column in a dataset
+        required:
+            - id
+            - name
+            - type
+        properties:
+            id:
+                type: integer
+            name:
+                type: string
+            type:
+                type: string
+    DatasetDescriptor:
+        type: object
+        description: Descriptor containing dataset metadata
+        required:
+            - id
+            - name
+            - columns
+            - rowCount
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            columns:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetColumn"
+            rowCount:
+                type: integer
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetHandle:
+        type: object
+        description: Columns and cell values in a dataset
+        required:
+            - id
+            - columns
+            - rows
+            - offset
+            - rowCount
+            - annotatedCells
+            - links
+        properties:
+            id:
+                type: string
+            columns:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetColumn"
+            rows:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetRow"
+            offset:
+                type: integer
+            rowcount:
+                type: integer
+            annotatedCells:
+                type: array
+                items:
+                    type: object
+                    properties:
+                        column:
+                            type: integer
+                        row:
+                            type: integer
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetIdentifier:
+        type: object
+        description: Named dataset associated with workflow state
+        required:
+            - id
+            - name
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+    DatasetRow:
+        type: object
+        description: Row in a dataset
+        required:
+            - id
+            - index
+            - values
+        properties:
+            id:
+                type: integer
+            index:
+                type: integer
+            values:
+                type: array
+                items:
+                    type: string
+    FileHandle:
+        type: object
+        description: Metadata for uploaded file
+        required:
+            - id
+            - name
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            mimetype:
+                type: string
+            encoding:
+                type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    ModuleStatement:
+        type: object
+        description: Definition of a command to evaluate against a workflow state
+        required:
+            - packageId
+            - commandId
+            - arguments
+        properties:
+            packageId:
+                type: string
+            commandId:
+                type: string
+            arguments:
+                type: array
+    Reference:
+        type: object
+        description: "HATEOAS reference object"
+        required:
+            - rel
+            - href
+        properties:
+            rel:
+                type: string
+            href:
+                type: string
+    ServiceDescriptor:
+        type: object
+        description: Basic service properties
+        required:
+            - name
+            - startedAt
+            - version
+            - defaults
+            - environment
+            - links
+        properties:
+            name:
+                type: string
+            startedAt:
+                type: string
+            version:
+                type: string
+            defaults:
+                type: object
+                required:
+                    - maxFileSize
+                properties:
+                    maxFileSize:
+                        type: integer
+            environment:
+                type: object
+                required:
+                    - identifier
+                    - version
+                properties:
+                    identifier:
+                        type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    TaskStatement:
+        type: object
+        description: Execute request for a workflow module
+        required:
+            - id
+            - command
+            - context
+            - resources
+        properties:
+            id:
+                type: string
+            command:
+                $ref: "#/definitions/ModuleStatement"
+            context:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetIdentifier'
+            resources:
+                type: object
+    TaskRequestResult:
+        type: object
+        desciption: Result of a task execute or cancel request
+        required:
+            - result
+        properties:
+            result:
+                type: boolean
+    UpdateAnnotationStatement:
+        type: object
+        description: Update statement for resource annotation
+        required:
+            - key
+        properties:
+            annoId:
+                type: integer
+            columnId:
+                type: integer
+            rowId:
+                type: integer
+            key:
+                type: string
+            value:
+                type: string

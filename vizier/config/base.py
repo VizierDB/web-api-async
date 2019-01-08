@@ -94,6 +94,119 @@ class ConfigObject(object):
                 self.keys.add(key)
 
 
+class ServerConfig(object):
+    """Configuration for an API web server.
+
+    Configuration is read from a configuration file (in Yaml or Json format).
+    The file is expected to follow the given format:
+
+    webservice:
+        server_url: Url of the server (e.g., http://localhost)
+        server_port: Public server port (e.g., 5000)
+        server_local_port: Locally bound server port (e.g., 5000)
+        app_path: Application path for Web API (e.g., /vizier-db/api/v1)
+        app_base_url: Concatenation of server_url, server_port and app_path
+        doc_url: Url to API documentation
+        name: Web Service name
+        defaults:
+            row_limit: Default row limit for requests that read datasets
+            max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
+            max_file_size: Maximum size for file uploads (in byte)
+    engine:
+        identifier: Unique engine configuration identifier
+        properties: Configuration specific parameters
+    debug: Flag indicating whether server is started in debug mode
+    logs:
+        server: Log file for Web Server
+
+    The configuration file can either be given, specified using the an
+    envirnment variable, or be located (as file config.json or config.yaml) in
+    the current working directory.
+    """
+    def __init__(self, env, default_settings, configuration_file=None):
+        """Read configuration parameters from a configuration file. The file is
+        expected to be in Json or Yaml format, having the same structure as
+        shown above.
+
+        If no file is specified attempts will be made to read the following
+        configuration files:
+
+        (1) The file referenced by the environment variable VIZIERSERVER_CONFIG
+        (2) The file config.json or config.yaml in the current working directory
+
+        If the specified files are not found a ValueError is raised.
+
+        Parameters
+        ----------
+        env: string
+            Name of the environment variable that contains the reference to the
+            configuration file.
+        default_settings: dict
+            Default settings
+        configuration_file: string, optional
+            Optional path to configuration file
+        """
+        # Read configuration from configuration file. Raises ValueError if no
+        # configuration file is found.
+        self.doc = None
+        if configuration_file != None:
+            if os.path.isfile(configuration_file):
+                self.doc = read_object_from_file(configuration_file)
+            else:
+                raise ValueError('unknown file \'' + str(configuration_file) + '\'')
+        else:
+            files = [
+                os.getenv(env),
+                './config.json',
+                './config.yaml'
+            ]
+            for config_file in files:
+                if not config_file is None and os.path.isfile(config_file):
+                    self.doc = read_object_from_file(config_file)
+                    break
+        if self.doc is None:
+            raise ValueError('no configuration object found')
+        # Create the vizier engine
+        if 'engine' in self.doc:
+            for key in ['identifier', 'properties']:
+                if not key in self.doc['engine']:
+                    raise ValueError('missing key \'' + key + '\' for engine configuration')
+            self.engine = self.doc['engine']
+        else:
+            raise ValueError('missing engine configuration')
+        # Create objects for configuration of log files and web service.
+        for key in ['logs', 'webservice']:
+            if key in self.doc:
+                obj = ConfigObject(
+                    values=self.doc[key],
+                    default_values=default_settings[key]
+                )
+            else:
+                obj = ConfigObject(values=default_settings[key])
+            setattr(self, key, obj)
+        # Set debug flag if given
+        if 'debug' in self.doc:
+            self.debug = self.doc['debug']
+        else:
+            self.debug = default_settings['debug']
+
+    @property
+    def app_base_url(self):
+        """Full Url (prefix) for all resources that are available on the Web
+        Service. this is a concatenation of the service Url, port number and
+        application path.
+
+        Returns
+        -------
+        string
+        """
+        base_url = self.webservice.server_url
+        if self.webservice.server_port != 80:
+            base_url += ':' + str(self.webservice.server_port)
+        base_url += self.webservice.app_path
+        return base_url
+
+
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------

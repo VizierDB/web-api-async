@@ -1,0 +1,23 @@
+packages:
+            - declaration: './resources/packages/python.pckg.json'
+              engine:
+                  className: 'PyCellTaskProcessor'
+                  moduleName: 'vizier.engine.packages.pycell.processor'
+            - declaration: './resources/packages/vizual.pckg.json'
+              engine:
+                  className: 'VizualTaskProcessor'
+                  moduleName: 'vizier.engine.packages.vizual.processor'
+                  properties:
+                        api:
+                            className: 'DefaultVizualApi'
+                            moduleName: 'vizier.engine.packages.vizual.api.fs'
+datastores:
+    className: 'FileSystemDatastoreFactory'
+    moduleName: 'vizier.datastore.fs.factory'
+    properties:
+        directory: './.vizierdb/ds'
+filestores:
+    className: 'FileSystemFilestoreFactory'
+    moduleName: 'vizier.filestore.fs.factory'
+    properties:
+        directory: './.vizierdb/fs'

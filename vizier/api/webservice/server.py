@@ -45,9 +45,9 @@ import vizier.api.serialize.labels as labels
 """Read configuration parameter from a config file. The configuration file is
 expected to be in JSON or YAML format. Attempts first to read the file specified
 in the environment variable VIZIERSERVER_CONFIG first. If the variable is not
-set (or if the specified file does not exist) an attempt is made to read file
-config.yaml in the current working directory. If neither exists the the default
-configuration is used.
+set (or if the specified file does not exist) an attempt is made to read the
+file config.json or config.yaml in the current working directory. If neither
+exists an exception is thrown.
 """
 config = AppConfig()
 

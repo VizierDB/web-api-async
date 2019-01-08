@@ -1,4 +1,4 @@
-# Copyright (C) 2018 New York University
+# Copyright (C) 2019 New York University,
 #                    University at Buffalo,
 #                    Illinois Institute of Technology.
 #
@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Application configuration object. Contains all application settings and the
-configuration parameters for the vizier engine.
+"""Container server configuration object. Contains all application settings and
+the configuration parameters for the vizier engine.
 
-The app configuration has four main parts: API and Web service configuration,
-the vizier engine configuration, the path to the server log, and the
-debug flag for running the server in debugging mode. The structure of the
-configuration object is as follows:
+The container app configuration is similar to the app config. It has four main
+parts: API and Web service configuration, the vizier engine configuration, the
+path to the server log, and the debug flag for running the server in debugging
+mode. The structure of the configuration object is as follows:
 
 webservice:
     server_url: Url of the server (e.g., http://localhost)
@@ -40,6 +40,9 @@ engine:
 debug: Flag indicating whether server is started in debug mode
 logs:
     server: Log file for Web Server
+
+The main difference to the app config is the format of the engine dictionary
+properties.
 """
 
 import os
@@ -49,7 +52,7 @@ from vizier.config.base import ENV_DIRECTORY
 
 
 """Environment Variable containing path to config file."""
-ENV_CONFIG = 'VIZIERSERVER_CONFIG'
+ENV_CONFIG = 'VIZIERCONTAINERSERVER_CONFIG'
 
 """Default settings. The default settings do not include the configuration for
 the vizier engine.
@@ -60,8 +63,8 @@ DEFAULT_SETTINGS = {
         'server_port': 5000,
         'server_local_port': 5000,
         'app_path': '/vizier-db/api/v1',
-        'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/',
-        'name': 'Vizier Web API',
+        'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db-container/',
+        'name': 'Vizier Container Web API',
         'defaults': {
             'row_limit': 25,
             'max_row_limit': -1,
@@ -75,9 +78,7 @@ DEFAULT_SETTINGS = {
 }
 
 
-
-
-class AppConfig(ServerConfig):
+class ContainerAppConfig(ServerConfig):
     """Application configuration object. This object contains all configuration
     settings for the Vizier instance.
 
@@ -95,7 +96,8 @@ class AppConfig(ServerConfig):
         If no file is specified attempts will be made to read the following
         configuration files:
 
-        (1) The file referenced by the environment variable VIZIERSERVER_CONFIG
+        (1) The file referenced in the environment variable
+            VIZIERCONTAINERSERVER_CONFIG
         (2) The file config.json or config.yaml in the current working directory
 
         If the specified files are not found a ValueError is raised.
@@ -105,8 +107,13 @@ class AppConfig(ServerConfig):
         configuration_file: string, optional
             Optional path to configuration file
         """
-        super(AppConfig, self).__init__(
+        super(ContainerAppConfig, self).__init__(
             env=ENV_CONFIG,
             default_settings=DEFAULT_SETTINGS,
             configuration_file=configuration_file
         )
+        # Expects an additional configuration element containing the project
+        # identifier
+        if not 'project_id' in self.doc:
+            raise ValueError('missing project identifier')
+        self.project_id = self.doc['project_id']

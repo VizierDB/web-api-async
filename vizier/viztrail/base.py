@@ -23,6 +23,7 @@ optional name. Each branch is a sequence of workflow versions.
 
 from abc import abstractmethod
 
+from vizier.core.annotation.base import ObjectAnnotationSet
 from vizier.core.timestamp import get_current_time
 
 
@@ -112,7 +113,7 @@ class ViztrailHandle(NamedObject):
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
-        self, identifier, properties, branches, default_branch, created_at=None
+        self, identifier, properties=None, branches=None, default_branch=None, created_at=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -120,21 +121,24 @@ class ViztrailHandle(NamedObject):
         ----------
         identifier : string
             Unique viztrail identifier
-        properties: vizier.core.annotation.base.ObjectAnnotationSet
+        properties: vizier.core.annotation.base.ObjectAnnotationSet, optional
             Handler for user-defined properties
-        branches: list(vizier.viztrail.branch.BranchHandle)
+        branches: list(vizier.viztrail.branch.BranchHandle), optional
             List of branches in the viztrail
-        default_branch: vizier.viztrail.branch.BranchHandle
+        default_branch: vizier.viztrail.branch.BranchHandle, optional
             Default branch for the viztrail
         created_at : datetime.datetime, optional
             Timestamp of project creation (UTC)
         """
-        super(ViztrailHandle, self).__init__(properties=properties)
+        super(ViztrailHandle, self).__init__(
+            properties=properties if not properties is None else ObjectAnnotationSet()
+        )
         self.identifier = identifier
         self.branches = dict()
         # Initialize the branch index from the given list (if present)
-        for b in branches:
-            self.branches[b.identifier] = b
+        if not branches is None:
+            for b in branches:
+                self.branches[b.identifier] = b
         self.default_branch = default_branch
         # If created_at timestamp is None the viztrail is expected to be a newly
         # created viztrail.
