@@ -104,7 +104,7 @@ class ViztrailsCommands(Command):
             elif tokens[0] == 'show' and tokens[1] in ['history', 'notebooks']:
                 return self.list_workflows()
             # show workflow
-            elif tokens[0] == 'show' and tokens[1] == 'notebook':
+            elif tokens[0] == 'show' and tokens[1] in ['nb', 'notebook']:
                 return self.show_notebook()
         elif len(tokens) == 3:
             # create branch <name>
@@ -126,7 +126,7 @@ class ViztrailsCommands(Command):
             elif tokens[0] == 'rename' and tokens[1] == 'project':
                 return self.rename_project(tokens[2])
             # show workflow <workflow-id>
-            elif tokens[0] == 'show' and tokens[1] == 'notebook':
+            elif tokens[0] == 'show' and tokens[1] in ['nb', 'notebook']:
                 return self.show_notebook(workflow_id=tokens[2])
         return False
 

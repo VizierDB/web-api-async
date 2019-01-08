@@ -16,15 +16,32 @@
 
 """Objects representing descriptors and handles for datasets."""
 
+from vizier.datastore.base import get_column_index
+from vizier.datastore.dataset import DatasetColumn
+
 import vizier.api.serialize.deserialize as deserialize
+import vizier.api.serialize.labels as labels
 
 
 class DatasetDescriptor(object):
     """A dataset descriptor is simply an identifier and a dictionary of HATEOAS
     references.
     """
-    def __init__(self, identifier, links):
+    def __init__(self, identifier, columns, links):
+        """Initialize the dataset identifier, list of columns, and HATEOAS
+        references.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+        columns: list(vizier.datastore.dataset.DatasetColumn)
+            Dataset schema
+        links: dict
+            Dictionary of HATEOS references for the dataset
+        """
         self.identifier = identifier
+        self.columns = columns
         self.links = links
 
     @staticmethod
@@ -42,6 +59,28 @@ class DatasetDescriptor(object):
         vizier.api.client.resources.dataset.DatasetDescriptor
         """
         return DatasetDescriptor(
-            identifier=obj['id'],
+            identifier=obj[labels.ID],
+            columns=[
+                DatasetColumn(
+                    identifier=col[labels.ID],
+                    name=col[labels.NAME],
+                    data_type=col[labels.DATATYPE]
+                ) for col in obj['columns']
+            ],
             links=deserialize.HATEOAS(links=obj['links'])
         )
+
+    def get_column(self, column_id):
+        """Get a column based on the column name, column spreadsheet label, or
+        index position.
+
+        Parameters
+        ---------
+        column_id: string or int
+
+        Returns
+        -------
+        vizier.datastore.dataset.DatasetColumn
+        """
+        col_idx = get_column_index(columns=self.columns, column_id=column_id)
+        return self.columns[col_idx]

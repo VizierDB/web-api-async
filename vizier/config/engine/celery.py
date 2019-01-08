@@ -14,18 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Helper classes and methods to configure the celery backend."""
+"""Helper methods to configure the celery backend."""
 
-from __future__ import absolute_import, unicode_literals
-from celery import Celery
-
-celery_app = Celery('vizier')
-celery_app.config_from_object('vizier.config.engine.celeryconfig')
-
-
-# ------------------------------------------------------------------------------
-# Helper Methods
-# ------------------------------------------------------------------------------
 
 def config_routes(elements):
     """Create routing information for individual vizier commands. The expected
@@ -61,7 +51,3 @@ def config_routes(elements):
             routes[package_id] = dict()
         routes[package_id][command_id] = queue
     return routes
-
-
-if __name__ == '__main__':
-    celery_app.start()

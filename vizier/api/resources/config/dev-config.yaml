@@ -1,0 +1,17 @@
+packages:
+    - declarations: './resources/packages/mimir.pckg.json'
+    - declarations: './resources/packages/plot.pckg.json'
+    - declarations: './resources/packages/python.pckg.json'
+webservice:
+    server_url: 'http://localhost'
+    server_port: 5000
+    server_local_port: 5000
+    app_path: '/vizier-db/api/v1'
+    doc_url: 'http://cds-swg1.cims.nyu.edu/doc/vizier-db'
+    name: 'Development Server API'
+    defaults:
+        max_file_size: 16777216
+debug: True
+logs:
+    server: './.vizierdb/logs'
+

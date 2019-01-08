@@ -68,4 +68,7 @@ def main(args):
         ).eval(args)
 
 if __name__ == '__main__':
-    main(args=sys.argv[1:])
+    try:
+        main(args=sys.argv[1:])
+    except Exception as ex:
+        print str(ex)

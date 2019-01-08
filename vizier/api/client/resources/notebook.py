@@ -22,8 +22,24 @@ from vizier.api.client.resources.workflow import WorkflowResource
 
 
 class Notebook(object):
-    def __init__(self, workflow):
+    """A notebook is a wrapper around a workflow instance for a particular
+    project.
+    """
+    def __init__(self, project_id, workflow, urls):
+        """Initialize the internal components.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        workflow: vizier.api.client.resources.workflow.WorkflowResource
+            Workflow that defines the notebook
+        urls: vizier.api.routes.base.UrlFactory
+            Factory for request urls
+        """
+        self.project_id = project_id
         self.workflow = workflow
+        self.urls = urls
 
     def append_cell(self, command):
         """Append a new module to the notebook that executes te given command.
@@ -47,7 +63,8 @@ class Notebook(object):
         # request was not successful
         r = requests.post(url, json=data)
         r.raise_for_status()
-        # The result is the new branch descriptor
+        # The result is undefined by now. We may need to update the maintained
+        # internal workflow state here.
         return json.loads(r.text)
 
     def cancel_exec(self):
@@ -83,8 +100,8 @@ class Notebook(object):
             else:
                 modules.append(m)
 
-    def get_dataset(self, identifier):
-        """Get handle for dataset with given identifier.
+    def fetch_dataset(self, identifier):
+        """Fetch rows for the dataset with the given identifier.
 
         Parameters
         ----------
@@ -100,3 +117,44 @@ class Notebook(object):
         r.raise_for_status()
         # The result is the workflow handle
         return json.loads(r.text)
+
+    def get_dataset(self, name):
+        """Get descriptor for dataset with given name from the database state of
+        the last module in the notebook workflow. If the dataset does not exist
+        a ValueError exception is raised.
+
+        Parameters
+        ----------
+        name: string
+            User-provided dataset name
+
+        Returns
+        -------
+        """
+        if len(self.workflow.modules) > 0:
+            module = self.workflow.modules[-1]
+            if name in module.datasets:
+                return self.workflow.datasets[module.datasets[name]]
+        raise ValueError('unknown datasets \'' + name + '\'')
+
+    def upload_file(self, filename):
+        """Upload a file from local disk to notebooks filestore. Returns the
+        identifier of the uploaded file.
+
+        Parameters
+        ----------
+        filename: string
+            Path to file on local disk
+
+        Returns
+        -------
+        string
+        """
+        # Get the request Url and create the request body
+        url = self.urls.upload_file(self.project_id)
+        files = {'file': open(filename,'rb')}
+        # Send request. The result is the handle for the uploaded file.
+        r = requests.post(url, files=files)
+        r.raise_for_status()
+        # The result is the file identifier
+        return json.loads(r.text)['id']

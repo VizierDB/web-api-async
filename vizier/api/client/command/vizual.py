@@ -383,8 +383,8 @@ def update_cell(dataset_name, column, row, value, validate=False):
     ----------
     dataset_name: string
         Name of the dataset
-    column: string or int
-        Cell Columne name or index
+    column: int
+        Cell column identifier
     row: int
         Cell row index
     value: string

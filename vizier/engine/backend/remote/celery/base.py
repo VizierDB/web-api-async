@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from vizier.config.engine.celery import celery_app
+from vizier.engine.backend.remote.celery.app import celeryapp
 from vizier.engine.backend.base import VizierBackend
 from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.engine.backend.remote.celery.worker import execute
@@ -46,6 +46,7 @@ class CeleryBackend(VizierBackend):
         # Initialize the synchronous command execution engine
         super(CeleryBackend, self).__init__(synchronous=synchronous)
         self.routes = routes
+        print routes
         # Keep dictionary of celery tasks in order to be able to cancel a task
         self.tasks = dict()
 
@@ -60,7 +61,7 @@ class CeleryBackend(VizierBackend):
         if task_id in self.tasks:
             async_task = self.tasks[task_id]
             del self.tasks[task_id]
-            celery_app.control.revoke(task_id=async_task.id, terminate=True)
+            celeryapp.control.revoke(task_id=async_task.id, terminate=True)
 
     def execute_async(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
@@ -97,8 +98,7 @@ class CeleryBackend(VizierBackend):
                     context=context,
                     resources=resources
                 ),
-                queue=queue.name,
-                routing_key=queue.routing_key
+                queue=queue
             )
         else:
             async_task = execute.apply_async(

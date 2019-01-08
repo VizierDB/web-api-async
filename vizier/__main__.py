@@ -17,7 +17,12 @@
 """Run the vizier command line interpreter."""
 
 import sys
+
 from vizier.api.client.cli.__main__ import main
 
+
 if __name__ == '__main__':
+    #try:
     main(args=sys.argv[1:])
+    #except Exception as ex:
+    #    print str(ex)

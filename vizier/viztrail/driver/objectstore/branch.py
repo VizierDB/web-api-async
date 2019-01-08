@@ -221,7 +221,7 @@ class OSBranchHandle(BranchHandle):
             modules=workflow_modules,
             descriptor=descriptor
         )
-        self.workflows.append(workflow)
+        self.workflows.append(workflow.descriptor)
         if not self.head is None:
             self.add_to_cache(self.head)
         self.head = workflow

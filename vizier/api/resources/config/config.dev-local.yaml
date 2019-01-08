@@ -13,7 +13,7 @@ engine:
         backend: 'CELERY'
         filestores: './.vizierdb/fs'
         datastores: './.vizierdb/ds'
-        viztrails: './.vizierdb/ds'
+        viztrails: './.vizierdb/vt'
         packages:
             - declaration: './resources/packages/python.pckg.json'
               engine:
@@ -31,6 +31,10 @@ engine:
                         api:
                             className: 'DefaultVizualApi'
                             moduleName: 'vizier.engine.packages.vizual.api.fs'
+        routing:
+            - packageId: 'python'
+              commandId: 'code'
+              queue: 'pycell'
         options:
             useShortIdentifier: True
 debug: True

@@ -229,10 +229,12 @@ class VizierApiClient(object):
         if branch_id is None:
             branch_id = self.get_default_branch()
         return Notebook(
+            project_id=project_id,
             workflow=self.get_workflow(
                 project_id=project_id,
                 branch_id=branch_id
-            )
+            ),
+            urls=self.urls
         )
 
     def get_project(self, project_id):
@@ -367,31 +369,3 @@ class VizierApiClient(object):
         r.raise_for_status()
         # The result is the new project descriptor
         return ProjectResource.from_dict(json.loads(r.text))
-
-    def upload_file(self, filename, project_id=None):
-        """Upload a file from local disk to the given project. If no project
-        identifier is given the default project is used. Returns the identifier
-        for the uploaded file.
-
-        Parameters
-        ----------
-        filename: string
-            Path to file on local disk
-        project_id: string, optional
-            Unique project identifier
-
-        Returns
-        -------
-        string
-        """
-        # Use the default project if not project identifier is given
-        if project_id is None:
-            project_id = self.get_default_project()
-        # Get the request Url and create the request body
-        url = self.urls.upload_file(project_id)
-        files = {'file': open(filename,'rb')}
-        # Send request. The result is the handle for the uploaded file.
-        r = requests.post(url, files=files)
-        r.raise_for_status()
-        # The result is the new project descriptor
-        return json.loads(r.text)['id']

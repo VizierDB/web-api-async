@@ -163,15 +163,7 @@ def PROVENANCE(prov):
             doc = {labels.NAME: name}
             ds = prov.write[name]
             if not ds is None:
-                doc['dataset'] = {
-                    labels.ID: ds.identifier,
-                    'columns': [{
-                        labels.ID: col.identifier,
-                        labels.NAME: col.name,
-                        'type': col.data_type
-                    } for col in ds.columns],
-                    'rows': ds.row_count
-                }
+                doc['dataset'] = serialds.DATASET_DESCRIPTOR(dataset=ds)
             obj['write'].append(doc)
     if not prov.delete is None:
         obj['delete'] = prov.delete

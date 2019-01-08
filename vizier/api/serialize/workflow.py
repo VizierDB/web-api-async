@@ -74,7 +74,7 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    woekflow: vizier.viztrail.workflow.WorkflowDescriptor
+    workflow: vizier.viztrail.workflow.WorkflowDescriptor
         Workflow descriptor
     urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls

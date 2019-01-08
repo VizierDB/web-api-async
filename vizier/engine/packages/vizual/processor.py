@@ -394,7 +394,7 @@ class VizualTaskProcessor(TaskProcessor):
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
         reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
-        # Execute load command
+        # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,
             filestore=context.filestore,

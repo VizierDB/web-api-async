@@ -39,14 +39,14 @@ def DATASET(obj):
     vizier.datastore.dataset.DatasetDescriptor
     """
     return DatasetDescriptor(
-        identifier=ds[labels.ID],
+        identifier=obj[labels.ID],
         columns=[
             DatasetColumn(
                 identifier=col[labels.ID],
                 name=col[labels.NAME],
-                data_type=col['type']
-            ) for col in ds['columns']],
-        row_count=ds['rows']
+                data_type=col[labels.DATATYPE]
+            ) for col in obj[labels.COLUMNS]],
+        row_count=obj[labels.ROWCOUNT]
     )
 
 

@@ -19,10 +19,7 @@
 import os
 
 from vizier.api.client.cli.command import Command
-from vizier.engine.packages.base import FILE_ID, FILE_NAME, FILE_URI
-
-import vizier.api.client.command.pycell as pycell
-import vizier.api.client.command.vizual as vizual
+from vizier.api.client.cli.packages import parse_command, print_commands
 
 
 class NotebookCommands(Command):
@@ -36,6 +33,27 @@ class NotebookCommands(Command):
             Vizier API client
         """
         self.api = api
+
+    def append_module(self, command, notebook):
+        """Append the given command as new cellt o the current notebook. The
+        command may be None in which case no action is taken and False is
+        returned.
+
+        Parameters
+        ----------
+        command: vizier.engine.module.command.ModuleCommand
+            Notebook cell command
+        notebook: vizier.api.client.resources.notebook.Notebook
+            Current notebook state
+
+        Returns
+        -------
+        bool
+        """
+        if command is None:
+            return False
+        notebook.append_cell(command=command)
+        return True
 
     def cancel_exec(self):
         """Cancel exection of tasks for the default notebook."""
@@ -71,75 +89,50 @@ class NotebookCommands(Command):
             List of tokens in the command line
         """
         if len(tokens) == 2:
+            # [notebook | nb] cancel
             if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'cancel':
                 return self.cancel_exec()
         elif len(tokens) == 3:
             # run python [<script> | <file>]
             if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'delete':
                 return self.delete_cell(module_id=tokens[2])
-            elif tokens[0] == 'run' and tokens[1] == 'python':
-                return self.run_python(tokens[2])
             elif tokens[0] == 'show' and tokens[1] == 'dataset':
+                # show dataset <name>
                 return self.show_dataset(name=tokens[2])
         elif len(tokens) == 5:
             # load <name> from file <file>
-            if tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'file':
-                return self.load_dataset_from_file(tokens[1], tokens[4])
-            # load <name> from url <url>
-            elif tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'url':
-                return self.load_dataset_from_url(tokens[1], tokens[4])
+            if tokens[0] == 'show' and tokens[1] == 'dataset' and tokens[3] == 'in':
+                # show dataset <name> {in <module-id>}
+                return self.show_dataset(name=tokens[2], module_id=tokens[4])
+        elif len(tokens) >= 3:
+            if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'append':
+                # [notebook | nb] append <cmd>
+                notebook = self.api.get_notebook()
+                return self.append_module(
+                    command=parse_command(tokens=tokens[2:], notebook=notebook),
+                    notebook=notebook
+                )
+        elif len(tokens) >= 4:
+            # [notebook | nb] replace <module-id> <cmd>
+            if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'replace':
+                return True
+        elif len(tokens) >= 5:
+            # [notebook | nb] insert before <module-id> <cmd>
+            if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'insert' and tokens[2] == 'before':
+                return True
         return False
 
     def help(self):
         """Print help statement."""
         print '\nNotebooks'
-        print '  notebook cancel'
-        print '  notebook delete <module-id>'
-        print '  load <name> from file <file>'
-        print '  load <name> from url <url>'
-        print '  run python [<script> | <file>]'
+        print '  [notebook | nb] append <cmd>'
+        print '  [notebook | nb] cancel'
+        print '  [notebook | nb] delete <module-id>'
+        print '  [notebook | nb] insert before <module-id> <cmd>'
+        print '  [notebook | nb] replace <module-id> <cmd>'
         print '  show dataset <name> {in <module-id>}'
-
-    def load_dataset_from_file(self, name, file):
-        """Create a new dataset from a given file."""
-        # Ensure that the specified file exists
-        file_id = self.api.upload_file(filename=file)
-        notebook = self.api.get_notebook()
-        modules = notebook.append_cell(
-            command=vizual.load_dataset(
-                dataset_name=name,
-                file={
-                    FILE_ID: file_id,
-                    FILE_NAME: os.path.basename(file)
-                }
-            )
-        )
-        return True
-
-    def load_dataset_from_url(self, name, url):
-        """Create a new dataset from a given file."""
-        # Ensure that the specified file exists
-        notebook = self.api.get_notebook()
-        modules = notebook.append_cell(
-            command=vizual.load_dataset(
-                dataset_name=name,
-                file={FILE_URI: url}
-            )
-        )
-        return True
-
-
-    def run_python(self, script):
-        """Append cell with python script."""
-        # Ensure that the specified file exists
-        if os.path.isfile(script):
-            with open(script, 'r') as f:
-                source = f.read()
-        else:
-            source = script
-        notebook = self.api.get_notebook()
-        modules = notebook.append_cell(pycell.python_cell(source))
-        return True
+        print '\nCommands'
+        print_commands()
 
     def show_dataset(self, name, module_id=None):
         """Create a new dataset from a given file."""
@@ -154,7 +147,7 @@ class NotebookCommands(Command):
                     module = m
                     break
         if not module is None and name in module.datasets:
-            ds = notebook.get_dataset(module.datasets[name])
+            ds = notebook.fetch_dataset(identifier=module.datasets[name])
             rows = [[col['name'] for col in ds['columns']]]
             for row in ds['rows']:
                 values = [str(val) for val in row['values']]

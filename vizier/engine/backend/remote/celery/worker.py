@@ -17,9 +17,10 @@
 """Remote Celery worker to execute workflow commands."""
 
 from celery import Task
+from celery.signals import worker_init
 
 from vizier.api.routes.task import TaskUrlFactory
-from vizier.config.engine.celery import celery_app
+from vizier.engine.backend.remote.celery.app import celeryapp
 from vizier.config.worker import WorkerConfig
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import worker
@@ -53,19 +54,20 @@ class WorkerEnv(object):
 """Initialize global objects."""
 # The worker environment will only be initialized when the Celery worker is
 # started
-try:
+@worker_init.connect()
+def init(signal=None, sender=None, **kwargs):
+    """Initialize the global worker environment."""
     config = WorkerConfig()
+    global env
     env = WorkerEnv(
         processors=config.processors,
         datastores=config.datastores.get_instance(),
         filestores=config.filestores.get_instance(),
         controller_url=config.controller.url
     )
-except ValueError as ex:
-    pass
 
 
-@celery_app.task
+@celeryapp.task
 def execute(task_id, project_id, command_doc, context, resources):
     """Execute the givven command.
 
