@@ -1,0 +1,12 @@
+FROM python:2.7-slim
+COPY requirements.txt /app/requirements.txt
+COPY setup.py /app/setup.py
+COPY ./vizier/ /app/vizier/
+COPY ./resources/packages/ /app/resources/packages/
+COPY ./resources/config/config.dev.docker-worker.yaml /app/config.yaml
+WORKDIR /app/
+RUN pip install -r requirements.txt
+RUN pip install .
+RUN rm requirements.txt
+RUN rm setup.py
+ENTRYPOINT celery -A vizier.engine.backend.remote.celery.worker worker -l info -c 1 -n worker@%h

@@ -46,7 +46,6 @@ class CeleryBackend(VizierBackend):
         # Initialize the synchronous command execution engine
         super(CeleryBackend, self).__init__(synchronous=synchronous)
         self.routes = routes
-        print routes
         # Keep dictionary of celery tasks in order to be able to cancel a task
         self.tasks = dict()
 

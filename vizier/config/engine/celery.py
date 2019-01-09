@@ -16,6 +16,11 @@
 
 """Helper methods to configure the celery backend."""
 
+"""Property keys for routes."""
+ROUTE_COMMAND = 'commandId'
+ROUTE_PACKAGE = 'packageId'
+ROUTE_QUEUE = 'queue'
+
 
 def config_routes(elements):
     """Create routing information for individual vizier commands. The expected
@@ -41,12 +46,12 @@ def config_routes(elements):
     """
     routes = dict()
     for rt in elements:
-        for key in ['packageId','commandId', 'queue']:
+        for key in [ROUTE_PACKAGE, ROUTE_COMMAND, ROUTE_QUEUE]:
             if not key in rt:
                 raise ValueError('missing element \'' + key + '\' in route information')
-        package_id = rt['packageId']
-        command_id = rt['commandId']
-        queue = rt['queue']
+        package_id = rt[ROUTE_PACKAGE]
+        command_id = rt[ROUTE_COMMAND]
+        queue = rt[ROUTE_QUEUE]
         if not package_id in routes:
             routes[package_id] = dict()
         routes[package_id][command_id] = queue

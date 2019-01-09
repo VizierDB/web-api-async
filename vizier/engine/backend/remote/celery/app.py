@@ -24,7 +24,7 @@ import os
 
 
 """Environment variables."""
-BROKER_URL = 'VIZIERCELERYBROKER_URL'
+BROKER_URL = 'CELERY_BROKER_URL'
 
 
 # Create and initialize the celery app. The broker url is expected to be set in
