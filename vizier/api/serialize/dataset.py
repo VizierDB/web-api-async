@@ -65,6 +65,34 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
     return obj
 
 
+def DATASET_ANNOTATION_STATEMENT(column_id, row_id, key, value):
+    """Get dictionary serialization for the definition of a dataset cell
+    annotation. Contrary to an existing annotation the definition specifies the
+    cell column and row identifier instead of the annotation identifier.
+
+    Parameters
+    ----------
+    column_id: int
+        Unique column identifier
+    row_id: int
+        Unique row identifier
+    key: string
+        Annotation key
+    value: scalar
+        Annotation value
+
+    Returns
+    -------
+    dict
+    """
+    return {
+        labels.COLUMN: column_id,
+        labels.ROW: row_id,
+        labels.KEY: key,
+        labels.VALUE: value
+    }
+
+
 def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     """Dictionary serialization for a dataset descriptor.
 

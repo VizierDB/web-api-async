@@ -26,7 +26,26 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.api.serialize.labels as labels
 
 
-def DATASET(obj):
+def DATASET_ANNOTATION_STATEMENT(obj, annotations):
+    """Deserialize a dataset cell annotation statement and add it to the given
+    dataset metadata object.
+
+    Parameters
+    ----------
+    obj: dict
+        Dataset annotation statement in default serialization format
+    annotations: vizier.datastore.metadata.DatasetMetadata
+        Dataset annotations object
+    """
+    column_id = obj[labels.COLUMN]
+    row_id = obj[labels.ROW]
+    key = obj[labels.KEY]
+    value = obj[labels.VALUE]
+    annos = annotations.for_cell(column_id=column_id, row_id=row_id)
+    annos.add(key=key, value=value)
+
+
+def DATASET_DESCRIPTOR(obj):
     """Convert a dictionary into a dataset descriptor.
 
     Parameters
@@ -40,14 +59,29 @@ def DATASET(obj):
     """
     return DatasetDescriptor(
         identifier=obj[labels.ID],
-        columns=[
-            DatasetColumn(
-                identifier=col[labels.ID],
-                name=col[labels.NAME],
-                data_type=col[labels.DATATYPE]
-            ) for col in obj[labels.COLUMNS]],
+        columns=DATASET_COLUMNS(obj[labels.COLUMNS]),
         row_count=obj[labels.ROWCOUNT]
     )
+
+
+def DATASET_COLUMNS(obj):
+    """Convert a list of dictionaries into a list of dataset columns.
+
+    Parameters
+    ----------
+    obj: list
+        List of dataset columns in default serialization format
+
+    Returns
+    -------
+    list
+    """
+    return [
+        DatasetColumn(
+            identifier=col[labels.ID],
+            name=col[labels.NAME],
+            data_type=col[labels.DATATYPE]
+        ) for col in obj]
 
 
 def DATASET_ROW(obj):
@@ -182,7 +216,7 @@ def PROVENANCE(obj):
         write = dict()
         for ds in obj['write']:
             if 'dataset' in ds:
-                write[ds[labels.NAME]] = DATASET(ds['dataset'])
+                write[ds[labels.NAME]] = DATASET_DESCRIPTOR(ds['dataset'])
             else:
                 write[ds[labels.NAME]] = None
     # names of datasets that were deleted

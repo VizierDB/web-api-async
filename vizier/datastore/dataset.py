@@ -227,8 +227,6 @@ class DatasetHandle(DatasetDescriptor):
 
     Attributes
     ----------
-    annotations: vizier.datastore.metadata.DatasetMetadata
-        Annotations for dataset components
     columns: list(DatasetColumns)
         List of dataset columns
     identifier: string

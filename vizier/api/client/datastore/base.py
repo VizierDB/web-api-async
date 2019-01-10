@@ -29,10 +29,14 @@ import vizier.api.serialize.deserialize as deserialize
 
 
 class DatastoreClient(Datastore):
-    """
+    """Datastore that is a client to a vizier web service API. Datasets are
+    retireved from the API and stored at the API via HTTP requests.
+
+    The datastore only allows access to datasets for a single project.
     """
     def __init__(self, urls):
-        """
+        """Initialize the url factory to retireve and manipulate API resources.
+
         Parameters
         ----------
         urls: vizier.api.routes.datastore.DatastoreClientUrlFactory
@@ -95,7 +99,7 @@ class DatastoreClient(Datastore):
             r.raise_for_status()
         # The result is the workflow handle
         obj = json.loads(r.text)
-        ds = deserialize.DATASET(obj)
+        ds = deserialize.DATASET_DESCRIPTOR(obj)
         return RemoteDatasetHandle(
             identifier=ds.identifier,
             columns=ds.columns,

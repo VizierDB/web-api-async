@@ -30,6 +30,7 @@ from werkzeug.utils import secure_filename
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config.app import AppConfig
+from vizier.datastore.metadata import DatasetMetadata
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
@@ -525,6 +526,68 @@ def update_task_state(task_id):
 # ------------------------------------------------------------------------------
 # Datasets
 # ------------------------------------------------------------------------------
+
+@app.route('/projects/<string:project_id>/datasets', methods=['POST'])
+def create_dataset(project_id):
+    """Create a new dataset in the datastore for the given project. The dataset
+    schema and rows are given in the request body. Dataset annotations are
+    optional. The expected request body format is:
+
+    {
+      "columns": [
+        {
+          "id": 0,
+          "name": "string",
+          "type": "string"
+        }
+      ],
+      "rows": [
+        {
+          "id": 0,
+          "values": [
+            "string"
+          ]
+        }
+      ],
+      "annotations": [
+        {
+          "column": 0,
+          "row": 0,
+          "key": "string",
+          "value": "string"
+        }
+      ]
+    }
+    """
+    # Validate the request
+    obj = srv.validate_json_request(
+        request,
+        required=['columns', 'rows'],
+        optional=['annotations']
+    )
+    columns = deserialize.DATASET_COLUMNS(obj[labels.COLUMNS])
+    rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
+    annotations = None
+    if 'annotations' in obj:
+        annotations = DatasetMetadata()
+        for anno in obj['annotations']:
+            deserialize.DATASET_ANNOTATION_STATEMENT(
+                obj=anno,
+                annotations=annotations
+            )
+    try:
+        dataset = api.datasets.create_dataset(
+            project_id=project_id,
+            columns=columns,
+            rows=rows,
+            annotations=annotations
+        )
+        if not dataset is None:
+            return jsonify(dataset)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+
 
 @app.route('/projects/<string:project_id>/datasets/<string:dataset_id>')
 def get_dataset(project_id, dataset_id):

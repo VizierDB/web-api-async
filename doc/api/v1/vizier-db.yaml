@@ -560,6 +560,41 @@ paths:
     #
     # Datasets
     #
+    /projects/{projectId}/datasets:
+        post:
+            summary: Create dataset
+            description: Create dataset from given schema and rows
+            operationId: createDataset
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+                - name: dataset
+                  in: body
+                  description: Dataset schema, rows, and optional annotations
+                  required: true
+                  schema:
+                      $ref: '#/definitions/DatasetStatement'
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset handle
+                    schema:
+                        $ref: '#/definitions/DatasetHandle'
+                400:
+                    description: Invalid request
+                404:
+                    description: Unknown project
     /projects/{projectId}/datasets/{datasetId}:
         get:
             summary: Get dataset
@@ -596,7 +631,7 @@ paths:
                     schema:
                         $ref: '#/definitions/DatasetHandle'
                 404:
-                    description: Unknown dataset
+                    description: Unknown project or dataset
     /projects/{projectId}/datasets/{datasetId}/annotations:
         get:
             summary: Get dataset annotations
@@ -633,7 +668,7 @@ paths:
                     schema:
                         $ref: '#/definitions/DatasetAnnotations'
                 404:
-                    description: Unknown dataset
+                    description: Unknown project or dataset
         post:
             summary: Update dataset annotations
             description: Update an annotations that is associated with a dataset component
@@ -661,13 +696,13 @@ paths:
                 - application/json
             responses:
                 200:
-                    description: Dataset data
+                    description: Dataset annotations
                     schema:
                         $ref: '#/definitions/DatasetAnnotations'
                 400:
                     description: Invalid request
                 404:
-                    description: Unknown dataset
+                    description: Unknown project or dataset
     /projects/{projectId}/datasets/{datasetsIdentifier}/csv:
         get:
             summary: Get CSV file
@@ -692,7 +727,7 @@ paths:
                 200:
                     description: CSV file
                 404:
-                    description: Unknown datasets
+                    description: Unknown project or datasets
     #
     # Views
     #
@@ -1076,6 +1111,39 @@ definitions:
                 type: array
                 items:
                     type: string
+    DatasetStatement:
+        type: object
+        description: Schema, rows, and annotations for new dataset
+        required:
+            - columns
+            - rows
+        properties:
+            columns:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetColumn'
+            rows:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetRow'
+            annotations:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - column
+                        - row
+                        - key
+                        - value
+                    properties:
+                        col:
+                            type: integer
+                        row:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
     FileHandle:
         type: object
         description: Metadata for uploaded file
