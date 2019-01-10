@@ -155,7 +155,6 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     for row in rows:
         serialized_rows.append({
             labels.ID: row.identifier,
-            labels.ROWINDEX: len(serialized_rows) + offset,
             labels.ROWVALUES: row.values
         })
         for i in range(len(dataset.columns)):

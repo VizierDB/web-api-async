@@ -186,7 +186,7 @@ class DelimitedFileReader(DatasetReader):
 
 
 class DefaultJsonDatasetReader(DatasetReader):
-    """Dataset reader for datasets stored in defautl Json format. The default
+    """Dataset reader for datasets stored in defaut Json format. The default
     Json serialization has the following structure:
         {
             'rows': [

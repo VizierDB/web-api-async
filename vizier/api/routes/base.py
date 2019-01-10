@@ -31,7 +31,6 @@ PAGE_OFFSET = 'offset'
 
 class UrlFactory:
     """Factory to create urls for all routes that the webservice supports."""
-
     def __init__(self, base_url=None, api_doc_url=None, properties=None):
         """Intialize the base url for the web service. The object can be
         initialized from a properties dictionary that may contain the base url

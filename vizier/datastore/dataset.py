@@ -251,8 +251,6 @@ class DatasetHandle(DatasetDescriptor):
             identifier.
         row_count: int, optional
             Number of rows in the dataset
-        annotations: vizier.datastore.metadata.DatasetMetadata
-            Annotations for dataset components
         """
         super(DatasetHandle, self).__init__(
             identifier=identifier,

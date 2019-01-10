@@ -1068,12 +1068,9 @@ definitions:
         description: Row in a dataset
         required:
             - id
-            - index
             - values
         properties:
             id:
-                type: integer
-            index:
                 type: integer
             values:
                 type: array

@@ -19,7 +19,7 @@ created by the serializers back into instances of the respective Python
 classes.
 """
 
-from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
 
@@ -48,6 +48,21 @@ def DATASET(obj):
             ) for col in obj[labels.COLUMNS]],
         row_count=obj[labels.ROWCOUNT]
     )
+
+
+def DATASET_ROW(obj):
+    """Convert dictionary into a dataset row object.
+
+    Parameters
+    ----------
+    obj: dict
+        Default serialization of a dataset row
+
+    Returns
+    -------
+    vizier.datastore.dataset.DatasetRow
+    """
+    return DatasetRow(identifier=obj[labels.ID], values=obj[labels.ROWVALUES])
 
 
 def HATEOAS(links):

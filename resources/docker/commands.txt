@@ -1,0 +1,1 @@
+docker stack deploy -c resources/docker/compose/celery-app-dev.yml vizierappdev
