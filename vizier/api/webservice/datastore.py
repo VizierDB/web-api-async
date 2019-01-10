@@ -41,6 +41,51 @@ class VizierDatastoreApi(object):
         self.urls = urls
         self.defaults = defaults
 
+    def create_dataset(self, project_id, columns, rows, annotations=None):
+        """Create a new dataset in the datastore for the given project. Expects
+        a` list of columns and rows for the dataset. The dataset annotations
+        are optional.
+
+        Returns the serialized descriptor for the new dataset. The result is
+        None if the project is unknown.
+
+        Raises ValueError if (1) the column identifier are not unique, (2) the
+        row identifier are not uniqe, (3) the number of columns and values in a
+        row do not match, (4) any of the column or row identifier have a
+        negative value, or (5) if the given column or row counter have value
+        lower or equal to any of the column or row identifier.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        columns: list(vizier.datastore.dataset.DatasetColumn)
+            List of columns. It is expected that each column has a unique
+            identifier.
+        rows: list(vizier.datastore.dataset.DatasetRow)
+            List of dataset rows.
+        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+            Annotations for dataset components
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the project to ensure that it exists.
+        project = self.projects.get_project(project_id)
+        if project is None:
+            return None
+        dataset = project.datastore.create_dataset(
+            columns=columns,
+            rows=rows,
+            annotations=annotations
+        )
+        return serialize.DATASET_DESCRIPTOR(
+            project=project,
+            dataset=dataset,
+            urls=self.urls
+        )
+
     def get_annotations(self, project_id, dataset_id, column_id=-1, row_id=-1):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.

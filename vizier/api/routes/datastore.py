@@ -42,13 +42,20 @@ class DatastoreClientUrlFactory:
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, project_id, dataset_id):
+    def create_dataset(self):
+        """Url to create a new dataset.
+
+        Returns
+        -------
+        string
+        """
+        return self.urls.create_dataset(self.project_id) 
+
+    def get_dataset(self, dataset_id):
         """Url to retrieve dataset rows.
 
         Parameters
         ----------
-        project_id: string
-            Unique project identifier
         dataset_id: string
             Unique dataset identifier
 
@@ -59,13 +66,11 @@ class DatastoreClientUrlFactory:
         url = self.urls.get_dataset(self.project_id, dataset_id)
         return url + '?' + PAGE_LIMIT + '=-1'
 
-    def get_dataset_annotations(self, project_id, dataset_id):
+    def get_dataset_annotations(self, dataset_id):
         """Url to retrieve dataset annotations.
 
         Parameters
         ----------
-        project_id: string
-            Unique project identifier
         dataset_id: string
             Unique dataset identifier
 
@@ -75,13 +80,11 @@ class DatastoreClientUrlFactory:
         """
         return self.urls.get_dataset_annotations(self.project_id, dataset_id)
 
-    def update_dataset_annotations(self, project_id, dataset_id):
+    def update_dataset_annotations(self, dataset_id):
         """Url to update dataset annotations.
 
         Parameters
         ----------
-        project_id: string
-            Unique project identifier
         dataset_id: string
             Unique dataset identifier
 

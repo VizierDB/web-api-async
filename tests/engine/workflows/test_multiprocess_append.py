@@ -110,8 +110,6 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         self.assertTrue(canceled_count > 0)
         # All workflows in the branch history should be finished as well
         self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
-        for wf in project.viztrail.default_branch.get_history():
-            self.assertFalse(wf.is_active)
 
     def test_error(self):
         """Test running a sequence of steps where one generates an error."""
@@ -141,8 +139,6 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
                 self.assertTrue(module.is_canceled)
         # All workflows in the branch history should be finished as well
         self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
-        for wf in project.viztrail.default_branch.get_history():
-            self.assertFalse(wf.is_active)
 
     def test_execute_with_error(self):
         """Test running a sequence of statements where we (potentially)append to
@@ -208,11 +204,8 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
             self.assertEquals(len(module.outputs.stderr), 0)
         # All workflows in the branch history should be finished as well
         self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
-        for wf in project.viztrail.default_branch.get_history():
-            self.assertFalse(wf.is_active)
 
 
 if __name__ == '__main__':
     import yaml
-    print yaml.dump(CONFIG, indent=4)
     unittest.main()

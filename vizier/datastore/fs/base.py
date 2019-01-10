@@ -28,7 +28,8 @@ import urllib2
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import Datastore
-from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.datastore.metadata import DatasetMetadata
@@ -94,7 +95,7 @@ class FileSystemDatastore(Datastore):
 
         Returns
         -------
-        vizier.datastore.fs.dataset.FileSystemDatasetHandle
+        vizier.datastore.dataset.DatasetDescriptor
         """
         # Validate (i) that each column has a unique identifier, and (ii) that
         # every row has exactly one value per column. If the column counter is
@@ -134,7 +135,11 @@ class FileSystemDatastore(Datastore):
                 os.path.join(dataset_dir, METADATA_FILE)
             )
         # Return handle for new dataset
-        return dataset
+        return DatasetDescriptor(
+            identifier=dataset.identifier,
+            columns=dataset.columns,
+            row_count=dataset.row_count
+        )
 
     def delete_dataset(self, identifier):
         """Delete dataset with given identifier. Returns True if dataset existed

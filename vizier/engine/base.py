@@ -220,12 +220,13 @@ class VizierEngine(WorkflowController):
                         )
                     ]
                 )
-                self.execute_module(
-                    project_id=project_id,
-                    branch_id=branch_id,
-                    module=workflow.modules[-1],
-                    datasets=datasets
-                )
+                if not is_active and not state == mstate.MODULE_CANCELED:
+                    self.execute_module(
+                        project_id=project_id,
+                        branch_id=branch_id,
+                        module=workflow.modules[-1],
+                        datasets=datasets
+                    )
             return workflow.modules[-1]
 
     def cancel_exec(self, project_id, branch_id):

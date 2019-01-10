@@ -26,7 +26,7 @@ from vizier.api.client.datastore.dataset import RemoteDatasetHandle
 from vizier.datastore.base import Datastore
 
 import vizier.api.serialize.deserialize as deserialize
-
+import vizier.api.serialize.labels as labels
 
 class DatastoreClient(Datastore):
     """Datastore that is a client to a vizier web service API. Datasets are
@@ -44,19 +44,15 @@ class DatastoreClient(Datastore):
         """
         self.urls = urls
 
-    @abstractmethod
-    def create_dataset(
-        self, columns, rows, column_counter=None, row_counter=None,
-        annotations=None
-    ):
-        """Create a new dataset in the datastore. Expects at least the list of
-        columns and the rows for the dataset.
+    def create_dataset(self, columns, rows, annotations=None):
+        """Create a new dataset in the project datastore using the API. Expects
+        a list of columns and the rows for the dataset. All columns and rows
+        should have unique non-negative identifier (although this may not
+        be enforced by all backend datastores). Depending on the backend
+        datastore the given identifier may change. They are, however, required
+        to reference the given annotations properly.
 
-        Raises ValueError if (1) the column identifier are not unique, (2) the
-        row identifier are not uniqe, (3) the number of columns and values in a
-        row do not match, (4) any of the column or row identifier have a
-        negative value, or (5) if the given column or row counter have value
-        lower or equal to any of the column or row identifier.
+        Raises ValueError if the backend datastore rejects the given dataset.
 
         Parameters
         ----------
@@ -65,18 +61,26 @@ class DatastoreClient(Datastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        column_counter: int, optional
-            Counter to generate unique column identifier
-        row_counter: int, optional
-            Counter to generate unique row identifier
         annotations: vizier.datastore.metadata.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
         -------
-        vizier.datastore.fs.dataset.FileSystemDatasetHandle
+        vizier.datastore.dataset.DatasetHandle
         """
-        raise NotImplementedError
+        url = self.urls.create_dataset()
+        data = {
+            labels.COLUMNS: [serialize.DATASET_COLUMN(col)] for col in columns,
+            labels.ROWS: [serialize.DATASET_ROW(row) for row in rows]
+        }
+        if not annotations is None:
+            pass #???
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful.
+        r = requests.post(url, json=data)
+        r.raise_for_status()
+        obj = json.loads(r.text)
+        ds = deserialize.DATASET_DESCRIPTOR(obj)
 
     def get_dataset(self, identifier):
         """Get the handle for the dataset with given identifier from the data
@@ -104,7 +108,7 @@ class DatastoreClient(Datastore):
             identifier=ds.identifier,
             columns=ds.columns,
             row_count=ds.row_count,
-            rows=[deserialize.DATASET_ROW(row) for row in obj[label.ROWS]]
+            rows=[deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
         )
 
     @abstractmethod

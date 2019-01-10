@@ -93,6 +93,25 @@ def DATASET_ANNOTATION_STATEMENT(column_id, row_id, key, value):
     }
 
 
+def DATASET_COLUMN(column):
+    """Dictionary serialization for a dataset column.
+
+    Parameters
+    ----------
+    column: vizier.datastore.dataset.DatasetColumn
+        Dataset column
+
+    Returns
+    -------
+    dict
+    """
+    return {
+        labels.ID: column.identifier,
+        labels.NAME: column.name,
+        labels.DATATYPE: column.data_type,
+    }
+
+
 def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     """Dictionary serialization for a dataset descriptor.
 
@@ -113,13 +132,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     """
     obj = {
         labels.ID: dataset.identifier,
-        labels.COLUMNS: [
-            {
-                labels.ID: col.identifier,
-                labels.NAME: col.name,
-                labels.DATATYPE: col.data_type,
-            } for col in dataset.columns
-        ],
+        labels.COLUMNS: [DATASET_COLUMN(col) for col in dataset.columns],
         labels.ROWCOUNT: dataset.row_count
     }
     if not name is None:

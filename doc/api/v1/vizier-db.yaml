@@ -590,7 +590,7 @@ paths:
                 200:
                     description: Dataset handle
                     schema:
-                        $ref: '#/definitions/DatasetHandle'
+                        $ref: '#/definitions/DatasetDescriptor'
                 400:
                     description: Invalid request
                 404:

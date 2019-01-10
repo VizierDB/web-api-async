@@ -57,7 +57,7 @@ class Datastore(object):
 
         Returns
         -------
-        vizier.datastore.fs.dataset.FileSystemDatasetHandle
+        vizier.datastore.dataset.DatasetDescriptor
         """
         raise NotImplementedError
 

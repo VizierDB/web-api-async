@@ -330,6 +330,20 @@ class UrlFactory:
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
+    def create_dataset(self, project_id):
+        """Url to create a new dataset.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id) + '/datasets'
+
     def get_dataset(self, project_id, dataset_id):
         """Url to retrieve dataset rows.
 

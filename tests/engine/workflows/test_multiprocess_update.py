@@ -143,6 +143,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         branch_id = self.create_workflow(project)
         wf = project.viztrail.default_branch.head
         # Keep track of datasets in the completed workflow
+        for m in wf.modules:
+            print m.external_form
+            print m.state
+            print m.datasets
+            if not m.is_success:
+                for o in m.outputs.stderr:
+                    print o.value
+            print '--'
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
         # Insert in the middle
         result = self.engine.delete_workflow_module(

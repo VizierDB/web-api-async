@@ -134,7 +134,6 @@ class FileSystemFilestore(Filestore):
         vizier.filestore.base.FileHandle
         """
         file_dir = self.get_file_dir(identifier)
-        print 'Get file in base dir ' + self.base_path
         if os.path.isdir(file_dir):
             file_name, mimetype, encoding = read_metadata_file(file_dir)
             return FileHandle(
