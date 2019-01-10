@@ -62,6 +62,25 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
+    def get_annotations(self, identifier, column_id=None, row_id=None):
+        """Get list of annotations for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If
+
+        Parameters
+        ----------
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optiona
+            Unique row identifier
+
+        Returns
+        -------
+        list(vizier.datastore.annotation.base.Annotation)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_dataset(self, identifier):
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.

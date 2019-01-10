@@ -283,24 +283,6 @@ class DatasetHandle(DatasetDescriptor):
         return rows
 
     @abstractmethod
-    def get_annotations(self, column_id=-1, row_id=-1):
-        """Get list of annotations for a dataset component. Expects at least one
-        of the given identifier to be a valid identifier (>= 0).
-
-        Parameters
-        ----------
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optiona
-            Unique row identifier
-
-        Returns
-        -------
-        list(vizier.datastore.metadata.Annotation)
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
