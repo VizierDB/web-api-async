@@ -86,7 +86,7 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_annotations(self, project_id, dataset_id, column_id=-1, row_id=-1):
+    def get_annotations(self, project_id, dataset_id, column_id=None, row_id=None):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
@@ -110,13 +110,11 @@ class VizierDatastoreApi(object):
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
-        anno = dataset.get_annotations(column_id=column_id, row_id=row_id)
+        annos = dataset.get_annotations(column_id=column_id, row_id=row_id)
         return serialize.DATASET_ANNOTATIONS(
             project=project,
             dataset=dataset,
-            annotations=anno,
-            column_id=column_id,
-            row_id=row_id,
+            annotations=annos,
             urls=self.urls
         )
 
@@ -192,8 +190,8 @@ class VizierDatastoreApi(object):
         return project, project.datastore.get_dataset(dataset_id)
 
     def update_annotation(
-        self, project_id, dataset_id, column_id=-1, row_id=-1, anno_id=-1,
-        key=None, value=None
+        self, project_id, dataset_id, column_id=None, row_id=None, key=None,
+        old_value=None, new_value=None
     ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the modified object annotations or None if the
@@ -231,9 +229,9 @@ class VizierDatastoreApi(object):
             identifier=dataset_id,
             column_id=column_id,
             row_id=row_id,
-            anno_id=anno_id,
             key=key,
-            value=value
+            old_value=value,
+            new_value=new_value
         )
         if result is None:
             return None

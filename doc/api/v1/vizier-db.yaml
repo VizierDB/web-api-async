@@ -635,7 +635,7 @@ paths:
     /projects/{projectId}/datasets/{datasetId}/annotations:
         get:
             summary: Get dataset annotations
-            description: Get all annotations that are associated with dataset components
+            description: Get all annotations that are associated with a dataset
             operationId: getDatasetAnnotations
             tags:
                 - dataset
@@ -932,22 +932,51 @@ definitions:
         type: object
         description: Annotations for a dataset component
         required:
-            - annotations
             - links
         properties:
-            column:
-                type: integer
-            row:
-                type: integer
-            annotations:
+            columns:
                 type: array
                 items:
+                    type: object
                     required:
-                        - id
+                        - columnId
                         - key
                         - value
                     properties:
-                        id:
+                        columnId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            rows:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - rowId
+                        - key
+                        - value
+                    properties:
+                        rowId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            cells:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - columnId
+                        - rowId
+                        - key
+                        - value
+                    properties:
+                        columnId:
+                            type: integer
+                        rowId:
                             type: integer
                         key:
                             type: string
@@ -1057,7 +1086,6 @@ definitions:
             - rows
             - offset
             - rowCount
-            - annotatedCells
             - links
         properties:
             id:
@@ -1074,15 +1102,6 @@ definitions:
                 type: integer
             rowcount:
                 type: integer
-            annotatedCells:
-                type: array
-                items:
-                    type: object
-                    properties:
-                        column:
-                            type: integer
-                        row:
-                            type: integer
             links:
                 type: array
                 items:

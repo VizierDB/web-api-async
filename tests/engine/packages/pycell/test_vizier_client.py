@@ -125,36 +125,44 @@ class TestVizierClient(unittest.TestCase):
         ds = client.update_dataset(DATASET_NAME, ds)
         annotations = ds.rows[0].annotations('Age').find_all('user:comment')
         self.assertEquals(len(annotations), 1)
-        #anno = annotations[0]
-        #self.assertEquals(anno.key, 'user:comment')
-        #self.assertEquals(anno.value, 'My Comment')
-        #ds.rows[0].annotations('Age').add('user:comment', 'Another Comment')
-        #ds = client.update_dataset(DATASET_NAME, ds)
-        #annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        #self.assertEquals(len(annotations), 2)
-        #self.assertEquals(ds.rows[0].annotations('Age').keys(), ['user:comment'])
-        #values = [a.value for a in annotations]
-        #for val in ['My Comment', 'Another Comment']:
-        #    self.assertTrue(val in values)
-        #ds.rows[0].annotations('Age').update(identifier=anno.identifier, key='user:issue', value='Some Issue')
-        #ds = client.update_dataset(DATASET_NAME, ds)
-        #annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        #self.assertEquals(len(annotations), 1)
-        #keys = ds.rows[0].annotations('Age').keys()
-        #for key in ['user:comment', 'user:issue']:
-        #    self.assertTrue(key in keys)
-        #values = [a.value for a in ds.rows[0].annotations('Age').find_all('user:comment')]
-        #for val in ['Another Comment']:
-        #    self.assertTrue(val in values)
-        #values = [a.value for a in ds.rows[0].annotations('Age').find_all('user:issue')]
-        #for val in ['Some Issue']:
-        #    self.assertTrue(val in values)
-        #ds.rows[0].annotations('Age').update(identifier=anno.identifier)
-        #ds = client.update_dataset(DATASET_NAME, ds)
-        #annotations = ds.rows[0].annotations('Age').find_all('user:issue')
-        #self.assertEquals(len(annotations), 0)
-        #annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        #self.assertEquals(len(annotations), 1)
+        anno = annotations[0]
+        self.assertEquals(anno.key, 'user:comment')
+        self.assertEquals(anno.value, 'My Comment')
+        ds.annotations.add(
+            column_id=col.identifier,
+            row_id=row.identifier,
+            key='user:comment',
+            value='Another Comment'
+        )
+        ds = client.update_dataset(DATASET_NAME, ds)
+        annotations = ds.rows[0].annotations('Age').find_all('user:comment')
+        self.assertEquals(len(annotations), 2)
+        self.assertEquals(ds.rows[0].annotations('Age').keys(), ['user:comment'])
+        values = [a.value for a in annotations]
+        for val in ['My Comment', 'Another Comment']:
+            self.assertTrue(val in values)
+        anno = ds.rows[0].annotations('Age').find_one('user:comment')
+        anno.key = 'user:issue'
+        anno.value = 'Some Issue'
+        ds = client.update_dataset(DATASET_NAME, ds)
+        annotations = ds.rows[0].annotations('Age').find_all('user:comment')
+        self.assertEquals(len(annotations), 1)
+        keys = ds.rows[0].annotations('Age').keys()
+        for key in ['user:comment', 'user:issue']:
+            self.assertTrue(key in keys)
+        values = [a.value for a in ds.rows[0].annotations('Age').find_all('user:issue')]
+        for val in ['Some Issue']:
+            self.assertTrue(val in values)
+        ds.annotations.remove(
+            column_id=col.identifier,
+            row_id=row.identifier,
+            key='user:issue',
+        )
+        ds = client.update_dataset(DATASET_NAME, ds)
+        annotations = ds.rows[0].annotations('Age').find_all('user:issue')
+        self.assertEquals(len(annotations), 0)
+        annotations = ds.rows[0].annotations('Age').find_all('user:comment')
+        self.assertEquals(len(annotations), 1)
         # Delete column
         ds = client.get_dataset(DATASET_NAME)
         ds.delete_column('Age')

@@ -360,7 +360,7 @@ class ObjectMetadataSet(object):
 
         Parameters
         ----------
-        annotations: list(vizier.datastore.annotation.base.Annotation)
+        annotations: list(vizier.datastore.annotation.base.DatasetAnnotation)
             List of resource annotations
         """
         self.annotations = annotations
@@ -399,7 +399,7 @@ class ObjectMetadataSet(object):
 
         Returns
         -------
-        list(vizier.datastore.annotation.base.Annotation)
+        list(vizier.datastore.annotation.base.DatasetAnnotation)
         """
         result = list()
         for anno in self.annotations:
@@ -418,7 +418,7 @@ class ObjectMetadataSet(object):
 
         Returns
         -------
-        vizier.datastore.annotation.base.Annotation
+        vizier.datastore.annotation.base.DatasetAnnotation
         """
         for anno in self.annotations:
             if anno.key == key:

@@ -4,7 +4,7 @@ import os
 import shutil
 import unittest
 
-from vizier.datastore.annotation.base import CellAnnotation, ColumnAnnotation, RowAnnotation
+from vizier.datastore.annotation.base import DatasetAnnotation
 from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.fs.base import FileSystemDatastore
@@ -57,26 +57,25 @@ class TestFileSystemDatastore(unittest.TestCase):
             rows=[DatasetRow(identifier=0, values=['a', 'b'])],
             annotations=DatasetMetadata(
                 cells=[
-                    CellAnnotation(column_id=0, row_id=0, key='X', value=1),
-                    CellAnnotation(column_id=0, row_id=0, key='X', value=2),
-                    CellAnnotation(column_id=1, row_id=0, key='X', value=3),
-                    CellAnnotation(column_id=1, row_id=1, key='X', value=3),
-                    CellAnnotation(column_id=0, row_id=0, key='Y', value=1)
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    DatasetAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    DatasetAnnotation(column_id=1, row_id=1, key='X', value=3),
+                    DatasetAnnotation(column_id=0, row_id=0, key='Y', value=1)
                 ],
                 columns=[
-                    ColumnAnnotation(column_id=0, key='A', value='x'),
-                    ColumnAnnotation(column_id=2, key='A', value='x')
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=2, key='A', value='x')
                     ],
                 rows=[
-                    RowAnnotation(row_id=0, key='E', value=100),
-                    RowAnnotation(row_id=0, key='E', value=100)
+                    DatasetAnnotation(row_id=0, key='E', value=100)
                 ]
             )
         )
         ds = store.get_dataset(ds.identifier)
         self.assertEquals(len(ds.annotations.cells), 4)
         self.assertEquals(len(ds.annotations.columns), 1)
-        self.assertEquals(len(ds.annotations.rows), 2)
+        self.assertEquals(len(ds.annotations.rows), 1)
         annos = ds.annotations.for_cell(column_id=0, row_id=0)
         self.assertEquals(len(annos), 3)
         self.assertTrue(1 in [a.value for a in annos])
@@ -86,18 +85,17 @@ class TestFileSystemDatastore(unittest.TestCase):
         with self.assertRaises(ValueError):
             ds.annotations.find_one(values=annos, key='X')
         self.assertEquals(len(ds.annotations.for_column(column_id=0)), 1)
-        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 2)
+        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 1)
         annotations = ds.annotations.filter(columns=[1])
         self.assertEquals(len(annotations.cells), 1)
         self.assertEquals(len(annotations.columns), 0)
-        self.assertEquals(len(annotations.rows), 2)
-
+        self.assertEquals(len(annotations.rows), 1)
         # Reload datastore
         store = FileSystemDatastore(STORE_DIR)
         ds = store.get_dataset(ds.identifier)
         self.assertEquals(len(ds.annotations.cells), 4)
         self.assertEquals(len(ds.annotations.columns), 1)
-        self.assertEquals(len(ds.annotations.rows), 2)
+        self.assertEquals(len(ds.annotations.rows), 1)
 
     def test_create_dataset(self):
         """Test loading a dataset from file."""
@@ -171,6 +169,62 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertIsNone(store.get_dataset(ds_id))
         self.assertIsNone(store.get_dataset(ds_id_2))
 
+    def test_deduplicate_annotations(self):
+        """Test removing duplicated annotations."""
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.create_dataset(
+            columns=[
+                DatasetColumn(identifier=0, name='A'),
+                DatasetColumn(identifier=1, name='B')
+            ],
+            rows=[DatasetRow(identifier=0, values=['a', 'b'])],
+            annotations=DatasetMetadata(
+                cells=[
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    DatasetAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    DatasetAnnotation(column_id=1, row_id=1, key='X', value=3),
+                    DatasetAnnotation(column_id=0, row_id=0, key='Y', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    DatasetAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    DatasetAnnotation(column_id=1, row_id=1, key='X', value=3),
+                ],
+                columns=[
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x'),
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x'),
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x'),
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x')
+                    ],
+                rows=[
+                    DatasetAnnotation(row_id=0, key='E', value=100),
+                    DatasetAnnotation(row_id=0, key='E', value=100)
+                ]
+            )
+        )
+        ds = store.get_dataset(ds.identifier)
+        self.assertEquals(len(ds.annotations.cells), 4)
+        self.assertEquals(len(ds.annotations.columns), 2)
+        self.assertEquals(len(ds.annotations.rows), 1)
+        annos = ds.annotations.for_cell(column_id=0, row_id=0)
+        self.assertEquals(len(annos), 3)
+        self.assertTrue(1 in [a.value for a in annos])
+        self.assertTrue(2 in [a.value for a in annos])
+        self.assertFalse(3 in [a.value for a in annos])
+        self.assertEquals(len(ds.annotations.find_all(values=annos, key='X')), 2)
+        with self.assertRaises(ValueError):
+            ds.annotations.find_one(values=annos, key='X')
+        self.assertEquals(len(ds.annotations.for_column(column_id=0)), 1)
+        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 1)
+        annotations = ds.annotations.filter(columns=[1])
+        self.assertEquals(len(annotations.cells), 1)
+        self.assertEquals(len(annotations.columns), 1)
+        self.assertEquals(len(annotations.rows), 1)
+
     def test_download_dataset(self):
         """Test loading a dataset from Url. Note that this test depends on the
         accessed web service to be running. It will fail otherwise."""
@@ -237,18 +291,123 @@ class TestFileSystemDatastore(unittest.TestCase):
         with self.assertRaises(ValueError):
             store.load_dataset(f_handle=None)
 
-    def validate_class_size_dataset(self, ds):
-        """Validate some features of the loaded class size dataset."""
-        self.assertEquals(len(ds.columns), 4)
-        self.assertEquals(ds.column_by_name('average_class_size').identifier, 0)
-        self.assertEquals(ds.column_by_name('grade_or_service_category_').identifier, 1)
-        self.assertEquals(ds.column_by_name('program').identifier, 2)
-        self.assertEquals(ds.column_by_name('core_course_high_schools_only_').identifier, 3)
-        self.assertEquals(ds.row_count, 54)
-        # Get the first row
-        row = ds.fetch_rows(offset=0, limit=1)[0]
-        self.assertEquals(row.identifier, 0)
-        self.assertTrue(isinstance(row.values[0], float))
+    def test_query_annotations(self):
+        """Test retrieving annotations via the datastore."""
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.create_dataset(
+            columns=[
+                DatasetColumn(identifier=0, name='A'),
+                DatasetColumn(identifier=1, name='B')
+            ],
+            rows=[DatasetRow(identifier=0, values=['a', 'b'])],
+            annotations=DatasetMetadata(
+                cells=[
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    DatasetAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    DatasetAnnotation(column_id=0, row_id=0, key='Y', value=1)
+                ],
+                columns=[
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x')
+                    ],
+                rows=[
+                    DatasetAnnotation(row_id=0, key='E', value=100)
+                ]
+            )
+        )
+        annos = store.get_annotations(ds.identifier, column_id=1)
+        self.assertEquals(len(annos.columns), 1)
+        self.assertEquals(len(annos.rows), 0)
+        self.assertEquals(len(annos.cells), 0)
+        annos = store.get_annotations(ds.identifier, column_id=0)
+        self.assertEquals(len(annos.columns), 1)
+        self.assertEquals(len(annos.rows), 0)
+        self.assertEquals(len(annos.cells), 0)
+        annos = store.get_annotations(ds.identifier, row_id=0)
+        self.assertEquals(len(annos.columns), 0)
+        self.assertEquals(len(annos.rows), 1)
+        self.assertEquals(len(annos.cells), 0)
+        annos = store.get_annotations(ds.identifier, column_id=1, row_id=0)
+        self.assertEquals(len(annos.columns), 0)
+        self.assertEquals(len(annos.rows), 0)
+        self.assertEquals(len(annos.cells), 1)
+        annos = store.get_annotations(ds.identifier, column_id=0, row_id=0)
+        self.assertEquals(len(annos.columns), 0)
+        self.assertEquals(len(annos.rows), 0)
+        self.assertEquals(len(annos.cells), 3)
+
+    def test_update_annotations(self):
+        """Test updating annotations via the datastore."""
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.create_dataset(
+            columns=[
+                DatasetColumn(identifier=0, name='A'),
+                DatasetColumn(identifier=1, name='B')
+            ],
+            rows=[DatasetRow(identifier=0, values=['a', 'b'])],
+            annotations=DatasetMetadata(
+                cells=[
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    DatasetAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    DatasetAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    DatasetAnnotation(column_id=0, row_id=0, key='Y', value=1)
+                ],
+                columns=[
+                    DatasetAnnotation(column_id=0, key='A', value='x'),
+                    DatasetAnnotation(column_id=1, key='A', value='x')
+                    ],
+                rows=[
+                    DatasetAnnotation(row_id=0, key='E', value=100)
+                ]
+            )
+        )
+        # INSERT row annotatins
+        store.update_annotation(
+            ds.identifier,
+            key='D',
+            row_id=0,
+            new_value=200
+        )
+        annos = store.get_annotations(ds.identifier, row_id=0)
+        self.assertEquals(len(annos.rows), 2)
+        for key in ['D', 'E']:
+            self.assertTrue(key in [a.key for a in annos.rows])
+        for val in [100, 200]:
+            self.assertTrue(val in [a.value for a in annos.rows])
+        # UPDATE column annotation
+        store.update_annotation(
+            ds.identifier,
+            key='A',
+            column_id=1,
+            old_value='x',
+            new_value='y'
+        )
+        annos = store.get_annotations(ds.identifier, column_id=1)
+        self.assertEquals(annos.columns[0].key, 'A')
+        self.assertEquals(annos.columns[0].value, 'y')
+        # DELETE cell annotation
+        store.update_annotation(
+            ds.identifier,
+            key='X',
+            column_id=0,
+            row_id=0,
+            old_value=2,
+        )
+        annos = store.get_annotations(ds.identifier, column_id=0, row_id=0)
+        self.assertEquals(len(annos.cells), 2)
+        for a in annos.cells:
+            self.assertNotEqual(a.value, 2)
+        result = store.update_annotation(
+            ds.identifier,
+            key='X',
+            column_id=1,
+            row_id=0,
+            old_value=3,
+        )
+        self.assertTrue(result)
+        annos = store.get_annotations(ds.identifier, column_id=1, row_id=0)
+        self.assertEquals(len(annos.cells), 0)
 
     def test_validate_dataset(self):
         """Test the validate dataset function."""
@@ -298,6 +457,19 @@ class TestFileSystemDatastore(unittest.TestCase):
             validate_dataset(columns, rows + [DatasetRow(0, [1, 3])])
         with self.assertRaises(ValueError):
             validate_dataset(columns, rows + [DatasetRow(3, [1, 3])], row_counter=3)
+
+    def validate_class_size_dataset(self, ds):
+        """Validate some features of the loaded class size dataset."""
+        self.assertEquals(len(ds.columns), 4)
+        self.assertEquals(ds.column_by_name('average_class_size').identifier, 0)
+        self.assertEquals(ds.column_by_name('grade_or_service_category_').identifier, 1)
+        self.assertEquals(ds.column_by_name('program').identifier, 2)
+        self.assertEquals(ds.column_by_name('core_course_high_schools_only_').identifier, 3)
+        self.assertEquals(ds.row_count, 54)
+        # Get the first row
+        row = ds.fetch_rows(offset=0, limit=1)[0]
+        self.assertEquals(row.identifier, 0)
+        self.assertTrue(isinstance(row.values[0], float))
 
 
 if __name__ == '__main__':

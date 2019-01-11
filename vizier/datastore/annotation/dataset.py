@@ -23,7 +23,7 @@ metadata object is barely a wrapper around three lists of resource annotations.
 import json
 import os
 
-from vizier.datastore.annotation.base import CellAnnotation, ColumnAnnotation, RowAnnotation
+from vizier.datastore.annotation.base import DatasetAnnotation
 
 
 class DatasetMetadata(object):
@@ -63,23 +63,20 @@ class DatasetMetadata(object):
         row_id: int, optional
             Unique row identifier
         """
-        if column_id is None and row_id is None:
-            raise ValueError('must specify at least one dataset resource identifier')
-        elif row_id is None:
-            self.columns.append(
-                ColumnAnnotation(key=key, value=value, column_id=column_id)
-            )
+        # Create the annotation object. This will raise an exception if the
+        # resource identifier is invalid.
+        annotation = DatasetAnnotation(
+            key=key,
+            value=value,
+            column_id=column_id,
+            row_id=row_id
+        )
+        if row_id is None:
+            self.columns.append(annotation)
         elif column_id is None:
-            self.rows.append(RowAnnotation(key=key, value=value, row_id=row_id))
+            self.rows.append(annotation)
         else:
-            self.cells.append(
-                CellAnnotation(
-                    key=key,
-                    value=value,
-                    column_id=column_id,
-                    row_id=row_id
-                )
-            )
+            self.cells.append(annotation)
 
     def find_all(self, values, key):
         """Get the list of annotations that are associated with the given key.
@@ -87,14 +84,14 @@ class DatasetMetadata(object):
 
         Parameters
         ----------
-        values: list(vizier.datastore.annotation.base.Annotation)
+        values: list(vizier.datastore.annotation.base.DatasetAnnotation)
             List of annotations
         key: string
             Unique property key
 
         Returns
         -------
-        list(vizier.datastore.annotation.base.Annotation)
+        list(vizier.datastore.annotation.base.DatasetAnnotation)
         """
         result = list()
         for anno in values:
@@ -148,7 +145,7 @@ class DatasetMetadata(object):
 
         Parameters
         ----------
-        values: list(vizier.datastore.annotation.base.Annotation)
+        values: list(vizier.datastore.annotation.base.DatasetAnnotation)
             List of annotations
         key: string
             Unique property key
@@ -158,7 +155,7 @@ class DatasetMetadata(object):
 
         Returns
         -------
-        vizier.datastore.annotation.base.Annotation
+        vizier.datastore.annotation.base.DatasetAnnotation
         """
         result = self.find_all(values=values, key=key)
         if len(result) == 0:
@@ -180,7 +177,7 @@ class DatasetMetadata(object):
 
         Returns
         -------
-        list(vizier.datastpre.annotation.base.CellAnnotation)
+        list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
         result = list()
         for anno in self.cells:
@@ -198,7 +195,7 @@ class DatasetMetadata(object):
 
         Returns
         -------
-        list(vizier.datastpre.annotation.base.ColumnAnnotation)
+        list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
         result = list()
         for anno in self.columns:
@@ -216,7 +213,7 @@ class DatasetMetadata(object):
 
         Returns
         -------
-        list(vizier.datastpre.annotation.base.RowAnnotation)
+        list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
         result = list()
         for anno in self.rows:
@@ -248,11 +245,11 @@ class DatasetMetadata(object):
         columns = None
         rows = None
         if 'cells' in doc:
-            cells = [CellAnnotation.from_dict(a) for a in doc['cells']]
+            cells = [DatasetAnnotation.from_dict(a) for a in doc['cells']]
         if 'columns' in doc:
-            columns = [ColumnAnnotation.from_dict(a) for a in doc['columns']]
+            columns = [DatasetAnnotation.from_dict(a) for a in doc['columns']]
         if 'rows' in doc:
-            rows = [RowAnnotation.from_dict(a) for a in doc['rows']]
+            rows = [DatasetAnnotation.from_dict(a) for a in doc['rows']]
         return DatasetMetadata(
             cells=cells,
             columns=columns,
@@ -280,27 +277,19 @@ class DatasetMetadata(object):
         """
         # Get the resource annotations list and the indices of the candidates
         # that match the resource identifier.
-        candidates = list()
         if column_id is None and row_id is None:
             raise ValueError('must specify at least one dataset resource identifier')
-        elif row_id is None:
-            elements = self.columns
-            for i in range(len(elements)):
-                anno = elements[i]
-                if anno.column_id == column_id:
-                    candidates.append(i)
         elif column_id is None:
             elements = self.rows
-            for i in range(len(elements)):
-                anno = elements[i]
-                if anno.row_id == row_id:
-                    candidates.append(i)
+        elif row_id is None:
+            elements = self.columns
         else:
             elements = self.cells
-            for i in range(len(elements)):
-                anno = elements[i]
-                if anno.column_id == column_id and anno.row_id == row_id:
-                    candidates.append(i)
+        candidates = list()
+        for i in range(len(elements)):
+            anno = elements[i]
+            if anno.column_id == column_id and anno.row_id == row_id:
+                candidates.append(i)
         # Get indices of all annotations that are being deleted. Use key and
         # value as filter if given. Otherwise, remove all elements in the list
         del_idx_list = list()
@@ -336,10 +325,37 @@ class DatasetMetadata(object):
         """
         doc = dict()
         if len(self.cells) > 0:
-            doc['cells'] = [a.to_dict() for a in self.cells]
+            doc['cells'] = [a.to_dict() for a in deduplicate(self.cells)]
         if len(self.columns) > 0:
-            doc['columns'] = [a.to_dict() for a in self.columns]
+            doc['columns'] = [a.to_dict() for a in deduplicate(self.columns)]
         if len(self.rows) > 0:
-            doc['rows'] = [a.to_dict() for a in self.rows]
+            doc['rows'] = [a.to_dict() for a in deduplicate(self.rows)]
         with open(filename, 'w') as f:
             json.dump(doc, f)
+
+
+#  -----------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def deduplicate(elements):
+    """Remove duplicate entries in a list of dataset annotations.
+
+    Parameters
+    ----------
+    elements: list(vizier.datastore.annotation.base.DatasetAnnotation)
+        List of dataset annotations
+
+    Returns
+    -------
+    list(vizier.datastore.annotation.base.DatasetAnnotation)
+    """
+    if len(elements) < 2:
+        return elements
+    s = sorted(elements, key=lambda a: (a.column_id, a.row_id, a.key, a.value))
+    result = s[:1]
+    for a in s[1:]:
+        l = result[-1]
+        if a.column_id != l.column_id or a.row_id != l.row_id or a.key != l.key or a.value != l.value:
+            result.append(a)
+    return result

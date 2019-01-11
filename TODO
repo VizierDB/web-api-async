@@ -1,9 +1,3 @@
-Annotations in serialized dataset handle
-
-Eliminate from vizier.datastore.metadata import DatasetMetadata
-
 Eliminate other vizier.datastore.metadata.
 
 Rename DatasetMetadata to DatasetAnnotations
-
-query_annotations()

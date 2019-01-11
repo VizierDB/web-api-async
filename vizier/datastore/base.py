@@ -65,7 +65,10 @@ class Datastore(object):
     def get_annotations(self, identifier, column_id=None, row_id=None):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
-        returned. If
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
 
         Parameters
         ----------
@@ -76,7 +79,7 @@ class Datastore(object):
 
         Returns
         -------
-        list(vizier.datastore.annotation.base.Annotation)
+        vizier.datastore.annotation.dataset.DatasetMetadata
         """
         raise NotImplementedError
 
@@ -131,12 +134,17 @@ class Datastore(object):
 
     @abstractmethod
     def update_annotation(
-        self, identifier, column_id=None, row_id=None, anno_id=None,
-        key=None, value=None
+        self, identifier, key, old_value=None, new_value=None, column_id=None,
+        row_id=None
     ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
 
         Parameters
         ----------
@@ -146,16 +154,14 @@ class Datastore(object):
             Unique column identifier
         row_id: int, optional
             Unique row identifier
-        anno_id: int
-            Unique annotation identifier
         key: string, optional
             Annotation key
-        value: string, optional
-            Annotation value
+        old_value: string, optional
+            Previous annotation value whan updating an existing annotation.
 
         Returns
         -------
-        vizier.datastore.annotation.base.Annotation
+        bool
         """
         raise NotImplementedError
 

@@ -15,30 +15,33 @@
 # limitations under the License.
 
 """Vizier supports annotations for dataset columns, rows, and cells. Each
-annotation is a key,value pair and has a unique identifier. This module contains
-annotation objects for the three types of resources listed above.
+annotation is a key,value pair. Each annotation contains the identifier of the
+particular resource that it is associated with.
 """
 
 from vizier.core.util import is_scalar
 
 
-class Annotation(object):
-    """Annotations are identifiable key value pairs. The object identifier are
-    unique only among annotations for the same dataset component. They are not
-    global unique identifier.
+class DatasetAnnotation(object):
+    """Dataset annotations are key,value pairs. Each annotation is associated
+    with one of the following dataset resource types: column, row, cell. The
+    resource is identified by the combination of column id and row id. At least
+    one of the two identifier has to be not None.
 
     Attributes
     ----------
-    identifier: int, optional
-        Unique annotation identifier
     key: string
         Annotation key
-    value: string
+    value: scalar
         Annotation value
+    column_id: int, optional
+        Unique column identifier
+    row_id: int, optional
+        Unique row identifier
     """
-    def __init__(self, key, value, identifier=None):
-        """Initialize the annotation components. When creating a new annotation
-        object the identifier can be None.
+    def __init__(self, key, value, column_id=None, row_id=None):
+        """Initialize the annotation components. Raises ValueError if both
+        identifier are None.
 
         Parameters
         ----------
@@ -46,12 +49,17 @@ class Annotation(object):
             Annotation key
         value: string
             Annotation value
-        identifier: int, optional
-            Unique annotation identifier
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optional
+            Unique row identifier
         """
-        self.identifier = identifier
+        if column_id is None and row_id is None:
+            raise ValueError('invalid dataset resource identifier')
         self.key = key
         self.value = value
+        self.column_id = column_id
+        self.row_id = row_id
 
     def to_dict(self):
         """Get default dictionary serialization for the annotation object.
@@ -65,39 +73,11 @@ class Annotation(object):
         if not is_scalar(self.value):
             raise ValueError('invalid annotation value')
         return {
-            'id': self.identifier,
             'key': self.key,
-            'value': self.value
+            'value': self.value,
+            'columnId': self.column_id,
+            'rowId': self.row_id
         }
-
-
-class CellAnnotation(Annotation):
-    """A cell annotation extends the annotation object with the unique column
-    identifier and row identifier for the cell.
-    """
-    def __init__(self, column_id, row_id, key, value, identifier=None):
-        """Initialize the annotation components.
-
-        Parameters
-        ----------
-        column_id: int
-            Unique column identifier
-        row_id: int
-            Unique row identifier
-        key: string
-            Annotation key
-        value: string
-            Annotation value
-        identifier: int, optional
-            Unique annotation identifier
-        """
-        super(CellAnnotation, self).__init__(
-            key=key,
-            value=value,
-            identifier=identifier
-        )
-        self.column_id = column_id
-        self.row_id = row_id
 
     @staticmethod
     def from_dict(doc):
@@ -110,138 +90,11 @@ class CellAnnotation(Annotation):
 
         Returns
         -------
-        vizier.datastore.annotation.base.CellAnnotation
+        vizier.datastore.annotation.base.DatasetAnnotation
         """
-        return CellAnnotation(
+        return DatasetAnnotation(
             key=doc['key'],
             value=doc['value'],
-            identifier=doc['id'],
             column_id=doc['columnId'],
             row_id=doc['rowId']
         )
-
-    def to_dict(self):
-        """Get default dictionary serialization for the annotation object.
-
-        Returns
-        -------
-        dict
-        """
-        obj = super(CellAnnotation, self).to_dict()
-        obj['columnId'] = self.column_id
-        obj['rowId'] = self.row_id
-        return obj
-
-
-class ColumnAnnotation(Annotation):
-    """A column annotation extends the annotation object with the unique column
-    identifier.
-    """
-    def __init__(self, column_id, key, value, identifier=None):
-        """Initialize the annotation components.
-
-        Parameters
-        ----------
-        column_id: int
-            Unique column identifier
-        key: string
-            Annotation key
-        value: string
-            Annotation value
-        identifier: int, optional
-            Unique annotation identifier
-        """
-        super(ColumnAnnotation, self).__init__(
-            key=key,
-            value=value,
-            identifier=identifier
-        )
-        self.column_id = column_id
-
-    @staticmethod
-    def from_dict(doc):
-        """Create an annotation instance from a dictionary representation.
-
-        Parameters
-        ----------
-        doc: dict
-            Dictionary representation as generated by to_dict()
-
-        Returns
-        -------
-        vizier.datastore.annotation.base.ColumnAnnotation
-        """
-        return ColumnAnnotation(
-            key=doc['key'],
-            value=doc['value'],
-            identifier=doc['id'],
-            column_id=doc['columnId']
-        )
-
-    def to_dict(self):
-        """Get default dictionary serialization for the annotation object.
-
-        Returns
-        -------
-        dict
-        """
-        obj = super(ColumnAnnotation, self).to_dict()
-        obj['columnId'] = self.column_id
-        return obj
-
-
-class RowAnnotation(Annotation):
-    """A row annotation extends the annotation object with the unique row
-    identifier.
-    """
-    def __init__(self, row_id, key, value, identifier=None):
-        """Initialize the annotation components.
-
-        Parameters
-        ----------
-        row_id: int
-            Unique row identifier
-        key: string
-            Annotation key
-        value: string
-            Annotation value
-        identifier: int, optional
-            Unique annotation identifier
-        """
-        super(RowAnnotation, self).__init__(
-            key=key,
-            value=value,
-            identifier=identifier
-        )
-        self.row_id = row_id
-
-    @staticmethod
-    def from_dict(doc):
-        """Create an annotation instance from a dictionary representation.
-
-        Parameters
-        ----------
-        doc: dict
-            Dictionary representation as generated by to_dict()
-
-        Returns
-        -------
-        vizier.datastore.annotation.base.RowAnnotation
-        """
-        return RowAnnotation(
-            key=doc['key'],
-            value=doc['value'],
-            identifier=doc['id'],
-            row_id=doc['rowId']
-        )
-
-    def to_dict(self):
-        """Get default dictionary serialization for the annotation object.
-
-        Returns
-        -------
-        dict
-        """
-        obj = super(RowAnnotation, self).to_dict()
-        obj['rowId'] = self.row_id
-        return obj

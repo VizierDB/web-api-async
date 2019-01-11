@@ -22,7 +22,30 @@ import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
 
 
-def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
+def ANNOTATION(anno):
+    """Get dictionary serialization for a dataset annotation.
+
+    Parameters
+    ----------
+    anno: vizier.datastore.annotation.base.DatasetAnnotation
+        Dataset annotation object
+
+    Returns
+    -------
+    dict
+    """
+    obj = {
+        labels.KEY: anno.key,
+        labels.value: anno.value
+    }
+    if not anno.column_id is None:
+        obj['columnId'] = anno.column_id
+    if not anno.row_id is None:
+        obj['rowId'] = anno.row_id
+    return obj
+
+
+def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
     """Get dictionary serialization for dataset component annotations.
 
     Parameters
@@ -31,12 +54,8 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
         Handle for project containing the dataset
     dataset: vizier.datastore.dataset.DatasetDescriptor
         Dataset descriptor
-    annotations: list(vizier.datastore.metadata.Annotation)
+    annotations: vizier.datastore.annotation.dataset.DatasetMetadata
         Set of annotations for dataset components
-    column_id: int
-        Unique column identifier for component
-    row_id: int
-        Unique row identifier for component
     urls: vizier.api.routes.base.UrlFactory, optional
         Factory for resource urls
 
@@ -44,17 +63,13 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
     -------
     dict
     """
-    obj = {
-        'annotations': [{
-            labels.ID: a.identifier,
-            'key': a.key,
-            'value': a.value
-        } for a in annotations]
-    }
-    if column_id >= 0:
-        obj[labels.COLUMN] = column_id
-    if row_id >= 0:
-        obj[labels.ROW] = row_id
+    obj = dict()
+    if len(annotations.columns) > 0:
+        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
+    if len(annotations.rows) > 0:
+        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
+    if len(annotations.cells) > 0:
+        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
     # Add references to update annotations
     obj[labels.LINKS] = serialize.HATEOAS({
         'annotations:update': urls.update_dataset_annotations(
@@ -63,34 +78,6 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, column_id, row_id, urls):
         )
     })
     return obj
-
-
-def DATASET_ANNOTATION_STATEMENT(column_id, row_id, key, value):
-    """Get dictionary serialization for the definition of a dataset cell
-    annotation. Contrary to an existing annotation the definition specifies the
-    cell column and row identifier instead of the annotation identifier.
-
-    Parameters
-    ----------
-    column_id: int
-        Unique column identifier
-    row_id: int
-        Unique row identifier
-    key: string
-        Annotation key
-    value: scalar
-        Annotation value
-
-    Returns
-    -------
-    dict
-    """
-    return {
-        labels.COLUMN: column_id,
-        labels.ROW: row_id,
-        labels.KEY: key,
-        labels.VALUE: value
-    }
 
 
 def DATASET_COLUMN(column):
@@ -192,7 +179,6 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     # Serialize rows. The default dictionary representation for a row does
     # not include the row index position nor the annotation information.
     serialized_rows = list()
-    annotated_cells = list()
     for row in rows:
         serialized_rows.append({
             labels.ID: row.identifier,
@@ -202,7 +188,6 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     obj[labels.ROWS] = serialized_rows
     obj[labels.ROWCOUNT] = dataset.row_count
     obj[labels.OFFSET] = offset
-    obj[labels.ANNOTATED_CELLS] = annotated_cells
     # Add pagination references
     links = obj[labels.LINKS]
     # Max. number of records shown
