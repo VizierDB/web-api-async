@@ -56,7 +56,7 @@ from vizier.engine.container import VizierContainerEngine
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.viztrail.objectstore.repository import OSViztrailRepository
 
 
 """Unique factory identifier."""

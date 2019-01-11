@@ -18,7 +18,7 @@
 
 from vizier.core.util import is_valid_name
 from vizier.engine.packages.plot.query import ChartQuery
-from vizier.engine.packages.plot.view import ChartViewHandle
+from vizier.view.chart import ChartViewHandle
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, ChartOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -118,7 +118,8 @@ class PlotProcessor(TaskProcessor):
             outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows)]),
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},
-                write=dict()
+                write=dict(),
+                charts=[view]
             )
         )
 

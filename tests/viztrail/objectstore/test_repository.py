@@ -7,10 +7,10 @@ import unittest
 from vizier.core.io.base import PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
 from vizier.core.io.mem import MemObjectStore
 from vizier.core.loader import ClassLoader
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
-from vizier.viztrail.driver.objectstore.repository import OBJ_VIZTRAILINDEX
-from vizier.viztrail.driver.objectstore.viztrail import FOLDER_BRANCHES, FOLDER_MODULES
-from vizier.viztrail.driver.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA, OBJ_PROPERTIES
+from vizier.viztrail.objectstore.repository import OSViztrailRepository
+from vizier.viztrail.objectstore.repository import OBJ_VIZTRAILINDEX
+from vizier.viztrail.objectstore.viztrail import FOLDER_BRANCHES, FOLDER_MODULES
+from vizier.viztrail.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA, OBJ_PROPERTIES
 from vizier.viztrail.base import PROPERTY_NAME
 
 

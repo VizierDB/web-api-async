@@ -3,7 +3,7 @@
 import unittest
 
 
-from vizier.viztrail.driver.objectstore.branch import get_workflow_id
+from vizier.viztrail.objectstore.branch import get_workflow_id
 
 
 class TestOSBranchWorkflowID(unittest.TestCase):

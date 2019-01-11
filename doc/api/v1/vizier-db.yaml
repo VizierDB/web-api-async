@@ -1128,17 +1128,6 @@ definitions:
                 type: array
                 items:
                     $ref: "#/definitions/Reference"
-    DatasetIdentifier:
-        type: object
-        description: Named dataset associated with workflow state
-        required:
-            - id
-            - name
-        properties:
-            id:
-                type: string
-            name:
-                type: string
     DatasetRow:
         type: object
         description: Row in a dataset
@@ -1238,7 +1227,11 @@ definitions:
             datasets:
                 type: array
                 items:
-                    $ref: '#/definitions/DatasetIdentifier'
+                    $ref: '#/definitions/ResourceIdentifier'
+            views:
+                type: array
+                items:
+                    $ref: '#/definitions/ResourceIdentifier'
             links:
                 type: array
                 items:
@@ -1473,6 +1466,17 @@ definitions:
                 type: string
             href:
                 type: string
+    ResourceIdentifier:
+        type: object
+        description: Named dataset associated with workflow state
+        required:
+            - id
+            - name
+        properties:
+            id:
+                type: string
+            name:
+                type: string
     ServiceDescriptor:
         type: object
         description: Basic service properties
@@ -1538,11 +1542,11 @@ definitions:
                     read:
                         type: array
                         items:
-                            $ref: '#/definitions/DatasetIdentifier'
+                            $ref: '#/definitions/ResourceIdentifier'
                     write:
                         type: array
                         items:
-                            $ref: '#/definitions/DatasetIdentifier'
+                            $ref: '#/definitions/ResourceIdentifier'
                     delete:
                         type: array
                         items:

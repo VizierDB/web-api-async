@@ -23,8 +23,8 @@ from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
-from vizier.viztrail.driver.objectstore.module import OSModuleHandle
-from vizier.viztrail.driver.objectstore.module import get_module_path
+from vizier.viztrail.objectstore.module import OSModuleHandle
+from vizier.viztrail.objectstore.module import get_module_path
 from vizier.viztrail.module.base import MODULE_PENDING, MODULE_RUNNING
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
@@ -260,7 +260,7 @@ class OSBranchHandle(BranchHandle):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.branch.OSBranchHandle
+        vizier.viztrail.objectstore.branch.OSBranchHandle
         """
         # Make sure the object store is not None
         if object_store is None:
@@ -411,7 +411,7 @@ class OSBranchHandle(BranchHandle):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.branch.OSBranchHandle
+        vizier.viztrail.objectstore.branch.OSBranchHandle
         """
         # Make sure the object store is not None
         if object_store is None:
@@ -564,7 +564,7 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
 
     Returns
     -------
-    list(vizier.viztrail.driver.objectstore.module.OSModuleHandle)
+    list(vizier.viztrail.objectstore.module.OSModuleHandle)
     """
     modules = list()
     database_state = dict()

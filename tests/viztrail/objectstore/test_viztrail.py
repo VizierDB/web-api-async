@@ -6,16 +6,16 @@ import unittest
 
 
 from vizier.api.client.command.pycell import python_cell
-from vizier.viztrail.driver.objectstore.module import OSModuleHandle
-from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
+from vizier.viztrail.objectstore.module import OSModuleHandle
+from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.base import PROPERTY_NAME
 from vizier.viztrail.module.base import MODULE_SUCCESS
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 
-import vizier.viztrail.driver.objectstore.branch as br
-import vizier.viztrail.driver.objectstore.viztrail as viztrail
+import vizier.viztrail.objectstore.branch as br
+import vizier.viztrail.objectstore.viztrail as viztrail
 
 
 REPO_DIR = './.temp'

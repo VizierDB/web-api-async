@@ -8,7 +8,7 @@ import unittest
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.viztrail.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.base import PROPERTY_NAME
 
 

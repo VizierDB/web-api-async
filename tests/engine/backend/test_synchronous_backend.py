@@ -5,7 +5,6 @@ import shutil
 import unittest
 
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
-from vizier.engine.backend.cache import ContextCache
 from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.base import task_context
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
@@ -17,7 +16,7 @@ from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.engine.task.base import TaskHandle
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.viztrail.objectstore.repository import OSViztrailRepository
 
 import vizier.api.client.command.vizual as vizual
 import vizier.api.client.command.pycell as pycell

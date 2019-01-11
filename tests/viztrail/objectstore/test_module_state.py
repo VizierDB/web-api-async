@@ -4,7 +4,7 @@ import unittest
 
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetDescriptor
-from vizier.viztrail.driver.objectstore.module import OSModuleHandle
+from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance

@@ -22,7 +22,7 @@ from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
-from vizier.viztrail.driver.objectstore.branch import OSBranchHandle
+from vizier.viztrail.objectstore.branch import OSBranchHandle
 from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH
 
@@ -116,7 +116,7 @@ class OSViztrailHandle(ViztrailHandle):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.branch.OSBranchHandle
+        vizier.viztrail.objectstore.branch.OSBranchHandle
         """
         branch = create_branch(
             provenance=provenance,
@@ -373,7 +373,7 @@ def create_branch(
 
     Returns
     -------
-    vizier.viztrail.driver.objectstore.branch.OSBranchHandle
+    vizier.viztrail.objectstore.branch.OSBranchHandle
     """
     # Get unique identifier for new branch by creating the subfolder that
     # will contain branch resources
@@ -407,7 +407,7 @@ def write_branch_index(branches, object_path, object_store):
 
     Parameters
     ----------
-    branches: dict(vizier.viztrail.driver.objectstore.branch.OSBranchHandle)
+    branches: dict(vizier.viztrail.objectstore.branch.OSBranchHandle)
         Current ser of branches in the viztrail
     object_path: string
         Path to branch index list

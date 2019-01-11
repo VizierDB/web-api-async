@@ -7,7 +7,7 @@ import unittest
 from vizier.api.client.command.plot import create_plot
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.plot.query import ChartQuery
-from vizier.engine.packages.plot.view import ChartViewHandle
+from vizier.view.chart import ChartViewHandle
 from vizier.filestore.fs.base import FileSystemFilestore
 
 

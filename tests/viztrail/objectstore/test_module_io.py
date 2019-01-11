@@ -7,7 +7,8 @@ import unittest
 
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.viztrail.driver.objectstore.module import OSModuleHandle
+from vizier.view.chart import ChartViewHandle, DataSeriesHandle
+from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.module.base import MODULE_PENDING, MODULE_SUCCESS
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -259,6 +260,61 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEquals(m.provenance.write['DS1'].identifier, 'ID1')
         self.assertEquals(m.provenance.write['DS2'].identifier, 'ID2')
         self.assertEquals(m.provenance.delete, ['A', 'B'])
+        # Module with chart
+        chart = ChartViewHandle(
+            identifier='A',
+            dataset_name='DS1',
+            chart_name='My Chart',
+            data=[
+                DataSeriesHandle(
+                    column='COL1',
+                    label='SERIES1',
+                    range_start=0,
+                    range_end=100
+                ),
+                DataSeriesHandle(
+                    column='COL2',
+                    range_start=101,
+                    range_end=200
+                ),
+                DataSeriesHandle(
+                    column='COL3',
+                    label='SERIES2'
+                )
+            ],
+            x_axis=1,
+            chart_type='bar',
+            grouped_chart=True
+        )
+        mod0 = OSModuleHandle.create_module(
+            command=python_cell(source='print 2+2'),
+            external_form='TEST MODULE',
+            state=MODULE_PENDING,
+            outputs=ModuleOutputs(),
+            provenance=ModuleProvenance(
+                charts=[chart]
+            ),
+            timestamp=ModuleTimestamp(),
+            module_folder=MODULE_DIR
+        )
+        m = OSModuleHandle.load_module(
+            identifier=mod0.identifier,
+            module_path=mod0.module_path
+        )
+        self.assertEquals(len(m.provenance.charts), 1)
+        c = m.provenance.charts[0]
+        self.assertEquals(chart.identifier, c.identifier)
+        self.assertEquals(chart.dataset_name, c.dataset_name)
+        self.assertEquals(chart.chart_name, c.chart_name)
+        self.assertEquals(chart.x_axis, c.x_axis)
+        self.assertEquals(chart.chart_type, c.chart_type)
+        self.assertEquals(chart.grouped_chart, c.grouped_chart)
+        self.assertEquals(len(c.data), 3)
+        for i in range(3):
+            self.assertEquals(c.data[i].column, chart.data[i].column)
+            self.assertEquals(c.data[i].label, chart.data[i].label)
+            self.assertEquals(c.data[i].range_start, chart.data[i].range_start)
+            self.assertEquals(c.data[i].range_end, chart.data[i].range_end)
 
     def test_read_write_module(self):
         """Test reading and writing modules."""

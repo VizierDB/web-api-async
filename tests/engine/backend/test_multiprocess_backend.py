@@ -6,7 +6,6 @@ import time
 import unittest
 
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
-from vizier.engine.backend.cache import ContextCache
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
@@ -19,7 +18,7 @@ from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.engine.task.base import TaskHandle
 from vizier.engine.task.processor import TaskProcessor
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
-from vizier.viztrail.driver.objectstore.repository import OSViztrailRepository
+from vizier.viztrail.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.client.command.vizual as vizual

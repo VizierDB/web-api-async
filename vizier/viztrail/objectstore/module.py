@@ -21,6 +21,7 @@ object store.
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.view.chart import ChartViewHandle
 from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
@@ -51,6 +52,7 @@ KEY_OUTPUT_TYPE = 'type'
 KEY_OUTPUT_VALUE = 'value'
 KEY_PACKAGE_ID = 'packageId'
 KEY_PROVENANCE = 'prov'
+KEY_PROVENANCE_CHARTS = 'charts'
 KEY_PROVENANCE_DELETE = 'delete'
 KEY_PROVENANCE_READ = 'read'
 KEY_PROVENANCE_RESOURCES = 'resources'
@@ -107,6 +109,9 @@ class OSModuleHandle(ModuleHandle):
           - id: ...
           - name: ...
         ]
+      - delete: [],
+      - resources: {}
+      - charts: []
     """
     def __init__(
         self, identifier, command, external_form, module_path,
@@ -186,7 +191,7 @@ class OSModuleHandle(ModuleHandle):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.module.OSModuleHandle
+        vizier.viztrail.objectstore.module.OSModuleHandle
         """
         # Make sure the object store is not None
         if object_store is None:
@@ -237,7 +242,7 @@ class OSModuleHandle(ModuleHandle):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.module.OSModuleHandle
+        vizier.viztrail.objectstore.module.OSModuleHandle
         """
         # Make sure the object store is not None
         if object_store is None:
@@ -313,11 +318,18 @@ class OSModuleHandle(ModuleHandle):
         res_prov = None
         if KEY_PROVENANCE_RESOURCES in obj[KEY_PROVENANCE]:
             res_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_RESOURCES]
+        charts_prov = None
+        if KEY_PROVENANCE_CHARTS in obj[KEY_PROVENANCE]:
+            charts_prov = [
+                ChartViewHandle.from_dict(c)
+                    for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
+            ]
         provenance = ModuleProvenance(
             read=read_prov,
             write=write_prov,
             delete=delete_prov,
-            resources=res_prov
+            resources=res_prov,
+            charts=charts_prov
         )
         # Create dictionary of dataset descriptors only if previous state is
         # given and the module is in SUCCESS state. Otherwise, the database
@@ -586,6 +598,8 @@ def serialize_module(command, external_form, state, timestamp, outputs, provenan
         prov[KEY_PROVENANCE_DELETE] = list(provenance.delete)
     if not provenance.resources is None:
         prov[KEY_PROVENANCE_RESOURCES] = provenance.resources
+    if not provenance.charts is None:
+        prov[KEY_PROVENANCE_CHARTS] = [c.to_dict() for c in provenance.charts]
     # Create dictionary serialization for the module handle
     return {
         KEY_EXTERNAL_FORM: external_form,

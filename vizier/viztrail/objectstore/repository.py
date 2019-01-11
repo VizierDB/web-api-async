@@ -27,7 +27,7 @@ import os
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.loader import ClassLoader
 from vizier.core.util import init_value
-from vizier.viztrail.driver.objectstore.viztrail import OSViztrailHandle
+from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.repository import ViztrailRepository
 
 
@@ -110,7 +110,7 @@ class OSViztrailRepository(ViztrailRepository):
 
         Returns
         -------
-        vizier.viztrail.driver.objectstore.viztrail.OSViztrailHandle
+        vizier.viztrail.objectstore.viztrail.OSViztrailHandle
         """
         # Get unique identifier for new viztrail and viztrail directory. Raise
         # runtime error if the returned identifier is not unique.

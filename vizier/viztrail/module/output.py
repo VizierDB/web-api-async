@@ -90,7 +90,7 @@ class ChartOutput(OutputObject):
 
         Parameters
         ----------
-        view: vizier.engine.packages.plot.view.ChartViewHandle
+        view: vizier.view.chart.ChartViewHandle
             Handle defining the dataset chart view
         rows: list
             List of rows in the query result

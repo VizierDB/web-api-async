@@ -96,7 +96,7 @@ class ChartQuery(object):
         ----------
         dataset: vizier.datastore.dataset.DatasetHandle
             Handle for dataset that is being queried
-        view: vizier.engine.packages.plot.view.ChartViewHandle
+        view: vizier.view.chart.ChartViewHandle
             Chart view definition handle
 
         Returns
