@@ -58,7 +58,7 @@ class DatasetMetadata(object):
             Annotation key
         value: scalar
             Annotation value
-        column_id: int, optional
+        column_id: int, 'rows'optional
             Unique column identifier
         row_id: int, optional
             Unique row identifier
@@ -332,6 +332,16 @@ class DatasetMetadata(object):
             doc['rows'] = [a.to_dict() for a in deduplicate(self.rows)]
         with open(filename, 'w') as f:
             json.dump(doc, f)
+
+    @property
+    def values(self):
+        """List all annotations in the metadata set.
+
+        Returns
+        -------
+        list(vizier.datastore.annotation.base.DatasetAnnotation)
+        """
+        return self.columns + self.rows + self.cells
 
 
 #  -----------------------------------------------------------------------------

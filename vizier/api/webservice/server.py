@@ -562,15 +562,15 @@ def create_dataset(project_id):
     # Validate the request
     obj = srv.validate_json_request(
         request,
-        required=['columns', 'rows'],
-        optional=['annotations']
+        required=[labels.COLUMNS, labels.ROWS],
+        optional=[labels.ANNOTATIONS]
     )
     columns = deserialize.DATASET_COLUMNS(obj[labels.COLUMNS])
     rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
     annotations = None
-    if 'annotations' in obj:
+    if labels.ANNOTATIONS in obj:
         annotations = DatasetMetadata()
-        for anno in obj['annotations']:
+        for anno in obj[labels.ANNOTATIONS]:
             a = deserialize.ANNOTATION(anno)
             if a.column_id is None:
                 annotations.rows.append(a)

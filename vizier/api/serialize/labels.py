@@ -36,7 +36,7 @@ SELF = 'self'
 REL = 'rel'
 
 # Datasets
-ANNOTATED_CELLS = 'annotatedCells'
+ANNOTATIONS = 'annotations'
 COLUMN = 'column'
 COLUMNS = 'columns'
 DATATYPE = 'type'

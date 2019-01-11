@@ -25,6 +25,7 @@ import requests
 from vizier.api.client.datastore.dataset import RemoteDatasetHandle
 from vizier.datastore.base import Datastore
 
+import vizier.api.serialize.dataset as serialize
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 
@@ -66,7 +67,7 @@ class DatastoreClient(Datastore):
 
         Returns
         -------
-        vizier.datastore.dataset.DatasetHandle
+        vizier.datastore.dataset.DatasetDescriptor
         """
         url = self.urls.create_dataset()
         data = {
@@ -74,7 +75,9 @@ class DatastoreClient(Datastore):
             labels.ROWS: [serialize.DATASET_ROW(row) for row in rows]
         }
         if not annotations is None:
-            pass #???
+            data[labels.ANNOTATIONS] = [
+                serialize.ANNOTATION(a) for a in annotations.values
+            ]
         # Send request. Raise exception if status code indicates that the
         # request was not successful.
         r = requests.post(url, json=data)

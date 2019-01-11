@@ -573,11 +573,6 @@ paths:
                   required: true
                   description: The unique project identifier
                   type: string
-                - name: datasetId
-                  in: path
-                  required: true
-                  description: The unique dataset identifier
-                  type: string
                 - name: dataset
                   in: body
                   description: Dataset schema, rows, and optional annotations

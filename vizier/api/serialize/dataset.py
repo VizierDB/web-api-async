@@ -63,13 +63,11 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
     -------
     dict
     """
-    obj = dict()
-    if len(annotations.columns) > 0:
-        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
-    if len(annotations.rows) > 0:
-        obj['rows'] = [ANNOTATION(a) for a in annotations.rows]
-    if len(annotations.cells) > 0:
-        obj['cells'] = [ANNOTATION(a) for a in annotations.cells]
+    obj = {
+        'columns': [ANNOTATION(a) for a in annotations.columns],
+        'rows': [ANNOTATION(a) for a in annotations.rows],
+        'cells': [ANNOTATION(a) for a in annotations.cells]
+    }
     # Add references to update annotations
     obj[labels.LINKS] = serialize.HATEOAS({
         'annotations:update': urls.update_dataset_annotations(
