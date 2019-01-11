@@ -4,6 +4,8 @@ import os
 import shutil
 import unittest
 
+from vizier.datastore.annotation.base import CellAnnotation, ColumnAnnotation, RowAnnotation
+from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.datastore.fs.base import DATA_FILE, DESCRIPTOR_FILE, METADATA_FILE
@@ -43,6 +45,100 @@ class TestFileSystemDatastore(unittest.TestCase):
         """
         if os.path.isdir(BASE_DIR):
             shutil.rmtree(BASE_DIR)
+
+    def test_annotations(self):
+        """Test loading a dataset from file."""
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.create_dataset(
+            columns=[
+                DatasetColumn(identifier=0, name='A'),
+                DatasetColumn(identifier=1, name='B')
+            ],
+            rows=[DatasetRow(identifier=0, values=['a', 'b'])],
+            annotations=DatasetMetadata(
+                cells=[
+                    CellAnnotation(column_id=0, row_id=0, key='X', value=1),
+                    CellAnnotation(column_id=0, row_id=0, key='X', value=2),
+                    CellAnnotation(column_id=1, row_id=0, key='X', value=3),
+                    CellAnnotation(column_id=1, row_id=1, key='X', value=3),
+                    CellAnnotation(column_id=0, row_id=0, key='Y', value=1)
+                ],
+                columns=[
+                    ColumnAnnotation(column_id=0, key='A', value='x'),
+                    ColumnAnnotation(column_id=2, key='A', value='x')
+                    ],
+                rows=[
+                    RowAnnotation(row_id=0, key='E', value=100),
+                    RowAnnotation(row_id=0, key='E', value=100)
+                ]
+            )
+        )
+        ds = store.get_dataset(ds.identifier)
+        self.assertEquals(len(ds.annotations.cells), 4)
+        self.assertEquals(len(ds.annotations.columns), 1)
+        self.assertEquals(len(ds.annotations.rows), 2)
+        annos = ds.annotations.for_cell(column_id=0, row_id=0)
+        self.assertEquals(len(annos), 3)
+        self.assertTrue(1 in [a.value for a in annos])
+        self.assertTrue(2 in [a.value for a in annos])
+        self.assertFalse(3 in [a.value for a in annos])
+        self.assertEquals(len(ds.annotations.find_all(values=annos, key='X')), 2)
+        with self.assertRaises(ValueError):
+            ds.annotations.find_one(values=annos, key='X')
+        self.assertEquals(len(ds.annotations.for_column(column_id=0)), 1)
+        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 2)
+        annotations = ds.annotations.filter(columns=[1])
+        self.assertEquals(len(annotations.cells), 1)
+        self.assertEquals(len(annotations.columns), 0)
+        self.assertEquals(len(annotations.rows), 2)
+
+        # Reload datastore
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.get_dataset(ds.identifier)
+        self.assertEquals(len(ds.annotations.cells), 4)
+        self.assertEquals(len(ds.annotations.columns), 1)
+        self.assertEquals(len(ds.annotations.rows), 2)
+
+    def test_create_dataset(self):
+        """Test loading a dataset from file."""
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.create_dataset(
+            columns=[
+                DatasetColumn(identifier=0, name='A'),
+                DatasetColumn(identifier=1, name='B')
+            ],
+            rows=[DatasetRow(identifier=0, values=['a', 'b'])]
+        )
+        ds = store.get_dataset(ds.identifier)
+        column_ids = [col.identifier for col in ds.columns]
+        self.assertEquals(len(ds.columns), 2)
+        for id in [0, 1]:
+            self.assertTrue(id in column_ids)
+        column_names = [col.name for col in ds.columns]
+        for name in ['A', 'B']:
+            self.assertTrue(name in column_names)
+        rows = ds.fetch_rows()
+        self.assertEquals(len(rows), 1)
+        self.assertEquals(rows[0].values, ['a', 'b'])
+        self.assertEquals(len(ds.annotations.cells), 0)
+        self.assertEquals(len(ds.annotations.columns), 0)
+        self.assertEquals(len(ds.annotations.rows), 0)
+        # Reload the datastore
+        store = FileSystemDatastore(STORE_DIR)
+        ds = store.get_dataset(ds.identifier)
+        column_ids = [col.identifier for col in ds.columns]
+        self.assertEquals(len(ds.columns), 2)
+        for id in [0, 1]:
+            self.assertTrue(id in column_ids)
+        column_names = [col.name for col in ds.columns]
+        for name in ['A', 'B']:
+            self.assertTrue(name in column_names)
+        rows = ds.fetch_rows()
+        self.assertEquals(len(rows), 1)
+        self.assertEquals(rows[0].values, ['a', 'b'])
+        self.assertEquals(len(ds.annotations.cells), 0)
+        self.assertEquals(len(ds.annotations.columns), 0)
+        self.assertEquals(len(ds.annotations.rows), 0)
 
     def test_create_base(self):
         """Test that the datastore base directory is created if it does not

@@ -656,6 +656,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds = self.api.delete_column(ds.identifier, ds.column_by_name('Age').identifier, self.datastore).dataset
         ds = self.api.delete_row(ds.identifier, 0, self.datastore).dataset
         ds = self.api.delete_row(ds.identifier, 0, self.datastore).dataset
+        ds = self.datastore.get_dataset(ds.identifier)
         ds_rows = ds.fetch_rows()
         names = ['Name', 'Height', 'Salary']
         self.assertEquals(len(ds.columns), len(names))

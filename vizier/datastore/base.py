@@ -21,7 +21,7 @@ workflows.
 
 from abc import abstractmethod
 
-from vizier.datastore.metadata import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata
 
 
 class Datastore(object):
@@ -52,7 +52,7 @@ class Datastore(object):
             Counter to generate unique column identifier
         row_counter: int, optional
             Counter to generate unique row identifier
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
@@ -155,7 +155,7 @@ class Datastore(object):
 
         Returns
         -------
-        vizier.datastore.metadata.Annotation
+        vizier.datastore.annotation.base.Annotation
         """
         raise NotImplementedError
 

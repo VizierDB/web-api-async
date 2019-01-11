@@ -18,7 +18,7 @@
 """
 
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
-from vizier.datastore.metadata import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata
 
 
 class DatasetClient(object):
@@ -28,8 +28,6 @@ class DatasetClient(object):
 
     Attributes
     ----------
-    annotations: vizier.datastore.metadata.DatasetMetadata
-        Annotations for dataset components
     columns: list(vizier.datastore.base.DatasetColumns)
         List of dataset columns
     identifier : string
@@ -50,16 +48,29 @@ class DatasetClient(object):
             new dataset.
         """
         self.dataset = dataset
-        # Delay fetching rows for now
-        self._rows = None
         if not dataset is None:
             self.identifier = dataset.identifier
             self.columns = dataset.columns
-            self.annotations = dataset.annotations
+            # Delay fetching rows and dataset annotations for now
+            self._annotations = None
+            self._rows = None
         else:
             self.identifier = None
             self.columns = list()
-            self.annotations = DatasetMetadata()
+            self._annotations = DatasetMetadata()
+            self._rows = list()
+
+    @property
+    def annotations(self):
+        """Get all dataset annotations.
+
+        Returns
+        -------
+        vizier.datastore.annotation.dataset.DatasetMetadata
+        """
+        if self._annotations is None:
+            self._annotations = self.dataset.get_annotations()
+        return self._annotations
 
     def column_index(self, column_id):
         """Get position of a given column in the dataset schema. The given
@@ -102,6 +113,24 @@ class DatasetClient(object):
         # Delete all value for the deleted column
         for row in ds_rows:
             del row.values[col_index]
+
+    def get_column(self, name):
+        """Get the fist column in the dataset schema that matches the given
+        name. If no column matches the given name None is returned.
+
+        Parameters
+        ----------
+        name: string
+            Column name
+
+        Returns
+        -------
+        vizier.datastore.dataset.DatasetColumn
+        """
+        for col in self.columns:
+            if col.name == name:
+                return col
+        return None
 
     def insert_column(self, name, position=None):
         """Add a new column to the dataset schema.
@@ -225,17 +254,16 @@ class DatasetClient(object):
         """
         if self._rows is None:
             self._rows = list()
-            if not self.dataset is None:
-                for row in self.dataset.fetch_rows():
-                    # Create mutable dataset row and set reference to this dataset
-                    # for updates
-                    self._rows.append(
-                        MutableDatasetRow(
-                            identifier=row.identifier,
-                            values=row.values,
-                            dataset=self
-                        )
+            for row in self.dataset.fetch_rows():
+                # Create mutable dataset row and set reference to this dataset
+                # for updates
+                self._rows.append(
+                    MutableDatasetRow(
+                        identifier=row.identifier,
+                        values=row.values,
+                        dataset=self
                     )
+                )
         return self._rows
 
 
@@ -277,11 +305,16 @@ class MutableDatasetRow(DatasetRow):
 
         Returns
         -------
-        vizier.datastore.metadata.ObjectMetadataSet
+        vizier.engine.packages.pycell.client.ObjectMetadataSet
         """
         col_index = self.dataset.column_index(column)
         column_id = self.dataset.columns[col_index].identifier
-        return self.dataset.annotations.for_cell(column_id, self.identifier)
+        return ObjectMetadataSet(
+            annotations=self.dataset.annotations.for_cell(
+                column_id=column_id,
+                row_id=self.identifier
+            )
+        )
 
     def get_value(self, column):
         """Get the row value for the given column.
@@ -318,3 +351,87 @@ class MutableDatasetRow(DatasetRow):
                 self.dataset.columns[col_index].identifier,
                 self.identifier
             )
+
+
+class ObjectMetadataSet(object):
+    """Query annotations for a dataset resource."""
+    def __init__(self, annotations):
+        """initialize the list of resource annotations.
+
+        Parameters
+        ----------
+        annotations: list(vizier.datastore.annotation.base.Annotation)
+            List of resource annotations
+        """
+        self.annotations = annotations
+
+    def contains(self, key):
+        """Test if an annotation with given key exists for the resource.
+
+        Parameters
+        ----------
+        key: string
+            Annotation key
+
+        Returns
+        -------
+        bool
+        """
+        return not self.find_one(key) is None
+
+    def count(self):
+        """Number of annotations for this resource.
+
+        Returns
+        -------
+        int
+        """
+        return len(self.annotations)
+
+    def find_all(self, key):
+        """Get a list with all annotations that have a given key. Returns an
+        empty list if no annotation with the given key exists.
+
+        Parameters
+        ----------
+        key: string
+            Key value for new annotation
+
+        Returns
+        -------
+        list(vizier.datastore.annotation.base.Annotation)
+        """
+        result = list()
+        for anno in self.annotations:
+            if anno.key == key:
+                result.append(anno)
+        return result
+
+    def find_one(self, key):
+        """Find the first annotation with given key. Returns None if no
+        annotation with the given key exists.
+
+        Parameters
+        ----------
+        key: string
+            Key value for new annotation
+
+        Returns
+        -------
+        vizier.datastore.annotation.base.Annotation
+        """
+        for anno in self.annotations:
+            if anno.key == key:
+                return anno
+
+    def keys(self):
+        """List of existing annotation keys for the object.
+
+        Returns
+        -------
+        list(string)
+        """
+        result = set()
+        for anno in self.annotations:
+            result.add(anno.key)
+        return list(result)

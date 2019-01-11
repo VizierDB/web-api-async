@@ -138,7 +138,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_UPD_CELL),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'UPDATE ds SET [\'Some Name\' , 1] = \'Some Value\'')
+        self.assertEquals(cmd, 'UPDATE ds SET [\'Some Name\', 1] = \'Some Value\'')
 
 
 if __name__ == '__main__':

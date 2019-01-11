@@ -20,7 +20,7 @@ a datastore from within a python script.
 
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.metadata import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
 
 
@@ -107,7 +107,7 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
-        return DatasetClient(dataset=ds)
+        return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
 
     def drop_dataset(self, name):
         """Remove the dataset with the given name.
@@ -308,4 +308,4 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
-        return DatasetClient(dataset=ds)
+        return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))

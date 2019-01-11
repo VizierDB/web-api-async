@@ -198,12 +198,6 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
             labels.ID: row.identifier,
             labels.ROWVALUES: row.values
         })
-        for i in range(len(dataset.columns)):
-            if row.cell_annotations[i] == True:
-                annotated_cells.append({
-                    labels.COLUMN: dataset.columns[i].identifier,
-                    labels.ROW: row.identifier
-                })
     # Serialize the dataset schema and cells
     obj[labels.ROWS] = serialized_rows
     obj[labels.ROWCOUNT] = dataset.row_count

@@ -194,7 +194,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             ]
         }
     """
-    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=-1, annotations=None):
+    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=-1):
         """Initialize information about the Json file.
 
         Parameters
@@ -210,15 +210,12 @@ class DefaultJsonDatasetReader(DatasetReader):
             Number of rows at the beginning of the list that are skipped.
         limit: int, optional
             Limits the number of rows that are returned.
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
-            Annotations for dataset components
         """
         self.filename = filename
         self.columns = columns
         self.compressed = compressed
         self.offset = offset
         self.limit = limit
-        self.annotations = annotations
         # Variables that maintain the internal state of the reader, i.e., the
         # opened file and the list of rows (in original Json format). If the
         # is_open flag is True the file handle (fd) and row list and read index
@@ -255,16 +252,6 @@ class DefaultJsonDatasetReader(DatasetReader):
                     identifier=r_dict[KEY_ROW_ID],
                     values=r_dict[KEY_ROW_VALUES]
                 )
-                # Set the annotation flags in the dataset row
-                if not self.annotations is None:
-                    for i in range(len(self.columns)):
-                        col = self.columns[i]
-                        has_anno = self.annotations.has_cell_annotation(
-                            col.identifier,
-                            row.identifier
-                        )
-                        if has_anno:
-                            row.cell_annotations[i] = True
                 self.read_index += 1
                 return row
         raise StopIteration

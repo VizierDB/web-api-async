@@ -114,6 +114,26 @@ def init_value(value, default_value):
     return value if not value is None else default_value
 
 
+def is_scalar(value):
+    """Test if a given value is a string, integer or float.
+
+    Parameters
+    ----------
+    value: any
+
+    Returns
+    -------
+    bool
+    """
+    if isinstance(value, float):
+        return True
+    elif not isinstance(value, int):
+        return True
+    elif not isinstance(value, float):
+        return True
+    return False
+
+
 def is_valid_name(name):
     """Returns Ture if a given string represents a valid name (e.g., for a
     dataset). Valid names contain only letters, digits, hyphen, underline, or

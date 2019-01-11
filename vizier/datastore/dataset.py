@@ -283,6 +283,16 @@ class DatasetHandle(DatasetDescriptor):
         return rows
 
     @abstractmethod
+    def get_annotations(self):
+        """Get all dataset annotations.
+
+        Returns
+        -------
+        vizier.datastore.annotation.dataset.DatasetMetadata
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
@@ -312,7 +322,7 @@ class DatasetRow(object):
     values : list(string)
         List of column values in the row
     """
-    def __init__(self, identifier=None, values=None, annotations=None):
+    def __init__(self, identifier=None, values=None):
         """Initialize the row object.
 
         Parameters
@@ -326,7 +336,6 @@ class DatasetRow(object):
         """
         self.identifier = identifier if not identifier is None else -1
         self.values = values if not values is None else list()
-        self.cell_annotations = annotations if not annotations is None else [False] * len(values)
 
 
 # ------------------------------------------------------------------------------

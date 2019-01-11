@@ -28,8 +28,8 @@ the dataset schema.
 
 import json
 
+from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetHandle
-from vizier.datastore.metadata import DatasetMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
 
 
@@ -80,7 +80,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             Number of rows in the dataset
         row_counter: int, optional
             Counter to generate unique row identifier
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
         """
         super(FileSystemDatasetHandle, self).__init__(
@@ -104,7 +104,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             Path to the file containing the dataset descriptor
         data_file: string
             Path to the file that contains the dataset rows.
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
@@ -129,23 +129,14 @@ class FileSystemDatasetHandle(DatasetHandle):
             annotations=annotations
         )
 
-    def get_annotations(self, column_id=-1, row_id=-1):
-        """Get list of annotations for a dataset component. Expects at least one
-        of the given identifier to be a valid identifier (>= 0).
-
-        Parameters
-        ----------
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optiona
-            Unique row identifier
+    def get_annotations(self):
+        """Get all dataset annotations.
 
         Returns
         -------
-        list(vizier.datastore.metadata.Annotation)
+        vizier.datastore.annotation.dataset.DatasetMetadata
         """
-        annos = self.annotations.for_object(column_id=column_id, row_id=row_id)
-        return annos.values()
+        return self.annotations
 
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional
@@ -167,8 +158,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             self.data_file,
             columns=self.columns,
             offset=offset,
-            limit=limit,
-            annotations=self.annotations
+            limit=limit
         )
 
     def to_file(self, descriptor_file):

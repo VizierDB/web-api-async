@@ -24,6 +24,8 @@ contain the parameter id and value as dictionary elements. The structure of the
 va;ue element is dependent on the parameter type.
 """
 
+from vizier.core.util import is_scalar
+
 import vizier.engine.packages.base as pckg
 
 
@@ -298,13 +300,7 @@ class ModuleArguments(object):
                 if not isinstance(arg_value, float):
                     raise ValueError('expected float for \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_SCALAR:
-                if isinstance(arg_value, float):
-                    continue
-                elif not isinstance(arg_value, int):
-                    continue
-                elif not isinstance(arg_value, float):
-                    continue
-                else:
+                if not is_scalar(arg_value):
                     raise ValueError('expected scalar for \'' + str(arg_id) + '\'')
             elif datatype in pckg.INT_TYPES:
                 if not isinstance(arg_value, int):

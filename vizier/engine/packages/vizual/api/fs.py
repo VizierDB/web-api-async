@@ -76,7 +76,9 @@ class DefaultVizualApi(VizualApi):
             rows=rows,
             column_counter=dataset.column_counter,
             row_counter=dataset.row_counter,
-            annotations=dataset.annotations
+            annotations=dataset.annotations.filter(
+                columns=[c.identifier for c in columns]
+            )
         )
         return VizualApiResult(ds)
 
@@ -115,7 +117,9 @@ class DefaultVizualApi(VizualApi):
             rows=rows,
             column_counter=dataset.column_counter,
             row_counter=dataset.row_counter,
-            annotations=dataset.annotations
+            annotations=dataset.annotations.filter(
+                rows=[r.identifier for r in rows]
+            )
         )
         return VizualApiResult(ds)
 
@@ -181,7 +185,9 @@ class DefaultVizualApi(VizualApi):
             rows=rows,
             column_counter=dataset.column_counter,
             row_counter=dataset.row_counter,
-            annotations=dataset.annotations.filter_columns(columns)
+            annotations=dataset.annotations.filter(
+                columns=[c.identifier for c in schema]
+            )
         )
         return VizualApiResult(ds)
 

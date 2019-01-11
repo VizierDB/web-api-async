@@ -32,7 +32,7 @@ from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
-from vizier.datastore.metadata import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
@@ -90,7 +90,7 @@ class FileSystemDatastore(Datastore):
             Counter to generate unique column identifier
         row_counter: int, optional
             Counter to generate unique row identifier
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
@@ -116,6 +116,12 @@ class FileSystemDatastore(Datastore):
         # Write rows to data file
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
+        # Filter annotations for non-existing resources
+        if not annotations is None:
+            annotations = annotations.filter(
+                columns=[c.identifier for c in columns],
+                rows=[r.identifier for r in rows]
+            )
         # Create dataset an write dataset file
         dataset = FileSystemDatasetHandle(
             identifier=identifier,
@@ -345,7 +351,7 @@ class FileSystemDatastore(Datastore):
 
         Returns
         -------
-        vizier.datastore.metadata.Annotation
+        vizier.datastore.annotation.base.Annotation
         """
         # Return None if the dataset is unknown
         dataset_dir = os.path.join(self.base_path, identifier)
