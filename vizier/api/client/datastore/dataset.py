@@ -20,7 +20,7 @@ from vizier.datastore.reader import InMemDatasetReader
 
 class RemoteDatasetHandle(DatasetHandle):
     """Handle for dataset that has been downloaded from a (remote) API."""
-    def __init__(self, identifier, columns, row_count, rows):
+    def __init__(self, identifier, columns, row_count, rows, store):
         """Initialize the dataset handle. The list of rows is a list of
         dictionaries in the default serialization format.
 
@@ -35,31 +35,25 @@ class RemoteDatasetHandle(DatasetHandle):
             Number of rows in the dataset
         rows: list(vizier.datastore.dataset.DatasetRow)
             Dataset in default serialization format
+        store: vizier.api.client.datastore.base.DatastoreClient
+            Reference to the datastore (required to retrieve annotations)
         """
         super(RemoteDatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
             row_count=row_count
         )
-        self.row = rows
+        self.rows = rows
+        self.store = store
 
-    @abstractmethod
-    def get_annotations(self, column_id=-1, row_id=-1):
-        """Get list of annotations for a dataset component. Expects at least one
-        of the given identifier to be a valid identifier (>= 0).
-
-        Parameters
-        ----------
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optiona
-            Unique row identifier
+    def get_annotations(self):
+        """Get all dataset annotations.
 
         Returns
         -------
-        list(vizier.datastore.metadata.Annotation)
+        vizier.datastore.annotation.dataset.DatasetMetadata
         """
-        raise NotImplementedError
+        return self.store.get_annotations(self.identifier)
 
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional
@@ -77,9 +71,9 @@ class RemoteDatasetHandle(DatasetHandle):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        if offset == 0 and limit == -1
-            return InMemDatasetReader(rows)
-        elif limit >0:
-            return InMemDatasetReader(rows[offset:offset+limit])
+        if offset == 0 and limit == -1:
+            return InMemDatasetReader(self.rows)
+        elif limit > 0:
+            return InMemDatasetReader(self.rows[offset:offset+limit])
         else:
-            return InMemDatasetReader(rows[offset:])
+            return InMemDatasetReader(self.rows[offset:])

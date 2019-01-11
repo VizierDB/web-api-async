@@ -178,10 +178,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     # not include the row index position nor the annotation information.
     serialized_rows = list()
     for row in rows:
-        serialized_rows.append({
-            labels.ID: row.identifier,
-            labels.ROWVALUES: row.values
-        })
+        serialized_rows.append(DATASET_ROW(row))
     # Serialize the dataset schema and cells
     obj[labels.ROWS] = serialized_rows
     obj[labels.ROWCOUNT] = dataset.row_count
@@ -275,4 +272,22 @@ def DATASET_IDENTIFIER(identifier, name):
     return {
         labels.ID: identifier,
         labels.NAME: name
+    }
+
+
+def DATASET_ROW(row):
+    """Dictionary serialization for a dataset row.
+
+    Parameters
+    ----------
+    row: vizier.datastore.dataset.DatasetRow
+        Dataset row
+
+    Returns
+    -------
+    dict
+    """
+    return {
+        labels.ID: row.identifier,
+        labels.ROWVALUES: row.values
     }

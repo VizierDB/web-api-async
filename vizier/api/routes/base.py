@@ -344,22 +344,6 @@ class UrlFactory:
         """
         return self.get_project(project_id) + '/datasets'
 
-    def get_dataset(self, project_id, dataset_id):
-        """Url to retrieve dataset rows.
-
-        Parameters
-        ----------
-        project_id: string
-            Unique project identifier
-        dataset_id: string
-            Unique dataset identifier
-
-        Returns
-        -------
-        string
-        """
-        return self.get_project(project_id) + '/datasets/' + dataset_id
-
     def dataset_pagination(self, project_id, dataset_id, offset=0, limit=None):
         """Get Url for dataset row pagination.
 
@@ -400,6 +384,22 @@ class UrlFactory:
         """
         return self.get_dataset(project_id, dataset_id) + '/csv'
 
+    def get_dataset(self, project_id, dataset_id):
+        """Url to retrieve dataset rows.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_project(project_id) + '/datasets/' + dataset_id
+
     def get_dataset_annotations(self, project_id, dataset_id):
         """Url to retrieve dataset annotations.
 
@@ -415,6 +415,22 @@ class UrlFactory:
         string
         """
         return self.get_dataset(project_id, dataset_id) + '/annotations'
+
+    def get_dataset_descriptor(self, project_id, dataset_id):
+        """Url to retrieve dataset descriptor.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset(project_id, dataset_id) + '/descriptor'
 
     def update_dataset_annotations(self, project_id, dataset_id):
         """Url to update dataset annotations.

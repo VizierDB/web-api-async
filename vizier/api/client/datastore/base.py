@@ -71,7 +71,7 @@ class DatastoreClient(Datastore):
         """
         url = self.urls.create_dataset()
         data = {
-            labels.COLUMNS: [serialize.DATASET_COLUMN(col)] for col in columns,
+            labels.COLUMNS: [serialize.DATASET_COLUMN(col) for col in columns],
             labels.ROWS: [serialize.DATASET_ROW(row) for row in rows]
         }
         if not annotations is None:
@@ -83,7 +83,7 @@ class DatastoreClient(Datastore):
         r = requests.post(url, json=data)
         r.raise_for_status()
         obj = json.loads(r.text)
-        ds = deserialize.DATASET_DESCRIPTOR(obj)
+        return deserialize.DATASET_DESCRIPTOR(obj)
 
     def get_dataset(self, identifier):
         """Get the handle for the dataset with given identifier from the data
@@ -100,9 +100,9 @@ class DatastoreClient(Datastore):
         """
         url = self.urls.get_dataset(identifier)
         r = requests.get(url)
-        if r.status == 404:
+        if r.status_code == 404:
             return None
-        elif r.status != 200:
+        elif r.status_code != 200:
             r.raise_for_status()
         # The result is the workflow handle
         obj = json.loads(r.text)
@@ -111,8 +111,31 @@ class DatastoreClient(Datastore):
             identifier=ds.identifier,
             columns=ds.columns,
             row_count=ds.row_count,
-            rows=[deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
+            rows=[deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]],
+            store=self
         )
+
+    def get_annotations(self, identifier):
+        """Get all dataset annotations.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        vizier.datastore.annotation.dataset.DatasetMetadata
+        """
+        url = self.urls.get_dataset_annotations(identifier)
+        r = requests.get(url)
+        if r.status_code == 404:
+            return None
+        elif r.status_code != 200:
+            r.raise_for_status()
+        # The result is the workflow handle
+        obj = json.loads(r.text)
+        return deserialize.DATASET_ANNOTATIONS(obj)
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
@@ -129,15 +152,14 @@ class DatastoreClient(Datastore):
         """
         url = self.urls.get_dataset_descriptor(identifier)
         r = requests.get(url)
-        if r.status == 404:
+        if r.status_code == 404:
             return None
-        elif r.status != 200:
+        elif r.status_code != 200:
             r.raise_for_status()
         # The result is the workflow handle
         obj = json.loads(r.text)
         return deserialize.DATASET_DESCRIPTOR(obj)
 
-    @abstractmethod
     def update_annotation(
         self, identifier, key, old_value=None, new_value=None, column_id=None,
         row_id=None
@@ -170,7 +192,7 @@ class DatastoreClient(Datastore):
         -------
         bool
         """
-        url = self.urls.update(identifier)
+        url = self.urls.update_dataset_annotations(identifier)
         data = {labels.KEY: key}
         if not column_id is None:
             data[labels.COLUMN_ID] = column_id

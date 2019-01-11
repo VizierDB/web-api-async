@@ -178,7 +178,7 @@ class VizierDatastoreApi(object):
             limit=limit
         )
 
-    def get_dataset_descritor(self, project_id, dataset_id):
+    def get_dataset_descriptor(self, project_id, dataset_id):
         """Get descriptor for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
@@ -199,7 +199,7 @@ class VizierDatastoreApi(object):
             return None
         # Retrieve the dataset descriptor. The result is None if the dataset
         # does not exist.
-        dataset = project.datastore.get_dataset_descriptor(dataset_id)
+        dataset = project.datastore.get_descriptor(dataset_id)
         if dataset is None:
             return None
         # Serialize the dataset descriptor

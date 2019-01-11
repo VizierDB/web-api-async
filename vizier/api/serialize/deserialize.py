@@ -20,6 +20,7 @@ classes.
 """
 
 from vizier.datastore.annotation.base import DatasetAnnotation
+from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -45,6 +46,25 @@ def ANNOTATION(obj):
         value=obj[labels.VALUE],
         column_id=obj['columnId'] if 'columnId' in obj else None,
         row_id=obj['rowId'] if 'rowId' in obj else None
+    )
+
+
+def DATASET_ANNOTATIONS(obj):
+    """Convert dictionary serialization into a dataset metadata object.
+
+    Parameters
+    ----------
+    obj: dict
+        Default serialization for dataset metadata
+
+    Returns
+    -------
+    vizier.datastore.annotation.dataset.DatasetMetadata
+    """
+    return DatasetMetadata(
+        columns=[ANNOTATION(a) for a in obj['columns']],
+        rows=[ANNOTATION(a) for a in obj['rows']],
+        cells=[ANNOTATION(a) for a in obj['cells']],
     )
 
 
