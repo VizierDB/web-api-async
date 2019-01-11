@@ -4,16 +4,16 @@ webservice:
     server_local_port: 5000
     app_path: '/vizier-db/api/v1'
     doc_url: 'http://cds-swg1.cims.nyu.edu/doc/vizier-db'
-    name: 'Development Server API (Docker)'
+    name: 'Development Server API'
     defaults:
         max_file_size: 16777216
 engine:
     identifier: 'DEV'
     properties:
-        backend: 'CELERY'
-        filestores: '/data/fs'
-        datastores: '/data/ds'
-        viztrails: '/data/vt'
+        backend: 'MULTIPROCESS'
+        filestores: './.vizierdb/fs'
+        datastores: './.vizierdb/ds'
+        viztrails: './.vizierdb/vt'
         packages:
             - declaration: './resources/packages/python.pckg.json'
               engine:
@@ -31,12 +31,8 @@ engine:
                         api:
                             className: 'DefaultVizualApi'
                             moduleName: 'vizier.engine.packages.vizual.api.fs'
-        routing:
-            - packageId: 'python'
-              commandId: 'code'
-              queue: 'pycell'
         options:
             useShortIdentifier: True
 debug: True
 logs:
-    server: '/data/logs'
+    server: './.vizierdb/logs'

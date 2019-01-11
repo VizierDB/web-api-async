@@ -18,6 +18,8 @@
 the datastores that are associated with vizier projects.
 """
 
+from vizier.core.util import is_scalar
+
 import vizier.api.serialize.dataset as serialize
 
 
@@ -90,6 +92,12 @@ class VizierDatastoreApi(object):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
+        If only the column id is provided annotations for the identifier column
+        will be returned. If only the row identifier is given all annotations
+        for the specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all annotations
+        for the dataset are returned.
+
         Parameters
         ----------
         project_id : string
@@ -110,7 +118,11 @@ class VizierDatastoreApi(object):
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
-        annos = dataset.get_annotations(column_id=column_id, row_id=row_id)
+        annos = project.datastore.get_annotations(
+            identifier=dataset_id,
+            column_id=column_id,
+            row_id=row_id
+        )
         return serialize.DATASET_ANNOTATIONS(
             project=project,
             dataset=dataset,
@@ -230,7 +242,7 @@ class VizierDatastoreApi(object):
             column_id=column_id,
             row_id=row_id,
             key=key,
-            old_value=value,
+            old_value=old_value,
             new_value=new_value
         )
         if result is None:

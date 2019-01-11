@@ -30,7 +30,7 @@ from werkzeug.utils import secure_filename
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config.app import AppConfig
-from vizier.datastore.metadata import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
@@ -551,8 +551,8 @@ def create_dataset(project_id):
       ],
       "annotations": [
         {
-          "column": 0,
-          "row": 0,
+          "columnId": 0,
+          "rowId": 0,
           "key": "string",
           "value": "string"
         }
@@ -571,10 +571,13 @@ def create_dataset(project_id):
     if 'annotations' in obj:
         annotations = DatasetMetadata()
         for anno in obj['annotations']:
-            deserialize.DATASET_ANNOTATION_STATEMENT(
-                obj=anno,
-                annotations=annotations
-            )
+            a = deserialize.ANNOTATION(anno)
+            if a.column_id is None:
+                annotations.rows.append(a)
+            elif a.row_id is None:
+                annotations.columns.append(a)
+            else:
+                annotations.cells.append(a)
     try:
         dataset = api.datasets.create_dataset(
             project_id=project_id,
@@ -614,10 +617,8 @@ def get_dataset_annotations(project_id, dataset_id):
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier
-    column_id = request.args.get(labels.COLUMN, -1, type=int)
-    row_id = request.args.get(labels.ROW, -1, type=int)
-    if column_id < 0 and row_id < 0:
-        raise srv.InvalidRequest('missing identifier for column or row')
+    column_id = request.args.get(labels.COLUMN, type=int)
+    row_id = request.args.get(labels.ROW, type=int)
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.
     annotations = api.datasets.get_annotations(
@@ -639,37 +640,40 @@ def update_dataset_annotation(project_id, dataset_id):
     Request
     -------
     {
-      "annoId": 0,
       "columnId": 0,
       "rowId": 0,
       "key": "string",
-      "value": "string"
+      "oldValue": "string", or "int", or "float"
+      "newValue": "string", or "int", or "float"
     }
     """
     # Validate the request
     obj = srv.validate_json_request(
         request,
-        required=[],
-        optional=['annoId', 'columnId', 'rowId', 'key', 'value']
+        required=['key'],
+        optional=['columnId', 'rowId', 'key', 'oldValue', 'newValue']
     )
     # Create update statement and execute. The result is None if no dataset with
     # given identifier exists.
     key = obj['key'] if 'key' in obj else None
-    anno_id = obj['annoId'] if 'annoId' in obj else -1
-    column_id = obj['columnId'] if 'columnId' in obj else -1
-    row_id = obj['rowId'] if 'rowId' in obj else -1
-    value = obj['value'] if 'value' in obj else None
-    annotations = api.datasets.update_annotation(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        column_id=column_id,
-        row_id=row_id,
-        anno_id=anno_id,
-        key=key,
-        value=value
-    )
-    if not annotations is None:
-        return jsonify(annotations)
+    column_id = obj['columnId'] if 'columnId' in obj else None
+    row_id = obj['rowId'] if 'rowId' in obj else None
+    old_value = obj['oldValue'] if 'oldValue' in obj else None
+    new_value = obj['newValue'] if 'newValue' in obj else None
+    try:
+        annotations = api.datasets.update_annotation(
+            project_id=project_id,
+            dataset_id=dataset_id,
+            key=key,
+            column_id=column_id,
+            row_id=row_id,
+            old_value=old_value,
+            new_value=new_value
+        )
+        if not annotations is None:
+            return jsonify(annotations)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 

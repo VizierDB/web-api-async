@@ -19,6 +19,7 @@ created by the serializers back into instances of the respective Python
 classes.
 """
 
+from vizier.datastore.annotation.base import DatasetAnnotation
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -26,23 +27,25 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.api.serialize.labels as labels
 
 
-def DATASET_ANNOTATION_STATEMENT(obj, annotations):
-    """Deserialize a dataset cell annotation statement and add it to the given
-    dataset metadata object.
+def ANNOTATION(obj):
+    """Convert dictionary containing serialization for a dataset annotation into
+    an instance of that class.
 
     Parameters
     ----------
     obj: dict
-        Dataset annotation statement in default serialization format
-    annotations: vizier.datastore.metadata.DatasetMetadata
-        Dataset annotations object
+        Default serialization for dataset annotations
+
+    Returns
+    -------
+    vizier.datastore.annotation.base.DatasetAnnotation
     """
-    column_id = obj[labels.COLUMN]
-    row_id = obj[labels.ROW]
-    key = obj[labels.KEY]
-    value = obj[labels.VALUE]
-    annos = annotations.for_cell(column_id=column_id, row_id=row_id)
-    annos.add(key=key, value=value)
+    return DatasetAnnotation(
+        key=obj[labels.KEY],
+        value=obj[labels.VALUE],
+        column_id=obj['columnId'] if 'columnId' in obj else None,
+        row_id=obj['rowId'] if 'rowId' in obj else None
+    )
 
 
 def DATASET_DESCRIPTOR(obj):

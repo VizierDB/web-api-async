@@ -1150,14 +1150,12 @@ definitions:
                 items:
                     type: object
                     required:
-                        - column
-                        - row
                         - key
                         - value
                     properties:
-                        col:
+                        columnId:
                             type: integer
-                        row:
+                        rowId:
                             type: integer
                         key:
                             type: string
@@ -1535,15 +1533,15 @@ definitions:
         required:
             - key
         properties:
-            annoId:
-                type: integer
             columnId:
                 type: integer
             rowId:
                 type: integer
             key:
                 type: string
-            value:
+            oldValue:
+                type: string
+            newValue:
                 type: string
     WorkflowDescriptor:
         type: object

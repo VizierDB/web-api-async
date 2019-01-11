@@ -13,7 +13,7 @@ engine:
         backend: 'CELERY'
         filestores: './.vizierdb/fs'
         datastores: './.vizierdb/ds'
-        viztrails: './.vizierdb/ds'
+        viztrails: './.vizierdb/vt'
         packages:
             - declaration: './resources/packages/python.pckg.json'
               engine:

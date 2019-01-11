@@ -36,7 +36,7 @@ def ANNOTATION(anno):
     """
     obj = {
         labels.KEY: anno.key,
-        labels.value: anno.value
+        labels.VALUE: anno.value
     }
     if not anno.column_id is None:
         obj['columnId'] = anno.column_id
@@ -67,9 +67,9 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
     if len(annotations.columns) > 0:
         obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
     if len(annotations.rows) > 0:
-        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
+        obj['rows'] = [ANNOTATION(a) for a in annotations.rows]
     if len(annotations.cells) > 0:
-        obj['columns'] = [ANNOTATION(a) for a in annotations.columns]
+        obj['cells'] = [ANNOTATION(a) for a in annotations.cells]
     # Add references to update annotations
     obj[labels.LINKS] = serialize.HATEOAS({
         'annotations:update': urls.update_dataset_annotations(
