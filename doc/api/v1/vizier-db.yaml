@@ -723,6 +723,33 @@ paths:
                     description: CSV file
                 404:
                     description: Unknown project or datasets
+    /projects/{projectId}/datasets/{datasetId}/descriptor:
+        get:
+            summary: Get dataset descriptor
+            description: Get short descriptor for a dataset
+            operationId: getDatasetDescriptor
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Dataset data
+                    schema:
+                        $ref: '#/definitions/DatasetDescriptor'
+                404:
+                    description: Unknown project or dataset
     #
     # Views
     #

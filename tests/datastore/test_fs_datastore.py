@@ -256,18 +256,13 @@ class TestFileSystemDatastore(unittest.TestCase):
         # None for non-existing dataset
         store = FileSystemDatastore(STORE_DIR)
         self.assertIsNone(store.get_dataset('0000'))
-        self.assertIsNone(store.get_descriptor('0000'))
         ds_id = store.load_dataset(f_handle=FILE).identifier
         self.assertIsNotNone(store.get_dataset(ds_id))
-        self.assertIsNotNone(store.get_descriptor(ds_id))
         self.assertIsNone(store.get_dataset('0000'))
-        self.assertIsNone(store.get_descriptor('0000'))
         # Reload store to ensure the dataset still exists
         store = FileSystemDatastore(STORE_DIR)
         self.assertIsNotNone(store.get_dataset(ds_id))
-        self.assertIsNotNone(store.get_descriptor(ds_id))
         self.assertIsNone(store.get_dataset('0000'))
-        self.assertIsNone(store.get_descriptor('0000'))
         self.validate_class_size_dataset(store.get_dataset(ds_id))
         # Load a second dataset
         ds_id_2 =  store.load_dataset(f_handle=FILE).identifier

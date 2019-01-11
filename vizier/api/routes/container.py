@@ -90,6 +90,22 @@ class ContainerUrlFactory:
         """
         return self.base_url + '/datasets/' + dataset_id
 
+    def get_dataset_descriptor(self, project_id, dataset_id):
+        """Url to retrieve dataset descriptor.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset(project_id, dataset_id) + '/descriptor'
+
     def dataset_pagination(self, project_id, dataset_id, offset=0, limit=None):
         """Get Url for dataset row pagination.
 

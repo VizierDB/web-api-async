@@ -178,6 +178,37 @@ class VizierDatastoreApi(object):
             limit=limit
         )
 
+    def get_dataset_descritor(self, project_id, dataset_id):
+        """Get descriptor for dataset with given identifier. The result is None
+        if no dataset with the given identifier exists.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        dataset_id : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve project to ensure that it exists
+        project = self.projects.get_project(project_id)
+        if project is None:
+            return None
+        # Retrieve the dataset descriptor. The result is None if the dataset
+        # does not exist.
+        dataset = project.datastore.get_dataset_descriptor(dataset_id)
+        if dataset is None:
+            return None
+        # Serialize the dataset descriptor
+        return serialize.DATASET_DESCRIPTOR(
+            project=project,
+            dataset=dataset,
+            urls=self.urls
+        )
+
     def get_dataset_handle(self, project_id, dataset_id):
         """Get handle for dataset with given identifier. The result is None if
         the dataset or the project do not exist.

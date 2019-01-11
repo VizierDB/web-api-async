@@ -179,6 +179,21 @@ def get_dataset_annotations(dataset_id):
     raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
 
 
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
+def get_dataset_descriptor(project_id, dataset_id):
+    """Get the descriptor for the dataset with given identifier."""
+    try:
+        dataset = api.datasets.get_dataset_descriptor(
+            project_id=config.project_id,
+            dataset_id=dataset_id
+        )
+        if not dataset is None:
+            return jsonify(dataset)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+
+
 @app.route('/datasets/<string:dataset_id>/annotations', methods=['POST'])
 def update_dataset_annotation(dataset_id):
     """Update an annotation that is associated with a component of the given

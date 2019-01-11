@@ -114,7 +114,6 @@ class DatastoreClient(Datastore):
             rows=[deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
         )
 
-    @abstractmethod
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
         data store. Returns None if no dataset with the given identifier exists.
@@ -128,16 +127,29 @@ class DatastoreClient(Datastore):
         -------
         vizier.datastore.base.DatasetDescriptor
         """
-        raise NotImplementedError
+        url = self.urls.get_dataset_descriptor(identifier)
+        r = requests.get(url)
+        if r.status == 404:
+            return None
+        elif r.status != 200:
+            r.raise_for_status()
+        # The result is the workflow handle
+        obj = json.loads(r.text)
+        return deserialize.DATASET_DESCRIPTOR(obj)
 
     @abstractmethod
     def update_annotation(
-        self, identifier, column_id=None, row_id=None, anno_id=None,
-        key=None, value=None
+        self, identifier, key, old_value=None, new_value=None, column_id=None,
+        row_id=None
     ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
 
         Parameters
         ----------
@@ -147,15 +159,29 @@ class DatastoreClient(Datastore):
             Unique column identifier
         row_id: int, optional
             Unique row identifier
-        anno_id: int
-            Unique annotation identifier
         key: string, optional
             Annotation key
-        value: string, optional
-            Annotation value
+        old_value: string, optional
+            Previous annotation value whan updating an existing annotation.
+        new_value: string, optional
+            Updated annotation value
 
         Returns
         -------
-        vizier.datastore.metadata.Annotation
+        bool
         """
-        raise NotImplementedError
+        url = self.urls.update(identifier)
+        data = {labels.KEY: key}
+        if not column_id is None:
+            data[labels.COLUMN_ID] = column_id
+        if not row_id is None:
+            data[labels.ROW_ID] = row_id
+        if not old_value is None:
+            data[labels.OLD_VALUE] = old_value
+        if not new_value is None:
+            data[labels.NEW_VALUE] = new_value
+        # Send request. Raise exception if status code indicates that the
+        # request was not successful. If no exception was raised return True.
+        r = requests.post(url, json=data)
+        r.raise_for_status()
+        return True

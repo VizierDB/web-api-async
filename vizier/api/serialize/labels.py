@@ -46,6 +46,12 @@ ROWS = 'rows'
 ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
 
+# Annotations
+COLUMN_ID = 'columnId'
+ROW_ID = 'rowId'
+OLD_VALUE = 'oldValue'
+NEW_VALUE = 'newValue'
+
 # Timestamps
 TIMESTAMPS = 'timestamps'
 CREATED_AT = 'createdAt'

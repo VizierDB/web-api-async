@@ -41,7 +41,10 @@ class VizierDBClient(object):
         """
         self.datastore = datastore
         self.datasets = dict(datasets)
-        # Keep track of datasets that are read and written.
+        # Keep track of the descriptors of datasets that the client successfully
+        # modified
+        self.descriptors = dict()
+        # Keep track of datasets that are read and written, deleted and renamed.
         self.read = set()
         self.write = set()
         self.delete = None
@@ -107,6 +110,7 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
+        self.descriptors[ds.identifier] = ds
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
 
     def drop_dataset(self, name):
@@ -119,6 +123,10 @@ class VizierDBClient(object):
         name : string
             Unique dataset name
         """
+        # Make sure to record access idependently of whether the dataset exists
+        # or not. Ignore read access to datasets that have been written.
+        if not name.lower() in self.write:
+            self.read.add(name.lower())
         # Remove the context dataset identifier for the given name. Will raise
         # a ValueError if dataset does not exist
         if self.delete is None:
@@ -242,7 +250,7 @@ class VizierDBClient(object):
             raise ValueError('invalid dataset name \'' + new_name + '\'')
         # Raise an exception if no dataset with the given name exists
         identifier = self.get_dataset_identifier(name)
-        self.remove_dataset_identifier(name)
+        self.drop_dataset(name)
         self.set_dataset_identifier(new_name, identifier)
 
     def set_dataset_identifier(self, name, identifier):
@@ -308,4 +316,5 @@ class VizierDBClient(object):
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
+        self.descriptors[ds.identifier] = ds
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))

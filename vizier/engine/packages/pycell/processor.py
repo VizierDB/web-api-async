@@ -131,7 +131,10 @@ class PyCellTaskProcessor(TaskProcessor):
                 if not ds_id is None:
                     if not isinstance(ds_id, basestring):
                         raise RuntimeError('invalid value in mapping dictionary')
-                    write[name] = context.datastore.get_descriptor(ds_id)
+                    elif ds_id in client.descriptors:
+                        write[name] = client.descriptors[ds_id]
+                    else:
+                        write[name] = client.datastore.get_descriptor(ds_id)
                 else:
                     write[name] = None
             provenance = ModuleProvenance(

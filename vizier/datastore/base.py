@@ -158,7 +158,8 @@ class Datastore(object):
             Annotation key
         old_value: string, optional
             Previous annotation value whan updating an existing annotation.
-
+        new_value: string, optional
+            Updated annotation value
         Returns
         -------
         bool

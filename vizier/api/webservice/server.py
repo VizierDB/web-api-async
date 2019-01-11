@@ -632,6 +632,21 @@ def get_dataset_annotations(project_id, dataset_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 
+@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
+def get_dataset_descriptor(project_id, dataset_id):
+    """Get the descriptor for the dataset with given identifier."""
+    try:
+        dataset = api.datasets.get_dataset_descriptor(
+            project_id=project_id,
+            dataset_id=dataset_id
+        )
+        if not dataset is None:
+            return jsonify(dataset)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+
+
 @app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
 def update_dataset_annotation(project_id, dataset_id):
     """Update an annotation that is associated with a component of the given
@@ -655,11 +670,11 @@ def update_dataset_annotation(project_id, dataset_id):
     )
     # Create update statement and execute. The result is None if no dataset with
     # given identifier exists.
-    key = obj['key'] if 'key' in obj else None
-    column_id = obj['columnId'] if 'columnId' in obj else None
-    row_id = obj['rowId'] if 'rowId' in obj else None
-    old_value = obj['oldValue'] if 'oldValue' in obj else None
-    new_value = obj['newValue'] if 'newValue' in obj else None
+    key = obj[labels.KEY] if labels.KEY in obj else None
+    column_id = obj[labels.COLUMN_ID] if labels.COLUMN_ID in obj else None
+    row_id = obj[labels.ROW_ID] if labels.ROW_ID in obj else None
+    old_value = obj[labels.OLD_VALUE] if labels.OLD_VALUE in obj else None
+    new_value = obj[labels.NEW_VALUE] if labels.NEW_VALUE in obj else None
     try:
         annotations = api.datasets.update_annotation(
             project_id=project_id,
