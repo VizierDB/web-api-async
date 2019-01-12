@@ -17,8 +17,10 @@
 import json
 import requests
 
+from vizier.api.client.datastore.base import DatastoreClient
 from vizier.api.client.resources.module import ModuleResource
 from vizier.api.client.resources.workflow import WorkflowResource
+from vizier.api.routes.datastore import DatastoreClientUrlFactory
 
 
 class Notebook(object):
@@ -101,7 +103,7 @@ class Notebook(object):
                 modules.append(m)
 
     def fetch_dataset(self, identifier):
-        """Fetch rows for the dataset with the given identifier.
+        """Fetch handle for the dataset with the given identifier.
 
         Parameters
         ----------
@@ -110,13 +112,15 @@ class Notebook(object):
 
         Returns
         -------
-        ???
+        vizier.datastore.base.DatasetHandle
         """
-        url = self.workflow.datasets[identifier].links['self']
-        r = requests.get(url)
-        r.raise_for_status()
-        # The result is the workflow handle
-        return json.loads(r.text)
+        # Use the remote datastore client to get the dataset handle
+        return DatastoreClient(
+            urls=DatastoreClientUrlFactory(
+                urls=self.urls,
+                project_id=self.project_id
+            )
+        ).get_dataset(identifier)
 
     def get_dataset(self, name):
         """Get descriptor for dataset with given name from the database state of

@@ -62,6 +62,7 @@ STARTED_AT = 'startedAt'
 STATE = 'state'
 
 # Modules
+CHARTS = 'charts'
 DATASETS = 'datasets'
 OUTPUTS = 'outputs'
 PROVENANCE = 'provenance'

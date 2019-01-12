@@ -253,6 +253,8 @@ class ViztrailsCommands(Command):
             if len(module.datasets) > 0:
                 print indent + '--'
                 print indent + 'Datasets: ' + ', '.join(module.datasets)
+            if len(module.charts) > 0:
+                print indent + 'Charts: ' + ', '.join(module.charts.keys())
             print '.'
         return True
 

@@ -40,9 +40,10 @@ def print_metadata(annotations):
 store = DatastoreClient(
     urls=DatastoreClientUrlFactory(
         urls=UrlFactory(
-            base_url='http://localhost:5000/vizier-db/api/v1'),
-            project_id=PROJECT_ID
-        )
+            base_url='http://localhost:5000/vizier-db/api/v1'
+        ),
+        project_id=PROJECT_ID
+    )
 )
 
 ds = store.create_dataset(

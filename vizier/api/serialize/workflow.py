@@ -116,7 +116,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
-    woekflow: vizier.viztrail.workflow.WorkflowHandle
+    workflow: vizier.viztrail.workflow.WorkflowHandle
         Workflow handle
     urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
@@ -133,12 +133,24 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     # Create lists of module handles and dataset handles
     modules = list()
     datasets = dict()
+    charts = dict()
     for m in workflow.modules:
+        if not m.provenance.charts is None:
+            for c_handle in m.provenance.charts:
+                charts[c_handle.chart_name.lower()] = c_handle
+        available_charts = list()
+        # Only include charts for modules that completed successful
+        if m.is_success:
+            for c_handle in charts.values():
+                if c_handle.dataset_name in m.datasets:
+                    available_charts.append(c_handle)
         modules.append(
             serialmd.MODULE_HANDLE(
                 project=project,
                 branch=branch,
+                workflow=workflow,
                 module=m,
+                charts=available_charts,
                 urls=urls,
                 include_self=(not read_only)
             )

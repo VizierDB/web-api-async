@@ -96,12 +96,18 @@ class NotebookCommands(Command):
             # run python [<script> | <file>]
             if tokens[0] in ['nb', 'notebook'] and tokens[1] == 'delete':
                 return self.delete_cell(module_id=tokens[2])
+            elif tokens[0] == 'show' and tokens[1] == 'chart':
+                # show chart <name>
+                return self.show_chart(name=tokens[2])
             elif tokens[0] == 'show' and tokens[1] == 'dataset':
                 # show dataset <name>
                 return self.show_dataset(name=tokens[2])
         elif len(tokens) == 5:
             # load <name> from file <file>
-            if tokens[0] == 'show' and tokens[1] == 'dataset' and tokens[3] == 'in':
+            if tokens[0] == 'show' and tokens[1] == 'chart' and tokens[3] == 'in':
+                # show chart <name> {in <module-id>}
+                return self.show_chart(name=tokens[2], module_id=tokens[4])
+            elif tokens[0] == 'show' and tokens[1] == 'dataset' and tokens[3] == 'in':
                 # show dataset <name> {in <module-id>}
                 return self.show_dataset(name=tokens[2], module_id=tokens[4])
         elif len(tokens) >= 3:
@@ -130,12 +136,37 @@ class NotebookCommands(Command):
         print '  [notebook | nb] delete <module-id>'
         print '  [notebook | nb] insert before <module-id> <cmd>'
         print '  [notebook | nb] replace <module-id> <cmd>'
+        print '  show chart <name> {in <module-id>}'
         print '  show dataset <name> {in <module-id>}'
         print '\nCommands'
         print_commands()
 
+    def show_chart(self, name, module_id=None):
+        """Print data series values for a chart in a given module. The chart is
+        identified by the user-provided name. If the module is not given the
+        last module in the notebook is used as default.
+        """
+        # Ensure that the specified file exists
+        notebook = self.api.get_notebook()
+        module = None
+        if module_id is None and len(notebook.workflow.modules) > 0:
+            module = notebook.workflow.modules[-1]
+        else:
+            for m in notebook.workflow.modules:
+                if m.identifier == module_id:
+                    module = m
+                    break
+        if not module is None and name in module.charts:
+            chart = self.api.fetch_chart(module.charts[name].links['self'])
+        else:
+            print 'unknown dataset \'' + name + '\''
+        return True
+
     def show_dataset(self, name, module_id=None):
-        """Create a new dataset from a given file."""
+        """List rows for a dataset in a given module. The dataset is identified
+        by the user-provided name. If the module is not given the last module
+        in the notebook is used as default.
+        """
         # Ensure that the specified file exists
         notebook = self.api.get_notebook()
         module = None
@@ -148,9 +179,9 @@ class NotebookCommands(Command):
                     break
         if not module is None and name in module.datasets:
             ds = notebook.fetch_dataset(identifier=module.datasets[name])
-            rows = [[col['name'] for col in ds['columns']]]
-            for row in ds['rows']:
-                values = [str(val) for val in row['values']]
+            rows = [[col.name for col in ds.columns]]
+            for row in ds.fetch_rows():
+                values = [str(val) for val in row.values]
                 rows.append(values)
             self.output(rows)
         else:

@@ -21,6 +21,7 @@ import os
 from vizier.core.util import cast
 from vizier.engine.packages.base import FILE_ID, FILE_NAME, FILE_URI
 
+import vizier.api.client.command.plot as plot
 import vizier.api.client.command.pycell as pycell
 import vizier.api.client.command.vizual as vizual
 
@@ -98,12 +99,35 @@ def parse_command(tokens, notebook):
                 row=int(tokens[3]),
                 value=cast(tokens[4])
             )
-
+    elif len(tokens) >= 6:
+        if tokens[0] == 'chart' and tokens[2] == 'on' and tokens[4] == 'with':
+            # chart <chart-name> on <dataset-name> with <column-name:label:start-end> ...
+            dataset_name = tokens[3]
+            ds = notebook.get_dataset(dataset_name)
+            series = list()
+            for spec in tokens[5:]:
+                s_tokens = spec.split(':')
+                if len(s_tokens) != 3:
+                    print 'invalid data series ' + str(s_tokens)
+                    return None
+                s = {
+                    'column': ds.get_column(s_tokens[0]).identifier,
+                    'range': s_tokens[2].replace('-', ':')
+                }
+                if s_tokens[1] != '':
+                    s['label'] = s_tokens[1]
+                series.append(s)
+            return plot.create_plot(
+                chart_name=tokens[1],
+                dataset_name=dataset_name,
+                series=series
+            )
     return None
 
 
 def print_commands():
     """Print command syntax listing for supported commands."""
+    print '  chart <chart-name> on <dataset-name> with <column-name:label:start-end> ...'
     print '  load <name> from file <file>'
     print '  load <name> from url <url>'
     print '  python [<script> | <file>]'

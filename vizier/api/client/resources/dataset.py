@@ -67,7 +67,7 @@ class DatasetDescriptor(object):
                     data_type=col[labels.DATATYPE]
                 ) for col in obj['columns']
             ],
-            links=deserialize.HATEOAS(links=obj['links'])
+            links=deserialize.HATEOAS(links=obj[labels.LINKS])
         )
 
     def get_column(self, column_id):

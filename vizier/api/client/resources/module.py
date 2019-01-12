@@ -18,7 +18,9 @@
 remote vizier instance.
 """
 
+from vizier.api.client.resources.chart import ChartHandle
 from vizier.core.timestamp import to_datetime
+from vizier.viztrail.module.output import OUTPUT_TEXT
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 import vizier.viztrail.module.base as states
@@ -28,7 +30,7 @@ import vizier.api.serialize.deserialize as deserialize
 class ModuleResource(object):
     """A workflow module in a remote vizier instance."""
     def __init__(
-        self, identifier, state, external_form, outputs, datasets, timestamp,
+        self, identifier, state, external_form, outputs, datasets, charts, timestamp,
         links
     ):
         """Initialize the branch attributes."""
@@ -37,6 +39,7 @@ class ModuleResource(object):
         self.external_form = external_form
         self.outputs = outputs
         self.datasets = datasets
+        self.charts = charts
         self.timestamp= timestamp
         self.links = links
 
@@ -58,7 +61,8 @@ class ModuleResource(object):
         outputs = list()
         if 'outputs' in obj:
             for out in obj['outputs']['stdout']:
-                outputs.append(out['value'])
+                if out['type'] == OUTPUT_TEXT:
+                    outputs.append(out['value'])
             for out in obj['outputs']['stderr']:
                 outputs.append(out['value'])
         # Create the timestamp
@@ -73,12 +77,18 @@ class ModuleResource(object):
         if 'datasets' in obj:
             for ds in obj['datasets']:
                 datasets[ds['name']] = ds['id']
+        charts = dict()
+        if 'charts' in obj:
+            for ch in obj['charts']:
+                c_handle = ChartHandle.from_dict(ch)
+                charts[c_handle.name] = c_handle
         return ModuleResource(
             identifier=obj['id'],
             state=to_external_form(obj['state']),
             external_form=obj['text'],
             outputs=outputs,
             datasets=datasets,
+            charts=charts,
             timestamp=timestamp,
             links=deserialize.HATEOAS(links=obj['links'])
         )

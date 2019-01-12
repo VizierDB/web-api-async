@@ -40,8 +40,8 @@ class DataSeriesHandle(object):
 
         Parameters
         ----------
-        column: string
-            Column containing the series data
+        column: int
+            Unique column identifier
         label: string, optional
             Data series label
         range_start: int, optional

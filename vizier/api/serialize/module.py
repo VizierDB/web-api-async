@@ -23,7 +23,7 @@ import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.labels as labels
 
 
-def MODULE_HANDLE(project, branch, module, urls, include_self=True):
+def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, include_self=True):
     """Dictionary serialization for a handle in the workflow at the branch
     head.
 
@@ -36,8 +36,12 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
         Handle for the containing project
     branch : vizier.viztrail.branch.BranchHandle
         Branch handle
+    workflow: vizier.viztrail.workflow.WorkflowHandle
+        Workflow handle
     module: vizier.viztrail.module.base.ModuleHandle
         Module handle
+    charts: list(vizier.view.chart.ChartViewHandle)
+        List of handles for available chart views
     urls: vizier.api.routes.base.UrlFactory
         Factory for resource urls
     include_self: bool, optional
@@ -96,7 +100,22 @@ def MODULE_HANDLE(project, branch, module, urls, include_self=True):
                     name=name
                 )
             )
+        available_charts = list()
+        for c_handle in charts:
+            available_charts.append({
+                labels.NAME: c_handle.chart_name,
+                labels.LINKS: serialize.HATEOAS({
+                    labels.SELF: urls.get_chart_view(
+                        project_id=project_id,
+                        branch_id=branch_id,
+                        workflow_id=workflow.identifier,
+                        module_id=module_id,
+                        chart_id=c_handle.identifier
+                    )
+                })
+            })
         obj[labels.DATASETS] = datasets
+        obj[labels.CHARTS] = available_charts
         obj[labels.OUTPUTS] = serialize.OUTPUTS(module.outputs)
         if not timestamp.finished_at is None:
             obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()

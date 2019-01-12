@@ -161,6 +161,21 @@ class VizierApiClient(object):
         r.raise_for_status()
         return True
 
+    def fetch_chart(self, url):
+        """Fetch data series for a chart in a workflow module.
+
+        Parameters
+        ----------
+        url: string
+            Url to retrieve chart data
+
+        Returns
+        -------
+        ???
+        """
+        r = requests.get(url)
+        r.raise_for_status()
+        
     def get_branch(self, project_id, branch_id):
         """Fetch a project branch from the remote web service API.
 

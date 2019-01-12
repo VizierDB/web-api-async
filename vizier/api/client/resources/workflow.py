@@ -22,12 +22,14 @@ from vizier.api.client.resources.module import ModuleResource
 from vizier.core.timestamp import to_datetime
 
 import vizier.api.serialize.deserialize as deserialize
+import vizier.engine.packages.plot.base as plot
 import vizier.engine.packages.pycell.base as pycell
 import vizier.engine.packages.vizual.base as vizual
 import vizier.viztrail.workflow as wf
 
 
 PACKAGES = {
+    plot.PACKAGE_PLOT: plot.PLOT_COMMANDS,
     pycell.PACKAGE_PYTHON: pycell.PYTHON_COMMANDS,
     vizual.PACKAGE_VIZUAL: vizual.VIZUAL_COMMANDS
 }

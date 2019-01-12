@@ -320,6 +320,8 @@ class UrlFactory:
             Unique project identifier
         branch_id: string
             Unique branch identifier
+        module_id: string
+            Unique module identifier
 
         Returns
         -------
@@ -447,6 +449,37 @@ class UrlFactory:
         string
         """
         return self.get_dataset_annotations(project_id, dataset_id)
+
+    # --------------------------------------------------------------------------
+    # Charts
+    # --------------------------------------------------------------------------
+    def get_chart_view(self, project_id, branch_id, workflow_id, module_id, chart_id):
+        """Get chart view result for a given workflow module.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+        workflow_id: string
+            Unique workflow identifier
+        module_id: string
+            Unique module identifier
+        chart_id: string
+            Unique chart identifier
+
+        Returns
+        -------
+        string
+
+        Returns
+        -------
+        string
+        """
+        url = self.get_workflow(project_id, branch_id, workflow_id)
+        return url + '/modules/' + module_id + '/charts/' + chart_id
+
 
     # --------------------------------------------------------------------------
     # Files
