@@ -1,3 +1,0 @@
-Eliminate other vizier.datastore.metadata.
-
-Rename DatasetMetadata to DatasetAnnotations

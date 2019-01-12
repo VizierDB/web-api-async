@@ -62,7 +62,7 @@ class DatastoreClient(Datastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.metadata.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
