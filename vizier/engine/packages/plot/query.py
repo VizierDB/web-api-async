@@ -85,7 +85,8 @@ class DataStreamConsumer(object):
 
 class ChartQuery(object):
     """Query processor for simple chart queries."""
-    def exec_query(self, dataset, view):
+    @staticmethod
+    def exec_query(dataset, view):
         """Query a given dataset by selecting the columns in the given list.
         Each row in the result is the result of projecting a tuple in the
         dataset on the given columns.

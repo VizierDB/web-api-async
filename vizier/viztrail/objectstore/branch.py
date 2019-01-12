@@ -366,6 +366,8 @@ class OSBranchHandle(BranchHandle):
         # If identifier is None the head is returned
         if workflow_id is None:
             return self.head
+        elif not self.head is None and self.head.identifier == workflow_id:
+            return self.head
         # Check if the workflow is in the internal cache
         for wf in self.cache:
             if wf.identifier == workflow_id:

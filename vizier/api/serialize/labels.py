@@ -19,6 +19,7 @@
 # General object attributes
 ID = 'id'
 NAME = 'name'
+DATA = 'data'
 
 # Properties
 PROPERTIES = 'properties'

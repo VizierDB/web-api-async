@@ -16,12 +16,17 @@
 
 """Query workflow states to get results for a dataset chart view."""
 
+from vizier.engine.packages.plot.query import ChartQuery
+from vizier.viztrail.module.output import CHART_VIEW_DATA
+
+import vizier.api.serialize.view as serialize
+
 
 class VizierDatasetViewApi(object):
     """The vizier dataset view API implements the methods that query a vizier
     workflow module state to get the results for a dataset chart view.
     """
-    def __init__(self, engine, urls):
+    def __init__(self, projects, urls):
         """Initialize the API components.
 
         Parameters
@@ -34,49 +39,82 @@ class VizierDatasetViewApi(object):
         self.projects = projects
         self.urls = urls
 
-    def get_dataset_chart_view(self, project_id, branch_id, version, module_id, chart_id):
+    def get_dataset_chart_view(self, project_id, branch_id, workflow_id, module_id, chart_id):
+        """Get chart view data for a given workflow module. Returns None if
+        either of the specified resources does not exist.
+
+        Raises a ValueError if the chart exists but the specified datasets does
+        not exist in the workflow module.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+        workflow_id: string
+            Unique workflow identifier
+        module_id: string
+            Unique module identifier
+        chart_id: string
+            Unique chart identifier
+
+        Returns
+        -------
+        dict
         """
-        """
-        # Retrieve the project to ensure that it exists.
+        # Retrieve the project, branch and workflow to ensure that they exist.
+        # Return None if either is unknown.
         project = self.projects.get_project(project_id)
         if project is None:
             return None
-        # Retrieve workflow from repository. The result is None if the branch
-        # does not exist.
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=version
-        )
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
+            return None
+        workflow = branch.get_workflow(workflow_id)
         if workflow is None:
             return None
-        # Find the workflow module and ensure that the referenced view is
-        # defined for the module.
-        datasets = None
-        v_handle = None
-        for module in workflow.modules:
-            for obj in module.stdout:
-                if obj['type'] == serialize.O_CHARTVIEW:
-                    view = ChartViewHandle.from_dict(obj['data'])
-                    if view.identifier == view_id:
-                        v_handle = view
-            if module.identifier == module_id:
-                datasets = module.datasets
+        # Get the specified module. Keep track of the available charts while
+        # searching for the module.
+        module = None
+        charts = dict()
+        for m in workflow.modules:
+            if not m.provenance.charts is None:
+                for c in m.provenance.charts:
+                    charts[c.chart_name] = c
+            if m.identifier == module_id:
+                module = m
                 break
-        if not datasets is None and not v_handle is None:
-            if not v_handle.dataset_name in datasets:
-                raise ValueError('unknown dataset \'' + v_handle.dataset_name + '\'')
-            dataset_id = datasets[v_handle.dataset_name]
-            rows = self.datastore.get_dataset_chart(dataset_id, v_handle)
-            ref = self.urls.workflow_module_view_url(project_id, branch_id,  version, module_id,  view_id)
-            return serialize.DATASET_CHART_VIEW(
-                view=v_handle,
-                rows=rows,
-                self_ref=self.urls.workflow_module_view_url(
-                    project_id,
-                    branch_id,
-                    version,
-                    module_id,
-                    view_id
-                )
-            )
+        if module is None:
+            return None
+        # Find the specified chart
+        chart = None
+        for c in charts.values():
+            if c.identifier == chart_id:
+                chart = c
+                break
+        if chart is None:
+            return None
+        # Get the dataset that is referenced in the chart handle. Raise an
+        # exception if the dataset does not exist in the module. If the chart
+        # was defined in the module we do not need to execute the query but
+        # can take the result directly from the module output.
+        if not chart.dataset_name in module.datasets:
+            raise ValueError('unknown dataset \'' + chart.dataset_name + '\'')
+        if not module.provenance.charts is None and chart.chart_name in module.provenance.charts:
+            data = module.outputs.stdout[0].value
+        else:
+            dataset_id = module.datasets[chart.dataset_name].identifier
+            dataset = project.datastore.get_dataset(dataset_id)
+            rows = ChartQuery.exec_query(dataset=dataset, view=chart)
+            data = CHART_VIEW_DATA(view=chart, rows=rows)
+        return serialize.CHART_VIEW(
+            project_id=project_id,
+            branch_id=branch_id,
+            workflow_id=workflow_id,
+            module_id=module_id,
+            chart_id=chart_id,
+            name=chart.chart_name,
+            data=data,
+            urls=self.urls
+        )

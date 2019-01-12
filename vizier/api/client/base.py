@@ -23,6 +23,7 @@ import urllib2
 from vizier.api.client.resources.branch import BranchResource
 from vizier.api.client.resources.notebook import Notebook
 from vizier.api.client.resources.project import ProjectResource
+from vizier.api.client.resources.view import ChartView
 from vizier.api.client.resources.workflow import WorkflowResource
 
 import vizier.api.serialize.base as serialize
@@ -171,11 +172,12 @@ class VizierApiClient(object):
 
         Returns
         -------
-        ???
+        vizier.api.client.resources.view.ChartView
         """
         r = requests.get(url)
         r.raise_for_status()
-        
+        return ChartView.from_dict(json.loads(r.text))
+
     def get_branch(self, project_id, branch_id):
         """Fetch a project branch from the remote web service API.
 

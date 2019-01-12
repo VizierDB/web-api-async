@@ -158,6 +158,10 @@ class NotebookCommands(Command):
                     break
         if not module is None and name in module.charts:
             chart = self.api.fetch_chart(module.charts[name].links['self'])
+            rows = [[s.name for s in chart.data]]
+            for i in range(chart.data[0].length):
+                rows.append([str(s.values[i]) for s in chart.data])
+            self.output(rows)
         else:
             print 'unknown dataset \'' + name + '\''
         return True

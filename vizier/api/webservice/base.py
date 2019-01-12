@@ -31,6 +31,7 @@ from vizier.api.webservice.datastore import VizierDatastoreApi
 from vizier.api.webservice.filestore import VizierFilestoreApi
 from vizier.api.webservice.project import VizierProjectApi
 from vizier.api.webservice.task import VizierTaskApi
+from vizier.api.webservice.view import VizierDatasetViewApi
 from vizier.api.webservice.workflow import VizierWorkflowApi
 from vizier.api.routes.base import UrlFactory
 from vizier.config.engine.factory import VizierEngineFactory
