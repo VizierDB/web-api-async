@@ -718,17 +718,17 @@ def download_dataset(project_id, dataset_id):
 # ------------------------------------------------------------------------------
 # Views
 # ------------------------------------------------------------------------------
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/views/<string:view_id>')
-def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, view_id):
+@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')
+def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, chart_id):
     """Get content of a dataset chart view for a given workflow module.
     """
     try:
-        view = api.get_dataset_chart_view(
+        view = api.views.get_dataset_chart_view(
             project_id=project_id,
             branch_id=branch_id,
             workflow_id=workflow_id,
             module_id=module_id,
-            view_id=view_id
+            chart_id=chart_id
         )
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -740,7 +740,7 @@ def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, view_i
             '\', branch \'' + branch_id,
             '\', workflow \'' + workflow_id,
             '\', module \'' + module_id,
-            '\' or view \'' + view_id + '\''
+            '\' or chart \'' + chart_id + '\''
         ])
     )
 

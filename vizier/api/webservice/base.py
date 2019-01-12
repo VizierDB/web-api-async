@@ -73,6 +73,7 @@ class VizierApi(object):
         self.workflows = None
         self.urls = None
         self.service_descriptor = None
+        self.views = None
         if init:
             self.init()
 
@@ -95,6 +96,10 @@ class VizierApi(object):
             projects=self.engine.projects,
             urls=self.urls,
             defaults=self.config.webservice.defaults
+        )
+        self.views = VizierDatasetViewApi(
+            projects=self.engine.projects,
+            urls=self.urls
         )
         self.files = VizierFilestoreApi(
             projects=self.engine.projects,
@@ -140,53 +145,3 @@ class VizierApi(object):
         dict
         """
         return self.service_descriptor
-
-    # ------------------------------------------------------------------------------
-    # Views
-    # ------------------------------------------------------------------------------
-    def get_dataset_chart_view(self, project_id, branch_id, version, module_id, view_id):
-        """
-        """
-        # Get viztrail to ensure that it exist.
-        viztrail = self.viztrails.get_viztrail(viztrail_id=project_id)
-        if viztrail is None:
-            return None
-        # Retrieve workflow from repository. The result is None if the branch
-        # does not exist.
-        workflow = self.viztrails.get_workflow(
-            viztrail_id=project_id,
-            branch_id=branch_id,
-            workflow_version=version
-        )
-        if workflow is None:
-            return None
-        # Find the workflow module and ensure that the referenced view is
-        # defined for the module.
-        datasets = None
-        v_handle = None
-        for module in workflow.modules:
-            for obj in module.stdout:
-                if obj['type'] == serialize.O_CHARTVIEW:
-                    view = ChartViewHandle.from_dict(obj['data'])
-                    if view.identifier == view_id:
-                        v_handle = view
-            if module.identifier == module_id:
-                datasets = module.datasets
-                break
-        if not datasets is None and not v_handle is None:
-            if not v_handle.dataset_name in datasets:
-                raise ValueError('unknown dataset \'' + v_handle.dataset_name + '\'')
-            dataset_id = datasets[v_handle.dataset_name]
-            rows = self.datastore.get_dataset_chart(dataset_id, v_handle)
-            ref = self.urls.workflow_module_view_url(project_id, branch_id,  version, module_id,  view_id)
-            return serialize.DATASET_CHART_VIEW(
-                view=v_handle,
-                rows=rows,
-                self_ref=self.urls.workflow_module_view_url(
-                    project_id,
-                    branch_id,
-                    version,
-                    module_id,
-                    view_id
-                )
-            )
