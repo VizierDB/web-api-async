@@ -86,8 +86,8 @@ class VizierApi(object):
             api_doc_url=self.config.webservice.doc_url
         )
         self.engine = VizierEngineFactory.get_engine(
-            identifier=self.config.engine['identifier'],
-            properties=self.config.engine['properties']
+            identifier=self.config.engine.identifier,
+            config=self.config
         )
         self.branches = VizierBranchApi(
             projects=self.engine.projects,

@@ -16,43 +16,36 @@
 
 """Helper methods to configure the celery backend."""
 
-"""Property keys for routes."""
-ROUTE_COMMAND = 'commandId'
-ROUTE_PACKAGE = 'packageId'
-ROUTE_QUEUE = 'queue'
+import os
+
+"""Environment variable containing routing information."""
+# Colon separated list of package.command=queue strings that define routing
+# information for individual commands
+VIZIERENGINE_CELERY_ROUTES = 'VIZIERENGINE_CELERY_ROUTES'
 
 
-def config_routes(elements):
-    """Create routing information for individual vizier commands. The expected
-    format of the properties dictionary is as follows:
+def config_routes():
+    """Create routing information for individual vizier commands. Expects
+    routing information in the environment variable VIZIERENGINE_CELERY_ROUTES.
+    The value format is a colon separated list of package.command=queue string.
 
-    routes: List representing mapping from commands to queues
-        - packageId
-          commandId
-          queue: Name of the queue (matching a name in the queues list)
-
-    Returns a dictionary of dictionaries mapping package commands to routing
-    queues.
-
-    Parameters
-    ----------
-    elements: list(dict)
-        List of dictionaries that contain routing information for individual
-        vizier commands
+    Returns None if the environment variable is not set.
 
     Returns
     -------
     dict
     """
-    routes = dict()
-    for rt in elements:
-        for key in [ROUTE_PACKAGE, ROUTE_COMMAND, ROUTE_QUEUE]:
-            if not key in rt:
-                raise ValueError('missing element \'' + key + '\' in route information')
-        package_id = rt[ROUTE_PACKAGE]
-        command_id = rt[ROUTE_COMMAND]
-        queue = rt[ROUTE_QUEUE]
-        if not package_id in routes:
-            routes[package_id] = dict()
-        routes[package_id][command_id] = queue
+    routes = None
+    routing = os.getenv(VIZIERENGINE_CELERY_ROUTES)
+    if not routing is None:
+        routes = dict()
+        for rt in routing.split(':'):
+            pos_1 = rt.index('.')
+            pos_2 = rt.index('=')
+            package_id = rt[:pos_1]
+            command_id = rt[pos_1+1:pos_2]
+            queue = rt[pos_2+1:]
+            if not package_id in routes:
+                routes[package_id] = dict()
+            routes[package_id][command_id] = queue
     return routes

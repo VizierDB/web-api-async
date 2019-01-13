@@ -46,9 +46,18 @@ A running Vizier instance has four main components: (1)) data store, (2) file st
 
 Not all of them are supported by each of the engines. Look at the engine specific documentation below.
 
-VIZIERENGINE_BACKEND
-VIZIERENGINE_USE_SHORT_IDENTIFIER
-VIZIERENGINE_DEV_DIR
+- **VIZIERENGINE_BACKEND**: Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
+- **VIZIERENGINE_USE_SHORT_IDENTIFIER**: Flag indicationg whether short identifier are used by the viztrail repository
+
+Development
+-----------
+
+- **VIZIERENGINE_DEV_DIR**: Base data directory for the development engine
+
+Celery
+------
+
+- **VIZIERENGINE_CELERY_ROUTES**: Colon separated list of package.command=queue strings that define routing information for individual commands
 
 
 Engines: DEV_LOCAL, DEV_CELERY

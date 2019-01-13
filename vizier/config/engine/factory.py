@@ -20,54 +20,32 @@ identifier. Configuration-specific parameters are passed via a dictionary.
 Modify this class to add new engine configurations.
 """
 
-from vizier.config.engine.dev import DevEngineFactory, DEV_ENGINE
+import vizier.config.engine.dev as dev
 
 
 class VizierEngineFactory(object):
     """Factory for vizier engines that are used by various applications."""
     @staticmethod
-    def get_container_engine(identifier, properties=None):
-        """Create an instance of the vizier container engine that is used by a
-        single- project container. The engine is created from a given dictionary
-        containing configuration parameters. Each configuration is identified by
-        a unique key.
-
-        Parameters
-        ----------
-        identifier: string
-            Unique configuration identifier
-        properties: dict, optional
-            Configuration-specific parameters
-
-        Returns
-        -------
-        vizier.engine.container.VizierContainerEngine
-        """
-        # For each new configuration add a clause the the if-statement
-        if identifier == DEV_ENGINE:
-            return DevEngineFactory.get_container_engine(properties)
-        else:
-            raise ValueError('unknown configuration identifer \'' + str(identifier) + '\'')
-
-    @staticmethod
-    def get_engine(identifier, properties=None):
+    def get_engine(identifier, config):
         """Create an instance of the vizier engine for a given configuration.
-        Each configuration is identified by a unique key. The properties
-        dictionary contains configuration-specific parameters.
+        Each configuration is identified by a unique key.
 
         Parameters
         ----------
         identifier: string
             Unique configuration identifier
-        properties: dict, optional
-            Configuration-specific parameters
+        config: vizier.config.base.ServerConfig
+            Server configuration object
 
         Returns
         -------
         vizier.engine.base.VizierEngine
         """
         # For each new configuration add a clause the the if-statement
-        if identifier == DEV_ENGINE:
-            return DevEngineFactory.get_engine(properties)
+        if identifier in dev.ENGINES:
+            return dev.DevEngineFactory.get_engine(
+                identifier=identifier,
+                config=config
+            )
         else:
             raise ValueError('unknown configuration identifer \'' + str(identifier) + '\'')

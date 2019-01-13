@@ -18,6 +18,10 @@
 
 import os
 
+from vizier.core.io.base import read_object_from_file
+from vizier.core.loader import ClassLoader
+from vizier.engine.packages.base import PackageIndex
+
 
 """Default directory for all server resources."""
 ENV_DIRECTORY = './.vizierdb'
@@ -74,7 +78,7 @@ DEFAULT_SETTINGS = {
     VIZIERSERVER_ROW_LIMIT: 25,
     VIZIERSERVER_MAX_ROW_LIMIT: 1000,
     VIZIERSERVER_MAX_UPLOAD_SIZE: 16 * 1024 * 1024,
-    VIZIERSERVER_ENGINE: 'DEV_LOCAL',
+    VIZIERSERVER_ENGINE: 'DEV',
     VIZIERSERVER_PACKAGE_PATH: './resources/packages',
     VIZIERSERVER_PROCESSOR_PATH: './resources/processors',
     'doc_url': ''
@@ -87,6 +91,27 @@ INTEGER = 'int'
 STRING = 'str'
 
 ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
+
+
+"""Definition of additional configuration environment variables that are used
+to instantiate and configure the vizier engine.
+"""
+
+# Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
+VIZIERENGINE_BACKEND = "VIZIERENGINE_BACKEND"
+# Colon separated list of package.command strings that identify the commands
+# that are executed synchronously
+VIZIERENGINE_SYNCHRONOUS = 'VIZIERENGINE_SYNCHRONOUS'
+# Flag indicationg whether short identifier are used by the viztrail repository
+VIZIERENGINE_USE_SHORT_IDENTIFIER = 'VIZIERENGINE_USE_SHORT_IDENTIFIER'
+
+
+"""Identifier for supported backends."""
+BACKEND_CELERY = 'CELERY'
+BACKEND_CONTAINER = 'CONTAINER'
+BACKEND_MULTIPROCESS = 'MULTIPLROCESS'
+
+BACKENDS = [BACKEND_CELERY, BACKEND_CONTAINER, BACKEND_MULTIPROCESS]
 
 
 class ConfigObject(object):
@@ -140,8 +165,8 @@ class ServerConfig(object):
             max_file_size
     engine:
         identifier
-        packages_path
-        processors_path
+        package_path
+        processor_path
     run:
         debug
     logs:
@@ -181,8 +206,8 @@ class ServerConfig(object):
         self.engine = ConfigObject(
             attributes=[
                 ('identifier', VIZIERSERVER_ENGINE, STRING),
-                ('packages_path', VIZIERSERVER_PACKAGE_PATH, STRING),
-                ('processors_path', VIZIERSERVER_PROCESSOR_PATH, STRING)
+                ('package_path', VIZIERSERVER_PACKAGE_PATH, STRING),
+                ('processor_path', VIZIERSERVER_PROCESSOR_PATH, STRING)
             ],
             default_values=default_values
         )
@@ -213,12 +238,65 @@ class ServerConfig(object):
         base_url += self.webservice.app_path
         return base_url
 
+    def load_packages(self):
+        """Load package declarations from directories in the packages path. The
+        packages path may contain multiple directories separated by ':'. The
+        directories in the path are processed in reverse order to ensure that
+        loaded packages are not overwritten by declarations that occur in
+        directories later in the path.
+
+        Returns
+        -------
+        dict(vizier.engine.package.base.PackageIndex)
+        """
+        packages = dict()
+        for dir_name in self.engine.package_path.split(':'):
+            for filename in os.listdir(dir_name):
+                filename = os.path.join(dir_name, filename)
+                if os.path.isfile(filename):
+                    pckg = read_object_from_file(filename)
+                    for key in pckg:
+                        packages[key] = PackageIndex(package=pckg[key])
+        return packages
+
+    def load_processors(self):
+        """Load task processors for packages from directories in the processors
+        path. The path may contain multiple directories separated by ':'. The
+        directories in the path are processed in reverse order to ensure that
+        loaded processors are not overwritten by files that occur in directories
+        later in the path.
+
+        The format of individual files is expected to be as follows:
+        {
+          - packages: [string]
+          - engine: {class loader definition}
+        }
+        Returns
+        -------
+        dict(vizier.engine.packages.task.processor.TaskProcessor)
+        """
+        processors = dict()
+        for dir_name in self.engine.processor_path.split(':'):
+            print dir_name
+            for filename in os.listdir(dir_name):
+                filename = os.path.join(dir_name, filename)
+                if os.path.isfile(filename):
+                    obj = read_object_from_file(filename)
+                    # Ignore files that do not contain the mandatory elements
+                    for key in ['engine', 'package']:
+                        if not key in obj:
+                            continue
+                    engine = ClassLoader(values=obj['engine']).get_instance()
+                    for key in obj['packages']:
+                        processors[key] = engine
+        return processors
+
 
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_config_value(attribute_name, attribute_type, env_variable, default_values):
+def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, default_values=None):
     """Get the value for a configuration parameter. The value is expected to be
     set in the given environment variable. If the variable is not set the value
     is taken from the given default settings or the global default settings.
@@ -230,12 +308,12 @@ def get_config_value(attribute_name, attribute_type, env_variable, default_value
 
     Parameters
     ----------
+    env_variable: string
+        Name of the environment variable
     attribute_name: string
         Name of the attibute that is being set
     attribute_type: string
         Expected type of the attribute value
-    env_variable: string
-        Name of the environment variable
     default_values: dict, optional
         Dictionary of default values.
 

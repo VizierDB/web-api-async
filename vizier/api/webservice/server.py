@@ -885,5 +885,5 @@ if __name__ == '__main__':
         '0.0.0.0',
         config.webservice.server_local_port,
         application,
-        use_reloader=config.debug
+        use_reloader=config.run.debug
     )

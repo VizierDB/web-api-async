@@ -1,0 +1,9 @@
+packages:
+    - vizual
+engine:
+    className: 'VizualTaskProcessor'
+    moduleName: 'vizier.engine.packages.vizual.processor'
+    properties:
+        api:
+            className: 'DefaultVizualApi'
+            moduleName: 'vizier.engine.packages.vizual.api.fs'
