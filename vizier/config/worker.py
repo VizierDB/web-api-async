@@ -29,7 +29,7 @@ datastores:
     className: Class name of the used engine
     properties: Dictionary of engine specific configuration properties
 controller:
-    url : Base Url for the controlling web servie
+    url : Base Url for the controlling web service
 logs:
     server: Log file for Web Server
 """

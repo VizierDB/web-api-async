@@ -23,6 +23,7 @@ from abc import abstractmethod
 import json
 import os
 import shutil
+import yaml
 
 from vizier.core.util import get_short_identifier, get_unique_identifier
 
@@ -446,3 +447,27 @@ class DefaultObjectStore(ObjectStore):
         """
         with open(object_path, 'w') as f:
             json.dump(content, f)
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def read_object_from_file(filename):
+    """Read dictionary serialization from file. The file format is expected to
+    by Yaml unless the filename ends with .json.
+
+    Parameters
+    ----------
+    filename: string
+        Name of the input file
+
+    Returns
+    -------
+    dict
+    """
+    with open(filename, 'r') as f:
+        if filename.endswith('.json'):
+            return json.loads(f.read())
+        else:
+            return yaml.load(f.read())

@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Application configuration object. Contains all application settings and the
-configuration parameters for the vizier engine.
+"""Application configuration object. Contains all application settings.
 
 The app configuration has four main parts: API and Web service configuration,
 the vizier engine configuration, the path to the server log, and the
@@ -36,77 +35,28 @@ webservice:
         max_file_size: Maximum size for file uploads (in byte)
 engine:
     identifier: Unique engine configuration identifier
-    properties: Configuration specific parameters
-debug: Flag indicating whether server is started in debug mode
+run:
+    debug: Flag indicating whether server is started in debug mode
 logs:
     server: Log file for Web Server
 """
 
 import os
 
-from vizier.config.base import ConfigObject, ServerConfig
-from vizier.config.base import ENV_DIRECTORY
-
-
-"""Environment Variable containing path to config file."""
-ENV_CONFIG = 'VIZIERSERVER_CONFIG'
-
-"""Default settings. The default settings do not include the configuration for
-the vizier engine.
-"""
-DEFAULT_SETTINGS = {
-    'webservice': {
-        'server_url': 'http://localhost',
-        'server_port': 5000,
-        'server_local_port': 5000,
-        'app_path': '/vizier-db/api/v1',
-        'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/',
-        'name': 'Vizier Web API',
-        'defaults': {
-            'row_limit': 25,
-            'max_row_limit': -1,
-            'max_file_size': 16 * 1024 * 1024
-        }
-    },
-    'logs': {
-        'server': os.path.join(ENV_DIRECTORY, 'logs')
-    },
-    'debug': True,
-}
-
-
+from vizier.config.base import ServerConfig
 
 
 class AppConfig(ServerConfig):
     """Application configuration object. This object contains all configuration
     settings for the Vizier instance.
-
-    Configuration is read from a configuration file (in Yaml or Json format).
-    The file is expected to contain follow the structure of the configuration
-    object as described above. The configuration file can either be specified
-    using the environment variable VIZIERSERVER_CONFIG or be located (as file
-    config.yaml) in the current working directory.
     """
-    def __init__(self, configuration_file=None):
-        """Read configuration parameters from a configuration file. The file is
-        expected to be in Json or Yaml format, having the same structure as
-        shown above.
-
-        If no file is specified attempts will be made to read the following
-        configuration files:
-
-        (1) The file referenced by the environment variable VIZIERSERVER_CONFIG
-        (2) The file config.json or config.yaml in the current working directory
-
-        If the specified files are not found a ValueError is raised.
+    def __init__(self, default_values=None):
+        """Initialize the configuration object from the respective environment
+        variables and the optional default values.
 
         Parameters
         ----------
-        configuration_file: string, optional
-            Optional path to configuration file
+        default_values: dict, optional
+            Dictionary of default values
         """
-        super(AppConfig, self).__init__(
-            env=ENV_CONFIG,
-            default_settings=DEFAULT_SETTINGS,
-            configuration_file=configuration_file
-        )
+        super(AppConfig, self).__init__(default_values=default_values)

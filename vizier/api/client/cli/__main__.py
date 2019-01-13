@@ -22,7 +22,7 @@ import sys
 
 from vizier.api.routes.base import UrlFactory
 from vizier.api.client.cli.interpreter import CommandInterpreter
-from vizier.config.base import read_object_from_file
+from vizier.core.io.base import read_object_from_file
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 
 

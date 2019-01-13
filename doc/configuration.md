@@ -1,36 +1,37 @@
 Vizier API Configuration
 ========================
 
-The Vizier API is configured using a configuration object that contains (i) API parameters and default settings for the Web service, (ii) definition of the execution engine for data curation workflows, and (iii) additional server specific information (e.g., the log file folder).
+The vizier web service API is configured using a set of environment variables. The following variables can be used to control different service parameters. Additional environment variables are defined for different backends.
+
+**General**
+
+- **VIZIERSERVER_NAME**: Web service name
+- **VIZIERSERVER_LOG_DIR**: Log file directory used by the web server (DEFAULT: *./.vizierdb/logs*)
+- **VIZIERSERVER_DEBUG**: Flag indicating whether server is started in debug mode (DEFAULT: *True*)
+
+**Web Service**
+
+- **VIZIERSERVER_BASE_URL**: Url of the server (DEFAULT: *http://localhost*)
+- **VIZIERSERVER_SERVER_PORT**: Public server port (DEFAULT: *5000*)
+- **VIZIERSERVER_SERVER_LOCAL_PORT**: Locally bound server port (DEFAULT: *5000*)
+- **VIZIERSERVER_APP_PATH**: Application path for Web API (DEFAULT: */vizier-db/api/v1*)
+
+- **VIZIERSERVER_ROW_LIMIT**: Default row limit for requests that read datasets (DEFAULT: *25*)
+- **VIZIERSERVER_MAX_ROW_LIMIT**: Maximum row limit for requests that read datasets (DEFAULT: *-1* (returns all rows))
+- **VIZIERSERVER_MAX_UPLOAD_SIZE**: Maximum size for file uploads in byte (DEFAULT: *16777216*)
+
+**Workflow Execution Engine**
+
+- **VIZIERSERVER_ENGINE**: Name of the workflow execution engine (DEFAULT: *DEV_LOCAL*)
+- **VIZIERSERVER_PACKAGE_PATH**: Path to the package declaration directory (DEFAULT: *./resources/packages*)
+- **VIZIERSERVER_PROCESSOR_PATH**: Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors*)
 
 
-Configuration Parameters
-------------------------
+The files in the package directory are used to initialize the registry of supported packages. Each file in the packages directory is expected to contain the declaration of a vizier packages. All files are read during service initialization to create the repository of available workflow packages.
 
-The API is configured using a dictionary of configuration parameters. The parameters are divided into the following parts:
 
-```
-webservice:
-    server_url: Url of the server (e.g., http://localhost)
-    server_port: Public server port (e.g., 5000)
-    server_local_port: Locally bound server port (e.g., 5000)
-    app_path: Application path for Web API (e.g., /vizier-db/api/v1)
-    app_base_url: Concatenation of server_url, server_port and app_path
-    doc_url: Url to API documentation
-    name: Web Service name
-    defaults:
-        row_limit: Default row limit for requests that read datasets
-        max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
-        max_file_size: Maximum size for file uploads (in byte)
-engine:
-    identifier: Unique engine configuration identifier
-    properties: Configuration specific parameters
-debug: Flag indicating whether server is started in debug mode
-logs:
-    server: Log file for Web Server
-```
 
-Vizier Engine
+Workflow Engine
 -------------
 
 The **Vizier Engine** defines the interface that is used by the API for creating, deleting, and manipulating projects. Different implementations of the engine will use different implementations for datasores, filestores, vitrails repositories and backends.
@@ -42,6 +43,15 @@ The class that contains the engine that is being used by a Vizier instance is de
 The community edition environment runs on the local machine. Expects the definition of the datastore, filestore and viztrail repository that is used for all projects. Intended for single user that works on a single project. Uses multi-process backend.
 
 A running Vizier instance has four main components: (1)) data store, (2) file store, (3) viztrails repository, and (4) workflow execution engine. For each of these components different implementations are possible. When initializing the instance the components that are to be used are loaded based on the respective configuration parameters.
+
+Not all of them are supported by each of the engines. Look at the engine specific documentation below.
+
+VIZIERENGINE_BACKEND
+VIZIERENGINE_USE_SHORT_IDENTIFIER
+VIZIERENGINE_DEV_DIR
+
+
+Engines: DEV_LOCAL, DEV_CELERY
 
 
 ## Configure the Default Viztrails Repository

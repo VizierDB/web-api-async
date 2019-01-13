@@ -16,179 +16,186 @@
 
 """Classes and helper methods for configration objects."""
 
-import json
 import os
-import yaml
 
 
-"""Default directory for API data."""
+"""Default directory for all server resources."""
 ENV_DIRECTORY = './.vizierdb'
 
 
-class ConfigObject(object):
-    """Create a Python class instance from a given dictionary of variables and
-    a dictionary of default values. Performs a nested merge of dictionaries in
-    values and default values.
+"""Environment variables used by the vizier API web service to configure server
+and components.
+"""
 
-    For lists the policy is all or nothing. List elements are not merged. If the
-    configuration object contains a list value all items in the list are copied
-    to the configuration as is.
+"""General"""
+# Web service name
+VIZIERSERVER_NAME = 'VIZIERSERVER_NAME'
+# Log file directory used by the web server (DEFAULT: ./.vizierdb/logs)
+VIZIERSERVER_LOG_DIR = 'VIZIERSERVER_LOG_DIR'
+# Flag indicating whether server is started in debug mode (DEFAULT: True)
+VIZIERSERVER_DEBUG = 'VIZIERSERVER_DEBUG'
+
+"""Web service"""
+# Url of the server (DEFAULT: http://localhost)
+VIZIERSERVER_BASE_URL = 'VIZIERSERVER_BASE_URL'
+# Public server port (DEFAULT: 5000)
+VIZIERSERVER_SERVER_PORT = 'VIZIERSERVER_SERVER_PORT'
+# Locally bound server port (DEFAULT: 5000)
+VIZIERSERVER_SERVER_LOCAL_PORT = 'VIZIERSERVER_SERVER_LOCAL_PORT'
+# Application path for Web API (DEFAULT: /vizier-db/api/v1)
+VIZIERSERVER_APP_PATH = 'VIZIERSERVER_APP_PATH'
+
+# Default row limit for requests that read datasets (DEFAULT: 25)
+VIZIERSERVER_ROW_LIMIT = 'VIZIERSERVER_ROW_LIMIT'
+# Maximum row limit for requests that read datasets (-1 returns all rows) (DEFAULT: 1000)
+VIZIERSERVER_MAX_ROW_LIMIT = 'VIZIERSERVER_MAX_ROW_LIMIT'
+# Maximum size for file uploads in byte (DEFAULT: 16777216)
+VIZIERSERVER_MAX_UPLOAD_SIZE = 'VIZIERSERVER_MAX_UPLOAD_SIZE'
+
+"""Workflow Execution Engine"""
+# Name of the workflow execution engine (DEFAULT: DEV_LOCAL)
+VIZIERSERVER_ENGINE = 'VIZIERSERVER_ENGINE'
+# Path to the package declaration directory (DEFAULT: ./resources/packages)
+VIZIERSERVER_PACKAGE_PATH = 'VIZIERSERVER_PACKAGE_PATH'
+# Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors)
+VIZIERSERVER_PROCESSOR_PATH = 'VIZIERSERVER_PROCESSOR_PATH'
+
+
+"""Dictionary of default confiburation settings. Note that there is no
+environment variable defined for the link to the API documentation."""
+DEFAULT_SETTINGS = {
+    VIZIERSERVER_NAME: 'Vizier Web API',
+    VIZIERSERVER_LOG_DIR: os.path.join(ENV_DIRECTORY, 'logs'),
+    VIZIERSERVER_DEBUG: True,
+    VIZIERSERVER_BASE_URL: 'http://localhost',
+    VIZIERSERVER_SERVER_PORT: 5000,
+    VIZIERSERVER_SERVER_LOCAL_PORT: 5000,
+    VIZIERSERVER_APP_PATH: '/vizier-db/api/v1',
+    VIZIERSERVER_ROW_LIMIT: 25,
+    VIZIERSERVER_MAX_ROW_LIMIT: 1000,
+    VIZIERSERVER_MAX_UPLOAD_SIZE: 16 * 1024 * 1024,
+    VIZIERSERVER_ENGINE: 'DEV_LOCAL',
+    VIZIERSERVER_PACKAGE_PATH: './resources/packages',
+    VIZIERSERVER_PROCESSOR_PATH: './resources/processors',
+    'doc_url': ''
+}
+
+"""Supported attribute types."""
+BOOL = 'bool'
+FLOAT = 'float'
+INTEGER = 'int'
+STRING = 'str'
+
+ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
+
+
+class ConfigObject(object):
+    """Object whose attributes contain the values of environment variables that
+    are used by vizier for to configure API components.
     """
-    def __init__(self, values, default_values=dict()):
-        """Initialize the object from the given dictionary of values and default
-        values.
+    def __init__(self, attributes, default_values=None):
+        """Initialize the object from a list of 3-tuples containing (1) the
+        attribute name, (2) the name of the environment variable that contains
+        the attibute value, and (3) the attibute type (string, bool ,float, or
+        int).
+
+        If the environment variable is not set (or the name of the environemnt
+        variable is None), the value will be taken from the default values
+        dictionary. If the default values are not given the global default
+        dictionary is used.
 
         Parameters
         ----------
-        values: dict
-            Dictionary of object variables. Dictionary keys are used as variable
-            names.
-        default_values: dict
+        attributes: list
+            List of tuples containing attribute name, name of the environment
+            variable, and attribute type.
+        default_values: dict, optional
             Dictionary of default values.
         """
-        #print json.dumps(values, sort_keys=True, indent=4)
-        #print json.dumps(default_values, sort_keys=True, indent=4)
-        self.keys = set()
-        for key in values:
-            if isinstance(values[key], dict):
-                if key in default_values:
-                    def_val = default_values[key]
-                    if not isinstance(def_val, dict):
-                        def_val = dict()
-                else:
-                    def_val = dict()
-                setattr(
-                    self,
-                    key,
-                     ConfigObject(values[key], default_values=def_val)
-                )
-            elif isinstance(values[key], list):
-                elements = list()
-                for el in values[key]:
-                    if isinstance(el, dict):
-                        elements.append(ConfigObject(el))
-                    else:
-                        elements.append(el)
-                setattr(self, key,  elements)
-            else:
-                setattr(self, key,  values[key])
-            self.keys.add(key)
-        for key in default_values:
-            if not key in self.keys:
-                if isinstance(default_values[key], dict):
-                    setattr(
-                        self,
-                        key,
-                        ConfigObject(dict(), default_values=default_values[key])
-                    )
-                elif isinstance(default_values[key], list):
-                    elements = list()
-                    for el in default_values[key]:
-                        if isinstance(el, dict):
-                            elements.append(ConfigObject(el))
-                        else:
-                            elements.append(el)
-                    setattr(self, key,  elements)
-                else:
-                    setattr(self, key,  default_values[key])
-                self.keys.add(key)
+        for attr in attributes:
+            name, var, type = attr
+            val = get_config_value(
+                attribute_name=name,
+                attribute_type=type,
+                env_variable=var,
+                default_values=default_values
+            )
+            setattr(self, name, val)
 
 
 class ServerConfig(object):
-    """Configuration for an API web server.
-
-    Configuration is read from a configuration file (in Yaml or Json format).
-    The file is expected to follow the given format:
+    """Configuration for an API web server. The object schema is as follows:
 
     webservice:
-        server_url: Url of the server (e.g., http://localhost)
-        server_port: Public server port (e.g., 5000)
-        server_local_port: Locally bound server port (e.g., 5000)
-        app_path: Application path for Web API (e.g., /vizier-db/api/v1)
-        app_base_url: Concatenation of server_url, server_port and app_path
-        doc_url: Url to API documentation
-        name: Web Service name
+        server_url
+        server_port
+        server_local_port
+        app_path
+        app_base_url
+        doc_url
+        name
         defaults:
-            row_limit: Default row limit for requests that read datasets
-            max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
-            max_file_size: Maximum size for file uploads (in byte)
+            row_limit
+            max_row_limit
+            max_file_size
     engine:
-        identifier: Unique engine configuration identifier
-        properties: Configuration specific parameters
-    debug: Flag indicating whether server is started in debug mode
+        identifier
+        packages_path
+        processors_path
+    run:
+        debug
     logs:
-        server: Log file for Web Server
-
-    The configuration file can either be given, specified using the an
-    envirnment variable, or be located (as file config.json or config.yaml) in
-    the current working directory.
+        server
     """
-    def __init__(self, env, default_settings, configuration_file=None):
-        """Read configuration parameters from a configuration file. The file is
-        expected to be in Json or Yaml format, having the same structure as
-        shown above.
-
-        If no file is specified attempts will be made to read the following
-        configuration files:
-
-        (1) The file referenced by the environment variable VIZIERSERVER_CONFIG
-        (2) The file config.json or config.yaml in the current working directory
-
-        If the specified files are not found a ValueError is raised.
+    def __init__(self, default_values=None):
+        """Create object instance from environment variables and optional set
+        of default values.
 
         Parameters
         ----------
-        env: string
-            Name of the environment variable that contains the reference to the
-            configuration file.
-        default_settings: dict
-            Default settings
-        configuration_file: string, optional
-            Optional path to configuration file
+        default_values: dict, optional
+            Dictionary of default values
         """
-        # Read configuration from configuration file. Raises ValueError if no
-        # configuration file is found.
-        self.doc = None
-        if configuration_file != None:
-            if os.path.isfile(configuration_file):
-                self.doc = read_object_from_file(configuration_file)
-            else:
-                raise ValueError('unknown file \'' + str(configuration_file) + '\'')
-        else:
-            files = [
-                os.getenv(env),
-                './config.json',
-                './config.yaml'
-            ]
-            for config_file in files:
-                if not config_file is None and os.path.isfile(config_file):
-                    self.doc = read_object_from_file(config_file)
-                    break
-        if self.doc is None:
-            raise ValueError('no configuration object found')
-        # Create the vizier engine
-        if 'engine' in self.doc:
-            for key in ['identifier', 'properties']:
-                if not key in self.doc['engine']:
-                    raise ValueError('missing key \'' + key + '\' for engine configuration')
-            self.engine = self.doc['engine']
-        else:
-            raise ValueError('missing engine configuration')
-        # Create objects for configuration of log files and web service.
-        for key in ['logs', 'webservice']:
-            if key in self.doc:
-                obj = ConfigObject(
-                    values=self.doc[key],
-                    default_values=default_settings[key]
-                )
-            else:
-                obj = ConfigObject(values=default_settings[key])
-            setattr(self, key, obj)
-        # Set debug flag if given
-        if 'debug' in self.doc:
-            self.debug = self.doc['debug']
-        else:
-            self.debug = default_settings['debug']
+        # webservice
+        self.webservice = ConfigObject(
+            attributes=[
+                ('name', VIZIERSERVER_NAME, STRING),
+                ('server_url', VIZIERSERVER_BASE_URL, STRING),
+                ('server_port', VIZIERSERVER_SERVER_PORT, INTEGER),
+                ('server_local_port', VIZIERSERVER_SERVER_LOCAL_PORT, INTEGER),
+                ('app_path', VIZIERSERVER_APP_PATH, STRING),
+                ('doc_url', None, STRING)
+            ],
+            default_values=default_values
+        )
+        defaults = ConfigObject(
+            attributes=[
+                ('row_limit', VIZIERSERVER_ROW_LIMIT, INTEGER),
+                ('max_row_limit', VIZIERSERVER_MAX_ROW_LIMIT, INTEGER),
+                ('max_file_size', VIZIERSERVER_MAX_UPLOAD_SIZE, INTEGER)
+            ],
+            default_values=default_values
+        )
+        setattr(self.webservice, 'defaults', defaults)
+        # engine
+        self.engine = ConfigObject(
+            attributes=[
+                ('identifier', VIZIERSERVER_ENGINE, STRING),
+                ('packages_path', VIZIERSERVER_PACKAGE_PATH, STRING),
+                ('processors_path', VIZIERSERVER_PROCESSOR_PATH, STRING)
+            ],
+            default_values=default_values
+        )
+        # run
+        self.run = ConfigObject(
+            attributes=[('debug', VIZIERSERVER_DEBUG, BOOL)],
+            default_values=default_values
+        )
+        # logs
+        self.logs = ConfigObject(
+            attributes=[('server', VIZIERSERVER_LOG_DIR, STRING)],
+            default_values=default_values
+        )
 
     @property
     def app_base_url(self):
@@ -211,21 +218,60 @@ class ServerConfig(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def read_object_from_file(filename):
-    """Read dictionary serialization from file. The file format is expected to
-    by Yaml unless the filename ends with .json.
+def get_config_value(attribute_name, attribute_type, env_variable, default_values):
+    """Get the value for a configuration parameter. The value is expected to be
+    set in the given environment variable. If the variable is not set the value
+    is taken from the given default settings or the global default settings.
+
+    If the environment variable name is None the attribute name is used to
+    get the value from the default values or the global default settings.
+
+    Raises ValueError if the attribute type is invalid.
 
     Parameters
     ----------
-    filename: string
-        Name of the input file
+    attribute_name: string
+        Name of the attibute that is being set
+    attribute_type: string
+        Expected type of the attribute value
+    env_variable: string
+        Name of the environment variable
+    default_values: dict, optional
+        Dictionary of default values.
 
     Returns
     -------
-    dict
+    scalar value
     """
-    with open(filename, 'r') as f:
-        if filename.endswith('.json'):
-            return json.loads(f.read())
-        else:
-            return yaml.load(f.read())
+    # Raise an exception if the attribute type is unknown
+    if not attribute_type in ATTRIBUTE_TYPES:
+        raise ValueError('unknown attribute type \'' + str(type) + '\' for \'' + attribute_name + '\'')
+    # Get the value for the environment variable. If the variable is
+    # None or if the variable is not set use the default settings
+    if not env_variable is None:
+        val = os.getenv(env_variable)
+        if val is None:
+            if not default_values is None and env_variable in default_values:
+                val = default_values[env_variable]
+            else:
+                val = DEFAULT_SETTINGS[env_variable]
+    elif not default_values is None and attribute_name in default_values:
+        val = default_values[attribute_name]
+        if val is None:
+            val = DEFAULT_SETTINGS[attribute_name]
+    else:
+        val = DEFAULT_SETTINGS[attribute_name]
+    if not val is None:
+        if attribute_type == BOOL and not isinstance(val, bool):
+            val = val.lower() == 'true'
+        elif attribute_type == FLOAT and not isinstance(val, float):
+            try:
+                val = float(val)
+            except ValueError as ex:
+                raise ValueError('expected float value for \'' + env_variable + '\'')
+        elif attribute_type == INTEGER and not isinstance(val, int):
+            try:
+                val = int(val)
+            except ValueError as ex:
+                raise ValueError('expected integer value for \'' + env_variable + '\'')
+    return val

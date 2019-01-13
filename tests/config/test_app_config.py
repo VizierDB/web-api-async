@@ -1,41 +1,102 @@
 import os
 import unittest
-import shutil
 
-from vizier.config.app import AppConfig, DEFAULT_SETTINGS, ENV_CONFIG
+from vizier.config.app import AppConfig
 
-CONFIG_FILE = './.files/config.yaml'
-CONFIG_INCOMPLETE = './.files/incomplete_config.yaml'
-CONFIG_WITH_ERRORS = '.files/config_with_errors.yaml'
+import vizier.config.base as env
+
+
+def delete_env(name):
+    if name in os.environ:
+        del os.environ[name]
 
 
 class TestConfig(unittest.TestCase):
 
-    def test_default_config(self):
-        """Test the default configuration settings.
-        """
-        # Test the default configuration if not configuration file is given.
-        # Ensure that the environment variable VIZIERSERVER_CONFIG is not set.
-        config = AppConfig(configuration_file=CONFIG_FILE)
-        self.assertEquals(config.webservice.server_url, 'http://vizier-db.info')
-        self.assertEquals(config.webservice.server_port, DEFAULT_SETTINGS['webservice']['server_port'])
-        self.assertEquals(config.webservice.server_local_port, 80)
-        self.assertEquals(config.webservice.app_path, '/vizier-db/api/v2')
-        self.assertEquals(config.webservice.doc_url, 'http://vizier-db.info/doc/api/v1')
-        self.assertEquals(config.webservice.name, 'Vizier Web API')
-        self.assertEquals(config.app_base_url, 'http://vizier-db.info:5000/vizier-db/api/v2')
-        self.assertEquals(config.webservice.defaults.max_file_size, 1024)
-        self.assertEquals(config.webservice.defaults.row_limit, 25)
-        self.assertEquals(config.webservice.defaults.max_row_limit, -1)
-        self.assertEquals(config.debug, True)
-        self.assertEquals(config.logs.server, 'logs')
+    def setUp(self):
+        """Clear all relevant environment variables."""
+        # Test the default configuration. Ensure that no environment variable
+        # is set.
+        delete_env(env.VIZIERSERVER_NAME)
+        delete_env(env.VIZIERSERVER_LOG_DIR)
+        delete_env(env.VIZIERSERVER_DEBUG)
+        delete_env(env.VIZIERSERVER_BASE_URL)
+        delete_env(env.VIZIERSERVER_SERVER_PORT)
+        delete_env(env.VIZIERSERVER_SERVER_LOCAL_PORT)
+        delete_env(env.VIZIERSERVER_APP_PATH)
+        delete_env(env.VIZIERSERVER_ROW_LIMIT)
+        delete_env(env.VIZIERSERVER_MAX_ROW_LIMIT)
+        delete_env(env.VIZIERSERVER_MAX_UPLOAD_SIZE)
+        delete_env(env.VIZIERSERVER_ENGINE)
+        delete_env(env.VIZIERSERVER_PACKAGE_PATH)
+        delete_env(env.VIZIERSERVER_PROCESSOR_PATH)
 
-    def test_config_with_error(self):
-        """Test loading configuration file with erroneous package specification."""
-        with self.assertRaises(ValueError):
-            AppConfig(configuration_file=CONFIG_INCOMPLETE)
-        with self.assertRaises(ValueError):
-            AppConfig(configuration_file=CONFIG_WITH_ERRORS)
+    def test_default_config(self):
+        """Test the default configuration settings."""
+        config = AppConfig()
+        self.assertEquals(config.webservice.name, env.DEFAULT_SETTINGS[env.VIZIERSERVER_NAME])
+        self.assertEquals(config.webservice.server_url, env.DEFAULT_SETTINGS[env.VIZIERSERVER_BASE_URL])
+        self.assertEquals(config.webservice.server_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_PORT])
+        self.assertEquals(config.webservice.server_local_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_LOCAL_PORT])
+        self.assertEquals(config.webservice.app_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_APP_PATH])
+        self.assertEquals(config.webservice.defaults.row_limit, env.DEFAULT_SETTINGS[env.VIZIERSERVER_ROW_LIMIT])
+        self.assertEquals(config.webservice.defaults.max_row_limit, env.DEFAULT_SETTINGS[env.VIZIERSERVER_MAX_ROW_LIMIT])
+        self.assertEquals(config.webservice.defaults.max_file_size, env.DEFAULT_SETTINGS[env.VIZIERSERVER_MAX_UPLOAD_SIZE])
+        self.assertEquals(config.run.debug, env.DEFAULT_SETTINGS[env.VIZIERSERVER_DEBUG])
+        self.assertEquals(config.logs.server, env.DEFAULT_SETTINGS[env.VIZIERSERVER_LOG_DIR])
+        self.assertEquals(config.engine.identifier, env.DEFAULT_SETTINGS[env.VIZIERSERVER_ENGINE])
+
+    def test_env_config(self):
+        """Test app config using environment variables."""
+        os.environ[env.VIZIERSERVER_NAME] = 'Some Name'
+        os.environ[env.VIZIERSERVER_LOG_DIR] = 'logdir'
+        os.environ[env.VIZIERSERVER_DEBUG] = 'bla'
+        os.environ[env.VIZIERSERVER_BASE_URL] = 'http://webapi'
+        os.environ[env.VIZIERSERVER_SERVER_PORT] = '80'
+        os.environ[env.VIZIERSERVER_SERVER_LOCAL_PORT] = '90'
+        os.environ[env.VIZIERSERVER_APP_PATH] = 'vizier/v2'
+        os.environ[env.VIZIERSERVER_ROW_LIMIT] = '111'
+        os.environ[env.VIZIERSERVER_MAX_ROW_LIMIT] = '222'
+        os.environ[env.VIZIERSERVER_MAX_UPLOAD_SIZE] = '333'
+        os.environ[env.VIZIERSERVER_ENGINE] = 'CELERY'
+        config = AppConfig()
+        self.assertEquals(config.webservice.name, 'Some Name')
+        self.assertEquals(config.webservice.server_url, 'http://webapi')
+        self.assertEquals(config.webservice.server_port, 80)
+        self.assertEquals(config.webservice.server_local_port, 90)
+        self.assertEquals(config.webservice.app_path, 'vizier/v2')
+        self.assertEquals(config.webservice.defaults.row_limit, 111)
+        self.assertEquals(config.webservice.defaults.max_row_limit, 222)
+        self.assertEquals(config.webservice.defaults.max_file_size, 333)
+        self.assertEquals(config.run.debug, False)
+        self.assertEquals(config.logs.server, 'logdir')
+        self.assertEquals(config.engine.identifier, 'CELERY')
+
+    def test_mixed_config(self):
+        """Test config using a mix of environment variables, default values and
+        default dettings.
+        """
+        os.environ[env.VIZIERSERVER_NAME] = 'Some Name'
+        os.environ[env.VIZIERSERVER_LOG_DIR] = 'logdir'
+        os.environ[env.VIZIERSERVER_ENGINE] = 'CELERY'
+        config = AppConfig(
+            default_values={
+                env.VIZIERSERVER_ROW_LIMIT: 2000,
+                env.VIZIERSERVER_DEBUG: False,
+                env.VIZIERSERVER_MAX_UPLOAD_SIZE: 4000
+            }
+        )
+        self.assertEquals(config.webservice.name, 'Some Name')
+        self.assertEquals(config.webservice.server_url, env.DEFAULT_SETTINGS[env.VIZIERSERVER_BASE_URL])
+        self.assertEquals(config.webservice.server_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_PORT])
+        self.assertEquals(config.webservice.server_local_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_LOCAL_PORT])
+        self.assertEquals(config.webservice.app_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_APP_PATH])
+        self.assertEquals(config.webservice.defaults.row_limit, 2000)
+        self.assertEquals(config.webservice.defaults.max_row_limit, env.DEFAULT_SETTINGS[env.VIZIERSERVER_MAX_ROW_LIMIT])
+        self.assertEquals(config.webservice.defaults.max_file_size, 4000)
+        self.assertEquals(config.run.debug, False)
+        self.assertEquals(config.logs.server, 'logdir')
+        self.assertEquals(config.engine.identifier, 'CELERY')
 
 
 if __name__ == '__main__':
