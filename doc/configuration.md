@@ -1,7 +1,13 @@
-Vizier API Configuration
-========================
+Vizier Configuration
+====================
 
-The vizier web service API is configured using a set of environment variables. The following variables can be used to control different service parameters. Additional environment variables are defined for different backends.
+We attempt to follow [The Twelve-Factor App methodology](https://12factor.net/) and store all configuration parameters in environment variables. The following sections describe the configuration options for the web service API, remote celery workers, and the container worker API.
+
+Web Service REST-API
+--------------------
+
+The following variables can be used to control different parameters of the web service API server. Additional environment variables are defined for different execution backends.
+
 
 **General**
 
@@ -22,7 +28,7 @@ The vizier web service API is configured using a set of environment variables. T
 
 **Workflow Execution Engine**
 
-- **VIZIERSERVER_ENGINE**: Name of the workflow execution engine (DEFAULT: *DEV_LOCAL*)
+- **VIZIERSERVER_ENGINE**: Name of the workflow execution engine (DEFAULT: *DEV*)
 - **VIZIERSERVER_PACKAGE_PATH**: Path to the package declaration directory (DEFAULT: *./resources/packages*)
 - **VIZIERSERVER_PROCESSOR_PATH**: Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors*)
 
@@ -38,6 +44,7 @@ The **Vizier Engine** defines the interface that is used by the API for creating
 
 The class that contains the engine that is being used by a Vizier instance is defined in the *engine* section of the configuration file. The section may contain another element *properties* that contains an engine-specific dictionary of configuration parameters. This dictionary is passed to the specified engine object when it is instantiated.
 
+
 ## Configuring the Local Vizier Engine
 
 The community edition environment runs on the local machine. Expects the definition of the datastore, filestore and viztrail repository that is used for all projects. Intended for single user that works on a single project. Uses multi-process backend.
@@ -49,16 +56,18 @@ Not all of them are supported by each of the engines. Look at the engine specifi
 - **VIZIERENGINE_BACKEND**: Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
 - **VIZIERENGINE_USE_SHORT_IDENTIFIER**: Flag indicationg whether short identifier are used by the viztrail repository
 
-Development
------------
 
-- **VIZIERENGINE_DEV_DIR**: Base data directory for the development engine
+###Development
 
-Celery
-------
+
+- **VIZIERENGINE_DATA_DIR**: Base data directory for the default engine
+
+
+###Celery
+
 
 - **VIZIERENGINE_CELERY_ROUTES**: Colon separated list of package.command=queue strings that define routing information for individual commands
-
+- **CELERY_BROKER_URL**: Url for the celery broker
 
 Engines: DEV_LOCAL, DEV_CELERY
 
@@ -70,6 +79,18 @@ The configuration parameter for the default viztrails repository are:
 - *directory*: Path to base directory on file system where viztrails resources are being stored
 - *keepDeletedFiles*: Boolean flag that indicates whether files are being physicaly deleted (False) or kept (True) when a viztrail or branch is deleted. Default is False.
 - *useShortIdentifier*: Use short eight character identifier if True or long 32 character identifiers if False. Default is False
+
+
+Worker Config
+--------------
+
+- **VIZIERWORKER_ENV**: Identifier for environment in which the worker operates (supported values are DEV or REMOTE) (DEFAULT: *DEV*)
+- **VIZIERWORKER_PROCESSOR_PATH**: Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors*)
+- **VIZIERWORKER_CONTROLLER_URL**: Url of the controlling web service (DEFAULT: *http://localhost:5000/vizier-db/api/v1*)
+- **VIZIERWORKER_LOG_DIR**: Log file directory used by the worker (DEFAULT: *./.vizierdb/logs/worker*)
+
+
+If the value of the environment variable **VIZIERWORKER_ENV** is *DEV* the environment variable **VIZIERENGINE_DATA_DIR** is used to instantiate the datastore and filestore factory. If the value of **VIZIERWORKER_ENV** is *REMOTE* the variable **VIZIERWORKER_CONTROLLER_URL** is used to instantiate the datastore factory. In a remote environment a dummy filestore factory is used.
 
 
 

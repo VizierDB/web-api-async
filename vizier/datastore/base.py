@@ -26,12 +26,8 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 
 class Datastore(object):
     """Abstract API to store and retireve datasets."""
-
     @abstractmethod
-    def create_dataset(
-        self, columns, rows, column_counter=None, row_counter=None,
-        annotations=None
-    ):
+    def create_dataset(self, columns, rows, annotations=None):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -48,10 +44,6 @@ class Datastore(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        column_counter: int, optional
-            Counter to generate unique column identifier
-        row_counter: int, optional
-            Counter to generate unique row identifier
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 

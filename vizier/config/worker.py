@@ -36,105 +36,69 @@ logs:
 
 import os
 
-from vizier.config.base import ConfigObject, read_object_from_file
-from vizier.config.base import ENV_DIRECTORY
-from vizier.config.engine.base import load_packages
-from vizier.core.loader import ClassLoader
+import vizier.config.base as base
 
 
-"""Environment Variable containing path to config file."""
-ENV_CONFIG = 'VIZIERWORKER_CONFIG'
+"""Environment variable used to configure remote celery workers."""
+# Identifier for environment in which the worker operates (supported values are DEV or REMOTE) (DEFAULT: *DEV*)
+VIZIERWORKER_ENV = 'VIZIERWORKER_ENV'
+# Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors*)
+VIZIERWORKER_PROCESSOR_PATH = 'IZIERWORKER_PROCESSOR_PATH'
+# Url of the controlling web service (DEFAULT: *http://localhost:5000/vizier-db/api/v1*)
+VIZIERWORKER_CONTROLLER_URL = 'VIZIERWORKER_CONTROLLER_URL'
+# Log file directory used by the worker (DEFAULT: ./.vizierdb/logs/worker)
+VIZIERWORKER_LOG_DIR = 'VIZIERWORKER_LOG_DIR'
 
-"""Default settings."""
+"""Dictionary of default worker configuration values."""
 DEFAULT_SETTINGS = {
-    'controller': {
-        'url': 'http://localhost:5000/vizier-db/api/v1'
-    },
-    'logs': {
-        'worker': os.path.join(ENV_DIRECTORY, 'logs')
-    }
+    VIZIERWORKER_LOG_DIR: os.path.join(base.ENV_DIRECTORY, 'logs', 'worker'),
+    VIZIERWORKER_CONTROLLER_URL: 'http://localhost:5000/vizier-db/api/v1',
+    VIZIERWORKER_ENV: base.DEV_ENGINE,
+    VIZIERWORKER_PROCESSOR_PATH: './resources/processors'
 }
 
 
 class WorkerConfig(object):
     """Remote worker configuration object. This object contains all settings to
-    create instances of the local filestore and datastore as well as the list
-    of available packages.
+    create instances of the local filestore and datastore and the workflow
+    controller.
 
-    Configuration is read from a configuration file (in Yaml or Json format).
-    The file is expected to contain follow the structure of the configuration
-    object as described above. The configuration file can either be specified
-    using the environment variable VIZIERWORKER_CONFIG or be located (as file
-    config.yaml) in the current working directory.
+    The object schema is as follows:
+
+    controller:
+        url
+    env:
+        identifier
+        processor_path
+    logs:
+        worker
     """
-    def __init__(self, configuration_file=None):
-        """Read configuration parameters from a configuration file. The file is
-        expected to be in Json or Yaml format, having the same structure as
-        shown above.
-
-        If no file is specified attempts will be made to read the following
-        configuration files:
-
-        (1) The file referenced by the environment variable VIZIERWORKER_CONFIG
-        (2) The file config.yaml in the current working directory
-
-        If the specified files are not found the default configuration is used.
+    def __init__(self, default_values=None):
+        """Create object instance from environment variables and optional set
+        of default values.
 
         Parameters
         ----------
-        configuration_file: string, optional
-            Optional path to configuration file
+        default_values: dict, optional
+            Dictionary of default values
         """
-        # Read configuration from given configuration file or one of the
-        # options: value oin environment variable, local config.json file, or
-        # local config.yaml file. Use the default settings if no configuration
-        # file is found.
-        doc = None
-        if configuration_file != None:
-            if os.path.isfile(configuration_file):
-                doc = read_object_from_file(configuration_file)
-            else:
-                raise ValueError('unknown file \'' + str(configuration_file) + '\'')
-        else:
-            files = [
-                os.getenv(ENV_CONFIG),
-                './config.json',
-                './config.yaml'
-            ]
-            for config_file in files:
-                if not config_file is None and os.path.isfile(config_file):
-                    doc = read_object_from_file(config_file)
-                    break
-        if doc is None:
-            raise ValueError('no configuration object found')
-        # Create registry of available packages.
-        if 'packages' in doc:
-            _, processors = load_packages(doc['packages'])
-            self.processors = processors
-        else:
-            raise ValueError('missing package information')
-        # Create a class loader instance for the engine.
-        for key in ['filestores', 'datastores']:
-            if key in doc:
-                loader = ClassLoader(values=doc[key])
-                setattr(self, key, loader)
-            else:
-                raise ValueError('missing configuration information \'' + key + '\'')
-        # Create object for controlling web service.
-        if 'controller' in doc:
-            obj = ConfigObject(
-                values=doc['controller'],
-                default_values=DEFAULT_SETTINGS['controller']
-            )
-        else:
-            obj = ConfigObject(values=DEFAULT_SETTINGS['controller'])
-        setattr(self, 'controller', obj)
-        # Create object for configuration of log files.
-        if 'logs' in doc:
-            obj = ConfigObject(
-                values=doc['logs'],
-                default_values=DEFAULT_SETTINGS['logs']
-            )
-        else:
-            obj = ConfigObject(values=DEFAULT_SETTINGS['logs'])
-        setattr(self, 'logs', obj)
+        if default_values is None:
+            default_values = DEFAULT_SETTINGS
+        # controller
+        self.controller = base.ConfigObject(
+            attributes=[('url', VIZIERWORKER_CONTROLLER_URL, base.STRING)],
+            default_values=default_values
+        )
+        # env
+        self.env = base.ConfigObject(
+            attributes=[
+                ('identifier', VIZIERWORKER_ENV, base.STRING),
+                ('processor_path', VIZIERWORKER_PROCESSOR_PATH, base.STRING)
+            ],
+            default_values=default_values
+        )
+        # logs
+        self.logs = base.ConfigObject(
+            attributes=[('worker', VIZIERWORKER_LOG_DIR, base.STRING)],
+            default_values=default_values
+        )

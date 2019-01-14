@@ -1,21 +1,46 @@
+import os
 import unittest
 
 from vizier.config.worker import WorkerConfig
-from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 
-CONFIG_FILE = './.files/config.worker.yaml'
+import vizier.config.worker as env
 
 
-class TestConfig(unittest.TestCase):
+def delete_env(name):
+    if name in os.environ:
+        del os.environ[name]
+
+
+class TestWorkerConfig(unittest.TestCase):
+
+    def setUp(self):
+        """Clear all relevant environment variables."""
+        # Test the default configuration. Ensure that no environment variable
+        # is set.
+        delete_env(env.VIZIERWORKER_LOG_DIR)
+        delete_env(env.VIZIERWORKER_CONTROLLER_URL)
+        delete_env(env.VIZIERWORKER_ENV)
+        delete_env(env.VIZIERWORKER_PROCESSOR_PATH)
 
     def test_default_config(self):
-        """Test the default configuration settings.
-        """
-        config = WorkerConfig(configuration_file=CONFIG_FILE)
-        self.assertEquals(config.controller.url, 'http://vizier-db.org/test')
-        for pckg in [PACKAGE_PYTHON, PACKAGE_VIZUAL]:
-            self.assertTrue(pckg in config.processors)
+        """Test the default worker configuration settings."""
+        config = WorkerConfig()
+        self.assertEquals(config.controller.url, env.DEFAULT_SETTINGS[env.VIZIERWORKER_CONTROLLER_URL])
+        self.assertEquals(config.env.identifier, env.DEFAULT_SETTINGS[env.VIZIERWORKER_ENV])
+        self.assertEquals(config.env.processor_path, env.DEFAULT_SETTINGS[env.VIZIERWORKER_PROCESSOR_PATH])
+        self.assertEquals(config.logs.worker, env.DEFAULT_SETTINGS[env.VIZIERWORKER_LOG_DIR])
+
+    def test_env_config(self):
+        """Test worker config using environment variables."""
+        os.environ[env.VIZIERWORKER_CONTROLLER_URL] = 'http://webapi'
+        os.environ[env.VIZIERWORKER_ENV] = 'REMOTE'
+        os.environ[env.VIZIERWORKER_PROCESSOR_PATH] = 'processors'
+        os.environ[env.VIZIERWORKER_LOG_DIR] = 'logdir'
+        config = WorkerConfig()
+        self.assertEquals(config.controller.url, 'http://webapi')
+        self.assertEquals(config.env.identifier, 'REMOTE')
+        self.assertEquals(config.env.processor_path, 'processors')
+        self.assertEquals(config.logs.worker, 'logdir')
 
 
 if __name__ == '__main__':

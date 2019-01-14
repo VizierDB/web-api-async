@@ -249,7 +249,12 @@ class ViztrailsCommands(Command):
             if len(module.outputs) > 0:
                 print indent + '--'
                 for line in module.outputs:
-                    print indent + line
+                    if '\n' in line:
+                        sublines = line.split('\n')
+                        for l in sublines:
+                            print indent + l
+                    else:
+                        print indent + line
             if len(module.datasets) > 0:
                 print indent + '--'
                 print indent + 'Datasets: ' + ', '.join(module.datasets)

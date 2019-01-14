@@ -254,8 +254,8 @@ class VizierBackend(object):
 # ------------------------------------------------------------------------------
 
 
-def worker(task_id, command, context, processor):
-    """The worker function executes a given task using a package task processor.
+def exec_command(task_id, command, context, processor):
+    """The function executes a given task using a package task processor.
     Returns a pair of task identifier and execution result.
 
     Parameters

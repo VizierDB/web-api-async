@@ -26,7 +26,7 @@ from multiprocessing import Lock, Pool
 
 from vizier.core.loader import ClassLoader
 from vizier.core.timestamp import get_current_time
-from vizier.engine.backend.base import VizierBackend, worker
+from vizier.engine.backend.base import VizierBackend, exec_command
 from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING
 
@@ -136,9 +136,9 @@ class MultiProcessBackend(VizierBackend):
         task_callback_function = partial(callback_function, tasks=self.tasks)
         # Get the project context from the cache
         project = self.projects.get_project(task.project_id)
-        # Execute task using worker function
+        # Execute task using execute command function
         pool.apply_async(
-            worker,
+            exec_command,
             args=(
                 task.task_id,
                 command,

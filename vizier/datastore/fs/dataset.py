@@ -40,8 +40,7 @@ KEY_COLUMN_NAME = 'name'
 KEY_COLUMN_TYPE = 'type'
 KEY_COLUMNS = 'columns'
 KEY_ROWCOUNT = 'rowCount'
-KEY_COLUMNCOUNTER = 'columnCounter'
-KEY_ROWCOUNTER = 'rowCounter'
+KEY_MAXROWID = 'maxRowId'
 
 
 class FileSystemDatasetHandle(DatasetHandle):
@@ -59,8 +58,8 @@ class FileSystemDatasetHandle(DatasetHandle):
         }
     """
     def __init__(
-        self, identifier, columns, data_file, row_count=0, column_counter=0,
-        row_counter=0, annotations=None
+        self, identifier, columns, max_row_id, data_file, row_count=0,
+        annotations=None
     ):
         """Initialize the dataset handle.
 
@@ -74,12 +73,8 @@ class FileSystemDatasetHandle(DatasetHandle):
         data_file: string
             Path to the file that contains the dataset rows. The data is stored
             in Json format.
-        column_counter: int, optional
-            Counter to generate unique column identifier
         rows: int, optional
             Number of rows in the dataset
-        row_counter: int, optional
-            Counter to generate unique row identifier
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
         """
@@ -89,8 +84,9 @@ class FileSystemDatasetHandle(DatasetHandle):
             row_count=row_count
         )
         self.data_file = data_file
-        self.column_counter = column_counter
-        self.row_counter = row_counter
+        if max_row_id is None:
+            raise ValueError('invalid max')
+        self._max_row_id = max_row_id
         self.annotations = annotations if not annotations is None else DatasetMetadata()
 
     @staticmethod
@@ -124,8 +120,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             ],
             data_file=data_file,
             row_count=doc[KEY_ROWCOUNT],
-            column_counter=doc[KEY_COLUMNCOUNTER],
-            row_counter=doc[KEY_ROWCOUNTER],
+            max_row_id=doc[KEY_MAXROWID],
             annotations=annotations
         )
 
@@ -137,6 +132,16 @@ class FileSystemDatasetHandle(DatasetHandle):
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
         return self.annotations
+
+    def max_row_id(self):
+        """Get maximum identifier for all rows in the dataset. If the dataset
+        is empty the result is -1.
+
+        Returns
+        -------
+        int
+        """
+        return self._max_row_id
 
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional
@@ -178,8 +183,7 @@ class FileSystemDatasetHandle(DatasetHandle):
                     KEY_COLUMN_TYPE: col.data_type
                 } for col in self.columns],
             KEY_ROWCOUNT: self.row_count,
-            KEY_COLUMNCOUNTER: self.column_counter,
-            KEY_ROWCOUNTER: self.row_counter
+            KEY_MAXROWID: self._max_row_id
         }
         with open(descriptor_file, 'w') as f:
             json.dump(doc, f)

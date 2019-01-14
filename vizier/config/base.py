@@ -1,4 +1,4 @@
-# Copyright (C) 2018 New York University
+# Copyright (C) 2019 New York University,
 #                    University at Buffalo,
 #                    Illinois Institute of Technology.
 #
@@ -18,92 +18,9 @@
 
 import os
 
-from vizier.core.io.base import read_object_from_file
-from vizier.core.loader import ClassLoader
-from vizier.engine.packages.base import PackageIndex
-
 
 """Default directory for all server resources."""
 ENV_DIRECTORY = './.vizierdb'
-
-
-"""Environment variables used by the vizier API web service to configure server
-and components.
-"""
-
-"""General"""
-# Web service name
-VIZIERSERVER_NAME = 'VIZIERSERVER_NAME'
-# Log file directory used by the web server (DEFAULT: ./.vizierdb/logs)
-VIZIERSERVER_LOG_DIR = 'VIZIERSERVER_LOG_DIR'
-# Flag indicating whether server is started in debug mode (DEFAULT: True)
-VIZIERSERVER_DEBUG = 'VIZIERSERVER_DEBUG'
-
-"""Web service"""
-# Url of the server (DEFAULT: http://localhost)
-VIZIERSERVER_BASE_URL = 'VIZIERSERVER_BASE_URL'
-# Public server port (DEFAULT: 5000)
-VIZIERSERVER_SERVER_PORT = 'VIZIERSERVER_SERVER_PORT'
-# Locally bound server port (DEFAULT: 5000)
-VIZIERSERVER_SERVER_LOCAL_PORT = 'VIZIERSERVER_SERVER_LOCAL_PORT'
-# Application path for Web API (DEFAULT: /vizier-db/api/v1)
-VIZIERSERVER_APP_PATH = 'VIZIERSERVER_APP_PATH'
-
-# Default row limit for requests that read datasets (DEFAULT: 25)
-VIZIERSERVER_ROW_LIMIT = 'VIZIERSERVER_ROW_LIMIT'
-# Maximum row limit for requests that read datasets (-1 returns all rows) (DEFAULT: 1000)
-VIZIERSERVER_MAX_ROW_LIMIT = 'VIZIERSERVER_MAX_ROW_LIMIT'
-# Maximum size for file uploads in byte (DEFAULT: 16777216)
-VIZIERSERVER_MAX_UPLOAD_SIZE = 'VIZIERSERVER_MAX_UPLOAD_SIZE'
-
-"""Workflow Execution Engine"""
-# Name of the workflow execution engine (DEFAULT: DEV_LOCAL)
-VIZIERSERVER_ENGINE = 'VIZIERSERVER_ENGINE'
-# Path to the package declaration directory (DEFAULT: ./resources/packages)
-VIZIERSERVER_PACKAGE_PATH = 'VIZIERSERVER_PACKAGE_PATH'
-# Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors)
-VIZIERSERVER_PROCESSOR_PATH = 'VIZIERSERVER_PROCESSOR_PATH'
-
-
-"""Dictionary of default confiburation settings. Note that there is no
-environment variable defined for the link to the API documentation."""
-DEFAULT_SETTINGS = {
-    VIZIERSERVER_NAME: 'Vizier Web API',
-    VIZIERSERVER_LOG_DIR: os.path.join(ENV_DIRECTORY, 'logs'),
-    VIZIERSERVER_DEBUG: True,
-    VIZIERSERVER_BASE_URL: 'http://localhost',
-    VIZIERSERVER_SERVER_PORT: 5000,
-    VIZIERSERVER_SERVER_LOCAL_PORT: 5000,
-    VIZIERSERVER_APP_PATH: '/vizier-db/api/v1',
-    VIZIERSERVER_ROW_LIMIT: 25,
-    VIZIERSERVER_MAX_ROW_LIMIT: 1000,
-    VIZIERSERVER_MAX_UPLOAD_SIZE: 16 * 1024 * 1024,
-    VIZIERSERVER_ENGINE: 'DEV',
-    VIZIERSERVER_PACKAGE_PATH: './resources/packages',
-    VIZIERSERVER_PROCESSOR_PATH: './resources/processors',
-    'doc_url': ''
-}
-
-"""Supported attribute types."""
-BOOL = 'bool'
-FLOAT = 'float'
-INTEGER = 'int'
-STRING = 'str'
-
-ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
-
-
-"""Definition of additional configuration environment variables that are used
-to instantiate and configure the vizier engine.
-"""
-
-# Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
-VIZIERENGINE_BACKEND = "VIZIERENGINE_BACKEND"
-# Colon separated list of package.command strings that identify the commands
-# that are executed synchronously
-VIZIERENGINE_SYNCHRONOUS = 'VIZIERENGINE_SYNCHRONOUS'
-# Flag indicationg whether short identifier are used by the viztrail repository
-VIZIERENGINE_USE_SHORT_IDENTIFIER = 'VIZIERENGINE_USE_SHORT_IDENTIFIER'
 
 
 """Identifier for supported backends."""
@@ -112,6 +29,19 @@ BACKEND_CONTAINER = 'CONTAINER'
 BACKEND_MULTIPROCESS = 'MULTIPLROCESS'
 
 BACKENDS = [BACKEND_CELERY, BACKEND_CONTAINER, BACKEND_MULTIPROCESS]
+
+
+"""Default engines."""
+DEV_ENGINE = 'DEV'
+
+
+"""Supported attribute types."""
+BOOL = 'bool'
+FLOAT = 'float'
+INTEGER = 'int'
+STRING = 'str'
+
+ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
 
 
 class ConfigObject(object):
@@ -146,150 +76,6 @@ class ConfigObject(object):
                 default_values=default_values
             )
             setattr(self, name, val)
-
-
-class ServerConfig(object):
-    """Configuration for an API web server. The object schema is as follows:
-
-    webservice:
-        server_url
-        server_port
-        server_local_port
-        app_path
-        app_base_url
-        doc_url
-        name
-        defaults:
-            row_limit
-            max_row_limit
-            max_file_size
-    engine:
-        identifier
-        package_path
-        processor_path
-    run:
-        debug
-    logs:
-        server
-    """
-    def __init__(self, default_values=None):
-        """Create object instance from environment variables and optional set
-        of default values.
-
-        Parameters
-        ----------
-        default_values: dict, optional
-            Dictionary of default values
-        """
-        # webservice
-        self.webservice = ConfigObject(
-            attributes=[
-                ('name', VIZIERSERVER_NAME, STRING),
-                ('server_url', VIZIERSERVER_BASE_URL, STRING),
-                ('server_port', VIZIERSERVER_SERVER_PORT, INTEGER),
-                ('server_local_port', VIZIERSERVER_SERVER_LOCAL_PORT, INTEGER),
-                ('app_path', VIZIERSERVER_APP_PATH, STRING),
-                ('doc_url', None, STRING)
-            ],
-            default_values=default_values
-        )
-        defaults = ConfigObject(
-            attributes=[
-                ('row_limit', VIZIERSERVER_ROW_LIMIT, INTEGER),
-                ('max_row_limit', VIZIERSERVER_MAX_ROW_LIMIT, INTEGER),
-                ('max_file_size', VIZIERSERVER_MAX_UPLOAD_SIZE, INTEGER)
-            ],
-            default_values=default_values
-        )
-        setattr(self.webservice, 'defaults', defaults)
-        # engine
-        self.engine = ConfigObject(
-            attributes=[
-                ('identifier', VIZIERSERVER_ENGINE, STRING),
-                ('package_path', VIZIERSERVER_PACKAGE_PATH, STRING),
-                ('processor_path', VIZIERSERVER_PROCESSOR_PATH, STRING)
-            ],
-            default_values=default_values
-        )
-        # run
-        self.run = ConfigObject(
-            attributes=[('debug', VIZIERSERVER_DEBUG, BOOL)],
-            default_values=default_values
-        )
-        # logs
-        self.logs = ConfigObject(
-            attributes=[('server', VIZIERSERVER_LOG_DIR, STRING)],
-            default_values=default_values
-        )
-
-    @property
-    def app_base_url(self):
-        """Full Url (prefix) for all resources that are available on the Web
-        Service. this is a concatenation of the service Url, port number and
-        application path.
-
-        Returns
-        -------
-        string
-        """
-        base_url = self.webservice.server_url
-        if self.webservice.server_port != 80:
-            base_url += ':' + str(self.webservice.server_port)
-        base_url += self.webservice.app_path
-        return base_url
-
-    def load_packages(self):
-        """Load package declarations from directories in the packages path. The
-        packages path may contain multiple directories separated by ':'. The
-        directories in the path are processed in reverse order to ensure that
-        loaded packages are not overwritten by declarations that occur in
-        directories later in the path.
-
-        Returns
-        -------
-        dict(vizier.engine.package.base.PackageIndex)
-        """
-        packages = dict()
-        for dir_name in self.engine.package_path.split(':'):
-            for filename in os.listdir(dir_name):
-                filename = os.path.join(dir_name, filename)
-                if os.path.isfile(filename):
-                    pckg = read_object_from_file(filename)
-                    for key in pckg:
-                        packages[key] = PackageIndex(package=pckg[key])
-        return packages
-
-    def load_processors(self):
-        """Load task processors for packages from directories in the processors
-        path. The path may contain multiple directories separated by ':'. The
-        directories in the path are processed in reverse order to ensure that
-        loaded processors are not overwritten by files that occur in directories
-        later in the path.
-
-        The format of individual files is expected to be as follows:
-        {
-          - packages: [string]
-          - engine: {class loader definition}
-        }
-        Returns
-        -------
-        dict(vizier.engine.packages.task.processor.TaskProcessor)
-        """
-        processors = dict()
-        for dir_name in self.engine.processor_path.split(':'):
-            print dir_name
-            for filename in os.listdir(dir_name):
-                filename = os.path.join(dir_name, filename)
-                if os.path.isfile(filename):
-                    obj = read_object_from_file(filename)
-                    # Ignore files that do not contain the mandatory elements
-                    for key in ['engine', 'package']:
-                        if not key in obj:
-                            continue
-                    engine = ClassLoader(values=obj['engine']).get_instance()
-                    for key in obj['packages']:
-                        processors[key] = engine
-        return processors
 
 
 # ------------------------------------------------------------------------------
@@ -328,17 +114,13 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
     # None or if the variable is not set use the default settings
     if not env_variable is None:
         val = os.getenv(env_variable)
-        if val is None:
+        if val is None or val.strip() == '':
             if not default_values is None and env_variable in default_values:
                 val = default_values[env_variable]
-            else:
-                val = DEFAULT_SETTINGS[env_variable]
     elif not default_values is None and attribute_name in default_values:
         val = default_values[attribute_name]
-        if val is None:
-            val = DEFAULT_SETTINGS[attribute_name]
     else:
-        val = DEFAULT_SETTINGS[attribute_name]
+        val = None
     if not val is None:
         if attribute_type == BOOL and not isinstance(val, bool):
             val = val.lower() == 'true'

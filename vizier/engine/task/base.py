@@ -19,6 +19,11 @@ in which task are executed. The interface for task execution engines (i.e.,
 processors) is defined in the processor module.
 """
 
+import os
+
+from vizier.core.io.base import read_object_from_file
+from vizier.core.loader import ClassLoader
+
 
 class TaskContext(object):
     """The task context contains references to the datastore and filestore that

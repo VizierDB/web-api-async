@@ -1,0 +1,5 @@
+packages:
+    - python
+engine:
+    className: 'PyCellTaskProcessor'
+    moduleName: 'vizier.engine.packages.pycell.processor'

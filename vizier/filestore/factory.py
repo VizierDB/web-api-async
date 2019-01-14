@@ -53,3 +53,37 @@ class FilestoreFactory(object):
         vizier.filestore.base.Filestore
         """
         raise NotImplementedError
+
+
+class DevNullFilestoreFactory(FilestoreFactory):
+    """This dummy filestore factory is used in environments that requires a
+    filestore factory but that never access the returned filestore object. A
+    typical example is a remote worker that executes Python cells in a vizier
+    workflow.
+    """
+    def delete_filestore(self, identifier):
+        """Delete a filestore. This method is normally called when the project
+        with which the filestore is associated is deleted.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique identifier for filestore
+        """
+        return None
+
+    def get_filestore(self, identifier):
+        """Get the filestore instance for the project with the given identifier.
+        The dummy implementation returns None in any case. It is assumed that
+        the calling process will never try to access the returned object anyway.
+
+        Paramaters
+        ----------
+        identifier: string
+            Unique identifier for filestore
+
+        Returns
+        -------
+        vizier.filestore.base.Filestore
+        """
+        return None

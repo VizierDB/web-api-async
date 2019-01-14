@@ -6,54 +6,20 @@ import time
 import unittest
 
 from vizier.api.client.command.vizual import load_dataset, update_cell
-from vizier.config.engine.dev import DevEngineFactory
-from vizier.core.loader import ClassLoader
-from vizier.engine.packages.vizual.processor import PROPERTY_API
+from vizier.api.webservice.base import get_engine
+from vizier.config.app import AppConfig
 
-import vizier.config.engine.base as conf
-import vizier.config.engine.dev as dev
+import vizier.config.app as app
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as vizual
 
 
 SERVER_DIR = './.tmp'
-DATASTORES_DIR = SERVER_DIR + '/ds'
-FILESTORES_DIR = SERVER_DIR + '/fs'
-VIZTRAILS_DIR = SERVER_DIR + '/vt'
+PACKAGES_DIR = './.files/packages'
+PROCESSORS_DIR = './.files/processors'
 
 EMPLOYEE_FILE = './.files/employee.csv'
 PEOPLE_FILE = './.files/people.csv'
-
-CONFIG = {
-    dev.PARA_DATASTORES: DATASTORES_DIR,
-    dev.PARA_FILESTORES: FILESTORES_DIR,
-    dev.PARA_VIZTRAILS: VIZTRAILS_DIR,
-    dev.PARA_PACKAGES: [
-        {
-            conf.PARA_PACKAGE_DECLARATION: './.files/vizual.pckg.json',
-            conf.PARA_PACKAGE_ENGINE: ClassLoader.to_dict(
-                module_name='vizier.engine.packages.vizual.processor',
-                class_name='VizualTaskProcessor',
-                properties={
-                    PROPERTY_API: ClassLoader.to_dict(
-                        module_name='vizier.engine.packages.vizual.api.fs',
-                        class_name='DefaultVizualApi'
-                    )
-                }
-            )
-        }
-    ],
-    dev.PARA_SYNCHRONOUS: [
-        {
-            dev.PARA_SYNCHRONOUS_PACKAGE: vizual.PACKAGE_VIZUAL,
-            dev.PARA_SYNCHRONOUS_COMMAND: vizual.VIZUAL_LOAD
-        },
-        {
-            dev.PARA_SYNCHRONOUS_PACKAGE: vizual.PACKAGE_VIZUAL,
-            dev.PARA_SYNCHRONOUS_COMMAND: vizual.VIZUAL_UPD_CELL
-        }
-    ]
-}
 
 
 class TestVizierEngineSynchron(unittest.TestCase):
@@ -64,7 +30,14 @@ class TestVizierEngineSynchron(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        self.engine = DevEngineFactory.get_engine(CONFIG)
+        os.environ[app.VIZIERENGINE_DATA_DIR] = SERVER_DIR
+        os.environ[app.VIZIERSERVER_PACKAGE_PATH] = PACKAGES_DIR
+        os.environ[app.VIZIERSERVER_PROCESSOR_PATH] = PROCESSORS_DIR
+        os.environ[app.VIZIERENGINE_SYNCHRONOUS] = ':'.join([
+            vizual.PACKAGE_VIZUAL + '.' + vizual.VIZUAL_LOAD,
+            vizual.PACKAGE_VIZUAL + '.' + vizual.VIZUAL_UPD_CELL
+        ])
+        self.engine = get_engine(AppConfig())
 
     def tearDown(self):
         """Remove the server directory."""
@@ -129,7 +102,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = DevEngineFactory.get_engine(CONFIG)
+        self.engine = get_engine(AppConfig())
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         self.assertEquals(len(modules), 3)
@@ -210,7 +183,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = DevEngineFactory.get_engine(CONFIG)
+        self.engine = get_engine(AppConfig())
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         for m in modules:
@@ -295,7 +268,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         #
         # Reload engine and check the module states
         #
-        self.engine = DevEngineFactory.get_engine(CONFIG)
+        self.engine = get_engine(AppConfig())
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         self.assertEquals(len(modules), 5)

@@ -58,7 +58,7 @@ class VizierDBClient(object):
         ----------
         name : string
             Unique dataset name
-        dataset : vizier.datastore.base.Dataset
+        dataset : vizier.datastore.client.DatasetClient
             Dataset object
 
         Returns
@@ -76,9 +76,7 @@ class VizierDBClient(object):
         # Create list of columns for new dataset. Ensure that every column has
         # a positive identifier
         columns = list()
-        if len(dataset.columns) == 0:
-            column_counter = 0
-        else:
+        if len(dataset.columns) > 0:
             column_counter = max(max([col.identifier for col in dataset.columns]) + 1, 0)
             for col in dataset.columns:
                 if col.identifier < 0:
@@ -92,9 +90,7 @@ class VizierDBClient(object):
                     )
                 )
         rows = dataset.rows
-        if len(rows) == 0:
-            row_counter = 0
-        else:
+        if len(rows) > 0:
             # Ensure that all rows have positive identifier
             row_counter = max(max([row.identifier for row in rows]) + 1, 0)
             for row in rows:
@@ -105,8 +101,6 @@ class VizierDBClient(object):
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            column_counter=column_counter,
-            row_counter=row_counter,
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)
@@ -292,8 +286,8 @@ class VizierDBClient(object):
             # Record access to the datasets
             self.read.add(name.lower())
             raise ValueError('unknown dataset \'' + identifier + '\'')
-        column_counter = source_dataset.column_counter
-        row_counter = source_dataset.row_counter
+        column_counter = source_dataset.max_column_id() + 1
+        row_counter = source_dataset.max_row_id() + 1
         # Update column and row identifier
         columns = dataset.columns
         rows = dataset.rows
@@ -311,8 +305,6 @@ class VizierDBClient(object):
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            column_counter=column_counter,
-            row_counter=row_counter,
             annotations=dataset.annotations
         )
         self.set_dataset_identifier(name, ds.identifier)

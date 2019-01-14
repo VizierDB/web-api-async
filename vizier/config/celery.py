@@ -27,7 +27,7 @@ VIZIERENGINE_CELERY_ROUTES = 'VIZIERENGINE_CELERY_ROUTES'
 def config_routes():
     """Create routing information for individual vizier commands. Expects
     routing information in the environment variable VIZIERENGINE_CELERY_ROUTES.
-    The value format is a colon separated list of package.command=queue string.
+    The value format is a colon separated list of package.command.queue strings.
 
     Returns None if the environment variable is not set.
 
@@ -37,14 +37,10 @@ def config_routes():
     """
     routes = None
     routing = os.getenv(VIZIERENGINE_CELERY_ROUTES)
-    if not routing is None:
+    if not routing is None and not routing.strip() == '':
         routes = dict()
         for rt in routing.split(':'):
-            pos_1 = rt.index('.')
-            pos_2 = rt.index('=')
-            package_id = rt[:pos_1]
-            command_id = rt[pos_1+1:pos_2]
-            queue = rt[pos_2+1:]
+            package_id, command_id, queue = rt.split('.')
             if not package_id in routes:
                 routes[package_id] = dict()
             routes[package_id][command_id] = queue

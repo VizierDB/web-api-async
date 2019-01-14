@@ -193,6 +193,30 @@ class DatasetDescriptor(object):
                 return i
         return None
 
+    def max_column_id(self):
+        """Get maximum identifier for columns in the dataset schema. If the
+        schema is empty the result is -1.
+
+        Returns
+        -------
+        int
+        """
+        if len(self.columns) == 0:
+            return -1
+        else:
+            return max([col.identifier for col in self.columns])
+
+    @abstractmethod
+    def max_row_id(self):
+        """Get maximum identifier for all rows in the dataset. If the dataset
+        is empty the result is -1.
+
+        Returns
+        -------
+        int
+        """
+        raise NotImplementedError
+
     def print_schema(self, name):
         """Print dataset schema as a list of lines.
 

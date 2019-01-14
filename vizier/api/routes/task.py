@@ -42,7 +42,7 @@ class TaskUrlFactory:
                 self.base_url = properties[PROPERTIES_BASEURL]
         # Raise ValueError if the base url is not set
         if self.base_url is None:
-            raise ValueError("missing base url argument")
+            raise ValueError('missing base url argument')
         # Ensure that base_url does not end with a slash
         while len(self.base_url) > 0:
             if self.base_url[-1] == '/':

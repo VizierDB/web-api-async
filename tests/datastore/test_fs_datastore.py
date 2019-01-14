@@ -413,10 +413,8 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertEquals(max_col_id, -1)
         self.assertEquals(max_row_id, -1)
         max_col_id, max_row_id = validate_dataset(
-            columns,
-            rows,
-            column_counter=10,
-            row_counter=1000
+            columns=columns,
+            rows=rows
         )
         self.assertEquals(max_col_id, -1)
         self.assertEquals(max_row_id, -1)
@@ -427,10 +425,8 @@ class TestFileSystemDatastore(unittest.TestCase):
         self.assertEquals(max_col_id, 10)
         self.assertEquals(max_row_id, 4)
         max_col_id, max_row_id = validate_dataset(
-            columns,
-            rows,
-            column_counter=11,
-            row_counter=5
+            columns=columns,
+            rows=rows
         )
         self.assertEquals(max_col_id, 10)
         self.assertEquals(max_row_id, 4)
@@ -439,10 +435,6 @@ class TestFileSystemDatastore(unittest.TestCase):
             validate_dataset(columns + [DatasetColumn()], [])
         with self.assertRaises(ValueError):
             validate_dataset(columns + [DatasetColumn(10, 'C')], [])
-        with self.assertRaises(ValueError):
-            validate_dataset(columns, [], column_counter=10)
-        with self.assertRaises(ValueError):
-            validate_dataset(columns, [], column_counter=5)
         # Row errors
         with self.assertRaises(ValueError):
             validate_dataset(columns, rows + [DatasetRow(1000, [0, 1, 3])])
@@ -450,17 +442,17 @@ class TestFileSystemDatastore(unittest.TestCase):
             validate_dataset(columns, rows + [DatasetRow(-1, [1, 3])])
         with self.assertRaises(ValueError):
             validate_dataset(columns, rows + [DatasetRow(0, [1, 3])])
-        with self.assertRaises(ValueError):
-            validate_dataset(columns, rows + [DatasetRow(3, [1, 3])], row_counter=3)
 
     def validate_class_size_dataset(self, ds):
         """Validate some features of the loaded class size dataset."""
         self.assertEquals(len(ds.columns), 4)
+        self.assertEquals(ds.max_column_id(), 3)
         self.assertEquals(ds.column_by_name('average_class_size').identifier, 0)
         self.assertEquals(ds.column_by_name('grade_or_service_category_').identifier, 1)
         self.assertEquals(ds.column_by_name('program').identifier, 2)
         self.assertEquals(ds.column_by_name('core_course_high_schools_only_').identifier, 3)
         self.assertEquals(ds.row_count, 54)
+        self.assertEquals(ds.max_row_id(), 53)
         # Get the first row
         row = ds.fetch_rows(offset=0, limit=1)[0]
         self.assertEquals(row.identifier, 0)

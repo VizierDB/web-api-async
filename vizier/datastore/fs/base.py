@@ -67,10 +67,7 @@ class FileSystemDatastore(Datastore):
         if not os.path.isdir(self.base_path):
             os.makedirs(self.base_path)
 
-    def create_dataset(
-        self, columns, rows, column_counter=None, row_counter=None,
-        annotations=None
-    ):
+    def create_dataset(self, columns, rows, annotations=None):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -87,10 +84,6 @@ class FileSystemDatastore(Datastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        column_counter: int, optional
-            Counter to generate unique column identifier
-        row_counter: int, optional
-            Counter to generate unique row identifier
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
@@ -98,18 +91,10 @@ class FileSystemDatastore(Datastore):
         -------
         vizier.datastore.dataset.DatasetDescriptor
         """
-        # Validate (i) that each column has a unique identifier, and (ii) that
-        # every row has exactly one value per column. If the column counter is
-        # not None it is also verified that the column id's are smaller than the
-        # counter value. If the row_counter is given it is verified that all
-        # row id's are smaller than the counter value. Returns the maximum
-        # column and row identifier
-        max_col_id, max_row_id = validate_dataset(
-            columns,
-            rows,
-            column_counter=column_counter,
-            row_counter=row_counter
-        )
+        # Validate (i) that each column has a unique identifier, (ii) each row
+        # has a unique identifier, and (iii) that every row has exactly one
+        # value per column.
+        _, max_row_id = validate_dataset(columns=columns, rows=rows)
         # Get new identifier and create directory for new dataset
         identifier = get_unique_identifier()
         dataset_dir = os.path.join(self.base_path, identifier)
@@ -129,8 +114,7 @@ class FileSystemDatastore(Datastore):
             columns=columns,
             data_file=data_file,
             row_count=len(rows),
-            column_counter=column_counter if not column_counter is None else max_col_id + 1,
-            row_counter=row_counter if not row_counter is None else max_row_id + 1,
+            max_row_id=max_row_id,
             annotations=annotations
         )
         dataset.to_file(
@@ -360,8 +344,7 @@ class FileSystemDatastore(Datastore):
             columns=columns,
             data_file=data_file,
             row_count=len(rows),
-            column_counter=len(columns),
-            row_counter=len(rows)
+            max_row_id=len(rows) - 1
         )
         dataset.to_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
@@ -456,17 +439,12 @@ class FileSystemDatastore(Datastore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def validate_dataset(columns, rows, column_counter=None, row_counter=None):
-    """Validate (i) that each column has a unique identifier, and (ii) that
-    every row has exactly one value per column. If the column counter is not
-    None it is also verified that the column id's are smaller than the counter
-    value. If the row_counter is given it is verified that all row id's are
-    smaller than the counter value. Returns the maximum column and row
-    identifier.
+def validate_dataset(columns, rows):
+    """Validate that (i) each column has a unique identifier, (ii) each row has
+    a unique identifier, and (iii) each row has exactly one value per column.
 
-    Returns the maximum column and row identifier.
-
-    Raises ValueError in case of a schema violation.
+    Returns the maximum column and row identifiers. Raises ValueError in case
+    of a schema violation.
 
     Parameters
     ----------
@@ -475,18 +453,11 @@ def validate_dataset(columns, rows, column_counter=None, row_counter=None):
         identifier.
     rows: list(vizier.datastore.dataset.DatasetRow)
         List of dataset rows.
-    column_counter: int, optional
-        Counter to generate unique column identifier
-    row_counter: int, optional
-        Counter to generate unique row identifier
 
     Returns
     -------
     int, int
     """
-    # Keep track of column and row ids
-    max_col_id = -1
-    max_row_id = -1
     # Ensure that all column identifier are zero or greater, unique, and smaller
     # than the column counter (if given)
     col_ids = set()
@@ -495,10 +466,6 @@ def validate_dataset(columns, rows, column_counter=None, row_counter=None):
             raise ValueError('negative column identifier \'' + str(col.identifier) + '\'')
         elif col.identifier in col_ids:
             raise ValueError('duplicate column identifier \'' + str(col.identifier) + '\'')
-        elif not column_counter is None and col.identifier >= column_counter:
-            raise ValueError('invalid column identifier \'' + str(col.identifier) + '\'')
-        elif col.identifier > max_col_id:
-            max_col_id = col.identifier
         col_ids.add(col.identifier)
     # Ensure that all row identifier are zero or greater, unique, smaller than
     # the row counter (if given), and contain exactly one value for each column
@@ -510,10 +477,5 @@ def validate_dataset(columns, rows, column_counter=None, row_counter=None):
             raise ValueError('negative row identifier \'' + str(row.identifier) + '\'')
         elif row.identifier in row_ids:
             raise ValueError('duplicate row identifier \'' + str(row.identifier) + '\'')
-        elif not row_counter is None and row.identifier >= row_counter:
-            raise ValueError('invalid row identifier \'' + str(row.identifier) + '\'')
-        elif row.identifier > max_row_id:
-            max_row_id = row.identifier
         row_ids.add(row.identifier)
-    # Return maximum column and row identifier
-    return max_col_id, max_row_id
+    return max(col_ids) if len(col_ids) > 0 else -1, max(row_ids) if len(row_ids) > 0 else -1

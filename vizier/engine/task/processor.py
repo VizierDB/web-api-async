@@ -20,8 +20,12 @@ package-specific task processor that is used to execute the commands that are
 declared in the package in a vizier workflow.
 """
 
+import os
+
 from abc import abstractmethod
 
+from vizier.core.io.base import read_object_from_file
+from vizier.core.loader import ClassLoader
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
 
@@ -100,3 +104,40 @@ class TaskProcessor(object):
         vizier.engine.task.processor.ExecResult
         """
         raise NotImplementedError
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def load_processors(path):
+    """Load task processors for packages from directories in the given
+    path. The path may contain multiple directories separated by ':'. The
+    directories in the path are processed in reverse order to ensure that
+    loaded processors are not overwritten by files that occur in directories
+    later in the path.
+
+    The format of individual files is expected to be as follows:
+    {
+      - packages: [string]
+      - engine: {class loader definition}
+    }
+
+    Returns
+    -------
+    dict(vizier.engine.packages.task.processor.TaskProcessor)
+    """
+    processors = dict()
+    for dir_name in path.split(':')[::-1]:
+        for filename in os.listdir(dir_name):
+            filename = os.path.join(dir_name, filename)
+            if os.path.isfile(filename):
+                obj = read_object_from_file(filename)
+                # Ignore files that do not contain the mandatory elements
+                for key in ['engine', 'package']:
+                    if not key in obj:
+                        continue
+                engine = ClassLoader(values=obj['engine']).get_instance()
+                for key in obj['packages']:
+                    processors[key] = engine
+    return processors

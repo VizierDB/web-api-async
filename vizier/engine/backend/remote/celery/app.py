@@ -35,5 +35,3 @@ broker_url =  os.getenv(BROKER_URL)
 if broker_url is None:
     broker_url = 'amqp://guest@localhost//'
 celeryapp = Celery('vizier', broker=broker_url)
-
-celeryapp.config_from_object('vizier.config.engine.celeryconfig')

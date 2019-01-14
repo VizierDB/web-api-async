@@ -1,9 +1,0 @@
-webservice:
-    server_url: 'http://vizier-db-container.info'
-    server_port: 80
-    server_local_port: 80
-engine:
-    identifier: 'DEV'
-    properties:
-        backend: 'CELERY'
-project_id: 'ABC'

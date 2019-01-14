@@ -180,7 +180,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Insert columns at position 1
-        col_ids.insert(1, ds.column_counter)
+        col_ids.insert(1, ds.max_column_id() + 1)
         result = self.api.insert_column(ds.identifier, 1, 'Height', self.datastore)
         # Resulting dataset should differ from previous one
         self.assertNotEquals(result.dataset.identifier, ds.identifier)
@@ -195,7 +195,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             self.assertEquals(col.identifier, col_ids[i])
             self.assertEquals(col.name.upper(), col_names[i].upper())
         # Insert columns at last position
-        col_ids.append(ds.column_counter)
+        col_ids.append(ds.max_column_id() + 1)
         col_names.append('Weight')
         result = self.api.insert_column(ds.identifier, 4, 'Weight', self.datastore)
         # Resulting dataset should differ from previous one
@@ -245,7 +245,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Insert row at index position 1
-        row_ids.insert(1, ds.row_counter)
+        row_ids.insert(1, ds.max_row_id() + 1)
         # Result should indicate that one row was inserted. The identifier of
         # the resulting dataset should differ from the identifier of the
         # original dataset
@@ -263,7 +263,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         for i in range(len(ds.columns)):
             self.assertIsNone(row.values[i])
         # Append row at end current dataset
-        row_ids.append(ds.row_counter)
+        row_ids.append(ds.max_row_id() + 1)
         result = self.api.insert_row(ds.identifier, 3, self.datastore)
         # Resulting dataset should differ from previous one
         self.assertNotEquals(result.dataset.identifier, ds.identifier)

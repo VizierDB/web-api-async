@@ -3,7 +3,7 @@ import unittest
 
 from vizier.config.app import AppConfig
 
-import vizier.config.base as env
+import vizier.config.app as env
 
 
 def delete_env(name):
@@ -11,7 +11,7 @@ def delete_env(name):
         del os.environ[name]
 
 
-class TestConfig(unittest.TestCase):
+class TestAppConfig(unittest.TestCase):
 
     def setUp(self):
         """Clear all relevant environment variables."""
@@ -68,32 +68,6 @@ class TestConfig(unittest.TestCase):
         self.assertEquals(config.webservice.defaults.row_limit, 111)
         self.assertEquals(config.webservice.defaults.max_row_limit, 222)
         self.assertEquals(config.webservice.defaults.max_file_size, 333)
-        self.assertEquals(config.run.debug, False)
-        self.assertEquals(config.logs.server, 'logdir')
-        self.assertEquals(config.engine.identifier, 'CELERY')
-
-    def test_mixed_config(self):
-        """Test config using a mix of environment variables, default values and
-        default dettings.
-        """
-        os.environ[env.VIZIERSERVER_NAME] = 'Some Name'
-        os.environ[env.VIZIERSERVER_LOG_DIR] = 'logdir'
-        os.environ[env.VIZIERSERVER_ENGINE] = 'CELERY'
-        config = AppConfig(
-            default_values={
-                env.VIZIERSERVER_ROW_LIMIT: 2000,
-                env.VIZIERSERVER_DEBUG: False,
-                env.VIZIERSERVER_MAX_UPLOAD_SIZE: 4000
-            }
-        )
-        self.assertEquals(config.webservice.name, 'Some Name')
-        self.assertEquals(config.webservice.server_url, env.DEFAULT_SETTINGS[env.VIZIERSERVER_BASE_URL])
-        self.assertEquals(config.webservice.server_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_PORT])
-        self.assertEquals(config.webservice.server_local_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_LOCAL_PORT])
-        self.assertEquals(config.webservice.app_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_APP_PATH])
-        self.assertEquals(config.webservice.defaults.row_limit, 2000)
-        self.assertEquals(config.webservice.defaults.max_row_limit, env.DEFAULT_SETTINGS[env.VIZIERSERVER_MAX_ROW_LIMIT])
-        self.assertEquals(config.webservice.defaults.max_file_size, 4000)
         self.assertEquals(config.run.debug, False)
         self.assertEquals(config.logs.server, 'logdir')
         self.assertEquals(config.engine.identifier, 'CELERY')

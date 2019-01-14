@@ -74,8 +74,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=columns,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations.filter(
                 columns=[c.identifier for c in columns]
             )
@@ -115,8 +113,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations.filter(
                 rows=[r.identifier for r in rows]
             )
@@ -183,8 +179,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=schema,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations.filter(
                 columns=[c.identifier for c in schema]
             )
@@ -229,7 +223,7 @@ class DefaultVizualApi(VizualApi):
         columns.insert(
             position,
             DatasetColumn(
-                identifier=dataset.column_counter,
+                identifier=dataset.max_column_id() + 1,
                 name=name if not name is None else ''
             )
         )
@@ -240,8 +234,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=columns,
             rows=rows,
-            column_counter=dataset.column_counter + 1,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -277,7 +269,7 @@ class DefaultVizualApi(VizualApi):
         rows.insert(
             position,
             DatasetRow(
-                identifier=dataset.row_counter,
+                identifier=dataset.max_row_id() + 1,
                 values=[None] * len(dataset.columns)
             )
         )
@@ -285,8 +277,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter + 1,
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -428,8 +418,6 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=columns,
                 rows=rows,
-                column_counter=dataset.column_counter,
-                row_counter=dataset.row_counter,
                 annotations=dataset.annotations
             )
             return VizualApiResult(ds)
@@ -475,8 +463,6 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=dataset.columns,
                 rows=rows,
-                column_counter=dataset.column_counter,
-                row_counter=dataset.row_counter,
                 annotations=dataset.annotations
             )
             return VizualApiResult(ds)
@@ -529,8 +515,6 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=columns,
                 rows=dataset.fetch_rows(),
-                column_counter=dataset.column_counter,
-                row_counter=dataset.row_counter,
                 annotations=dataset.annotations
             )
             return VizualApiResult(ds)
@@ -586,8 +570,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -636,8 +618,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            column_counter=dataset.column_counter,
-            row_counter=dataset.row_counter,
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)

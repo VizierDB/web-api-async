@@ -19,36 +19,15 @@
 from celery import Task
 from celery.signals import worker_init
 
-from vizier.api.routes.task import TaskUrlFactory
 from vizier.engine.backend.remote.celery.app import celeryapp
 from vizier.config.worker import WorkerConfig
 from vizier.core.timestamp import get_current_time
-from vizier.engine.backend.base import worker
-from vizier.engine.backend.remote.controller import RemoteWorkflowController
+from vizier.engine.backend.base import exec_command
+from vizier.engine.backend.remote.celery.env import get_env
 from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult
 from vizier.viztrail.command import ModuleCommand
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
-
-
-class WorkerEnv(object):
-    """Wrapper for package processors, datastore and filestore factories, and
-    controller factory.
-    """
-    def __init__(self, processors, datastores, filestores, controller_url):
-        """
-        """
-        self.processors = processors
-        self.datastores = datastores
-        self.filestores = filestores
-        self.controller_url = controller_url
-
-    def get_controller(self, project_id):
-        """
-        """
-        return RemoteWorkflowController(
-            urls=TaskUrlFactory(base_url=self.controller_url)
-        )
 
 
 """Initialize global objects."""
@@ -58,13 +37,8 @@ class WorkerEnv(object):
 def init(signal=None, sender=None, **kwargs):
     """Initialize the global worker environment."""
     config = WorkerConfig()
-    global env
-    env = WorkerEnv(
-        processors=config.processors,
-        datastores=config.datastores.get_instance(),
-        filestores=config.filestores.get_instance(),
-        controller_url=config.controller.url
-    )
+    global worker_env
+    worker_env = get_env(config)
 
 
 @celeryapp.task
@@ -87,20 +61,20 @@ def execute(task_id, project_id, command_doc, context, resources):
         previous execution of the command
     """
     # Create a remote workflow controller for the given task
-    controller = env.get_controller(project_id)
+    controller = worker_env.get_controller(project_id)
     # Notify the workflow controller that the task started to run
     controller.set_running(task_id=task_id, started_at=get_current_time())
     # Get the processor and execute the command. In case of an unknown package
     # the result is set to error.
     command = ModuleCommand.from_dict(command_doc)
-    if command.package_id in env.processors:
-        processor = env.processors[command.package_id]
-        _, exec_result = worker(
+    if command.package_id in worker_env.processors:
+        processor = worker_env.processors[command.package_id]
+        _, exec_result = exec_command(
             task_id=task_id,
             command=command,
             context=TaskContext(
-                datastore=env.datastores.get_datastore(project_id),
-                filestore=env.filestores.get_filestore(project_id),
+                datastore=worker_env.datastores.get_datastore(project_id),
+                filestore=worker_env.filestores.get_filestore(project_id),
                 datasets=context,
                 resources=resources
             ),
