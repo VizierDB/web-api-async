@@ -78,6 +78,37 @@ class TestVizierClient(unittest.TestCase):
         self.assertTrue('thisisnotadataset' in client.read)
         self.assertFalse('thisisnotadataset' in client.write)
 
+    def test_dataset_annotations(self):
+        """Test creating and updating an existing dataset via the client."""
+        # Move columns around
+        ds = self.datastore.load_dataset(self.filestore.upload_file(CSV_FILE))
+        client = VizierDBClient(
+            datastore=self.datastore,
+            datasets={DATASET_NAME: ds.identifier}
+        )
+        ds = client.get_dataset(DATASET_NAME)
+        annotations = ds.annotations
+        annotations.add(key='comment', value='Good', column_id=0, row_id=1)
+        annotations.add(key='comment', value='Good', column_id=1, row_id=1)
+        annotations.add(key='quality', value='Nice', column_id=0, row_id=1)
+        ds = client.update_dataset(name=DATASET_NAME, dataset=ds)
+        self.assertEquals(len(ds.annotations.cells), 3)
+        ds = client.get_dataset(DATASET_NAME)
+        self.assertEquals(len(ds.annotations.cells), 3)
+        row = ds.rows[1]
+        annotations = row.annotations(0)
+        for key in ['comment', 'quality']:
+            self.assertTrue(key in annotations.keys())
+        annotations = row.annotations(1)
+        self.assertTrue('comment' in annotations.keys())
+        self.assertFalse('quality' in annotations.keys())
+        row.set_value(0, 'New Value', clear_annotations=True)
+        self.assertEquals(len(ds.annotations.cells), 1)
+        ds = client.update_dataset(name=DATASET_NAME, dataset=ds)
+        self.assertEquals(len(ds.annotations.cells), 1)
+        ds = client.get_dataset(DATASET_NAME)
+        self.assertEquals(len(ds.annotations.cells), 1)
+
     def test_update_existing_dataset(self):
         """Test creating and updating an existing dataset via the client."""
         # Move columns around

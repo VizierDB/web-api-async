@@ -348,8 +348,8 @@ class MutableDatasetRow(DatasetRow):
         self.values[col_index] = value
         if clear_annotations:
             self.dataset.annotations.clear_cell(
-                self.dataset.columns[col_index].identifier,
-                self.identifier
+                column_id=self.dataset.columns[col_index].identifier,
+                row_id=self.identifier
             )
 
 

@@ -78,6 +78,24 @@ class DatasetMetadata(object):
         else:
             self.cells.append(annotation)
 
+    def clear_cell(self, column_id, row_id):
+        """Remove all annotations for a given cell.
+
+        Parameters
+        ----------
+        column_id: int
+            Unique column identifier
+        row_id: int
+            Unique row identifier
+        """
+        # Delete by making a copy of the cells list containing the remaining
+        # annotations
+        annotations = list()
+        for anno in self.cells:
+            if anno.column_id != column_id or anno.row_id != row_id:
+                annotations.append(anno)
+        self.cells = annotations
+
     def find_all(self, values, key):
         """Get the list of annotations that are associated with the given key.
         If no annotation is associated with the key an empty list is returned.
