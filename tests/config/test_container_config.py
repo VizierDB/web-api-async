@@ -1,13 +1,18 @@
+"""Test instantiating the container configuration object from the respective
+environment variables.
+"""
+
 import os
 import unittest
 
-from vizier.config.app import AppConfig
+from vizier.config.container import ContainerConfig
 from vizier.core.util import delete_env
 
 import vizier.config.app as env
+import vizier.config.container as container
 
 
-class TestAppConfig(unittest.TestCase):
+class TestContainerConfig(unittest.TestCase):
 
     def setUp(self):
         """Clear all relevant environment variables."""
@@ -26,10 +31,18 @@ class TestAppConfig(unittest.TestCase):
         delete_env(env.VIZIERSERVER_ENGINE)
         delete_env(env.VIZIERSERVER_PACKAGE_PATH)
         delete_env(env.VIZIERSERVER_PROCESSOR_PATH)
+        delete_env(container.VIZIERCONTAINER_PROJECT_ID)
+        delete_env(container.VIZIERCONTAINER_CONTROLLER_URL)
 
     def test_default_config(self):
         """Test the default configuration settings."""
-        config = AppConfig()
+        with self.assertRaises(ValueError):
+            config = ContainerConfig()
+        os.environ[container.VIZIERCONTAINER_PROJECT_ID] = '000'
+        with self.assertRaises(ValueError):
+            config = ContainerConfig()
+        os.environ[container.VIZIERCONTAINER_CONTROLLER_URL] = 'http://'
+        config = ContainerConfig()
         self.assertEquals(config.webservice.name, env.DEFAULT_SETTINGS[env.VIZIERSERVER_NAME])
         self.assertEquals(config.webservice.server_url, env.DEFAULT_SETTINGS[env.VIZIERSERVER_BASE_URL])
         self.assertEquals(config.webservice.server_port, env.DEFAULT_SETTINGS[env.VIZIERSERVER_SERVER_PORT])
@@ -41,9 +54,13 @@ class TestAppConfig(unittest.TestCase):
         self.assertEquals(config.run.debug, env.DEFAULT_SETTINGS[env.VIZIERSERVER_DEBUG])
         self.assertEquals(config.logs.server, env.DEFAULT_SETTINGS[env.VIZIERSERVER_LOG_DIR])
         self.assertEquals(config.engine.identifier, env.DEFAULT_SETTINGS[env.VIZIERSERVER_ENGINE])
+        self.assertEquals(config.project_id, '000')
+        self.assertEquals(config.controller_url, 'http://')
 
     def test_env_config(self):
         """Test app config using environment variables."""
+        os.environ[container.VIZIERCONTAINER_PROJECT_ID] = '001'
+        os.environ[container.VIZIERCONTAINER_CONTROLLER_URL] = 'http://localhost'
         os.environ[env.VIZIERSERVER_NAME] = 'Some Name'
         os.environ[env.VIZIERSERVER_LOG_DIR] = 'logdir'
         os.environ[env.VIZIERSERVER_DEBUG] = 'bla'
@@ -55,7 +72,7 @@ class TestAppConfig(unittest.TestCase):
         os.environ[env.VIZIERSERVER_MAX_ROW_LIMIT] = '222'
         os.environ[env.VIZIERSERVER_MAX_UPLOAD_SIZE] = '333'
         os.environ[env.VIZIERSERVER_ENGINE] = 'CELERY'
-        config = AppConfig()
+        config = ContainerConfig()
         self.assertEquals(config.webservice.name, 'Some Name')
         self.assertEquals(config.webservice.server_url, 'http://webapi')
         self.assertEquals(config.webservice.server_port, 80)
@@ -67,6 +84,8 @@ class TestAppConfig(unittest.TestCase):
         self.assertEquals(config.run.debug, False)
         self.assertEquals(config.logs.server, 'logdir')
         self.assertEquals(config.engine.identifier, 'CELERY')
+        self.assertEquals(config.project_id, '001')
+        self.assertEquals(config.controller_url, 'http://localhost')
 
 
 if __name__ == '__main__':

@@ -18,7 +18,7 @@ FILESTORES_DIR = SERVER_DIR + '/fs'
 VIZTRAILS_DIR = SERVER_DIR + '/vt'
 
 
-class TestDefaultEngine(unittest.TestCase):
+class TestCommonProjectCache(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of the default cache with an empty directory

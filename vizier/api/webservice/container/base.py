@@ -14,18 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from vizier.api.routes.container import ContainerUrlFactory
+import os
+
+from vizier.api.routes.container import ContainerApiUrlFactory
+from vizier.api.webservice.container.project import ContainerProjectCache
+from vizier.api.webservice.container.task import VizierContainerTaskApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
 from vizier.api.webservice.filestore import VizierFilestoreApi
-from vizier.config.engine.factory import VizierEngineFactory
+from vizier.api.webservice.view import VizierDatasetViewApi
 from vizier.core import VERSION_INFO
+from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time
+from vizier.core.util import get_short_identifier, get_unique_identifier
+from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.engine.backend.multiprocess import MultiProcessBackend
+from vizier.engine.backend.remote.celery.base import CeleryBackend
+from vizier.engine.base import VizierEngine
+from vizier.engine.packages.load import load_packages
 from vizier.engine.project.base import ProjectHandle
-from vizier.engine.project.cache.container import ContainerProjectCache
+from vizier.engine.task.processor import load_processors
+from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.base import ViztrailHandle
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
+import vizier.config.app as app
+import vizier.config.base as base
 
 
 class VizierContainerApi(object):
@@ -57,29 +71,28 @@ class VizierContainerApi(object):
     def init(self):
         """Initialize the API before the first request."""
         # Initialize the API compinents
-        self.urls = ContainerUrlFactory(
+        self.urls = ContainerApiUrlFactory(
             base_url=self.config.app_base_url,
             api_doc_url=self.config.webservice.doc_url
         )
-        self.engine = VizierEngineFactory.get_container_engine(
-            identifier=self.config.engine['identifier'],
-            properties=self.config.engine['properties']
-        )
-        self.projects = ContainerProjectCache(
-            ProjectHandle(
-                viztrail=ViztrailHandle(identifier=self.config.project_id),
-                datastore=self.engine.datastore,
-                filestore=self.engine.filestore
-            )
-        )
+        self.engine = get_engine(self.config)
+        self.projects =self.engine.projects
         self.datasets = VizierDatastoreApi(
             projects=self.projects,
             urls=self.urls,
             defaults=self.config.webservice.defaults
         )
+        self.views = VizierDatasetViewApi(
+            projects=self.projects,
+            urls=self.urls
+        )
         self.files = VizierFilestoreApi(
             projects=self.projects,
             urls=self.urls
+        )
+        self.tasks = VizierContainerTaskApi(
+            engine=self.engine,
+            controller_url=self.config.controller_url
         )
         # Initialize the service descriptor
         self.service_descriptor = {
@@ -90,7 +103,7 @@ class VizierContainerApi(object):
                 'maxFileSize': self.config.webservice.defaults.max_file_size
             },
             'environment': {
-                'identifier': self.config.engine['identifier']
+                'name': self.engine.name
             },
             labels.LINKS: serialize.HATEOAS({
                 'self': self.urls.service_descriptor(),
@@ -98,16 +111,102 @@ class VizierContainerApi(object):
             })
         }
 
-    # --------------------------------------------------------------------------
-    # Service
-    # --------------------------------------------------------------------------
-    def service_overview(self):
-        """Returns a dictionary containing essential information about the web
-        service including HATEOAS links to access resources and interact with
-        the service.
 
-        Returns
-        -------
-        dict
-        """
-        return self.service_descriptor
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def get_engine(config):
+    """Create instance of vizier engine using the default datastore, filestore
+    and viztrails factories. The default engine may use a multi-process backend
+    or a celery backend.
+
+    Parameters
+    ----------
+    config: vizier.config.app.AppConfig
+        Application configuration object
+
+    Returns
+    -------
+    vizier.engine.base.VizierEngine
+    """
+    # We ignore the identifier here since there is only one dev engine at
+    # this time.
+    default_values = {
+        app.VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
+        app.VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
+        app.VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
+        app.VIZIERENGINE_SYNCHRONOUS: None
+    }
+    # Get backend identifier. Raise ValueError if value does not identify
+    # a valid backend.
+    backend_id = base.get_config_value(
+        env_variable=app.VIZIERENGINE_BACKEND,
+        default_values=default_values
+    )
+    if not backend_id in base.BACKENDS:
+        raise ValueError('unknown backend \'' + str(backend_id) + '\'')
+    # Get the identifier factory for the viztrails repository and create
+    # the object store. At this point we use the default object store only.
+    # We could add another environment variable to use different object
+    # stores (once implemented).
+    use_short_ids = base.get_config_value(
+        env_variable=app.VIZIERENGINE_USE_SHORT_IDENTIFIER,
+        attribute_type=base.BOOL,
+        default_values=default_values
+    )
+    if use_short_ids:
+        id_factory = get_short_identifier
+    else:
+        id_factory = get_unique_identifier
+    object_store = DefaultObjectStore(
+        identifier_factory=id_factory
+    )
+    # By default the vizier engine uses the objectstore implementation for
+    # the viztrails repository. The datastore and filestore factories depend
+    # on the values of engine identifier (DEV or MIMIR).
+    base_dir = base.get_config_value(
+        env_variable=app.VIZIERENGINE_DATA_DIR,
+        default_values=default_values
+    )
+    viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+    if config.engine.identifier == base.DEV_ENGINE:
+        datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+        filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
+        datastore_factory=FileSystemDatastoreFactory(datastores_dir)
+        filestore_factory=FileSystemFilestoreFactory(filestores_dir)
+    else:
+        raise ValueError('unknown vizier engine \'' + str(config.engine.identifier) + '\'')
+    # The default engine uses a common project cache.
+    projects = ContainerProjectCache(
+        ProjectHandle(
+            viztrail=ViztrailHandle(identifier=config.project_id),
+            datastore=datastore_factory.get_datastore(config.project_id),
+            filestore=filestore_factory.get_filestore(config.project_id)
+        )
+    )
+    # Create workflow execution backend and processor for synchronous task
+    packages = load_packages(config.engine.package_path)
+    processors = load_processors(config.engine.processor_path)
+    # Create the backend
+    if backend_id == base.BACKEND_MULTIPROCESS:
+        backend = MultiProcessBackend(
+            processors=processors,
+            projects=projects,
+            synchronous=None
+        )
+    elif backend_id == base.BACKEND_CELERY:
+        # Create and configure routing information (if given)
+        backend = CeleryBackend(
+            routes=config_routes(),
+            synchronous=None
+        )
+    else:
+        # For completeness. Validity of the backend id is be checked before.
+        raise ValueError('unknown backend \'' + str(backend_id) + '\'')
+    return VizierEngine(
+        name=config.engine.identifier + ' (' + backend_id + ')',
+        projects=projects,
+        backend=backend,
+        packages=packages
+    )

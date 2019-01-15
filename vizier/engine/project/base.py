@@ -32,7 +32,7 @@ class ProjectHandle(object):
         Parameters
         ----------
         viztrail: vizier.viztrail.base.ViztrailHandle
-            The viztrail repository manager for the Vizier instance
+            The viztrail handle for the project
         datastore: vizier.datastore.base.Datastore, optional
             Associated datastore
         filestore: vizier.filestore.base.Filestore, optional

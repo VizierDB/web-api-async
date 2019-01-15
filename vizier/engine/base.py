@@ -80,15 +80,13 @@ class VizierEngine(WorkflowController):
     should have a descriptive name and version information (for display purposes
     in the front-end).
     """
-    def __init__(self, name, version, projects, backend, packages):
+    def __init__(self, name, projects, backend, packages):
         """Initialize the engine components.
 
         Parameters
         ----------
         name: string
             Descriptive name for the configuration
-        version: string
-            Version information for the configurations
         projects: vizier.engine.project.cache.base.ProjectCache
             Cache for project handles
         backend: vizier.engine.backend.base.VizierBackend
@@ -97,7 +95,6 @@ class VizierEngine(WorkflowController):
             Dictionary of loaded packages
         """
         self.name = name
-        self.version = version
         self.projects = projects
         self.backend = backend
         self.packages = packages

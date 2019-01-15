@@ -31,7 +31,9 @@ from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.container.base import VizierContainerApi
-from vizier.config.container import ContainerAppConfig
+from vizier.config.container import ContainerConfig
+from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
@@ -44,23 +46,18 @@ import vizier.api.serialize.labels as labels
 #
 # -----------------------------------------------------------------------------
 
-"""Read configuration parameter from a config file. The configuration file is
-expected to be in JSON or YAML format. Attempts first to read the file specified
-in the environment variable VIZIERCONTAINERSERVER_CONFIG first. If the variable
-is not set (or if the specified file does not exist) an attempt is made to read
-the file config.json or config.yaml in the current working directory. If neither
-exists an exception is thrown.
-"""
-config = ContainerAppConfig()
+"""Get application configuration parameters from environment variables."""
+config = ContainerConfig()
 
 # Create the app and enable cross-origin resource sharing
 app = Flask(__name__)
 app.config['APPLICATION_ROOT'] = config.webservice.app_path
-app.config['DEBUG'] = config.debug
+app.config['DEBUG'] = config.run.debug
 # Set size limit for uploaded files
 app.config['MAX_CONTENT_LENGTH'] = config.webservice.defaults.max_file_size
 
 CORS(app)
+
 
 # Get the Web Service API.
 api = VizierContainerApi(config)
@@ -80,7 +77,7 @@ def service_descriptor():
     """Retrieve essential information about the web service including relevant
     links to access resources and interact with the service.
     """
-    return jsonify(api.service_overview())
+    return jsonify(api.service_descriptor)
 
 
 # ------------------------------------------------------------------------------
@@ -104,38 +101,127 @@ def execute_task():
     Request
     -------
     {
-      "packageId": "string",
-      "commandId": "string",
-      "arguments": []
+      "id": "string",
+      "command": {
+        "packageId": "string",
+        "commandId": "string",
+        "arguments": [
+          null
+        ]
+      },
+      "context": [
+        {
+          "id": "string",
+          "name": "string"
+        }
+      ],
+      "resources": {}
     }
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    cmd = srv.validate_json_request(
+    obj = srv.validate_json_request(
         request,
-        required=['packageId', 'commandId', 'arguments']
+        required=[labels.ID, labels.COMMAND, labels.CONTEXT],
+        optional=[labels.RESOURCES]
     )
-    # Extend and execute workflow. This will throw a ValueError if the command
-    # cannot be parsed.
+    # Validate module command
+    cmd = obj[labels.COMMAND]
+    for key in [COMMAND_PACKAGE, COMMAND_ID, COMMAND_ARGS]:
+        if not key in cmd:
+            raise srv.InvalidRequest('missing element \'' + key + '\' in command specification')
+    # Get database state
+    context = dict()
+    for ds in obj[labels.CONTEXT]:
+        for key in [labels.ID, labels.NAME]:
+            if not key in ds:
+                raise srv.InvalidRequest('missing element \'' + key + '\' in dataset identifier')
+        context[ds[labels.NAME]] = ds[labels.ID]
     try:
-        # Result is None if project or branch are not found
-        module = api.workflows.append_workflow_module(
+        # Execute module. Result should not be None.
+        result = api.tasks.execute_task(
             project_id=config.project_id,
-            branch_id=branch_id,
-            package_id=cmd['packageId'],
-            command_id=cmd['commandId'],
-            arguments=cmd['arguments']
+            task_id=obj[labels.ID],
+            command=ModuleCommand(
+                package_id=cmd[COMMAND_PACKAGE],
+                command_id=cmd[COMMAND_ID],
+                arguments=cmd[COMMAND_ARGS],
+                packages=api.engine.packages
+            ),
+            context=context,
+            resources=obj[labels.RESOURCES] if labels.RESOURCES in obj else None
         )
-        if not module is None:
-            return jsonify(module)
+        return jsonify(result)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
 # ------------------------------------------------------------------------------
 # Datasets
 # ------------------------------------------------------------------------------
+
+@app.route('/datasets', methods=['POST'])
+def create_dataset():
+    """Create a new dataset in the datastore for the project. The dataset
+    schema and rows are given in the request body. Dataset annotations are
+    optional. The expected request body format is:
+
+    {
+      "columns": [
+        {
+          "id": 0,
+          "name": "string",
+          "type": "string"
+        }
+      ],
+      "rows": [
+        {
+          "id": 0,
+          "values": [
+            "string"
+          ]
+        }
+      ],
+      "annotations": [
+        {
+          "columnId": 0,
+          "rowId": 0,
+          "key": "string",
+          "value": "string"
+        }
+      ]
+    }
+    """
+    # Validate the request
+    obj = srv.validate_json_request(
+        request,
+        required=[labels.COLUMNS, labels.ROWS],
+        optional=[labels.ANNOTATIONS]
+    )
+    columns = deserialize.DATASET_COLUMNS(obj[labels.COLUMNS])
+    rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
+    annotations = None
+    if labels.ANNOTATIONS in obj:
+        annotations = DatasetMetadata()
+        for anno in obj[labels.ANNOTATIONS]:
+            a = deserialize.ANNOTATION(anno)
+            if a.column_id is None:
+                annotations.rows.append(a)
+            elif a.row_id is None:
+                annotations.columns.append(a)
+            else:
+                annotations.cells.append(a)
+    try:
+        dataset = api.datasets.create_dataset(
+            project_id=config.project_id,
+            columns=columns,
+            rows=rows,
+            annotations=annotations
+        )
+        return jsonify(dataset)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
+
 
 @app.route('/datasets/<string:dataset_id>')
 def get_dataset(dataset_id):
@@ -162,10 +248,8 @@ def get_dataset_annotations(dataset_id):
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier
-    column_id = request.args.get(labels.COLUMN, -1, type=int)
-    row_id = request.args.get(labels.ROW, -1, type=int)
-    if column_id < 0 and row_id < 0:
-        raise srv.InvalidRequest('missing identifier for column or row')
+    column_id = request.args.get(labels.COLUMN, type=int)
+    row_id = request.args.get(labels.ROW, type=int)
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.
     annotations = api.datasets.get_annotations(
@@ -179,8 +263,8 @@ def get_dataset_annotations(dataset_id):
     raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
-def get_dataset_descriptor(project_id, dataset_id):
+@app.route('/datasets/<string:dataset_id>/descriptor')
+def get_dataset_descriptor(dataset_id):
     """Get the descriptor for the dataset with given identifier."""
     try:
         dataset = api.datasets.get_dataset_descriptor(
@@ -191,7 +275,7 @@ def get_dataset_descriptor(project_id, dataset_id):
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
 
 
 @app.route('/datasets/<string:dataset_id>/annotations', methods=['POST'])
@@ -202,37 +286,40 @@ def update_dataset_annotation(dataset_id):
     Request
     -------
     {
-      "annoId": 0,
       "columnId": 0,
       "rowId": 0,
       "key": "string",
-      "value": "string"
+      "oldValue": "string", or "int", or "float"
+      "newValue": "string", or "int", or "float"
     }
     """
     # Validate the request
     obj = srv.validate_json_request(
         request,
-        required=[],
-        optional=['annoId', 'columnId', 'rowId', 'key', 'value']
+        required=['key'],
+        optional=['columnId', 'rowId', 'key', 'oldValue', 'newValue']
     )
     # Create update statement and execute. The result is None if no dataset with
     # given identifier exists.
-    key = obj['key'] if 'key' in obj else None
-    anno_id = obj['annoId'] if 'annoId' in obj else -1
-    column_id = obj['columnId'] if 'columnId' in obj else -1
-    row_id = obj['rowId'] if 'rowId' in obj else -1
-    value = obj['value'] if 'value' in obj else None
-    annotations = api.datasets.update_annotation(
-        project_id=config.project_id,
-        dataset_id=dataset_id,
-        column_id=column_id,
-        row_id=row_id,
-        anno_id=anno_id,
-        key=key,
-        value=value
-    )
-    if not annotations is None:
-        return jsonify(annotations)
+    key = obj[labels.KEY] if labels.KEY in obj else None
+    column_id = obj[labels.COLUMN_ID] if labels.COLUMN_ID in obj else None
+    row_id = obj[labels.ROW_ID] if labels.ROW_ID in obj else None
+    old_value = obj[labels.OLD_VALUE] if labels.OLD_VALUE in obj else None
+    new_value = obj[labels.NEW_VALUE] if labels.NEW_VALUE in obj else None
+    try:
+        annotations = api.datasets.update_annotation(
+            project_id=config.project_id,
+            dataset_id=dataset_id,
+            key=key,
+            column_id=column_id,
+            row_id=row_id,
+            old_value=old_value,
+            new_value=new_value
+        )
+        if not annotations is None:
+            return jsonify(annotations)
+    except ValueError as ex:
+        raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
 
 
@@ -262,17 +349,17 @@ def download_dataset(dataset_id):
 # ------------------------------------------------------------------------------
 # Views
 # ------------------------------------------------------------------------------
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/views/<string:view_id>')
-def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, view_id):
+@app.route('/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')
+def get_dataset_chart_view(branch_id, workflow_id, module_id, chart_id):
     """Get content of a dataset chart view for a given workflow module.
     """
     try:
-        view = api.get_dataset_chart_view(
-            project_id=None,
+        view = api.views.get_dataset_chart_view(
+            project_id=config.project_id,
             branch_id=branch_id,
             workflow_id=workflow_id,
             module_id=module_id,
-            view_id=view_id
+            chart_id=chart_id
         )
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -280,11 +367,10 @@ def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, view_i
         return jsonify(view)
     raise srv.ResourceNotFound(
         ''.join([
-            'unknown project \'' + project_id,
-            '\', branch \'' + branch_id,
+            'unknown branch \'' + branch_id,
             '\', workflow \'' + workflow_id,
             '\', module \'' + module_id,
-            '\' or view \'' + view_id + '\''
+            '\' or chart \'' + chart_id + '\''
         ])
     )
 
@@ -432,5 +518,5 @@ if __name__ == '__main__':
         '0.0.0.0',
         config.webservice.server_local_port,
         application,
-        use_reloader=config.debug
+        use_reloader=config.run.debug
     )

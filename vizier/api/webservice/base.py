@@ -36,6 +36,7 @@ from vizier.api.webservice.task import VizierTaskApi
 from vizier.api.webservice.view import VizierDatasetViewApi
 from vizier.api.webservice.workflow import VizierWorkflowApi
 from vizier.api.routes.base import UrlFactory
+from vizier.api.routes.container import ContainerEngineUrlFactory
 from vizier.config.celery import config_routes
 from vizier.core import VERSION_INFO
 from vizier.core.io.base import DefaultObjectStore
@@ -44,10 +45,12 @@ from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.backend.remote.celery.base import CeleryBackend
+from vizier.engine.backend.remote.container import ContainerBackend
 from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.base import VizierEngine
 from vizier.engine.packages.load import load_packages
 from vizier.engine.project.cache.common import CommonProjectCache
+from vizier.engine.project.cache.container import ContainerProjectCache
 from vizier.engine.task.processor import load_processors
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
@@ -97,11 +100,11 @@ class VizierApi(object):
     def init(self):
         """Initialize the API before the first request."""
         # Initialize the API compinents
-        self.urls = UrlFactory(
-            base_url=self.config.app_base_url,
-            api_doc_url=self.config.webservice.doc_url
-        )
         self.engine = get_engine(self.config)
+        self.urls = get_url_factory(
+            config=self.config,
+            projects=self.engine.projects
+        )
         self.branches = VizierBranchApi(
             projects=self.engine.projects,
             urls=self.urls
@@ -135,8 +138,7 @@ class VizierApi(object):
                 'maxFileSize': self.config.webservice.defaults.max_file_size
             },
             'environment': {
-                'name': self.engine.name,
-                'version': self.engine.version
+                'name': self.engine.name
             },
             labels.LINKS: serialize.HATEOAS({
                 'self': self.urls.service_descriptor(),
@@ -146,27 +148,13 @@ class VizierApi(object):
             })
         }
 
-    # --------------------------------------------------------------------------
-    # Service
-    # --------------------------------------------------------------------------
-    def service_overview(self):
-        """Returns a dictionary containing essential information about the web
-        service including HATEOAS links to access resources and interact with
-        the service.
-
-        Returns
-        -------
-        dict
-        """
-        return self.service_descriptor
-
 
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
 
 def get_engine(config):
-    """Create instance of development engine using the default datastore,
+    """Create instance of the default vizual engine using the default datastore,
     filestore and viztrails factories.  The default engine may use a
     multi-process backend or a celery backend.
 
@@ -211,6 +199,8 @@ def get_engine(config):
     object_store = DefaultObjectStore(
         identifier_factory=id_factory
     )
+    # Create index of supported packages
+    packages = load_packages(config.engine.package_path)
     # By default the vizier engine uses the objectstore implementation for
     # the viztrails repository. The datastore and filestore factories depend
     # on the values of engine identifier (DEV or MIMIR).
@@ -218,63 +208,102 @@ def get_engine(config):
         env_variable=app.VIZIERENGINE_DATA_DIR,
         default_values=default_values
     )
-    viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+    # Create the local viztrails repository
+    viztrails = OSViztrailRepository(
+        base_path=os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR),
+        object_store=object_store
+    )
     if config.engine.identifier == base.DEV_ENGINE:
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
         datastore_factory=FileSystemDatastoreFactory(datastores_dir)
         filestore_factory=FileSystemFilestoreFactory(filestores_dir)
+        # The default engine uses a common project cache.
+        projects = CommonProjectCache(
+            datastores=datastore_factory,
+            filestores=filestore_factory,
+            viztrails=viztrails
+        )
+        # Get set of task processors for supported packages
+        processors = load_processors(config.engine.processor_path)
+        # Create an optional task processor for synchronous tasks if given
+        synchronous = None
+        sync_commands_list = base.get_config_value(
+            env_variable=app.VIZIERENGINE_SYNCHRONOUS,
+            default_values=default_values
+        )
+        if not sync_commands_list is None:
+            commands = dict()
+            for el in sync_commands_list.split(':'):
+                package_id, command_id = el.split('.')
+                if not package_id in commands:
+                    commands[package_id] = dict()
+                commands[package_id][command_id] = processors[package_id]
+            synchronous = SynchronousTaskEngine(
+                commands=commands,
+                projects=projects
+            )
+        # Create the backend
+        if backend_id == base.BACKEND_MULTIPROCESS:
+            backend = MultiProcessBackend(
+                processors=processors,
+                projects=projects,
+                synchronous=synchronous
+            )
+        elif backend_id == base.BACKEND_CELERY:
+            # Create and configure routing information (if given)
+            backend = CeleryBackend(
+                routes=config_routes(),
+                synchronous=synchronous
+            )
+        else:
+            # Not all combinations of engine identifier and backend identifier
+            # are valid.
+            raise ValueError('invalid backend \'' + str(backend_id) + '\'')
+    elif config.engine.identifier == base.CONTAINER_ENGINE:
+        if backend_id == base.BACKEND_CONTAINER:
+            projects = ContainerProjectCache(
+                viztrails=viztrails,
+                container_file=os.path.join(base_dir, app.DEFAULT_CONTAINER_FILE)
+            )
+            backend = ContainerBackend(projects=projects)
+        else:
+            # The container engine only supports a single backend type.
+            raise ValueError('invalid backend \'' + str(backend_id) + '\'')
     else:
         raise ValueError('unknown vizier engine \'' + str(config.engine.identifier) + '\'')
-    # The default engine uses a common project cache.
-    projects = CommonProjectCache(
-        datastores=datastore_factory,
-        filestores=filestore_factory,
-        viztrails=OSViztrailRepository(
-            base_path=viztrails_dir,
-            object_store=object_store
-        )
-    )
-    # Create workflow execution backend and processor for synchronous task
-    packages = load_packages(config.engine.package_path)
-    processors = load_processors(config.engine.processor_path)
-    # Create an optional task processor for synchronous tasks if given
-    synchronous = None
-    sync_commands_list = base.get_config_value(
-        env_variable=app.VIZIERENGINE_SYNCHRONOUS,
-        default_values=default_values
-    )
-    if not sync_commands_list is None:
-        commands = dict()
-        for el in sync_commands_list.split(':'):
-            package_id, command_id = el.split('.')
-            if not package_id in commands:
-                commands[package_id] = dict()
-            commands[package_id][command_id] = processors[package_id]
-        synchronous = SynchronousTaskEngine(
-            commands=commands,
-            projects=projects
-        )
-    # Create the backend
-    if backend_id == base.BACKEND_MULTIPROCESS:
-        backend = MultiProcessBackend(
-            processors=processors,
-            projects=projects,
-            synchronous=synchronous
-        )
-    elif backend_id == base.BACKEND_CELERY:
-        # Create and configure routing information (if given)
-        backend = CeleryBackend(
-            routes=config_routes(),
-            synchronous=synchronous
-        )
-    else:
-        # For completeness. Validity of the backend id is be checked before.
-        raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     return VizierEngine(
-        name='Development Engine',
-        version='0.0.1',
+        name=config.engine.identifier + ' (' + backend_id + ')',
         projects=projects,
         backend=backend,
         packages=packages
     )
+
+
+def get_url_factory(config, projects):
+    """Get the url factory for a given configuration. In most cases we use the
+    default url factory. Only for the configuration where each project is
+    running in a separate container we need a different factory.
+
+    Parameter
+    ---------
+    config: vizier.config.app.AppConfig
+        Application configuration object
+    projects: vizier.engine.project.cache.base.ProjectCache
+        Cache for projects (only used for container engine)
+
+    Returns
+    -------
+    vizier.api.routes.base.UrlFactory
+    """
+    if config.engine.identifier == base.CONTAINER_ENGINE:
+        return ContainerEngineUrlFactory(
+            base_url=config.app_base_url,
+            api_doc_url=config.webservice.doc_url,
+            projects=projects
+        )
+    else:
+        return UrlFactory(
+            base_url=config.app_base_url,
+            api_doc_url=config.webservice.doc_url
+        )

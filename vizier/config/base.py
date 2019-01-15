@@ -32,8 +32,8 @@ BACKENDS = [BACKEND_CELERY, BACKEND_CONTAINER, BACKEND_MULTIPROCESS]
 
 
 """Default engines."""
+CONTAINER_ENGINE = 'CLUSTER'
 DEV_ENGINE = 'DEV'
-
 
 """Supported attribute types."""
 BOOL = 'bool'

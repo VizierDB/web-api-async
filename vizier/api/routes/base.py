@@ -29,7 +29,7 @@ PAGE_LIMIT = 'limit'
 PAGE_OFFSET = 'offset'
 
 
-class UrlFactory:
+class UrlFactory(object):
     """Factory to create urls for all routes that the webservice supports."""
     def __init__(self, base_url=None, api_doc_url=None, properties=None):
         """Intialize the base url for the web service. The object can be
@@ -498,7 +498,7 @@ class UrlFactory:
         -------
         string
         """
-        return self.get_project(project_id) + '/files/' + file_id
+        return self.upload_file(project_id) + '/' + file_id
 
     def upload_file(self, project_id):
         """File upload url for the given project.

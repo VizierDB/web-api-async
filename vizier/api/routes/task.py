@@ -21,7 +21,7 @@ workers to update the status of a task.
 from vizier.api.routes.base import PROPERTIES_BASEURL
 
 
-class TaskUrlFactory:
+class TaskUrlFactory(object):
     """Factory to create urls for route that is used update workflow status."""
     def __init__(self, base_url=None, properties=None):
         """Intialize the internal components. The factory maintains the base url

@@ -14,13 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from vizier.engine.backend.remote.celery.app import celeryapp
 from vizier.engine.backend.base import VizierBackend
-from vizier.viztrail.module.base import MODULE_PENDING
-from vizier.engine.backend.remote.celery.worker import execute
+from vizier.viztrail.module.base import MODULE_RUNNING
 
 
-class CeleryBackend(VizierBackend):
+class ContainerBackend(VizierBackend):
     """The backend interface defines two main methods: execute and cancel. The
     first method is used by the API to request execution of a command that
     defines a module in a data curation workflow. The second method is used
@@ -33,20 +31,18 @@ class CeleryBackend(VizierBackend):
     If tasks are executed remotely the lock is a dummy lock. Only for
     multi-process execution the lock shoulc be the default multi-process-lock.
     """
-    def __init__(self, routes=None, synchronous=None):
+    def __init__(self, projects):
         """
 
         Parameters
         ----------
-        routes: dict, optional
-            Mapping of package commands to queue names
-        synchronous: vizier.engine.backend.base.TaskExecEngine, optional
-            Engine for synchronous task execution
+        projects: vizier.engine.project.cache.container.ContainerProjectCache
+            Cache for container projects
         """
-        # Initialize the synchronous command execution engine
-        super(CeleryBackend, self).__init__(synchronous=synchronous)
-        self.routes = routes
-        # Keep dictionary of celery tasks in order to be able to cancel a task
+        # The container backend cannot execute any command synchronously
+        super(ContainerBackend, self).__init__(synchronous=None)
+        self.projects = projects
+        # Keep mapping of task identifier to projects
         self.tasks = dict()
 
     def cancel_task(self, task_id):
@@ -58,9 +54,10 @@ class CeleryBackend(VizierBackend):
             Unique task identifier
         """
         if task_id in self.tasks:
-            async_task = self.tasks[task_id]
+            project= self.tasks[task_id]
             del self.tasks[task_id]
-            celeryapp.control.revoke(task_id=async_task.id, terminate=True)
+            # Send cancel request to project API
+            project.cancel_task(task_id)
 
     def execute_async(self, task, command, context, resources=None):
         """Request execution of a given task. The task handle is used to
@@ -68,6 +65,9 @@ class CeleryBackend(VizierBackend):
         itself is defined by the given command specification. The given context
         contains the names and identifier of resources in the database state
         against which the task is executed.
+
+        Sends execute request to the container API that is associated with the
+        tasks project identifier.
 
         Parameters
         ----------
@@ -83,33 +83,18 @@ class CeleryBackend(VizierBackend):
             Optional information about resources that were generated during a
             previous execution of the command
         """
-        queue = None
-        if not self.routes is None and command.package_id in self.routes:
-            pckg_routes = self.routes[command.package_id]
-            if command.command_id in pckg_routes:
-                queue = pckg_routes[command.command_id]
-        if not queue is None:
-            async_task = execute.apply_async(
-                kwargs=dict(
-                    task_id=task.task_id,
-                    project_id=task.project_id,
-                    command_doc=command.to_dict(),
-                    context=context,
-                    resources=resources
-                ),
-                queue=queue
-            )
-        else:
-            async_task = execute.apply_async(
-                kwargs=dict(
-                    task_id=task.task_id,
-                    project_id=task.project_id,
-                    command_doc=command.to_dict(),
-                    context=context,
-                    resources=resources
-                )
-            )
-        self.tasks[task.task_id] = async_task
+        # Get the project. It is assumed that a valid project identifier is
+        # given.
+        project = self.projects.get_project(project_id=task.project_id)
+        # Send execute request to the projects container API
+        project.execute_task(
+            task_id=task.task_id,
+            command=command,
+            context=context,
+            resources=resources
+        )
+        # Keep track of the project that is associated with the task
+        self.tasks[task.task_id] = project
 
     def next_task_state(self):
         """Get the module state of the next task that will be submitted for
@@ -122,11 +107,11 @@ class CeleryBackend(VizierBackend):
         -------
         int
         """
-        return MODULE_PENDING
+        return MODULE_RUNNING
 
     def task_finished(self, task_id):
-        """The celery backend keeps track of the identifier for asynchronous
-        tasks. Delete the respective entry if a task is done.
+        """The container backend keeps mapping of task identifier to projects.
+        Delete the respective entry if a task is done.
 
         Parameters
         ----------

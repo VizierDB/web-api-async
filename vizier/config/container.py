@@ -14,106 +14,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Container server configuration object. Contains all application settings and
-the configuration parameters for the vizier engine.
+"""Container server configuration object. Extends the application configuration
+object with the project identifier and the url for the controlling web service.
 
-The container app configuration is similar to the app config. It has four main
-parts: API and Web service configuration, the vizier engine configuration, the
-path to the server log, and the debug flag for running the server in debugging
-mode. The structure of the configuration object is as follows:
+The object schema is as follows:
 
 webservice:
-    server_url: Url of the server (e.g., http://localhost)
-    server_port: Public server port (e.g., 5000)
-    server_local_port: Locally bound server port (e.g., 5000)
-    app_path: Application path for Web API (e.g., /vizier-db/api/v1)
-    app_base_url: Concatenation of server_url, server_port and app_path
-    doc_url: Url to API documentation
-    name: Web Service name
+    server_url
+    server_port
+    server_local_port
+    app_path
+    app_base_url
+    doc_url
+    name
     defaults:
-        row_limit: Default row limit for requests that read datasets
-        max_row_limit: Maximum row limit for requests that read datasets (-1 = all)
-        max_file_size: Maximum size for file uploads (in byte)
+        row_limit
+        max_row_limit
+        max_file_size
 engine:
-    identifier: Unique engine configuration identifier
-    properties: Configuration specific parameters
-debug: Flag indicating whether server is started in debug mode
+    identifier
+    package_path
+    processor_path
+controller_url: Url of the controlling web service
+project_id: Unique identifier for the project that the container maintains
+run:
+    debug
 logs:
-    server: Log file for Web Server
-
-The main difference to the app config is the format of the engine dictionary
-properties.
+    server
 """
 
 import os
 
-from vizier.config.base import ConfigObject, ServerConfig
-from vizier.config.base import ENV_DIRECTORY
+from vizier.config.app import AppConfig
+from vizier.config.base import get_config_value
 
 
-"""Environment Variable containing path to config file."""
-ENV_CONFIG = 'VIZIERCONTAINERSERVER_CONFIG'
-
-"""Default settings. The default settings do not include the configuration for
-the vizier engine.
-"""
-DEFAULT_SETTINGS = {
-    'webservice': {
-        'server_url': 'http://localhost',
-        'server_port': 5000,
-        'server_local_port': 5000,
-        'app_path': '/vizier-db/api/v1',
-        'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db-container/',
-        'name': 'Vizier Container Web API',
-        'defaults': {
-            'row_limit': 25,
-            'max_row_limit': -1,
-            'max_file_size': 16 * 1024 * 1024
-        }
-    },
-    'logs': {
-        'server': os.path.join(ENV_DIRECTORY, 'logs')
-    },
-    'debug': True,
-}
+"""Environment variables that are specific to the container server."""
+# Unique identifier for the project that the container maintains
+VIZIERCONTAINER_PROJECT_ID = 'VIZIERCONTAINER_PROJECT_ID'
+# Url for the controlling web service
+VIZIERCONTAINER_CONTROLLER_URL = 'VIZIERCONTAINER_CONTROLLER_URL'
 
 
-class ContainerAppConfig(ServerConfig):
-    """Application configuration object. This object contains all configuration
-    settings for the Vizier instance.
+class ContainerConfig(AppConfig):
+    """Configuration object for vizier servers that run in a container to
+    serve operations for a single project.
 
-    Configuration is read from a configuration file (in Yaml or Json format).
-    The file is expected to contain follow the structure of the configuration
-    object as described above. The configuration file can either be specified
-    using the environment variable VIZIERSERVER_CONFIG or be located (as file
-    config.yaml) in the current working directory.
+    Extends the application configuration object with the project id and the
+    url of the controlling web service.
     """
-    def __init__(self, configuration_file=None):
-        """Read configuration parameters from a configuration file. The file is
-        expected to be in Json or Yaml format, having the same structure as
-        shown above.
+    def __init__(self, default_values=None):
+        """Initialize the configuration object from the respective environment
+        variables and the optional default values.
 
-        If no file is specified attempts will be made to read the following
-        configuration files:
-
-        (1) The file referenced in the environment variable
-            VIZIERCONTAINERSERVER_CONFIG
-        (2) The file config.json or config.yaml in the current working directory
-
-        If the specified files are not found a ValueError is raised.
+        Raises ValueError if either the project identifier or the controller
+        url are None.
 
         Parameters
         ----------
-        configuration_file: string, optional
-            Optional path to configuration file
+        default_values: dict, optional
+            Dictionary of default values
         """
-        super(ContainerAppConfig, self).__init__(
-            env=ENV_CONFIG,
-            default_settings=DEFAULT_SETTINGS,
-            configuration_file=configuration_file
+        super(ContainerConfig, self).__init__(default_values=default_values)
+        # Get the project identifier. Raise exception if not set.
+        self.project_id = get_config_value(
+            env_variable=VIZIERCONTAINER_PROJECT_ID
         )
-        # Expects an additional configuration element containing the project
-        # identifier
-        if not 'project_id' in self.doc:
+        if self.project_id is None:
             raise ValueError('missing project identifier')
-        self.project_id = self.doc['project_id']
+        # Get controller url. Raise exception if not set.
+        self.controller_url = get_config_value(
+            env_variable=VIZIERCONTAINER_CONTROLLER_URL
+        )
+        if self.controller_url is None:
+            raise ValueError('missing controller url')

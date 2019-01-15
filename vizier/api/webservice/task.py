@@ -19,7 +19,6 @@ tasks in vizier projects.
 """
 
 from vizier.core.timestamp import to_datetime
-from vizier.viztrail.base import PROPERTY_NAME
 
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels

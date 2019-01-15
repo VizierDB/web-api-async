@@ -73,7 +73,7 @@ def service_descriptor():
     """Retrieve essential information about the web service including relevant
     links to access resources and interact with the service.
     """
-    return jsonify(api.service_overview())
+    return jsonify(api.service_descriptor)
 
 
 # ------------------------------------------------------------------------------

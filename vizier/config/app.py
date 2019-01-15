@@ -35,6 +35,8 @@ webservice:
         max_file_size: Maximum size for file uploads (in byte)
 engine:
     identifier: Unique engine configuration identifier
+    package_path: Path to folders containing package declarations
+    processor_path: Path to folders containing processor definitions
 run:
     debug: Flag indicating whether server is started in debug mode
 logs:
@@ -116,14 +118,18 @@ DEFAULT_SETTINGS = {
     VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
     VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
     VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
-    'doc_url': ''
+    'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
 }
 
 
-"""Default subfolders for different resources in the engine data directory."""
+"""Default file names and folder names for different resources in the engine
+data directory.
+"""
 DEFAULT_DATASTORES_DIR = 'ds'
 DEFAULT_FILESTORES_DIR = 'fs'
 DEFAULT_VIZTRAILS_DIR = 'vt'
+
+DEFAULT_CONTAINER_FILE = 'containers'
 
 
 class AppConfig(object):

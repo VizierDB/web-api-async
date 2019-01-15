@@ -54,22 +54,25 @@ A running Vizier instance has four main components: (1)) data store, (2) file st
 Not all of them are supported by each of the engines. Look at the engine specific documentation below.
 
 - **VIZIERENGINE_BACKEND**: Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
-- **VIZIERENGINE_USE_SHORT_IDENTIFIER**: Flag indicationg whether short identifier are used by the viztrail repository
-
+- **VIZIERENGINE_USE_SHORT_IDENTIFIER**: Flag indicating whether short identifier are used by the viztrail repository
+- **VIZIERENGINE_SYNCHRONOUS**: Colon separated list of package.command strings that identify the commands that are executed synchronously
 
 ###Development
-
 
 - **VIZIERENGINE_DATA_DIR**: Base data directory for the default engine
 
 
 ###Celery
 
-
 - **VIZIERENGINE_CELERY_ROUTES**: Colon separated list of package.command=queue strings that define routing information for individual commands
 - **CELERY_BROKER_URL**: Url for the celery broker
 
 Engines: DEV_LOCAL, DEV_CELERY
+
+
+### Container
+
+- **VIZIERENGINE_DATA_DIR**: Base data directory for viztrails and configuration files
 
 
 ## Configure the Default Viztrails Repository
@@ -93,6 +96,13 @@ Worker Config
 If the value of the environment variable **VIZIERWORKER_ENV** is *DEV* the environment variable **VIZIERENGINE_DATA_DIR** is used to instantiate the datastore and filestore factory. If the value of **VIZIERWORKER_ENV** is *REMOTE* the variable **VIZIERWORKER_CONTROLLER_URL** is used to instantiate the datastore factory. In a remote environment a dummy filestore factory is used.
 
 
+Project Container
+-----------------
+
+- **VIZIERCONTAINER_PROJECT_ID**: Unique identifier for the project that the container maintains
+- **VIZIERCONTAINER_CONTROLLER_URL**: Url for the controlling web service
+
+Ignores **VIZIERENGINE_SYNCHRONOUS**
 
 Packages of Workflow Commands
 -----------------------------

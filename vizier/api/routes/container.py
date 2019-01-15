@@ -14,17 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The url factory is used to generate urls for all resources (routes) that are
-accessible via a container web service that maintains a single project.
+"""Url factories for web services when running a configuration in which each
+project wrapped inside an individual container.
 """
 
+from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, UrlFactory
 
-from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 
-
-class ContainerUrlFactory:
-    """Factory to create urls for all routes that the webservice supports."""
-
+class ContainerApiUrlFactory(object):
+    """Factory to create urls for all routes that are supported by a vizier
+    API running in a separate container serving a single project.
+    """
     def __init__(self, base_url=None, api_doc_url=None):
         """Intialize the base url for the web service. A ValueError is raised
         if the base url is None.
@@ -70,6 +70,32 @@ class ContainerUrlFactory:
         string
         """
         return self.api_doc_url
+
+    # --------------------------------------------------------------------------
+    # Tasks
+    # --------------------------------------------------------------------------
+    def cancel_exec(self, task_id):
+        """Url to request cancelation of a running task.
+
+        Parameters
+        ----------
+        task_id: string
+            Unique task identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.base_url + '/tasks/' + task_id + '/cancel'
+
+    def execute_task(self):
+        """Url to request execution of a task.
+
+        Returns
+        -------
+        string
+        """
+        return self.base_url + '/tasks/execute'
 
     # --------------------------------------------------------------------------
     # Datasets
@@ -210,3 +236,68 @@ class ContainerUrlFactory:
         string
         """
         return self.base_url + '/files'
+
+
+class ContainerEngineUrlFactory(UrlFactory):
+    """Url factory for the web service API when running a configuration where
+    every project is maintained in a separate container. Overrides all methods
+    that create urls for resoures that are accessible directly via the project
+    container API.
+    """
+    def __init__(self, base_url, projects, api_doc_url=None):
+        """Intialize the base url for the web service and the cache for
+        projects. Each project is expected to maintain a separate factory for
+        resources that are accessible via the project container API.
+
+        Parameters
+        ----------
+        base_url: string
+            Prefix for all urls
+        projects: vizier.engine.project.cache.base.ProjectCache
+            Cache for projects (only used for container engine)
+        api_doc_url: string, optional
+            Url for the API documentation
+        """
+        super(ContainerEngineUrlFactory, self).__init__(
+            base_url=base_url,
+            api_doc_url=api_doc_url
+        )
+        self.projects = projects
+
+    # --------------------------------------------------------------------------
+    # Datasets
+    # --------------------------------------------------------------------------
+    def get_dataset(self, project_id, dataset_id):
+        """Url to retrieve dataset rows.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        project = self.projects.get_project(project_id)
+        return project.urls.get_dataset(project_id, dataset_id)
+
+    # --------------------------------------------------------------------------
+    # Files
+    # --------------------------------------------------------------------------
+    def upload_file(self, project_id):
+        """File upload url for the given project.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+
+        Returns
+        -------
+        string
+        """
+        project = self.projects.get_project(project_id)
+        return project.urls.upload_file(project_id)

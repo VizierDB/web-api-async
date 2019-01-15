@@ -2,13 +2,9 @@ import os
 import unittest
 
 from vizier.config.worker import WorkerConfig
+from vizier.core.util import delete_env
 
 import vizier.config.worker as env
-
-
-def delete_env(name):
-    if name in os.environ:
-        del os.environ[name]
 
 
 class TestWorkerConfig(unittest.TestCase):

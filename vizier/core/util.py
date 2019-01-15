@@ -16,6 +16,7 @@
 
 """Collection of helper methods."""
 
+import os
 import uuid
 
 
@@ -49,6 +50,19 @@ def cast(value):
             return float(value)
         except ValueError:
             return value
+
+
+def delete_env(name):
+    """Delete variable with the given name from the set of environment
+    variables. This is primarily used for test purposes.
+
+    Parameters
+    ----------
+    name: string
+        Name of the environment variable
+    """
+    if name in os.environ:
+        del os.environ[name]
 
 
 def encode_values(values):

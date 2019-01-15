@@ -70,3 +70,11 @@ PROVENANCE = 'provenance'
 
 # Task state changes
 RESULT = 'result'
+
+# Commands
+COMMAND = 'command'
+COMMAND_PACKAGE = 'packageId'
+COMMAND_ID = 'commandId'
+COMMAND_ARGS = 'arguments'
+CONTEXT = 'context'
+RESOURCES = 'resources'

@@ -19,6 +19,7 @@ serialize datasets.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.routes.base as routes
 import vizier.api.serialize.labels as labels
 
 
@@ -126,11 +127,13 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     if not project is None and not urls is None:
         project_id = project.identifier
         dataset_id = dataset.identifier
+        dataset_url = urls.get_dataset(
+            project_id=project_id,
+            dataset_id=dataset_id
+        )
         obj[labels.LINKS] = serialize.HATEOAS({
-            labels.SELF: urls.get_dataset(
-                project_id=project_id,
-                dataset_id=dataset_id
-            ),
+            labels.SELF: dataset_url,
+            'fetch:all': dataset_url + '?' + routes.PAGE_LIMIT + '=-1',
             'dataset:download': urls.download_dataset(
                 project_id=project_id,
                 dataset_id=dataset_id
