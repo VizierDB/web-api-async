@@ -4,7 +4,7 @@ import os
 import shutil
 import unittest
 
-from vizier.api.client.command.plot import create_plot
+from vizier.engine.packages.plot.command import create_plot
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.packages.plot.processor import PlotProcessor
 from vizier.engine.task.base import TaskContext

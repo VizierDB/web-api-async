@@ -18,8 +18,8 @@ from vizier.engine.task.base import TaskHandle
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
 
-import vizier.api.client.command.vizual as vizual
-import vizier.api.client.command.pycell as pycell
+import vizier.engine.packages.vizual.command as vizual
+import vizier.engine.packages.pycell.command as pycell
 import vizier.engine.packages.base as pckg
 
 

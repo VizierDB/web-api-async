@@ -1,7 +1,7 @@
 """Test get_state method for workflow handles."""
 import unittest
 
-from vizier.api.client.command.pycell import python_cell
+from vizier.engine.packages.pycell.command import python_cell
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle, ACTION_CREATE
 

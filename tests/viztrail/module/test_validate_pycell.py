@@ -4,7 +4,7 @@ package.
 
 import unittest
 
-from vizier.api.client.command.pycell import python_cell
+from vizier.engine.packages.pycell.command import python_cell
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as pycell

@@ -13,8 +13,8 @@ from vizier.viztrail.module.base import MODULE_PENDING, MODULE_SUCCESS
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-from vizier.api.client.command.plot import create_plot
-from vizier.api.client.command.pycell import python_cell
+from vizier.engine.packages.plot.command import create_plot
+from vizier.engine.packages.pycell.command import python_cell
 
 
 MODULE_DIR = './.temp'

@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 
-from vizier.api.client.command.pycell import python_cell
+from vizier.engine.packages.pycell.command import python_cell
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.base import PROPERTY_NAME

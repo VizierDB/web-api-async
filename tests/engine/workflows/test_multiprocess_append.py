@@ -7,8 +7,8 @@ import shutil
 import time
 import unittest
 
-from vizier.api.client.command.pycell import python_cell
-from vizier.api.client.command.vizual import load_dataset
+from vizier.engine.packages.pycell.command import python_cell
+from vizier.engine.packages.vizual.command import load_dataset
 from vizier.api.webservice.base import get_engine
 from vizier.config.app import AppConfig
 

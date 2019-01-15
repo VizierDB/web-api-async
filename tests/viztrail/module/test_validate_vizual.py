@@ -6,8 +6,8 @@ import os
 import shutil
 import unittest
 
-from vizier.api.client.command.vizual import delete_column, load_dataset
-from vizier.api.client.command.vizual import projection, sort_dataset, update_cell
+from vizier.engine.packages.vizual.command import delete_column, load_dataset
+from vizier.engine.packages.vizual.command import projection, sort_dataset, update_cell
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.filestore.fs.base import FileSystemFilestore, METADATA_FILENAME
 

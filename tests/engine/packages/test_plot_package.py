@@ -2,7 +2,7 @@
 
 import unittest
 
-from vizier.api.client.command.plot import create_plot
+from vizier.engine.packages.plot.command import create_plot
 from vizier.viztrail.command import ModuleCommand, ARG, ARG_ID
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.plot.base as plot

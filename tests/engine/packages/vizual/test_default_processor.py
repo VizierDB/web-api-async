@@ -11,7 +11,7 @@ from vizier.engine.packages.vizual.api.fs import DefaultVizualApi, RESOURCE_DATA
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor, PROPERTY_API
 from vizier.filestore.fs.base import FileSystemFilestore
 
-import vizier.api.client.command.vizual as vizual
+import vizier.engine.packages.vizual.command as vizual
 import vizier.engine.packages.base as pckg
 
 

@@ -5,7 +5,7 @@ import shutil
 import time
 import unittest
 
-from vizier.api.client.command.vizual import load_dataset, update_cell
+from vizier.engine.packages.vizual.command import load_dataset, update_cell
 from vizier.api.webservice.base import get_engine
 from vizier.config.app import AppConfig
 
