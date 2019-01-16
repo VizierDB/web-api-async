@@ -13,3 +13,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Collection of reference identifiers for HATEOAS references in the links list
+of serialized objects that are returned by the web service API.
+"""
+
+# General
+SELF = 'self'
+
+# Files
+FILE_DOWNLOAD = 'file:download'
+FILE_UPLOAD = 'file:upload'
+
+# Modules
+MODULE_DELETE = 'module:delete'
+MODULE_INSERT = 'module:insert'
+
+# Workflow
+WORKFLOW_APPEND = 'workflow:append'

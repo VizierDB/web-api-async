@@ -18,25 +18,27 @@
 
 import os
 
-"""Environment variable containing routing information."""
-# Colon separated list of package.command=queue strings that define routing
-# information for individual commands
-VIZIERENGINE_CELERY_ROUTES = 'VIZIERENGINE_CELERY_ROUTES'
+import vizier.config.app as app
 
 
-def config_routes():
+def config_routes(config):
     """Create routing information for individual vizier commands. Expects
     routing information in the environment variable VIZIERENGINE_CELERY_ROUTES.
     The value format is a colon separated list of package.command.queue strings.
 
     Returns None if the environment variable is not set.
 
+    Parameters
+    ----------
+    config: vizier.config.app.AppConfig
+        Application configuration object
+
     Returns
     -------
     dict
     """
     routes = None
-    routing = os.getenv(VIZIERENGINE_CELERY_ROUTES)
+    routing = config.backend.celery.routes
     if not routing is None and not routing.strip() == '':
         routes = dict()
         for rt in routing.split(':'):

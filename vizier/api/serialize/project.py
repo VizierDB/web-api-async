@@ -20,6 +20,7 @@ serialize projects.
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.branch as br
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
@@ -44,13 +45,13 @@ def PROJECT_DESCRIPTOR(project, urls):
         'lastModifiedAt': project.last_modified_at.isoformat(),
         'properties': serialize.ANNOTATIONS(project.viztrail.properties),
         labels.LINKS: serialize.HATEOAS({
-            'self': urls.get_project(project_id),
+            ref.SELF: urls.get_project(project_id),
             'home': urls.service_descriptor(),
             'doc': urls.api_doc(),
             'project:delete': urls.delete_project(project_id),
             'project:update': urls.update_project(project_id),
             'branch:create': urls.create_branch(project_id),
-            'file:upload': urls.upload_file(project_id)
+            ref.FILE_UPLOAD: urls.upload_file(project_id)
         })
     }
 

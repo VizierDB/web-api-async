@@ -167,32 +167,16 @@ def get_engine(config):
     -------
     vizier.engine.base.VizierEngine
     """
-    # We ignore the identifier here since there is only one dev engine at
-    # this time.
-    default_values = {
-        app.VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
-        app.VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
-        app.VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
-        app.VIZIERENGINE_SYNCHRONOUS: None
-    }
     # Get backend identifier. Raise ValueError if value does not identify
     # a valid backend.
-    backend_id = base.get_config_value(
-        env_variable=app.VIZIERENGINE_BACKEND,
-        default_values=default_values
-    )
+    backend_id = config.engine.backend.identifier
     if not backend_id in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     # Get the identifier factory for the viztrails repository and create
     # the object store. At this point we use the default object store only.
     # We could add another environment variable to use different object
     # stores (once implemented).
-    use_short_ids = base.get_config_value(
-        env_variable=app.VIZIERENGINE_USE_SHORT_IDENTIFIER,
-        attribute_type=base.BOOL,
-        default_values=default_values
-    )
-    if use_short_ids:
+    if config.engine.use_short_ids:
         id_factory = get_short_identifier
     else:
         id_factory = get_unique_identifier
@@ -204,10 +188,7 @@ def get_engine(config):
     # By default the vizier engine uses the objectstore implementation for
     # the viztrails repository. The datastore and filestore factories depend
     # on the values of engine identifier (DEV or MIMIR).
-    base_dir = base.get_config_value(
-        env_variable=app.VIZIERENGINE_DATA_DIR,
-        default_values=default_values
-    )
+    base_dir = config.engine.data_dir
     # Create the local viztrails repository
     viztrails = OSViztrailRepository(
         base_path=os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR),
@@ -228,10 +209,7 @@ def get_engine(config):
         processors = load_processors(config.engine.processor_path)
         # Create an optional task processor for synchronous tasks if given
         synchronous = None
-        sync_commands_list = base.get_config_value(
-            env_variable=app.VIZIERENGINE_SYNCHRONOUS,
-            default_values=default_values
-        )
+        sync_commands_list = config.engine.sync_commands
         if not sync_commands_list is None:
             commands = dict()
             for el in sync_commands_list.split(':'):
@@ -253,7 +231,7 @@ def get_engine(config):
         elif backend_id == base.BACKEND_CELERY:
             # Create and configure routing information (if given)
             backend = CeleryBackend(
-                routes=config_routes(),
+                routes=config_routes(config),
                 synchronous=synchronous
             )
         else:
@@ -264,7 +242,8 @@ def get_engine(config):
         if backend_id == base.BACKEND_CONTAINER:
             projects = ContainerProjectCache(
                 viztrails=viztrails,
-                container_file=os.path.join(base_dir, app.DEFAULT_CONTAINER_FILE)
+                container_file=os.path.join(base_dir, app.DEFAULT_CONTAINER_FILE),
+                config=config
             )
             backend = ContainerBackend(projects=projects)
         else:

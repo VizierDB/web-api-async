@@ -20,6 +20,7 @@ serialize workflow modules.
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.dataset as serialds
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
@@ -57,12 +58,12 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
     cmd = module.command
     timestamp = module.timestamp
     obj = {
-        'id': module_id,
+        labels.ID: module_id,
         'state': module.state,
-        'command': {
-            'packageId': cmd.package_id,
-            'commandId': cmd.command_id,
-            'arguments': cmd.arguments.to_list()
+        labels.COMMAND: {
+            labels.COMMAND_PACKAGE: cmd.package_id,
+            labels.COMMAND_ID: cmd.command_id,
+            labels.COMMAND_ARGS: cmd.arguments.to_list()
         },
         'text': module.external_form,
         labels.TIMESTAMPS: {
@@ -72,6 +73,11 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
             'branch:head': urls.get_branch_head(
                 project_id=project_id,
                 branch_id=branch_id
+            ),
+            ref.MODULE_INSERT: urls.workflow_module_insert(
+                project_id=project_id,
+                branch_id=branch_id,
+                module_id=module_id
             )
         })
     }
@@ -82,7 +88,7 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
                 branch_id=branch_id,
                 module_id=module_id
             ),
-            'module:delete': urls.get_workflow_module(
+            ref.MODULE_DELETE: urls.workflow_module_delete(
                 project_id=project_id,
                 branch_id=branch_id,
                 module_id=module_id

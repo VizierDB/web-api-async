@@ -37,19 +37,35 @@ class TestContainerCache(unittest.TestCase):
         DefaultObjectStore().write_object(
             object_path=filename,
             content=[
-                {'id': vt1.identifier, 'url': 'API1'},
-                {'id': vt2.identifier, 'url': 'API2'}
+                {
+                    'projectId': vt1.identifier,
+                    'url': 'API1',
+                    'port': 80,
+                    'containerId': 'ID1'
+                },
+                {
+                    'projectId': vt2.identifier,
+                    'url': 'API2',
+                    'port': 81,
+                    'containerId': 'ID2'
+                }
             ]
         )
         # Initialize the project cache
         viztrails = OSViztrailRepository(base_path=VIZTRAILS_DIR)
         projects = ContainerProjectCache(
             viztrails=viztrails,
-            container_file=filename
+            container_file=filename,
+            ports=20171,
+            container_image='vizierdb/projectcontainer'
         )
         self.assertEquals(len(projects.list_projects()), 2)
         self.assertEquals(projects.get_project(vt1.identifier).container_api, 'API1')
         self.assertEquals(projects.get_project(vt2.identifier).container_api, 'API2')
+        self.assertEquals(projects.get_project(vt1.identifier).container_id, 'ID1')
+        self.assertEquals(projects.get_project(vt2.identifier).container_id, 'ID2')
+        self.assertEquals(projects.get_project(vt1.identifier).port, 80)
+        self.assertEquals(projects.get_project(vt2.identifier).port, 81)
 
 
 if __name__ == '__main__':

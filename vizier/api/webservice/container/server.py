@@ -127,7 +127,7 @@ def execute_task():
     )
     # Validate module command
     cmd = obj[labels.COMMAND]
-    for key in [COMMAND_PACKAGE, COMMAND_ID, COMMAND_ARGS]:
+    for key in [labels.COMMAND_PACKAGE, labels.COMMAND_ID, labels.COMMAND_ARGS]:
         if not key in cmd:
             raise srv.InvalidRequest('missing element \'' + key + '\' in command specification')
     # Get database state
@@ -143,9 +143,9 @@ def execute_task():
             project_id=config.project_id,
             task_id=obj[labels.ID],
             command=ModuleCommand(
-                package_id=cmd[COMMAND_PACKAGE],
-                command_id=cmd[COMMAND_ID],
-                arguments=cmd[COMMAND_ARGS],
+                package_id=cmd[labels.COMMAND_PACKAGE],
+                command_id=cmd[labels.COMMAND_ID],
+                arguments=cmd[labels.COMMAND_ARGS],
                 packages=api.engine.packages
             ),
             context=context,

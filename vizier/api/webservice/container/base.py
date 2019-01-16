@@ -17,7 +17,7 @@
 import os
 
 from vizier.api.routes.container import ContainerApiUrlFactory
-from vizier.api.webservice.container.project import ContainerProjectCache
+from vizier.api.webservice.container.project import SingleProjectCache
 from vizier.api.webservice.container.task import VizierContainerTaskApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
 from vizier.api.webservice.filestore import VizierFilestoreApi
@@ -130,32 +130,16 @@ def get_engine(config):
     -------
     vizier.engine.base.VizierEngine
     """
-    # We ignore the identifier here since there is only one dev engine at
-    # this time.
-    default_values = {
-        app.VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
-        app.VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
-        app.VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
-        app.VIZIERENGINE_SYNCHRONOUS: None
-    }
     # Get backend identifier. Raise ValueError if value does not identify
     # a valid backend.
-    backend_id = base.get_config_value(
-        env_variable=app.VIZIERENGINE_BACKEND,
-        default_values=default_values
-    )
+    backend_id = config.engine.backend.identifier
     if not backend_id in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     # Get the identifier factory for the viztrails repository and create
     # the object store. At this point we use the default object store only.
     # We could add another environment variable to use different object
     # stores (once implemented).
-    use_short_ids = base.get_config_value(
-        env_variable=app.VIZIERENGINE_USE_SHORT_IDENTIFIER,
-        attribute_type=base.BOOL,
-        default_values=default_values
-    )
-    if use_short_ids:
+    if config.engine.use_short_ids:
         id_factory = get_short_identifier
     else:
         id_factory = get_unique_identifier
@@ -165,10 +149,7 @@ def get_engine(config):
     # By default the vizier engine uses the objectstore implementation for
     # the viztrails repository. The datastore and filestore factories depend
     # on the values of engine identifier (DEV or MIMIR).
-    base_dir = base.get_config_value(
-        env_variable=app.VIZIERENGINE_DATA_DIR,
-        default_values=default_values
-    )
+    base_dir = config.engine.data_dir
     viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     if config.engine.identifier == base.DEV_ENGINE:
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
@@ -178,7 +159,7 @@ def get_engine(config):
     else:
         raise ValueError('unknown vizier engine \'' + str(config.engine.identifier) + '\'')
     # The default engine uses a common project cache.
-    projects = ContainerProjectCache(
+    projects = SingleProjectCache(
         ProjectHandle(
             viztrail=ViztrailHandle(identifier=config.project_id),
             datastore=datastore_factory.get_datastore(config.project_id),
@@ -198,7 +179,7 @@ def get_engine(config):
     elif backend_id == base.BACKEND_CELERY:
         # Create and configure routing information (if given)
         backend = CeleryBackend(
-            routes=config_routes(),
+            routes=config_routes(config),
             synchronous=None
         )
     else:

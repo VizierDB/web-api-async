@@ -73,6 +73,8 @@ Engines: DEV_LOCAL, DEV_CELERY
 ### Container
 
 - **VIZIERENGINE_DATA_DIR**: Base data directory for viztrails and configuration files
+- **VIZIERENGINE_CONTAINER_PORTS** : First port number for new project containers. All following containers will have higher port numbers
+- **VIZIERENGINE_CONTAINER_IMAGE**: Unique identifier of the project container docker image
 
 
 ## Configure the Default Viztrails Repository

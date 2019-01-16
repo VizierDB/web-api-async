@@ -21,7 +21,7 @@ methods except get projects remain unimplemented.
 from vizier.engine.project.cache.base import ProjectCache
 
 
-class ContainerProjectCache(ProjectCache):
+class SingleProjectCache(ProjectCache):
     """The container project cache maintains a single project. The class is used
     by the container server API. All methods except get project remain
     unimplemented.

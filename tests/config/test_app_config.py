@@ -26,6 +26,13 @@ class TestAppConfig(unittest.TestCase):
         delete_env(env.VIZIERSERVER_ENGINE)
         delete_env(env.VIZIERSERVER_PACKAGE_PATH)
         delete_env(env.VIZIERSERVER_PROCESSOR_PATH)
+        delete_env(env.VIZIERENGINE_DATA_DIR)
+        delete_env(env.VIZIERENGINE_USE_SHORT_IDENTIFIER)
+        delete_env(env.VIZIERENGINE_SYNCHRONOUS)
+        delete_env(env.VIZIERENGINE_BACKEND)
+        delete_env(env.VIZIERENGINE_CELERY_ROUTES)
+        delete_env(env.VIZIERENGINE_CONTAINER_PORTS)
+        delete_env(env.VIZIERENGINE_CONTAINER_IMAGE)
 
     def test_default_config(self):
         """Test the default configuration settings."""
@@ -41,6 +48,15 @@ class TestAppConfig(unittest.TestCase):
         self.assertEquals(config.run.debug, env.DEFAULT_SETTINGS[env.VIZIERSERVER_DEBUG])
         self.assertEquals(config.logs.server, env.DEFAULT_SETTINGS[env.VIZIERSERVER_LOG_DIR])
         self.assertEquals(config.engine.identifier, env.DEFAULT_SETTINGS[env.VIZIERSERVER_ENGINE])
+        self.assertEquals(config.engine.data_dir, env.DEFAULT_SETTINGS[env.VIZIERENGINE_DATA_DIR])
+        self.assertEquals(config.engine.package_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_PACKAGE_PATH])
+        self.assertEquals(config.engine.processor_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_PROCESSOR_PATH])
+        self.assertEquals(config.engine.use_short_ids, env.DEFAULT_SETTINGS[env.VIZIERENGINE_USE_SHORT_IDENTIFIER])
+        self.assertEquals(config.engine.sync_commands, env.DEFAULT_SETTINGS[env.VIZIERENGINE_SYNCHRONOUS])
+        self.assertEquals(config.engine.backend.identifier, env.DEFAULT_SETTINGS[env.VIZIERENGINE_BACKEND])
+        self.assertEquals(config.engine.backend.celery.routes, env.DEFAULT_SETTINGS[env.VIZIERENGINE_CELERY_ROUTES])
+        self.assertEquals(config.engine.backend.container.ports, env.DEFAULT_SETTINGS[env.VIZIERENGINE_CONTAINER_PORTS])
+        self.assertEquals(config.engine.backend.container.image, env.DEFAULT_SETTINGS[env.VIZIERENGINE_CONTAINER_IMAGE])
 
     def test_env_config(self):
         """Test app config using environment variables."""
@@ -55,6 +71,11 @@ class TestAppConfig(unittest.TestCase):
         os.environ[env.VIZIERSERVER_MAX_ROW_LIMIT] = '222'
         os.environ[env.VIZIERSERVER_MAX_UPLOAD_SIZE] = '333'
         os.environ[env.VIZIERSERVER_ENGINE] = 'CELERY'
+        os.environ[env.VIZIERENGINE_USE_SHORT_IDENTIFIER] = str(not env.DEFAULT_SETTINGS[env.VIZIERENGINE_USE_SHORT_IDENTIFIER])
+        os.environ[env.VIZIERENGINE_SYNCHRONOUS] = 'ABC'
+        os.environ[env.VIZIERENGINE_BACKEND] = 'THE_BACKEND'
+        os.environ[env.VIZIERENGINE_CELERY_ROUTES] = 'Some Routes'
+        os.environ[env.VIZIERENGINE_CONTAINER_PORTS] = '8080'
         config = AppConfig()
         self.assertEquals(config.webservice.name, 'Some Name')
         self.assertEquals(config.webservice.server_url, 'http://webapi')
@@ -67,6 +88,12 @@ class TestAppConfig(unittest.TestCase):
         self.assertEquals(config.run.debug, False)
         self.assertEquals(config.logs.server, 'logdir')
         self.assertEquals(config.engine.identifier, 'CELERY')
+        self.assertEquals(config.engine.use_short_ids, not env.DEFAULT_SETTINGS[env.VIZIERENGINE_USE_SHORT_IDENTIFIER])
+        self.assertEquals(config.engine.sync_commands, 'ABC')
+        self.assertEquals(config.engine.backend.identifier, 'THE_BACKEND')
+        self.assertEquals(config.engine.backend.celery.routes, 'Some Routes')
+        self.assertEquals(config.engine.backend.container.ports, 8080)
+        self.assertEquals(config.engine.backend.container.image, env.DEFAULT_SETTINGS[env.VIZIERENGINE_CONTAINER_IMAGE])
 
 
 if __name__ == '__main__':

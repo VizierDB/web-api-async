@@ -31,6 +31,9 @@ class TestContainerConfig(unittest.TestCase):
         delete_env(env.VIZIERSERVER_ENGINE)
         delete_env(env.VIZIERSERVER_PACKAGE_PATH)
         delete_env(env.VIZIERSERVER_PROCESSOR_PATH)
+        delete_env(env.VIZIERENGINE_DATA_DIR)
+        delete_env(env.VIZIERENGINE_USE_SHORT_IDENTIFIER)
+        delete_env(env.VIZIERENGINE_SYNCHRONOUS)
         delete_env(container.VIZIERCONTAINER_PROJECT_ID)
         delete_env(container.VIZIERCONTAINER_CONTROLLER_URL)
 
@@ -53,7 +56,11 @@ class TestContainerConfig(unittest.TestCase):
         self.assertEquals(config.webservice.defaults.max_file_size, env.DEFAULT_SETTINGS[env.VIZIERSERVER_MAX_UPLOAD_SIZE])
         self.assertEquals(config.run.debug, env.DEFAULT_SETTINGS[env.VIZIERSERVER_DEBUG])
         self.assertEquals(config.logs.server, env.DEFAULT_SETTINGS[env.VIZIERSERVER_LOG_DIR])
-        self.assertEquals(config.engine.identifier, env.DEFAULT_SETTINGS[env.VIZIERSERVER_ENGINE])
+        self.assertEquals(config.engine.data_dir, env.DEFAULT_SETTINGS[env.VIZIERENGINE_DATA_DIR])
+        self.assertEquals(config.engine.package_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_PACKAGE_PATH])
+        self.assertEquals(config.engine.processor_path, env.DEFAULT_SETTINGS[env.VIZIERSERVER_PROCESSOR_PATH])
+        self.assertEquals(config.engine.use_short_ids, env.DEFAULT_SETTINGS[env.VIZIERENGINE_USE_SHORT_IDENTIFIER])
+        self.assertEquals(config.engine.sync_commands, env.DEFAULT_SETTINGS[env.VIZIERENGINE_SYNCHRONOUS])
         self.assertEquals(config.project_id, '000')
         self.assertEquals(config.controller_url, 'http://')
 

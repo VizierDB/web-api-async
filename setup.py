@@ -14,6 +14,7 @@ setup(
 	'Flask>=1.0',
 	'flask-cors',
     'celery',
+    'docker',
     'jsonschema',
 	'pyyaml',
 	'py4j>=0.10.6',

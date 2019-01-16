@@ -35,8 +35,18 @@ webservice:
         max_file_size: Maximum size for file uploads (in byte)
 engine:
     identifier: Unique engine configuration identifier
+    data_dir
     package_path: Path to folders containing package declarations
     processor_path: Path to folders containing processor definitions
+    sync_commands
+    use_short_ids
+    backend:
+        identifier: Unique backend identifier
+        celery:
+            routes: Optional routing infformation for celery workers
+        container:
+            ports: First port number for new project containers
+            image: Identifier of the project container docker image
 run:
     debug: Flag indicating whether server is started in debug mode
 logs:
@@ -98,6 +108,18 @@ VIZIERENGINE_SYNCHRONOUS = 'VIZIERENGINE_SYNCHRONOUS'
 # Flag indicationg whether short identifier are used by the viztrail repository
 VIZIERENGINE_USE_SHORT_IDENTIFIER = 'VIZIERENGINE_USE_SHORT_IDENTIFIER'
 
+"""Celery backend"""
+# Colon separated list of package.command=queue strings that define routing
+# information for individual commands
+VIZIERENGINE_CELERY_ROUTES = 'VIZIERENGINE_CELERY_ROUTES'
+
+"""Container backend"""
+# First port number for new project containers. All following containers will
+# have higher port numbers
+VIZIERENGINE_CONTAINER_PORTS = 'VIZIERENGINE_CONTAINER_PORTS'
+# Unique identifier of the project container docker image
+VIZIERENGINE_CONTAINER_IMAGE = 'VIZIERENGINE_CONTAINER_IMAGE'
+
 
 """Dictionary of default configurations settings. Note that there is no
 environment variable defined for the link to the API documentation."""
@@ -118,6 +140,10 @@ DEFAULT_SETTINGS = {
     VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
     VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
     VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
+    VIZIERENGINE_SYNCHRONOUS: None,
+    VIZIERENGINE_CELERY_ROUTES: None,
+    VIZIERENGINE_CONTAINER_PORTS: 20171,
+    VIZIERENGINE_CONTAINER_IMAGE: 'heikomueller/vizierdbprojectcontainer',
     'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
 }
 
@@ -155,8 +181,18 @@ class AppConfig(object):
                 max_file_size
         engine:
             identifier
+            data_dir
             package_path
             processor_path
+            sync_commands
+            use_short_ids
+            backend:
+                identifier
+                celery:
+                    routes
+                container:
+                    ports
+                    image
         run:
             debug
         logs:
@@ -194,11 +230,34 @@ class AppConfig(object):
         self.engine = base.ConfigObject(
             attributes=[
                 ('identifier', VIZIERSERVER_ENGINE, base.STRING),
+                ('data_dir', VIZIERENGINE_DATA_DIR, base.STRING),
                 ('package_path', VIZIERSERVER_PACKAGE_PATH, base.STRING),
-                ('processor_path', VIZIERSERVER_PROCESSOR_PATH, base.STRING)
+                ('processor_path', VIZIERSERVER_PROCESSOR_PATH, base.STRING),
+                ('use_short_ids', VIZIERENGINE_USE_SHORT_IDENTIFIER, base.BOOL),
+                ('sync_commands', VIZIERENGINE_SYNCHRONOUS, base.STRING)
             ],
             default_values=default_values
         )
+        # engine.backend
+        backend = base.ConfigObject(
+            attributes=[('identifier', VIZIERENGINE_BACKEND, base.STRING)],
+            default_values=default_values
+        )
+        # engine.backend.celery
+        celery = base.ConfigObject(
+            attributes=[('routes', VIZIERENGINE_CELERY_ROUTES, base.STRING)],
+            default_values=default_values
+        )
+        setattr(backend, 'celery', celery)
+        # engine.backend.container
+        container = base.ConfigObject(
+            attributes=[
+                ('ports', VIZIERENGINE_CONTAINER_PORTS, base.INTEGER),
+                ('image', VIZIERENGINE_CONTAINER_IMAGE, base.STRING)],
+            default_values=default_values
+        )
+        setattr(backend, 'container', container)
+        setattr(self.engine, 'backend', backend)
         # run
         self.run = base.ConfigObject(
             attributes=[('debug', VIZIERSERVER_DEBUG, base.BOOL)],
@@ -220,8 +279,23 @@ class AppConfig(object):
         -------
         string
         """
-        base_url = self.webservice.server_url
-        if self.webservice.server_port != 80:
-            base_url += ':' + str(self.webservice.server_port)
-        base_url += self.webservice.app_path
-        return base_url
+        return self.get_url(self.webservice.server_port)
+
+    def get_url(self, port):
+        """Full Url (prefix) for all resources that are available on a Web
+        Service running on the given port.
+
+        Parameters
+        ----------
+        port: int
+            Port number the web service is running on
+
+        Returns
+        -------
+        string
+        """
+        url = self.webservice.server_url
+        if port != 80:
+            url += ':' + str(port)
+        url += self.webservice.app_path
+        return url

@@ -21,6 +21,7 @@ serialize workflow resources.
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.dataset as serialds
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.module as serialmd
 
 
@@ -51,17 +52,11 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
         'datasets': list(),
         'charts': list(),
         'readOnly': False,
-        labels.LINKS: serialize.HATEOAS({
-            'workflow:append': urls.workflow_append(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:branch': urls.get_branch(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:project': urls.get_project(project_id)
-        })
+        labels.LINKS: WORKFLOW_HANDLE_LINKS(
+            project_id=project_id,
+            branch_id=branch_id,
+            urls=urls
+        )
     }
 
 
@@ -90,20 +85,14 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
         'id': workflow_id,
         'createdAt': workflow.created_at.isoformat(),
         'action': workflow.action,
-        'packageId': workflow.package_id,
-        'commandId': workflow.command_id,
-        labels.LINKS: serialize.HATEOAS({
-            'self': urls.get_workflow(
-                project_id=project_id,
-                branch_id=branch_id,
-                workflow_id=workflow_id
-            ),
-            'workflow:branch': urls.get_branch(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:project': urls.get_project(project_id)
-        })
+        labels.COMMAND_PACKAGE: workflow.package_id,
+        labels.COMMAND_ID: workflow.command_id,
+        labels.LINKS: WORKFLOW_HANDLE_LINKS(
+            project_id=project_id,
+            branch_id=branch_id,
+            workflow_id=workflow_id,
+            urls=urls
+        )
     }
 
 
@@ -164,29 +153,70 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                     project=project,
                     urls=urls
                 )
+    links = WORKFLOW_HANDLE_LINKS(
+        project_id=project_id,
+        branch_id=branch_id,
+        workflow_id=workflow_id,
+        urls=urls,
+        links={
+            'workflow:cancel': urls.cancel_workflow(
+                project_id=project_id,
+                branch_id=branch_id
+            )
+        }
+    )
     return {
         'id': workflow_id,
         'createdAt': descriptor.created_at.isoformat(),
         'action': descriptor.action,
-        'packageId': descriptor.package_id,
-        'commandId': descriptor.command_id,
+        labels.COMMAND_PACKAGE: descriptor.package_id,
+        labels.COMMAND_ID: descriptor.command_id,
         'state': workflow.get_state().state,
         'modules': modules,
         'datasets': datasets.values(),
         'readOnly': read_only,
-        labels.LINKS: serialize.HATEOAS({
-            'workflow:append': urls.workflow_append(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:branch': urls.get_branch(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:cancel': urls.cancel_workflow(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
-            'workflow:project': urls.get_project(project_id)
-        })
+        labels.LINKS: links
     }
+
+
+def WORKFLOW_HANDLE_LINKS(urls, project_id, branch_id, workflow_id=None, links=None):
+    """Get basic set of HATEOAS references for workflow handles.
+
+    For an empty workflow the identifier is None. In that case the result will
+    not contain a self reference.
+
+    Parameters
+    ----------
+    urls: vizier.api.routes.base.UrlFactory
+        Factory for resource urls
+    project_id: string
+        Unique project identifier
+    branch_id: string
+        Unique branch identifier
+    workflow_id: string, optional
+        Unique workflow identifier
+
+    Returns
+    -------
+    dict
+    """
+    if links is None:
+        links = dict()
+    links[ref.WORKFLOW_APPEND] = urls.workflow_module_append(
+        project_id=project_id,
+        branch_id=branch_id
+    )
+    links['workflow:branch'] = urls.get_branch(
+        project_id=project_id,
+        branch_id=branch_id
+    )
+    links['workflow:project'] = urls.get_project(project_id),
+    links[ref.FILE_UPLOAD] = urls.upload_file(project_id)
+    # Only include self reference if workflow identifier is given
+    if not workflow_id is None:
+        links[ref.SELF] = urls.get_workflow(
+            project_id=project_id,
+            branch_id=branch_id,
+            workflow_id=workflow_id
+        )
+    return serialize.HATEOAS(links)

@@ -18,6 +18,7 @@
 container.
 """
 
+import docker
 import requests
 
 from vizier.api.routes.container import ContainerApiUrlFactory
@@ -26,13 +27,15 @@ from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.base import ProjectCache
 
 import vizier.api.serialize.labels as labels
+import vizier.config.app as app
+import vizier.config.container as contnr
 
 
 class ContainerProjectHandle(ProjectHandle):
     """Extend the default project handle with a reference to the base url of
     the project container API.
     """
-    def __init__(self, viztrail, container_api):
+    def __init__(self, viztrail, container_api, port, container_id):
         """Initialize the project viztrail and the container API url.
 
         Parameters
@@ -41,9 +44,15 @@ class ContainerProjectHandle(ProjectHandle):
             The viztrail handle for the project
         container_api: string
             Base url for the project container API
+        port: int
+            Local port of the container API
+        container_id: string
+            Unique container identifier
         """
         super(ContainerProjectHandle, self).__init__(viztrail=viztrail)
         self.container_api = container_api
+        self.port = port
+        self.container_id = container_id
         self.urls = ContainerApiUrlFactory(base_url=self.container_api)
 
     def cancel_task(self, task_id):
@@ -95,9 +104,9 @@ class ContainerProjectCache(ProjectCache):
     """The project cache for containerized projects. It is assumed that each
     project runs in a separate container on the local machine that exposes the
     container API via a local port. Maintains a mapping of project identifier
-    to local port numbers in a separate file.
+    to information about local container in a separate file.
     """
-    def __init__(self, viztrails, container_file):
+    def __init__(self, viztrails, container_file, config):
         """Initialize the cache components and load all projects in the given
         viztrails repository. Maintains all projects in an dictionary keyed by
         their identifier.
@@ -107,32 +116,44 @@ class ContainerProjectCache(ProjectCache):
         viztrails: vizier.vizual.repository.ViztrailRepository
             Repository for viztrails
         container_file: string
-            Path to the container mapping file
+            Path to the container information file
+        config: vizier.config.app.AppConfig
+            Application object
         """
         self.viztrails = viztrails
         self.container_file = container_file
+        self.config = config
+        self.container_image = config.engine.backend.container.image
+        # Keep track of the port number of the next project container.
+        self.next_port_number = config.engine.backend.container.ports
+        # Instantiate the Docker daemon client using the default socket or
+        # configuration in the environment. This may need to be adjusted for
+        # production deployments.
+        self.client = docker.from_env()
+        # Read mapping of project identifier to container information
         self.store = DefaultObjectStore()
-        # Read mapping of project identifier to container API urls
-        mapping = dict()
+        containers = dict()
         if self.store.exists(self.container_file):
             for obj in self.store.read_object(self.container_file):
-                mapping[obj['id']] = obj['url']
+                containers[obj['projectId']] = obj
         # Create index of project handles from existing viztrails. The project
         # handles do not have a reference to the datastore or filestore.
         self.projects = dict()
         for viztrail in self.viztrails.list_viztrails():
+            container = containers[viztrail.identifier]
             project = ContainerProjectHandle(
                 viztrail=viztrail,
-                container_api=mapping[viztrail.identifier]
+                container_api=container['url'],
+                port=container['port'],
+                container_id=container['containerId']
             )
             self.projects[viztrail.identifier] = project
+            if project.port >= self.next_port_number:
+                self.next_port_number += 1
 
     def create_project(self, properties=None):
-        """Create a new project. Will create a viztrail in the underlying
-        viztrail repository. The initial set of properties is an optional
-        dictionary of (key,value)-pairs where all values are expected to either
-        be scalar values or a list of scalar values. The properties are passed
-        to the create method for the viztrail repository.
+        """Create a new project. Will (i) create a viztrail in the underlying
+        viztrail repository, and (ii) start a docker container for the project.
 
         Parameters
         ----------
@@ -143,7 +164,42 @@ class ContainerProjectCache(ProjectCache):
         -------
         vizier.engine.project.base.ProjectHandle
         """
-        raise NotImplementedError
+        # Create the viztrail for the project
+        viztrail = self.viztrails.create_viztrail(properties=properties)
+        # Start a new docker container for the project on the next unused
+        # port. Note that we assume that all ports that are greater or equal
+        # to the port number that was passed as argument at object instantiation
+        # are available.
+        port = self.next_port_number
+        project_id = viztrail.identifier
+        container = self.client.containers.run(
+            image=self.container_image,
+            environment={
+                app.VIZIERSERVER_NAME: 'Project Container API - ' + project_id,
+                app.VIZIERSERVER_BASE_URL: self.config.webservice.server_url,
+                app.VIZIERSERVER_SERVER_PORT: port,
+                app.VIZIERSERVER_SERVER_LOCAL_PORT: port,
+                app.VIZIERSERVER_APP_PATH: self.config.webservice.app_path,
+                app.VIZIERSERVER_LOG_DIR: '/app/data/logs/container',
+                app.VIZIERENGINE_DATA_DIR: '/app/data',
+                app.VIZIERSERVER_PACKAGE_PATH: '/app/resources/packages',
+                app.VIZIERSERVER_PROCESSOR_PATH: '/app/resources/processors',
+                contnr.VIZIERCONTAINER_PROJECT_ID: project_id,
+                contnr.VIZIERCONTAINER_CONTROLLER_URL: self.config.app_base_url
+            },
+            network='host',
+            detach=True
+        )
+        project = ContainerProjectHandle(
+            viztrail=viztrail,
+            container_api=self.config.get_url(port),
+            port=port,
+            container_id=container.id
+        )
+        self.next_port_number += 1
+        self.projects[project.identifier] = project
+        self.write_container_info()
+        return project
 
     def delete_project(self, project_id):
         """Delete all resources that are associated with the given project.
@@ -158,7 +214,21 @@ class ContainerProjectCache(ProjectCache):
         -------
         bool
         """
-        raise NotImplementedError
+        if project_id in self.projects:
+            project = self.projects[project_id]
+            # Delete the viztrail for the project
+            viztrail = project.viztrail
+            # Stop and remove the associated container
+            self.viztrails.delete_viztrail(viztrail.identifier)
+            container = self.client.containers.get(project.container_id)
+            container.stop()
+            container.remove()
+            # Remove project from internal cache and update the materialized
+            # mapping of projects to containers
+            del self.projects[project_id]
+            self.write_container_info()
+            return True
+        return False
 
     def get_branch(self, project_id, branch_id):
         """Get the branch with the given identifier for the specified project.
@@ -201,3 +271,17 @@ class ContainerProjectCache(ProjectCache):
         list(vizier.engine.project.base.ProjectHandle)
         """
         return self.projects.values()
+
+    def write_container_info(self):
+        """Write the current mapping of project identifier to project containers
+        to the object store container file.
+        """
+        self.store.write_object(
+            content=[{
+                'projectId': p.identifier,
+                'containerId': p.container_id,
+                'port': p.port,
+                'url': p.container_api
+            } for p in self.projects.values()],
+            object_path=self.container_file
+        )
