@@ -6,9 +6,10 @@ import unittest
 
 from vizier.datastore.annotation.base import DatasetAnnotation
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.base import METADATA_FILE
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.fs.base import FileSystemDatastore
-from vizier.datastore.fs.base import DATA_FILE, DESCRIPTOR_FILE, METADATA_FILE
+from vizier.datastore.fs.base import DATA_FILE, DESCRIPTOR_FILE
 from vizier.datastore.fs.base import validate_dataset
 from vizier.filestore.fs.base import FileSystemFilestore
 from vizier.filestore.base import FileHandle, FORMAT_TSV

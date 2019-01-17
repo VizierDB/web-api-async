@@ -43,6 +43,9 @@ STRING = 'str'
 
 ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
 
+"""Configuration default values for various properties."""
+DEFAULT_MAX_ROW_LIMIT = 1000
+
 
 class ConfigObject(object):
     """Object whose attributes contain the values of environment variables that

@@ -21,6 +21,8 @@ workflows.
 
 from abc import abstractmethod
 
+from vizier.datastore.annotation.dataset import DatasetMetadata
+
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -79,7 +81,10 @@ class DatasetColumn(object):
         -------
         string
         """
-        return self.name
+        name = self.name
+        if not self.data_type is None:
+             name += '(' + str(self.data_type) + ')'
+        return name
 
 
 class DatasetDescriptor(object):
@@ -258,7 +263,7 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None):
+    def __init__(self, identifier, columns=None, row_count=None, annotations=None):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -273,12 +278,15 @@ class DatasetHandle(DatasetDescriptor):
             identifier.
         row_count: int, optional
             Number of rows in the dataset
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+            Annotations for dataset components
         """
         super(DatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
             row_count=row_count
         )
+        self.annotations = annotations if not annotations is None else DatasetMetadata()
 
     def fetch_rows(self, offset=0, limit=-1):
         """Get list of dataset rows. The offset and limit parameters are
@@ -307,12 +315,20 @@ class DatasetHandle(DatasetDescriptor):
         return rows
 
     @abstractmethod
-    def get_annotations(self):
-        """Get all dataset annotations.
+    def get_annotations(self, column_id=None, row_id=None):
+        """Get all annotations for a given dataset resource. If both identifier
+        are None all dataset annotations are returned.
+
+        Parameters
+        ----------
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optional
+            Unique row identifier
 
         Returns
         -------
-        vizier.datastore.annotation.dataset.DatasetMetadata
+        list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
         raise NotImplementedError
 

@@ -1,6 +1,6 @@
-# Copyright (C) 2018 New York University
-#                    University at Buffalo,
-#                    Illinois Institute of Technology.
+# Copyright (C) 2017-2019 New York University,
+#                         University at Buffalo,
+#                         Illinois Institute of Technology.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,14 @@ workflows.
 
 from abc import abstractmethod
 
+import os
+
+from vizier.datastore.annotation.base import DatasetAnnotation
 from vizier.datastore.annotation.dataset import DatasetMetadata
+
+
+"""Metadata file name for datasets in the the default datastore."""
+METADATA_FILE = 'annotations.json'
 
 
 class Datastore(object):
@@ -159,6 +166,196 @@ class Datastore(object):
         raise NotImplementedError
 
 
+class DefaultDatastore(Datastore):
+    """Implementation of Vizier data store. Uses the file system to maintain
+    datasets. For each dataset a new subfolder is created. Within the folder the
+    dataset information is split across three files containing the descriptor,
+    annotation, and the dataset rows.
+    """
+    def __init__(self, base_path):
+        """Initialize the base directory that contains datasets. Each dataset is
+        maintained in a separate subfolder.
+
+        Parameters
+        ---------
+        base_path : string
+            Path to base directory for the datastore
+        """
+        # Create the base directory if it does not exist
+        self.base_path = os.path.abspath(base_path)
+        if not os.path.isdir(self.base_path):
+            os.makedirs(self.base_path)
+
+    def get_annotations(self, identifier, column_id=None, row_id=None):
+        """Get list of annotations for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
+
+        Parameters
+        ----------
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optiona
+            Unique row identifier
+
+        Returns
+        -------
+        vizier.datastore.annotation.dataset.DatasetMetadata
+        """
+        # Test if a subfolder for the given dataset identifier exists. If not
+        # return None.
+        dataset_dir = self.get_dataset_dir(identifier)
+        if not os.path.isdir(dataset_dir):
+            return None
+        annotations=DatasetMetadata.from_file(
+            self.get_metadata_filename(identifier)
+        )
+        if column_id is None and row_id is None:
+            return annotations
+        elif column_id is None:
+            return DatasetMetadata(rows=annotations.rows).filter(rows=[row_id])
+        elif row_id is None:
+            return DatasetMetadata(columns=annotations.columns).filter(
+                columns=[column_id]
+            )
+        else:
+            return DatasetMetadata(cells=annotations.cells).filter(
+                columns=[column_id],
+                rows=[row_id]
+            )
+
+    def get_dataset_dir(self, identifier):
+        """Get the base directory for a dataset with given identifier. Having a
+        separate method makes it easier to change the folder structure used to
+        store datasets.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.base_path, identifier)
+
+    def get_descriptor(self, identifier):
+        """Get the descriptor for the dataset with given identifier from the
+        data store. Returns None if no dataset with the given identifier exists.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self.get_dataset(identifier)
+
+    def get_metadata_filename(self, identifier):
+        """Get filename of meatdata file for the dataset with the given
+        identifier.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.get_dataset_dir(identifier), METADATA_FILE)
+
+    def update_annotation(
+        self, identifier, key, old_value=None, new_value=None, column_id=None,
+        row_id=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optional
+            Unique row identifier
+        key: string, optional
+            Annotation key
+        old_value: string, optional
+            Previous annotation value whan updating an existing annotation.
+        new_value: string, optional
+            Updated annotation value
+
+        Returns
+        -------
+        bool
+        """
+        # Raise ValueError if column id and row id are both None
+        if column_id is None and row_id is None:
+            raise ValueError('invalid dataset resource identifier')
+        # Return None if the dataset is unknown
+        dataset_dir = self.get_dataset_dir(identifier)
+        if not os.path.isdir(dataset_dir):
+            return None
+        # Read annotations from file, Evaluate update statement and write result
+        # back to file.
+        metadata_filename = self.get_metadata_filename(identifier)
+        annotations = DatasetMetadata.from_file(metadata_filename)
+        # Get object annotations
+        if column_id is None:
+            elements = annotations.rows
+        elif row_id is None:
+            elements = annotations.columns
+        else:
+            elements = annotations.cells
+        # Identify the type of operation: INSERT, DELETE or UPDATE
+        if old_value is None and not new_value is None:
+            elements.append(
+                DatasetAnnotation(
+                    key=key,
+                    value=new_value,
+                    column_id=column_id,
+                    row_id=row_id
+                )
+            )
+        elif not old_value is None and new_value is None:
+            del_index = None
+            for i in range(len(elements)):
+                a = elements[i]
+                if a.column_id == column_id and a.row_id == row_id:
+                    if a.key == key and a.value == old_value:
+                        del_index = i
+                        break
+            if del_index is None:
+                return False
+            del elements[del_index]
+        elif not old_value is None and not new_value is None:
+            anno = None
+            for a in elements:
+                if a.column_id == column_id and a.row_id == row_id:
+                    if a.key == key and a.value == old_value:
+                        anno = a
+                        break
+            if anno is None:
+                return False
+            anno.value = new_value
+        else:
+            raise ValueError('invalid modification operation')
+        # Write modified annotations to file
+        annotations.to_file(metadata_filename)
+        return True
+
+
 # ------------------------------------------------------------------------------
 #
 # Helper Methods
@@ -188,6 +385,32 @@ def collabel_2_index(label):
         else:
             return -1
     return num
+
+
+def encode_values(values):
+    """Encode a given list of cell values into utf-8 format.
+
+    Parameters
+    ----------
+    values: list(string)
+
+    Returns
+    -------
+    list(string)
+    """
+    result = list()
+    for val in values:
+        if isinstance(val, basestring):
+            try:
+                result.append(val.encode('utf-8'))
+            except UnicodeDecodeError as ex:
+                try:
+                    result.append(val.decode('cp1252').encode('utf-8'))
+                except UnicodeDecodeError as ex:
+                    result.append(val.decode('latin1').encode('utf-8'))
+        else:
+            result.append(val)
+    return result
 
 
 def get_column_index(columns, column_id):

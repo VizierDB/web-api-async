@@ -4,8 +4,7 @@ import os
 import shutil
 import unittest
 
-from vizier.datastore.fs.base import PARA_DIRECTORY
-from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.datastore.fs.factory import FileSystemDatastoreFactory, PARA_DIRECTORY
 
 
 SERVER_DIR = './.tmp'
@@ -39,7 +38,7 @@ class TestDefaultDatastoreFactory(unittest.TestCase):
         # ValueError if no base path is given
         with self.assertRaises(ValueError):
             FileSystemDatastoreFactory()
-            
+
 
 if __name__ == '__main__':
     unittest.main()

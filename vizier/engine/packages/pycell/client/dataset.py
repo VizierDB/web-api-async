@@ -69,7 +69,9 @@ class DatasetClient(object):
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
         if self._annotations is None:
-            self._annotations = self.dataset.get_annotations()
+            self._annotations = DatasetMetadata.from_list(
+                self.dataset.get_annotations()
+            )
         return self._annotations
 
     def column_index(self, column_id):

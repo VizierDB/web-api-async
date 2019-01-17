@@ -274,6 +274,37 @@ class DatasetMetadata(object):
             rows=rows
         )
 
+    @staticmethod
+    def from_list(values):
+        """Create dataset metadata instance from list of dataset annotations
+
+        Parameters
+        ----------
+        values: list(vizier.datastore.annotation.base.DatasetAnnotation)
+            List containing all annotations for a dataset
+
+        Returns
+        -------
+        vizier.database.annotation.dataset.DatsetMetadata
+        """
+        cells = list()
+        columns = list()
+        rows = list()
+        for anno in values:
+            if anno.column_id is None and anno.row_id is None:
+                raise ValueError('invalid dataset annotaiton')
+            elif anno.row_id is None:
+                columns.append(anno)
+            elif anno.column_id is None:
+                rows.append(anno)
+            else:
+                cells.append(anno)
+        return DatasetMetadata(
+            cells=cells,
+            columns=columns,
+            rows=rows
+        )
+
     def remove(self, key=None, value=None, column_id=None, row_id=None):
         """Remove annotations for a dataset resource. The resource type is
         determined based on the column and row identifier values. At least one

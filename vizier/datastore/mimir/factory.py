@@ -14,21 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Datastore factory implementation for the file system based datastore."""
+"""Datastore factory implementation for the Mimir datastore."""
 
 import os
 import shutil
 
 from vizier.datastore.factory import DatastoreFactory
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.mimir.store import MimirDatastore
 
 
 """Configuration parameter."""
 PARA_DIRECTORY = 'directory'
 
 
-class FileSystemDatastoreFactory(DatastoreFactory):
-    """Datastore factory for file system based datastores."""
+class MimirDatastoreFactory(DatastoreFactory):
+    """Datastore factory for Mimir datastores."""
     def __init__(self, base_path=None, properties=None):
         """Initialize the reference to the base directory that contains all
         datastore folders.
@@ -79,4 +79,4 @@ class FileSystemDatastoreFactory(DatastoreFactory):
         vizier.datastore.base.Datastore
         """
         datastore_dir = os.path.join(self.base_path, identifier)
-        return FileSystemDatastore(datastore_dir)
+        return MimirDatastore(datastore_dir)

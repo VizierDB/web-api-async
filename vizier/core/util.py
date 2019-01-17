@@ -16,6 +16,7 @@
 
 """Collection of helper methods."""
 
+import json
 import os
 import uuid
 
@@ -63,6 +64,25 @@ def delete_env(name):
     """
     if name in os.environ:
         del os.environ[name]
+
+
+def default_serialize(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, date):
+        serial = obj.isoformat()
+        return serial
+
+    if isinstance(obj, time):
+        serial = obj.isoformat()
+        return serial
+
+    return obj.__dict__
+
+
+def dump_json(obj, stream):
+    """Write Json serialization of the object to the given stream."""
+    stream.write(serialize(obj))
 
 
 def encode_values(values):
@@ -171,6 +191,26 @@ def is_valid_name(name):
     return (allnums > 0)
 
 
+def load_json(jsonstr):
+    """Get Json object from a given string.
+
+    Parameters
+    ----------
+    jsonstr: string
+        String containing representation of a Json object
+
+    Returns
+    -------
+    dict
+    """
+    try:
+        from types import SimpleNamespace as Namespace
+    except ImportError:
+        # Python 2.x fallback
+        from argparse import Namespace
+    return json.loads(jsonstr, object_hook=lambda d: vars(Namespace(**d)))
+
+
 def min_max(values):
     """Return the min and the max value from a list of values.
 
@@ -192,3 +232,8 @@ def min_max(values):
         if max_val < values[i]:
             max_val = values[i]
     return min_val, max_val
+
+
+def serialize(obj):
+    """Default Json resializer for python objects."""
+    return json.dumps(obj, default=default_serialize)

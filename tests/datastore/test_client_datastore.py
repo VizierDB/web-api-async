@@ -10,7 +10,7 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
 
 
-PROJECT_ID = '23885dc1'
+PROJECT_ID = '36ec09ec'
 
 
 def print_annotations(elements):
@@ -23,18 +23,6 @@ def print_annotations(elements):
             line += str(anno.row_id)
         line += ']: ' + anno.key + ' = ' + str(anno.value)
         print line
-
-
-def print_metadata(annotations):
-    if len(annotations.columns) > 0:
-        print 'COLUMNS'
-        print_annotations(annotations.columns)
-    if len(annotations.rows) > 0:
-        print 'ROWS'
-        print_annotations(annotations.rows)
-    if len(annotations.cells) > 0:
-        print 'CELLS'
-        print_annotations(annotations.cells)
 
 
 store = DatastoreClient(
@@ -61,7 +49,7 @@ for row in dh.fetch_rows():
     print [row.identifier] + row.values
 
 annotations = dh.get_annotations()
-print_metadata(annotations)
+print_annotations(annotations)
 
 store.update_annotation(
     identifier=dh.identifier,
@@ -80,7 +68,7 @@ store.update_annotation(
 )
 
 annotations = dh.get_annotations()
-print_metadata(annotations)
+print_annotations(annotations)
 
 store.update_annotation(
     identifier=dh.identifier,
@@ -91,7 +79,7 @@ store.update_annotation(
 )
 
 annotations = dh.get_annotations()
-print_metadata(annotations)
+print_annotations(annotations)
 
 store.update_annotation(
     identifier=dh.identifier,
@@ -103,4 +91,4 @@ store.update_annotation(
 )
 
 annotations = dh.get_annotations()
-print_metadata(annotations)
+print_annotations(annotations)
