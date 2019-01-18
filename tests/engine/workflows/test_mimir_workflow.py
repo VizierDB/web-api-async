@@ -54,7 +54,6 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         os.environ[app.VIZIERENGINE_DATA_DIR] = SERVER_DIR
         os.environ[app.VIZIERSERVER_PACKAGE_PATH] = PACKAGES_DIR
         os.environ[app.VIZIERSERVER_PROCESSOR_PATH] = PROCESSORS_DIR
-        os.environ[app.VIZIERENGINE_SYNCHRONOUS] = 'vizual.LOAD'
         self.engine = get_engine(AppConfig())
 
     def tearDown(self):

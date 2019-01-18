@@ -34,7 +34,7 @@
                         "value": "dataset"
                     }
                 ], 
-                "id": "DELETE_COLUMN", 
+                "id": "deleteColumn", 
                 "name": "Delete Column", 
                 "parameter": [
                     {
@@ -88,7 +88,7 @@
                         "value": "dataset"
                     }
                 ], 
-                "id": "DELETE_ROW", 
+                "id": "deleteRow", 
                 "name": "Delete Row", 
                 "parameter": [
                     {
@@ -130,7 +130,7 @@
                         "value": "dataset"
                     }
                 ], 
-                "id": "DROP_DATASET", 
+                "id": "dropDataset", 
                 "name": "Drop Dataset", 
                 "parameter": [
                     {
@@ -194,7 +194,7 @@
                         "value": "position"
                     }
                 ], 
-                "id": "INSERT_COLUMN", 
+                "id": "insertColumn", 
                 "name": "Insert Column", 
                 "parameter": [
                     {
@@ -268,7 +268,7 @@
                         "value": "position"
                     }
                 ], 
-                "id": "INSERT_ROW", 
+                "id": "insertRow", 
                 "name": "Insert Row", 
                 "parameter": [
                     {
@@ -322,7 +322,7 @@
                         "value": "file"
                     }
                 ], 
-                "id": "LOAD", 
+                "id": "load", 
                 "name": "Load Dataset", 
                 "parameter": [
                     {
@@ -340,6 +340,98 @@
                         "index": 1, 
                         "name": "Source File", 
                         "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadFormat", 
+                        "index": 2, 
+                        "name": "Load Format", 
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "CSV", 
+                                "value": "csv"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JSON", 
+                                "value": "json"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "XML", 
+                                "value": "com.databricks.spark.xml"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Excel", 
+                                "value": "com.crealytics.spark.excel"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JDBC Source", 
+                                "value": "jdbc"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Text", 
+                                "value": "text"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Parquet", 
+                                "value": "parquet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "ORC", 
+                                "value": "orc"
+                            }
+                        ]
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "loadInferTypes", 
+                        "index": 3, 
+                        "name": "Infer Types", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "loadDetectHeaders", 
+                        "index": 4, 
+                        "name": "Detect Headers", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "loadOptions", 
+                        "index": 5, 
+                        "name": "Load Options", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadOptionKey", 
+                        "index": 6, 
+                        "name": "Option Key", 
+                        "parent": "loadOptions", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadOptionValue", 
+                        "index": 7, 
+                        "name": "Option Value", 
+                        "parent": "loadOptions", 
+                        "required": false
                     }
                 ]
             }, 
@@ -394,7 +486,7 @@
                         "value": "position"
                     }
                 ], 
-                "id": "MOVE_COLUMN", 
+                "id": "moveColumn", 
                 "name": "Move Column", 
                 "parameter": [
                     {
@@ -474,7 +566,7 @@
                         "value": "position"
                     }
                 ], 
-                "id": "MOVE_ROW", 
+                "id": "moveRow", 
                 "name": "Move Row", 
                 "parameter": [
                     {
@@ -544,7 +636,7 @@
                         "value": "dataset"
                     }
                 ], 
-                "id": "PROJECTION", 
+                "id": "projection", 
                 "name": "Filter Columns", 
                 "parameter": [
                     {
@@ -628,7 +720,7 @@
                         "value": "name"
                     }
                 ], 
-                "id": "RENAME_COLUMN", 
+                "id": "renameColumn", 
                 "name": "Rename Column", 
                 "parameter": [
                     {
@@ -690,7 +782,7 @@
                         "value": "name"
                     }
                 ], 
-                "id": "RENAME_DATASET", 
+                "id": "renameDataset", 
                 "name": "Rename Dataset", 
                 "parameter": [
                     {
@@ -754,7 +846,7 @@
                         "value": "columns"
                     }
                 ], 
-                "id": "SORT_DATASET", 
+                "id": "sortDataset", 
                 "name": "Sort Dataset", 
                 "parameter": [
                     {
@@ -868,7 +960,7 @@
                         "value": "value"
                     }
                 ], 
-                "id": "UPDATE_CELL", 
+                "id": "updateCell", 
                 "name": "Update Cell", 
                 "parameter": [
                     {
@@ -888,7 +980,7 @@
                         "required": true
                     }, 
                     {
-                        "datatype": "rowidx", 
+                        "datatype": "rowid", 
                         "hidden": false, 
                         "id": "row", 
                         "index": 2, 

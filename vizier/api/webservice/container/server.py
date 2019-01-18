@@ -38,6 +38,7 @@ from vizier.viztrail.command import ModuleCommand
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
+import vizier.config.base as const
 
 
 # -----------------------------------------------------------------------------
@@ -476,6 +477,10 @@ def initialize():
     data twice since the API object is usually instatiated twice when the server
     starts.
     """
+    # Initialize the Mimir gateway if using Mimir engine
+    if config.engine.identifier == const.MIMIR_ENGINE:
+        import vizier.mimir as mimir
+        mimir.initialize()
     api.init()
 
 
