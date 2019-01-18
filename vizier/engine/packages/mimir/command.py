@@ -156,18 +156,16 @@ def mimir_missing_key(dataset_name, column, make_input_certain=False, validate=F
     )
 
 
-def mimir_missing_value(
-    dataset_name, column, constraint=None, make_input_certain=False,
-    validate=False
-):
+def mimir_missing_value(dataset_name, columns, make_input_certain=False, validate=False):
     """Create instance of mimir missing value lens command.
 
     Parameters
     ----------
     dataset_name: string
         Name of the dataset
-    column: string or int
-        Name or index for column
+    columns: list(dict)
+        List of dictionaries containing at least entry 'column' and optional
+        'constraint'
     constraint: string, optional
         Optional value constraint
     make_input_certain: bool, optional
@@ -179,13 +177,17 @@ def mimir_missing_value(
     -------
     vizier.viztrail.module.ModuleCommand
     """
+    column_list = list()
+    for col in columns:
+        col_arg = [md.ARG(id=pckg.PARA_COLUMN, value=col['column'])]
+        if 'constraint' in col:
+            col_arg.append(md.ARG(id=mimir.PARA_COLUMNS_CONSTRAINT, value=col['constraint']))
+        column_list.append(col_arg)
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
-        md.ARG(id=pckg.PARA_COLUMN, value=column),
+        md.ARG(id=mimir.PARA_COLUMNS, value=column_list),
         md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
     ]
-    if not constraint is None:
-        arguments.append(md.ARG(id=mimir.PARA_CONSTRAINT, value=constraint))
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,
         mimir.MIMIR_MISSING_VALUE,

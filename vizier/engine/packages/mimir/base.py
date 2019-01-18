@@ -37,7 +37,8 @@ MIMIR_TYPE_INFERENCE ='type_inference'
 # Command arguments
 PARA_CITY = 'city'
 PARA_COLUMN_NAME='column'
-PARA_CONSTRAINT = 'constraint'
+PARA_COLUMNS = 'columns'
+PARA_COLUMNS_CONSTRAINT = 'constraint'
 PARA_GEOCODER = 'geocoder'
 PARA_HOUSE_NUMBER = 'strnumber'
 PARA_MAKE_CERTAIN = 'makeInputCertain'
@@ -166,24 +167,42 @@ MIMIR_LENSES = pckg.package_declaration(
             name='Missing Value Lens',
             parameters=[
                 pckg.para_dataset(0),
-                pckg.para_column(1),
                 pckg.parameter_declaration(
-                    identifier=PARA_CONSTRAINT,
+                    identifier=PARA_COLUMNS,
+                    name='Columns',
+                    data_type=pckg.DT_LIST,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_COLUMN,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=2,
+                    parent=PARA_COLUMNS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_COLUMNS_CONSTRAINT,
                     name='Constraint',
                     data_type=pckg.DT_STRING,
-                    index=2,
+                    index=3,
+                    parent=PARA_COLUMNS,
                     required=False
                 ),
-                para_make_input_certain(3)
+                para_make_input_certain(4)
             ],
             format=[
                 pckg.constant_format('MISSING'),
                 pckg.constant_format('VALUES'),
                 pckg.constant_format('FOR'),
-                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.group_format(
+                    PARA_COLUMNS,
+                    format=[
+                        pckg.variable_format(pckg.PARA_COLUMN),
+                        pckg.optional_format(PARA_COLUMNS_CONSTRAINT, prefix='WITH CONSTRAINT ')
+                    ]
+                ),
                 pckg.constant_format('IN'),
                 pckg.variable_format(pckg.PARA_DATASET),
-                pckg.optional_format(PARA_CONSTRAINT, prefix='WITH CONSTRAINT ')
             ]
         ),
         pckg.command_declaration(

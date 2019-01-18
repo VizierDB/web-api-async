@@ -114,25 +114,27 @@ class TestValidateMimir(unittest.TestCase):
         """Test validation of Mimir missing value lens."""
         cmd = mimir_missing_value(
             dataset_name='ds',
-            column=1,
-            make_input_certain=True,
-            validate=True
-        ).to_external_form(
-            command=PACKAGE.get(mimir.MIMIR_MISSING_KEY),
-            datasets=DATASETS
-        )
-        self.assertEquals(cmd, 'MISSING KEYS FOR Street IN ds')
-        cmd = mimir_missing_value(
-            dataset_name='ds',
-            column=1,
-            constraint='> 40',
+            columns=[{'column': 1}],
             make_input_certain=True,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'MISSING VALUES FOR Street IN ds WITH CONSTRAINT \'> 40\'')
+        self.assertEquals(cmd, 'MISSING VALUES FOR Street IN ds')
+        cmd = mimir_missing_value(
+            dataset_name='ds',
+            columns=[
+                {'column': 1, 'constraint': '> 40'},
+                {'column': 2}
+            ],
+            make_input_certain=True,
+            validate=True
+        ).to_external_form(
+            command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
+            datasets=DATASETS
+        )
+        self.assertEquals(cmd, 'MISSING VALUES FOR Street WITH CONSTRAINT \'> 40\', \'Some Name\' IN ds')
 
     def test_mimir_picker(self):
         """Test validation of Mimir picker lens."""

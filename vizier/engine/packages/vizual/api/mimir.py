@@ -275,8 +275,8 @@ class MimirVizualApi(VizualApi):
         if position < 0 or position > len(dataset.row_ids):
             raise ValueError('invalid row index \'' + str(position) + '\'')
         # Get unique id for new row
-        dataset.row_counter += 1
         row_id = dataset.row_counter
+        dataset.row_counter += 1
         row_ids = list(dataset.row_ids)
         row_ids.insert(position, row_id)
         # Create a view for the modified schema
@@ -632,6 +632,7 @@ class MimirVizualApi(VizualApi):
         col_index = get_index_for_column(dataset, column_id)
         # Raise exception if row id is not valid
         if not row_id in dataset.row_ids:
+            print dataset.row_ids
             raise ValueError('invalid row id \'' + str(row_id) + '\'')
         # Create a view for the modified dataset
         col_list = [ROW_ID]

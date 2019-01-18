@@ -198,6 +198,30 @@ class DatasetDescriptor(object):
                 return i
         return None
 
+    def get_unique_name(self, name):
+        """Get a unique version of the given column name. If no column with the
+        given name exists the name itself is returned. Otherwise, we append
+        indices (starting at 1) to the name until a non-exisitng name is found.
+
+        Parameters
+        ----------
+        name: string
+             Column name
+
+        Returns
+        -------
+        string
+        """
+        names = [c.name.upper() for c in self.columns]
+        if not name.upper() in names:
+            return name
+        index = 1
+        while True:
+            col_name = name + '_' + str(index)
+            if not col_name.upper() in names:
+                return col_name
+            index += 1
+            
     def max_column_id(self):
         """Get maximum identifier for columns in the dataset schema. If the
         schema is empty the result is -1.

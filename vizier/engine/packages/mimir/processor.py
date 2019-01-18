@@ -15,17 +15,27 @@
 # limitations under the License.
 
 """Implementation of the task processor that executes commands that are defined
-in the default Mimir package declaration.
+in the Mimir lenses package.
 """
 
-from vizier.engine.task.processor import TaskProcessor
+from vizier.core.util import is_valid_name
+from vizier.datastore.mimir.dataset import MimirDatasetColumn
+from vizier.datastore.mimir.base import ROW_ID
+from vizier.datastore.mimir.store import create_missing_key_view
+from vizier.engine.task.processor import ExecResult, TaskProcessor
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.provenance import ModuleProvenance
+
+import vizier.engine.packages.base as pckg
+import vizier.engine.packages.mimir.base as cmd
+import vizier.mimir as mimir
 
 
 class MimirProcessor(TaskProcessor):
     """Task processor  to execute commands in the Mimir package."""
     def compute(self, command_id, arguments, context):
         """Compute results for commands in the Mimir package using the set of
-        user- provided arguments and the current database state.
+        user-provided arguments and the current database state.
 
         Parameters
         ----------
@@ -40,138 +50,144 @@ class MimirProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        # Get input arguments
-        lens = self.get_input('name')
-        args = self.get_input('arguments')
-        context = self.get_input('context')
-        # Get module identifier and VizierDB client for current workflow state
-        module_id = self.moduleInfo['moduleId']
-        vizierdb = get_env(module_id, context)
-        # Get command text. Catch potential exceptions (bugs) to avoid that the
-        # workflow execution breaks here.
-        #try:
-        cmd_text = self.to_string(lens, args, vizierdb)
-        #except Exception as ex:
-        #    cmd_text = 'MIMIR ' + str(name)
-        self.set_output('command', cmd_text)
-        # Module outputs
         outputs = ModuleOutputs()
         store_as_dataset = None
         update_rows = False
-        # Get dataset. Raise exception if dataset is unknown
-        ds_name = get_argument(cmd.PARA_DATASET, args).lower()
-        dataset_id = vizierdb.get_dataset_identifier(ds_name)
-        dataset = vizierdb.datastore.get_dataset(dataset_id)
-        if dataset is None:
-            raise ValueError('unknown dataset \'' + ds_name + '\'')
+        lens_annotations = []
+        # Get dataset. Raise exception if dataset is unknown.
+        ds_name = arguments.get_value(pckg.PARA_DATASET).lower()
+        dataset = context.get_dataset(ds_name)
         mimir_table_name = dataset.table_name
-        if lens == cmd.MIMIR_DOMAIN:
-            column = get_column_argument(dataset, args, cmd.PARA_COLUMN)
+        # Keep track of the name of the input dataset for the provenance
+        # information.
+        input_ds_name = ds_name
+        if command_id == cmd.MIMIR_DOMAIN:
+            column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = [column.name_in_rdb]
-        elif lens == cmd.MIMIR_GEOCODE:
-            geocoder = get_argument(cmd.PARA_GEOCODER, args)
+        elif command_id == cmd.MIMIR_GEOCODE:
+            geocoder = arguments.get_value(cmd.PARA_GEOCODER)
             params = ['GEOCODER(' + geocoder + ')']
-            add_param(params, 'HOUSE_NUMBER', dataset, args, cmd.PARA_HOUSE_NUMBER)
-            add_param(params, 'STREET', dataset, args, cmd.PARA_STREET)
-            add_param(params, 'CITY', dataset, args, cmd.PARA_CITY)
-            add_param(params, 'STATE', dataset, args, cmd.PARA_STATE)
+            add_column_parameter(params, 'HOUSE_NUMBER', dataset, arguments, cmd.PARA_HOUSE_NUMBER)
+            add_column_parameter(params, 'STREET', dataset, arguments, cmd.PARA_STREET)
+            add_column_parameter(params, 'CITY', dataset, arguments, cmd.PARA_CITY)
+            add_column_parameter(params, 'STATE', dataset, arguments, cmd.PARA_STATE)
             # Add columns for LATITUDE and LONGITUDE
-            c_id = dataset.column_counter
-            c_lat = COL_PREFIX + str(c_id)
-            dataset.columns.append(MimirDatasetColumn(c_id, 'LATITUDE', c_lat))
-            dataset.column_counter += 1
-            c_id = dataset.column_counter
-            c_lon = COL_PREFIX + str(c_id)
-            dataset.columns.append(MimirDatasetColumn(c_id, 'LONGITUDE', c_lon))
-            dataset.column_counter += 1
-            params.append('RESULT_COLUMNS(' + c_lat + ',' + c_lon + ')')
-        elif lens == cmd.MIMIR_KEY_REPAIR:
-            column = get_column_argument(dataset, args, cmd.PARA_COLUMN)
+            column_counter = dataset.max_column_id() + 1
+            cname_lat = dataset.get_unique_name('LATITUDE')
+            cname_lon = dataset.get_unique_name('LONGITUDE')
+            dataset.columns.append(
+                MimirDatasetColumn(
+                    identifier=column_counter,
+                    name_in_dataset=cname_lat
+                )
+            )
+            dataset.columns.append(
+                MimirDatasetColumn(
+                    identifier=column_counter + 1,
+                    name_in_dataset=cname_lon
+                )
+            )
+            params.append('RESULT_COLUMNS(' + cname_lat + ',' + cname_lon + ')')
+        elif command_id == cmd.MIMIR_KEY_REPAIR:
+            column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = [column.name_in_rdb]
             update_rows = True
-        elif lens == cmd.MIMIR_MISSING_KEY:
-            column = get_column_argument(dataset, args, cmd.PARA_COLUMN)
+        elif command_id == cmd.MIMIR_MISSING_KEY:
+            column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = [column.name_in_rdb]
             # Set MISSING ONLY to FALSE to ensure that all rows are returned
             params += ['MISSING_ONLY(FALSE)']
             # Need to run this lens twice in order to generate row ids for
             # any potential new tuple
-            mimir_table_name = mimir._mimir.createLens(
+            mimir_lens_response = mimir._mimir.createLens(
                 dataset.table_name,
                 mimir._jvmhelper.to_scala_seq(params),
-                lens,
-                get_argument(cmd.PARA_MAKE_CERTAIN, args),
+                command_id,
+                arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False
+            )
+            (mimir_table_name, lens_annotations) = (
+                mimir_lens_response.lensName(),
+                mimir_lens_response.annotations()
             )
             params = [ROW_ID, 'MISSING_ONLY(FALSE)']
             update_rows = True
-        elif lens == cmd.MIMIR_MISSING_VALUE:
-            column = get_column_argument(dataset, args, cmd.PARA_COLUMN)
-            params = column.name_in_rdb
-            if cmd.PARA_CONSTRAINT in args:
-                params = params + ' ' + str(args[cmd.PARA_CONSTRAINT])
-                params = '\'' + params + '\''
-            params = [params]
-        elif lens == cmd.MIMIR_PICKER:
+        elif command_id == cmd.MIMIR_MISSING_VALUE:
+            params = list()
+            for col in arguments.get_value(cmd.PARA_COLUMNS, default_value=[]):
+                f_col = dataset.column_by_id(col.get_value(pckg.PARA_COLUMN))
+                param = f_col.name_in_rdb
+                col_constraint = col.get_value(
+                    cmd.PARA_COLUMNS_CONSTRAINT,
+                    raise_error=False
+                )
+                if col_constraint == '':
+                    col_constraint = None
+                if not col_constraint is None:
+                    param = param + ' ' + str(col_constraint).replace("'", "''").replace("OR", ") OR (")
+                param = '\'(' + param + ')\''
+                params.append(param)
+        elif command_id == cmd.MIMIR_PICKER:
             pick_from = list()
             column_names = list()
-            for col in get_argument(cmd.PARA_SCHEMA, args):
-                c_col = get_argument(cmd.PARA_PICKFROM, col, as_int=True)
+            for col in arguments.get_value(cmd.PARA_SCHEMA):
+                c_col = col.get_value(cmd.PARA_PICKFROM)
                 column = dataset.column_by_id(c_col)
                 pick_from.append(column.name_in_rdb)
                 column_names.append(column.name.upper().replace(' ', '_'))
             # Add result column to dataset schema
-            pick_as = ''
-            if cmd.PARA_PICKAS in args:
-                pick_as = args[cmd.PARA_PICKAS].strip()
-            if pick_as == '':
-                pick_as = 'PICK_ONE_' + '_'.join(column_names)
-            target_column = COL_PREFIX + str(dataset.column_counter)
+            pick_as = arguments.get_value(
+                cmd.PARA_PICKAS,
+                default_value='PICK_ONE_' + '_'.join(column_names)
+            )
+            pick_as = dataset.get_unique_name(pick_as.strip().upper())
             dataset.columns.append(
                 MimirDatasetColumn(
-                    dataset.column_counter,
-                    pick_as,
-                    target_column
+                    identifier=dataset.max_column_id() + 1,
+                    name_in_dataset=pick_as
                 )
             )
-            dataset.column_counter += 1
             params = ['PICK_FROM(' + ','.join(pick_from) + ')']
-            params.append('PICK_AS(' + target_column + ')')
-        elif lens == cmd.MIMIR_SCHEMA_MATCHING:
-            store_as_dataset = get_argument(cmd.PARA_RESULT_DATASET, args)
-            if vizierdb.has_dataset_identifier(store_as_dataset):
+            params.append('PICK_AS(' + pick_as + ')')
+        elif command_id == cmd.MIMIR_SCHEMA_MATCHING:
+            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
+            if store_as_dataset in context.datasets:
                 raise ValueError('dataset \'' + store_as_dataset + '\' exists')
             if not is_valid_name(store_as_dataset):
                 raise ValueError('invalid dataset name \'' + store_as_dataset + '\'')
             column_names = list()
             params = ['\'' + ROW_ID + ' int\'']
-            for col in get_argument(cmd.PARA_SCHEMA, args):
-                c_name = get_argument(cmd.PARA_COLUMN, col)
-                c_type = get_argument(cmd.PARA_TYPE, col)
-                params.append('\'' + COL_PREFIX + str(len(column_names)) + ' ' + c_type + '\'')
+            for col in arguments.get_value(cmd.PARA_SCHEMA):
+                c_name = col.get_value(pckg.PARA_COLUMN)
+                c_type = col.get_value(cmd.PARA_TYPE)
+                params.append('\'' + c_name + ' ' + c_type + '\'')
                 column_names.append(c_name)
-        elif lens == cmd.MIMIR_TYPE_INFERENCE:
-            params = [str(get_argument(cmd.PARA_PERCENT_CONFORM, args))]
+        elif command_id == cmd.MIMIR_TYPE_INFERENCE:
+            params = [str(arguments.get_value(cmd.PARA_PERCENT_CONFORM))]
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
-        if lens in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
+        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
             lens_name = mimir._mimir.createAdaptiveSchema(
                 mimir_table_name,
                 mimir._jvmhelper.to_scala_seq(params),
-                lens
+                command_id.upper()
             )
         else:
-            lens_name = mimir._mimir.createLens(
+            mimir_lens_response = mimir._mimir.createLens(
                 mimir_table_name,
                 mimir._jvmhelper.to_scala_seq(params),
-                lens,
-                get_argument(cmd.PARA_MAKE_CERTAIN, args),
+                command_id.upper(),
+                arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False
+            )
+            (lens_name, lens_annotations) = (
+                mimir_lens_response.lensName(),
+                mimir_lens_response.annotations()
             )
         # Create a view including missing row ids for the result of a
         # MISSING KEY lens
-        if lens == cmd.MIMIR_MISSING_KEY:
+        if command_id == cmd.MIMIR_MISSING_KEY:
             lens_name, row_counter = create_missing_key_view(
                 dataset,
                 lens_name,
@@ -183,13 +199,13 @@ class MimirProcessor(TaskProcessor):
             columns = list()
             for c_name in column_names:
                 col_id = len(columns)
-                columns.append(MimirDatasetColumn(
-                    col_id,
-                    c_name,
-                    COL_PREFIX + str(col_id)
-                ))
-            #ds = vizierdb.datastore.create_dataset(table_name, columns)
-            ds = vizierdb.datastore.register_dataset(
+                columns.append(
+                    MimirDatasetColumn(
+                        identifier=col_id,
+                        name_in_dataset=c_name
+                    )
+                )
+            ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=columns,
                 row_ids=dataset.row_ids,
@@ -198,19 +214,86 @@ class MimirProcessor(TaskProcessor):
             )
             ds_name = store_as_dataset
         else:
-            ds = vizierdb.datastore.register_dataset(
+            ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=dataset.columns,
                 row_ids=dataset.row_ids,
-                column_counter=dataset.column_counter,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations,
                 update_rows=update_rows
             )
+        # Add dataset schema and returned annotations to output
         print_dataset_schema(outputs, ds_name, ds.columns)
-        vizierdb.set_dataset_identifier(ds_name, ds.identifier)
-        # Propagate potential changes to the dataset mappings
-        propagate_changes(module_id, vizierdb.datasets, context)
-        # Set the module outputs
-        self.set_output('context', context)
-        self.set_output('output', outputs)
+        print_lens_annotations(outputs, lens_annotations)
+        # Return task result
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=outputs),
+            provenance=ModuleProvenance(
+                read={input_ds_name: dataset.identifier},
+                write={ds_name: ds}
+            )
+        )
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def add_column_parameter(params, name, dataset, args, key):
+    """Add a Mimir lens parameter to the given list. This is a shortcut to add
+    a column parameter to a list of arguments for a lens.
+
+    params: list
+        List of Mimir lens parameters
+    name: string
+        Name of the parameter
+    dataset: vizier.datastore.base.DatasetHandle
+        Dataset handle
+    args : dict(dict())
+        Dictionary of command arguments
+    key : string
+        Argument name
+    """
+    column_id = args.get_value(key, raise_error=False)
+    if column_id is None:
+        return
+    column = dataset.column_by_id(column_id)
+    params.append(name + '(' + column.name_in_rdb + ')')
+
+
+def print_dataset_schema(outputs, name, columns):
+    """Add schema infromation for given dataset to cell output.
+
+    Parameters
+    ----------
+    outputs: vizier.workflow.module.ModuleOutputs
+        Cell outputt streams
+    name: string
+        Dataset name
+    columns: list(vizier.datasetore.base.DatasetColumn)
+        Columns in the dataset schema
+    """
+    outputs.stdout.append(TextOutput(name + ' ('))
+    for i in range(len(columns)):
+        text = '  ' + str(columns[i])
+        if i != len(columns) - 1:
+            text += ','
+        outputs.stdout.append(TextOutput(text))
+    outputs.stdout.append(TextOutput(')'))
+
+
+def print_lens_annotations(outputs, annotations):
+    """Add annotation infromation for given lens to cell output.
+
+    Parameters
+    ----------
+    outputs: vizier.workflow.module.ModuleOutputs
+        Cell outputt streams
+    annotations: dict
+        Annotations from first 200 rows of queried lens
+    """
+    if not annotations is None:
+        if len(annotations) > 0:
+            outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
+            for a in annotations:
+                outputs.stdout.append(TextOutput(str(a)))

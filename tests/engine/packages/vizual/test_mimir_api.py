@@ -679,7 +679,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         row_ids = ds.row_ids
         row0 = row_ids[0]
         row1 = row_ids[1]
-        row2 = ds.row_counter + 1
+        row2 = ds.row_counter
         ds = self.api.insert_row(ds.identifier, 1, self.datastore).dataset
         ds = self.api.insert_column(ds.identifier, 3, 'HDate', self.datastore).dataset
         ds = self.api.update_cell(ds.identifier, ds.column_by_name('HDate').identifier, row0, '180', self.datastore).dataset

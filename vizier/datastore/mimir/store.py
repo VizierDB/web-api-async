@@ -125,7 +125,7 @@ class MimirDatastore(DefaultDatastore):
             table_name=view_name,
             columns=db_columns,
             row_ids=row_ids,
-            row_counter=row_count,
+            row_counter=max(row_ids) + 1,
             annotations=annotations
         )
 
@@ -253,7 +253,7 @@ class MimirDatastore(DefaultDatastore):
         sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name
         rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
         row_ids = sorted(rs['prov'])
-        row_counter = row_ids[-1] if len(row_ids) > 0 else 0
+        row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
         return self.register_dataset(
             table_name=view_name,
             columns=columns,
@@ -332,17 +332,17 @@ class MimirDatastore(DefaultDatastore):
             data_type=col_types[base.ROW_ID]
         )
         # Set row counter to max. row id + 1 if None
-        if row_counter is None:
-            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + table_name
-            rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
-            row_counter = int(rs['data'][0][0])
+        #if row_counter is None:
+        #    sql = 'SELECT COUNT(*) AS RECCNT FROM ' + table_name
+        #    rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        #    row_counter = int(rs['data'][0][0]) + 1
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
             columns=map(lambda cn: self.bad_col_names.get(cn, cn), columns),
             rowid_column=rowid_column,
             table_name=table_name,
             row_ids=row_ids,
-            row_counter=row_counter,
+            row_counter=max(row_ids) + 1,
             annotations=annotations
         )
         # Create a new directory for the dataset if it doesn't exist.
@@ -355,3 +355,55 @@ class MimirDatastore(DefaultDatastore):
             self.get_metadata_filename(dataset.identifier)
         )
         return dataset
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def create_missing_key_view(dataset, lens_name, key_column):
+    """ Create a view for missing ROW_ID's on a MISSING_KEY lens.
+
+    Parameters
+    ----------
+    dataset: vizier.datastore.mimir.MimirDatasetHandle
+        Descriptor for the dataset on which the lens was created
+    lens_name: string
+        Identifier of the created MISSING_KEY lens
+    key_column: vizier.datastore.mimir.MimirDatasetColumn
+        Name of the column for which the missing values where generated
+
+    Returns
+    -------
+    string, int
+        Returns the name of the created view and the adjusted counter  for row
+        ids.
+    """
+    # Select the rows that have missing row ids
+    key_col_name = key_column.name_in_rdb
+    sql = 'SELECT ' + key_col_name + ' FROM ' + lens_name
+    sql += ' WHERE ' + ROW_ID + ' IS NULL'
+    rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+    case_conditions = []
+    for row in rs['data']:
+        row_id = dataset.row_counter + len(case_conditions)
+        val = str(row[0])
+        # If the key colum is of type real then we need to convert val into
+        # something that looks like a real
+        if key_column.data_type.lower() == 'real':
+            val += '.0'
+        case_conditions.append(
+            'WHEN ' + key_col_name + ' = ' + val + ' THEN ' + str(row_id)
+        )
+    # If no new rows where inserted we are good to go with the existing lens
+    if len(case_conditions) == 0:
+        return lens_name, dataset.row_counter
+    # Create the view SQL statement
+    stmt = 'CASE ' + (' '.join(case_conditions)).strip()
+    stmt += ' ELSE ' + ROW_ID + ' END AS ' + ROW_ID
+    col_list = [stmt]
+    for column in dataset.columns:
+        col_list.append(column.name_in_rdb)
+    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name
+    view_name = mimir._mimir.createView(dataset.table_name, sql)
+    return view_name, dataset.row_counter + len(case_conditions)

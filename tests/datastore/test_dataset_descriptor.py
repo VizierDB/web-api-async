@@ -85,5 +85,23 @@ class TestDatasetDescriptor(unittest.TestCase):
         self.assertEquals(ds.get_index(3), 2)
         self.assertEquals(ds.get_index(4), 0)
 
+    def test_unique_name(self):
+        """Test method that computes unique column names."""
+        ds = DatasetDescriptor(
+            identifier='0',
+            columns=[
+                DatasetColumn(identifier=0, name='ABC'),
+                DatasetColumn(identifier=1, name='A'),
+                DatasetColumn(identifier=2, name='ABC_1'),
+                DatasetColumn(identifier=3, name='DEF'),
+                DatasetColumn(identifier=4, name='xyz'),
+            ]
+        )
+        self.assertEquals(ds.get_unique_name('Age'), 'Age')
+        self.assertEquals(ds.get_unique_name('XYZ'), 'XYZ_1')
+        self.assertEquals(ds.get_unique_name('xyz'), 'xyz_1')
+        self.assertEquals(ds.get_unique_name('ABC'), 'ABC_2')
+
+
 if __name__ == '__main__':
     unittest.main()

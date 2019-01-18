@@ -64,15 +64,17 @@ class TestMimirCommandValidation(unittest.TestCase):
         # Test without constraint
         mimir.mimir_missing_value(
             dataset_name='ABC',
-            column=1,
+            columns=[{'column': 1}],
             make_input_certain=True,
             validate=True
         )
         # Test with constraint
         mimir.mimir_missing_value(
             dataset_name='ABC',
-            column=1,
-            constraint='>40',
+            columns=[
+                {'column': 1},
+                {'column': 2, 'constraint': '>40'}
+            ],
             make_input_certain=True,
             validate=True
         )
