@@ -146,7 +146,7 @@ class FileSystemDatastore(DefaultDatastore):
         shutil.rmtree(dataset_dir)
         return True
 
-    def download_dataset(self, uri, username=None, password=None, filestore=None):
+    def download_dataset(self, url, username=None, password=None, filestore=None):
         """Create a new dataset from a given file. Returns the handle for the
         downloaded file only if the filestore has been provided as an argument
         in which case the file handle is meaningful file handle.
@@ -155,7 +155,7 @@ class FileSystemDatastore(DefaultDatastore):
 
         Parameters
         ----------
-        uri : string
+        url : string
             Unique resource identifier for external resource that is accessed
         username: string, optional
             Optional user name for authentication
@@ -172,7 +172,7 @@ class FileSystemDatastore(DefaultDatastore):
         if not filestore is None:
             # Upload the file to the filestore to get the file handle
             fh = filestore.download_file(
-                uri=uri,
+                url=url,
                 username=username,
                 password=password
             )
@@ -183,8 +183,8 @@ class FileSystemDatastore(DefaultDatastore):
             # Manually download the file temporarily
             temp_dir = tempfile.mkdtemp()
             try:
-                response = urllib2.urlopen(uri)
-                filename = get_download_filename(uri, response.info())
+                response = urllib2.urlopen(url)
+                filename = get_download_filename(url, response.info())
                 download_file = os.path.join(temp_dir, filename)
                 mode = 'w'
                 if filename.endswith('.gz'):

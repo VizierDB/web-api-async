@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 from vizier.datastore.fs.base import FileSystemDatastore
-from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URI
+from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URL
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.filestore.fs.base import FileSystemFilestore
 
@@ -17,9 +17,9 @@ CSV_FILE = './.files/dataset.csv'
 SORT_FILE = './.files/dataset_for_sort.csv'
 
 # Note that some tests access an external resource to test download capabilities.
-# The test will fail if the specified resource is not available. Set the URI
-# to an available resource or to None to skip the download tests
-URI = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
+# The test will fail if the specified resource is not available. Set the
+# DOWNLOAD_URL to an available resource or to None to skip the download tests
+DOWNLOAD_URL = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 
 
@@ -340,14 +340,14 @@ class TestDefaultVizualApi(unittest.TestCase):
                 filestore=self.filestore,
                 file_id='unknown:uri'
             )
-        # Test loading file from external resource. Skip if URI is None
-        if URI is None:
+        # Test loading file from external resource. Skip if DOWNLOAD_URL is None
+        if DOWNLOAD_URL is None:
             print 'Skipping download test'
             return
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=URI
+            url=DOWNLOAD_URL
         )
         ds = result.dataset
         resources = result.resources
@@ -355,27 +355,27 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(len(ds.columns), 4)
         self.assertEquals(len(ds_rows), 54)
         self.assertIsNotNone(resources)
-        self.assertEquals(resources[RESOURCE_URI], URI)
+        self.assertEquals(resources[RESOURCE_URL], DOWNLOAD_URL)
         self.assertEquals(resources[RESOURCE_DATASET], ds.identifier)
         # Attempt to simulate re-running without downloading again. Set the
         # Uri to some fake Uri that would raise an exception if an attempt was
         # made to download
-        uri = 'some fake uri'
-        resources[RESOURCE_URI] = uri
+        url = 'some fake uri'
+        resources[RESOURCE_URL] = url
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=uri,
+            url=url,
             resources=resources
         )
         prev_id = result.dataset.identifier
         self.assertEquals(result.dataset.identifier, prev_id)
         # If we re-run with reload flag true a new dataset should be returned
-        resources[RESOURCE_URI] = URI
+        resources[RESOURCE_URL] = DOWNLOAD_URL
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=URI,
+            url=DOWNLOAD_URL,
             resources=resources,
             reload=True
         )

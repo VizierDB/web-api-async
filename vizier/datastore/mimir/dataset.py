@@ -227,7 +227,7 @@ class MimirDatasetHandle(DatasetHandle):
         super(MimirDatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_counter,
+            row_count=len(row_ids),
             annotations=annotations
         )
         self.rowid_column = rowid_column

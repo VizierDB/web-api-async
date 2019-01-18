@@ -82,12 +82,12 @@ class FileSystemFilestore(Filestore):
             return True
         return False
 
-    def download_file(self, uri, username=None, password=None):
+    def download_file(self, url, username=None, password=None):
         """Create a local copy of the identified web resource.
 
         Parameters
         ----------
-        uri : string
+        url : string
             Unique resource identifier for external resource that is accessed
         username: string, optional
             Optional user name for authentication
@@ -103,8 +103,8 @@ class FileSystemFilestore(Filestore):
         file_dir = self.get_file_dir(identifier, create=True)
         output_file = os.path.join(file_dir, DATA_FILENAME)
         # Write web resource to output file.
-        response = urllib2.urlopen(uri)
-        filename = get_download_filename(uri, response.info())
+        response = urllib2.urlopen(url)
+        filename = get_download_filename(url, response.info())
         mode = 'w'
         if filename.endswith('.gz'):
             mode += 'b'

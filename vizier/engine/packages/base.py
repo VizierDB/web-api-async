@@ -169,7 +169,7 @@ STRING_TYPES = [DT_DATASET_ID, DT_PYTHON_CODE, DT_STRING]
 """Elements for fileid dictionaries."""
 FILE_ID = 'fileId'
 FILE_NAME = 'filename'
-FILE_URI = 'uri'
+FILE_URL = 'url'
 FILE_USERNAME = 'userName'
 FILE_PASSWORD = 'password'
 FILE_RELOAD = 'reload'

@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 from vizier.datastore.mimir.store import MimirDatastore
-from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URI
+from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URL
 from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.filestore.fs.base import FileSystemFilestore
 
@@ -19,9 +19,9 @@ CSV_FILE = './.files/dataset.csv'
 SORT_FILE = './.files/dataset_for_sort.csv'
 
 # Note that some tests access an external resource to test download capabilities.
-# The test will fail if the specified resource is not available. Set the URI
-# to an available resource or to None to skip the download tests
-URI = None #'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
+# The test will fail if the specified resource is not available. Set the
+# DOWNLOAD_URL # to an available resource or to None to skip the download tests
+DOWNLOAD_URL = None #'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 
 
@@ -51,29 +51,29 @@ class TestDefaultVizualApi(unittest.TestCase):
         fresh environment after each test.
         """
         mimir.initialize()
-        #self.delete_column()
-        #self.setUp()
-        #self.delete_row()
-        #self.setUp()
-        #self.filter_columns()
-        #self.setUp()
-        #self.insert_column()
-        #self.setUp()
-        #self.insert_row()
-        #self.setUp()
-        #self.load_dataset()
-        #self.setUp()
-        #self.move_column()
-        #self.setUp()
-        #self.move_row()
-        #self.setUp()
-        #self.rename_column()
-        #self.setUp()
+        self.delete_column()
+        self.setUp()
+        self.delete_row()
+        self.setUp()
+        self.filter_columns()
+        self.setUp()
+        self.insert_column()
+        self.setUp()
+        self.insert_row()
+        self.setUp()
+        self.load_dataset()
+        self.setUp()
+        self.move_column()
+        self.setUp()
+        self.move_row()
+        self.setUp()
+        self.rename_column()
+        self.setUp()
         self.sequence_of_steps()
-        #self.setUp()
-        #self.sort_dataset()
-        #self.setUp()
-        #self.update_cell()
+        self.setUp()
+        self.sort_dataset()
+        self.setUp()
+        self.update_cell()
         mimir.finalize()
 
     def delete_column(self):
@@ -315,7 +315,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             self.assertIsNone(row.values[i])
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -372,14 +372,14 @@ class TestDefaultVizualApi(unittest.TestCase):
                 filestore=self.filestore,
                 file_id='unknown:uri'
             )
-        # Test loading file from external resource. Skip if URI is None
-        if URI is None:
+        # Test loading file from external resource. Skip if DOWNLOAD_URL is None
+        if DOWNLOAD_URL is None:
             print 'Skipping download test'
             return
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=URI,
+            url=DOWNLOAD_URL,
             options=[{'delimiter':'\t'}]
         )
         ds = result.dataset
@@ -388,27 +388,27 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(len(ds.columns), 4)
         self.assertEquals(len(ds_rows), 54)
         self.assertIsNotNone(resources)
-        self.assertEquals(resources[RESOURCE_URI], URI)
+        self.assertEquals(resources[RESOURCE_URL], DOWNLOAD_URL)
         self.assertEquals(resources[RESOURCE_DATASET], ds.identifier)
         # Attempt to simulate re-running without downloading again. Set the
         # Uri to some fake Uri that would raise an exception if an attempt was
         # made to download
-        uri = 'some fake uri'
-        resources[RESOURCE_URI] = uri
+        url = 'some fake uri'
+        resources[RESOURCE_URL] = url
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=uri,
+            url=url,
             resources=resources
         )
         prev_id = result.dataset.identifier
         self.assertEquals(result.dataset.identifier, prev_id)
         # If we re-run with reload flag true a new dataset should be returned
-        resources[RESOURCE_URI] = URI
+        resources[RESOURCE_URL] = DOWNLOAD_URL
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=URI,
+            url=DOWNLOAD_URL,
             resources=resources,
             reload=True,
             options=[{'delimiter':'\t'}]
@@ -454,7 +454,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(row.values[2], '30K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -483,7 +483,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(row.values[2], 'Bob')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -571,7 +571,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(row.values[2], '30K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -590,7 +590,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(row.values[2], '35K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -647,7 +647,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
@@ -780,7 +780,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals(row.values[ds.column_index('Name')], 'AValue')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])

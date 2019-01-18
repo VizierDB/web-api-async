@@ -25,9 +25,9 @@ FILE = FileHandle(
 )
 
 # Note that some tests access an external resource to test download capabilities.
-# The test will fail if the specified resource is not available. Set the URI
-# to an available resource or to None to skip the download tests
-URI = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
+# The test will fail if the specified resource is not available. Set the
+# DOWNLOAD_URL to an available resource or to None to skip the download tests
+DOWNLOAD_URL = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 class TestFileSystemDatastore(unittest.TestCase):
 
@@ -229,12 +229,12 @@ class TestFileSystemDatastore(unittest.TestCase):
     def test_download_dataset(self):
         """Test loading a dataset from Url. Note that this test depends on the
         accessed web service to be running. It will fail otherwise."""
-        # Skip test if URI is None
-        if URI is None:
+        # Skip test if DOWNLOAD_URL is None
+        if DOWNLOAD_URL is None:
             print 'Skipping download test'
             return
         store = FileSystemDatastore(STORE_DIR)
-        ds = store.download_dataset(uri=URI)
+        ds = store.download_dataset(url=DOWNLOAD_URL)
         dataset_dir = os.path.join(STORE_DIR, ds.identifier)
         self.assertTrue(os.path.isdir(dataset_dir))
         self.assertTrue(os.path.isfile(os.path.join(dataset_dir, DATA_FILE)))
@@ -244,7 +244,7 @@ class TestFileSystemDatastore(unittest.TestCase):
         # Download file into a given filestore
         fs = FileSystemFilestore(FSSTORE_DIR)
         ds, fh = store.download_dataset(
-            uri=URI,
+            url=DOWNLOAD_URL,
             filestore=fs
         )
         self.validate_class_size_dataset(ds)

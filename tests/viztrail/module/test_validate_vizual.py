@@ -76,7 +76,7 @@ class TestValidateVizual(unittest.TestCase):
         self.assertEquals(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
         cmd = load_dataset(
             dataset_name='ds',
-            file={pckg.FILE_URI: 'http://some.file.url'},
+            file={pckg.FILE_URL: 'http://some.file.url'},
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
@@ -85,7 +85,7 @@ class TestValidateVizual(unittest.TestCase):
         self.assertEquals(cmd, 'LOAD DATASET ds FROM http://some.file.url')
         cmd = load_dataset(
             dataset_name='ds',
-            file={pckg.FILE_ID: fh.identifier, pckg.FILE_URI: 'http://some.file.url'},
+            file={pckg.FILE_ID: fh.identifier, pckg.FILE_URL: 'http://some.file.url'},
             validate=True
         ).to_external_form(
             command=PACKAGE.get(vizual.VIZUAL_LOAD),

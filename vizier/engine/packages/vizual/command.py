@@ -169,7 +169,7 @@ def load_dataset(
     dataset_name: string
         Name for the new dataset
     file: dict
-        Dictionary containing at least one of 'fileId' or 'uri' and optional
+        Dictionary containing at least one of 'fileId' or 'url' and optional
         'userName' and 'password'.
     detect_headers: bool, optional
         Detect column names in loaded file if True

@@ -210,8 +210,8 @@ class ModuleArguments(object):
                                 datasets=datasets
                             )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
-                            if pckg.FILE_URI in value:
-                                token = value[pckg.FILE_URI]
+                            if pckg.FILE_URL in value:
+                                token = value[pckg.FILE_URL]
                             elif pckg.FILE_NAME in value:
                                 token = format_str(value[pckg.FILE_NAME])
                             elif pckg.FILE_ID in value:
@@ -313,7 +313,7 @@ class ModuleArguments(object):
                 # an uri element
                 if not isinstance(arg_value, dict):
                     raise ValueError('expected dictionary for \'' + str(arg_id) + '\'')
-                if not pckg.FILE_ID in arg_value and not pckg.FILE_URI in arg_value:
+                if not pckg.FILE_ID in arg_value and not pckg.FILE_URL in arg_value:
                     raise ValueError('invalid file identifier')
             elif datatype == pckg.DT_LIST:
                 if not isinstance(arg_value, list):

@@ -27,6 +27,7 @@ from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
+from vizier.datastore.mimir.factory import MimirDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.backend.remote.celery.base import CeleryBackend
 from vizier.engine.base import VizierEngine
@@ -151,11 +152,14 @@ def get_engine(config):
     # on the values of engine identifier (DEV or MIMIR).
     base_dir = config.engine.data_dir
     viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
-    if config.engine.identifier == base.DEV_ENGINE:
-        datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+    if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
-        datastore_factory=FileSystemDatastoreFactory(datastores_dir)
         filestore_factory=FileSystemFilestoreFactory(filestores_dir)
+        datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+        if config.engine.identifier == base.DEV_ENGINE:
+            datastore_factory = FileSystemDatastoreFactory(datastores_dir)
+        else:
+            datastore_factory = MimirDatastoreFactory(datastores_dir)
     else:
         raise ValueError('unknown vizier engine \'' + str(config.engine.identifier) + '\'')
     # The default engine uses a common project cache.

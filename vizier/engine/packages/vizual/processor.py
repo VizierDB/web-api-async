@@ -384,19 +384,27 @@ class VizualTaskProcessor(TaskProcessor):
         # descriptor is invalid.
         source_desc = args.get_value(cmd.PARA_FILE)
         file_id = None
-        uri = None
+        url = None
         if pckg.FILE_ID in source_desc:
             file_id = source_desc[pckg.FILE_ID]
-        elif pckg.FILE_URI in source_desc:
-            uri = source_desc[pckg.FILE_URI]
+        elif pckg.FILE_URL in source_desc:
+            url = source_desc[pckg.FILE_URL]
         else:
             raise ValueError('invalid source descriptor')
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
         reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
-        detect_headers = args.get_value(cmd.PARA_DETECT_HEADERS, raise_error=False)
-        infer_types = args.get_value(cmd.PARA_INFER_TYPES, raise_error=False)
+        detect_headers = args.get_value(
+            cmd.PARA_DETECT_HEADERS,
+            raise_error=False,
+            default_value=True
+        )
+        infer_types = args.get_value(
+            cmd.PARA_INFER_TYPES,
+            raise_error=False,
+            default_value=True
+        )
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
         if not options is None:
@@ -409,7 +417,7 @@ class VizualTaskProcessor(TaskProcessor):
             datastore=context.datastore,
             filestore=context.filestore,
             file_id=file_id,
-            uri=uri,
+            url=url,
             detect_headers=detect_headers,
             infer_types=infer_types,
             load_format=load_format,

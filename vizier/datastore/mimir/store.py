@@ -53,16 +53,16 @@ class MimirDatastore(DefaultDatastore):
     Note that every write_dataset call creates a new table in the underlying
     Mimir database. Other datasets are views on these tables.
     """
-    def __init__(self, base_dir):
+    def __init__(self, base_path):
         """Initialize the base directory that contains the dataset index and
         metadata files.
 
         Parameters
         ----------
-        base_dir: string
+        base_path: string
             Name of the directory where metadata is stored
         """
-        super(MimirDatastore, self).__init__(base_dir)
+        super(MimirDatastore, self).__init__(base_path)
         self.bad_col_names = {"ABORT":"`ABORT`", "ACTION":"`ACTION`", "ADD":"`ADD`", "AFTER":"`AFTER`", "ALL":"`ALL`", "ALTER":"`ALTER`", "ANALYZE":"`ANALYZE`", "AND":"`AND`", "AS":"`AS`", "ASC":"`ASC`", "ATTACH":"`ATTACH`", "AUTOINCREMENT":"`AUTOINCREMENT`", "BEFORE":"`BEFORE`", "BEGIN":"`BEGIN`", "BETWEEN":"`BETWEEN`", "BY":"`BY`", "CASCADE":"`CASCADE`", "CASE":"`CASE`", "CAST":"`CAST`", "CHECK":"`CHECK`", "COLLATE":"`COLLATE`", "COLUMN":"`COLUMN`", "COMMIT":"`COMMIT`", "CONFLICT":"`CONFLICT`", "CONSTRAINT":"`CONSTRAINT`", "CREATE":"`CREATE`", "CROSS":"`CROSS`", "CURRENT":"`CURRENT`", "CURRENT_DATE":"`CURRENT_DATE`", "CURRENT_TIME":"`CURRENT_TIME`", "CURRENT_TIMESTAMP":"`CURRENT_TIMESTAMP`", "DATABASE":"`DATABASE`", "DEFAULT":"`DEFAULT`", "DEFERRABLE":"`DEFERRABLE`", "DEFERRED":"`DEFERRED`", "DELETE":"`DELETE`", "DESC":"`DESC`", "DETACH":"`DETACH`", "DISTINCT":"`DISTINCT`", "DO":"`DO`", "DROP":"`DROP`", "EACH":"`EACH`", "ELSE":"`ELSE`", "END":"`END`", "ESCAPE":"`ESCAPE`", "EXCEPT":"`EXCEPT`", "EXCLUSIVE":"`EXCLUSIVE`", "EXISTS":"`EXISTS`", "EXPLAIN":"`EXPLAIN`", "FAIL":"`FAIL`", "FILTER":"`FILTER`", "FOLLOWING":"`FOLLOWING`", "FOR":"`FOR`", "FOREIGN":"`FOREIGN`", "FROM":"`FROM`", "FULL":"`FULL`", "GLOB":"`GLOB`", "GROUP":"`GROUP`", "HAVING":"`HAVING`", "IF":"`IF`", "IGNORE":"`IGNORE`", "IMMEDIATE":"`IMMEDIATE`", "IN":"`IN`", "INDEX":"`INDEX`", "INDEXED":"`INDEXED`", "INITIALLY":"`INITIALLY`", "INNER":"`INNER`", "INSERT":"`INSERT`", "INSTEAD":"`INSTEAD`", "INTERSECT":"`INTERSECT`", "INTO":"`INTO`", "IS":"`IS`", "ISNULL":"`ISNULL`", "JOIN":"`JOIN`", "KEY":"`KEY`", "LEFT":"`LEFT`", "LIKE":"`LIKE`", "LIMIT":"`LIMIT`", "MATCH":"`MATCH`", "NATURAL":"`NATURAL`", "NO":"`NO`", "NOT":"`NOT`", "NOTHING":"`NOTHING`", "NOTNULL":"`NOTNULL`", "NULL":"`NULL`", "OF":"`OF`", "OFFSET":"`OFFSET`", "ON":"`ON`", "OR":"`OR`", "ORDER":"`ORDER`", "OUTER":"`OUTER`", "OVER":"`OVER`", "PARTITION":"`PARTITION`", "PLAN":"`PLAN`", "PRAGMA":"`PRAGMA`", "PRECEDING":"`PRECEDING`", "PRIMARY":"`PRIMARY`", "QUERY":"`QUERY`", "RAISE":"`RAISE`", "RANGE":"`RANGE`", "RECURSIVE":"`RECURSIVE`", "REFERENCES":"`REFERENCES`", "REGEXP":"`REGEXP`", "REINDEX":"`REINDEX`", "RELEASE":"`RELEASE`", "RENAME":"`RENAME`", "REPLACE":"`REPLACE`", "RESTRICT":"`RESTRICT`", "RIGHT":"`RIGHT`", "ROLLBACK":"`ROLLBACK`", "ROW":"`ROW`", "ROWS":"`ROWS`", "SAVEPOINT":"`SAVEPOINT`", "SELECT":"`SELECT`", "SET":"`SET`", "TABLE":"`TABLE`", "TEMP":"`TEMP`", "TEMPORARY":"`TEMPORARY`", "THEN":"`THEN`", "TO":"`TO`", "TRANSACTION":"`TRANSACTION`", "TRIGGER":"`TRIGGER`", "UNBOUNDED":"`UNBOUNDED`", "UNION":"`UNION`", "UNIQUE":"`UNIQUE`", "UPDATE":"`UPDATE`", "USING":"`USING`", "VACUUM":"`VACUUM`", "VALUES":"`VALUES`", "VIEW":"`VIEW`", "VIRTUAL":"`VIRTUAL`", "WHEN":"`WHEN`", "WHERE":"`WHERE`", "WINDOW":"`WINDOW`", "WITH":"`WITH`", "WITHOUT":"`WITHOUT`"}
 
     def create_dataset(self, columns, rows, annotations=None):
@@ -86,7 +86,7 @@ class MimirDatastore(DefaultDatastore):
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
         # Write rows to temporary file in CSV format
-        tmp_file = os.path.abspath(self.base_dir + identifier)
+        tmp_file = os.path.abspath(self.base_path + identifier)
         # Create a list of columns that contain the user-vizible column name and
         # the name in the database
         db_columns = list()
@@ -119,7 +119,7 @@ class MimirDatastore(DefaultDatastore):
         # Get unique identifier for all rows in the created dataset
         sql = 'SELECT * FROM ' + view_name
         rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
-        row_ids = rs['prov']
+        row_ids = sorted(rs['prov'])
         # Insert the new dataset metadata information into the datastore
         return self.register_dataset(
             table_name=view_name,
@@ -169,7 +169,10 @@ class MimirDatastore(DefaultDatastore):
             annotations=annotations
         )
 
-    def load_dataset(self, f_handle=None, url=None, detect_headers=True, infer_types=True, load_format='csv', options=[]):
+    def load_dataset(
+        self, f_handle=None, url=None, detect_headers=True, infer_types=True,
+        load_format='csv', options=[]
+    ):
         """Create a new dataset from a given file or url. Expects that either
         the file handle or the url are not None. Raises ValueError if both are
         None or not None.
@@ -200,7 +203,7 @@ class MimirDatastore(DefaultDatastore):
             raise ValueError('too many load sources given')
         elif url is None:
              # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
-            abspath = f_handle.filepath
+             abspath = f_handle.filepath
         elif not url is None:
             abspath = url
         # Load dataset into Mimir

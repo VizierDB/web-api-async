@@ -19,6 +19,7 @@ import vizier.engine.packages.base as pckg
 SERVER_DIR = './.tmp'
 PACKAGES_DIR = './.files/packages'
 PROCESSORS_DIR = './.files/processors/mimir'
+#PROCESSORS_DIR = './.files/processors'
 
 CSV_FILE = './.files/people.csv'
 
@@ -53,6 +54,7 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         os.environ[app.VIZIERENGINE_DATA_DIR] = SERVER_DIR
         os.environ[app.VIZIERSERVER_PACKAGE_PATH] = PACKAGES_DIR
         os.environ[app.VIZIERSERVER_PROCESSOR_PATH] = PROCESSORS_DIR
+        os.environ[app.VIZIERENGINE_SYNCHRONOUS] = 'vizual.LOAD'
         self.engine = get_engine(AppConfig())
 
     def tearDown(self):
@@ -71,7 +73,10 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         fh = project.filestore.upload_file(CSV_FILE)
         cmd = load_dataset(
             dataset_name=DATASET_PEOPLE,
-            file={pckg.FILE_ID: fh.identifier}
+            file={
+                pckg.FILE_ID: fh.identifier,
+                pckg.FILE_NAME: os.path.basename(CSV_FILE)
+            }
         )
         self.engine.append_workflow_module(
             project_id=project.identifier,
@@ -87,6 +92,8 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         wf = project.viztrail.default_branch.head
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
+        for m in wf.modules:
+            self.assertTrue(m.is_success)
         cmd = python_cell(CREATE_DATASET_PY)
         self.engine.insert_workflow_module(
             project_id=project.identifier,
@@ -105,15 +112,13 @@ class TestMimirBackendWorkflows(unittest.TestCase):
             self.assertTrue(DATASET_FRIENDS in m.datasets)
             self.assertTrue(DATASET_PEOPLE in m.datasets)
         ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_PEOPLE].identifier)
-        for row in ds.fetch_rows():
-            print str(row.identifier) + '\t' + str(row.values)
         rows = ds.fetch_rows()
         self.assertEquals(rows[0].values, ['Alice', 24])
         self.assertEquals(rows[1].values, ['Bob', 32])
         ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_FRIENDS].identifier)
         rows = ds.fetch_rows()
         self.assertEquals(rows[0].values, ['Yonder', 23])
-        self.assertEquals(rows[1].values, ['Zoe', 32])
+        self.assertEquals(rows[1].values, ['Zoe', 34])
         mimir.finalize()
 
 
