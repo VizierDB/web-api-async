@@ -30,6 +30,7 @@ import sys
 from vizier.engine.packages.mimir.base import export_package as export_mimir
 from vizier.engine.packages.plot.base import export_package as export_plot
 from vizier.engine.packages.pycell.base import export_package as export_python
+from vizier.engine.packages.scala.base import export_package as export_scala
 from vizier.engine.packages.vizual.base import export_package as export_vizual
 
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) < 1 or len(args) > 3:
         print """Usage:
-  <package-name> [ MIMIR | PLOT | PYTHON | VIZUAL ]
+  <package-name> [ MIMIR | PLOT | PYTHON | SCALA | VIZUAL ]
   <file-name>
   {<format> [YAML | JSON]}"""
         sys.exit(-1)
@@ -55,6 +56,8 @@ if __name__ == '__main__':
         export_plot(filename, format=format)
     elif name.upper() == 'PYTHON':
         export_python(filename, format=format)
+    elif name.upper() == 'SCALA':
+        export_scala(filename, format=format)
     elif name.upper() == 'VIZUAL':
         export_vizual(filename, format=format)
     else:

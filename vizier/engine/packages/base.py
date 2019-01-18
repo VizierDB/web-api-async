@@ -142,7 +142,9 @@ DT_PYTHON_CODE = 'pyCode'
 DT_RECORD = 'record'
 DT_ROW_INDEX = 'rowidx'
 DT_ROW_ID = 'rowid'
+DT_SCALA_CODE = 'scalaCode'
 DT_SCALAR = 'scalar'
+DT_SQL_CODE = 'sqlCode'
 DT_STRING = 'string'
 
 DATA_TYPES = [
@@ -157,13 +159,17 @@ DATA_TYPES = [
     DT_RECORD,
     DT_ROW_INDEX,
     DT_ROW_ID,
+    DT_SCALA_CODE,
     DT_SCALAR,
+    DT_SQL_CODE,
     DT_STRING
 ]
 
 """Argument data types that expect an integer or string values."""
+DT_CODE = [DT_PYTHON_CODE, DT_SCALA_CODE, DT_SQL_CODE]
 INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX, DT_ROW_ID]
-STRING_TYPES = [DT_DATASET_ID, DT_PYTHON_CODE, DT_STRING]
+STRING_TYPES = [DT_DATASET_ID, DT_STRING] + DT_CODE
+
 
 
 """Elements for fileid dictionaries."""

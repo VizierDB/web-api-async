@@ -236,7 +236,7 @@ class ModuleArguments(object):
                                     else:
                                         delimiter = ', '
                                     token = delimiter.join(subcmd)
-                        elif var[pckg.LABEL_DATATYPE] != pckg.DT_PYTHON_CODE:
+                        elif var[pckg.LABEL_DATATYPE] not in pckg.DT_CODE:
                             token = format_str(str(value))
                         else:
                             token = str(value)

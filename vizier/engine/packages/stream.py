@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Class to redirect output streams during Python script execution."""
+"""Class to redirect output streams during script execution."""
 
 
 class OutputStream(object):
     """Output stream for standard output and standard error streams when
-    executing Python code in a pycell.
+    executing scripts in a notebook cell.
     """
     def __init__(self, tag, stream):
         self.closed = False

@@ -21,7 +21,7 @@ import sys
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
-from vizier.engine.packages.pycell.stream import OutputStream
+from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
