@@ -7,7 +7,8 @@ import unittest
 from vizier.core.loader import ClassLoader
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.task.base import TaskContext
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi, RESOURCE_DATASET
+from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET
+from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor, PROPERTY_API
 from vizier.filestore.fs.base import FileSystemFilestore
 

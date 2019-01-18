@@ -1,6 +1,6 @@
-# Copyright (C) 2018 New York University,
-#                    University at Buffalo,
-#                    Illinois Institute of Technology.
+# Copyright (C) 2017-2019 New York University,
+#                         University at Buffalo,
+#                         Illinois Institute of Technology.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,12 @@ Each vizual command will create a new dataset instance on success.
 from abc import abstractmethod
 
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+
+
+"""Labels for resources in a previous download state."""
+RESOURCE_DATASET = 'dataset'
+RESOURCE_FILEID = 'fileid'
+RESOURCE_URI = 'uri'
 
 
 class VizualApiResult(object):
@@ -176,8 +182,9 @@ class VizualApi(object):
 
     @abstractmethod
     def load_dataset(
-        self, datastore, filestore, file_id=None, uri=None, username=None,
-        password=None, resources=None, reload=False
+        self, datastore, filestore, file_id=None, uri=None, detect_headers=True,
+        infer_types=True, load_format='csv', options=[], username=None,
+        password=None, resources=None, reload=False,
     ):
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the uri are not None but
@@ -199,6 +206,14 @@ class VizualApi(object):
             Identifier for a file in an associated filestore
         uri: string, optional
             Identifier for a web resource
+        detect_headers: bool, optional
+            Detect column names in loaded file if True
+        infer_types: bool, optional
+            Infer column types for loaded dataset if True
+        load_format: string, optional
+            Format identifier
+        options: list, optional
+            Additional options for Mimirs load command
         username: string, optional
             User name for authentication when accessing restricted resources
         password: string, optional
@@ -321,7 +336,7 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def update_cell(self, identifier, column_id, row_index, value, datastore):
+    def update_cell(self, identifier, column_id, row_id, value, datastore):
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -333,8 +348,8 @@ class VizualApi(object):
             Unique dataset identifier
         column_id: int
             Unique column identifier for updated cell
-        row_index: int
-            Row index for updated cell (starting at 0)
+        row_id: int
+            Unique row identifier
         value: string
             New cell value
         datastore : vizier.datastore.fs.base.FileSystemDatastore

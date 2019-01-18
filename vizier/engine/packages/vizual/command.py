@@ -158,7 +158,10 @@ def insert_row(dataset_name, position, validate=False):
     )
 
 
-def load_dataset(dataset_name, file, validate=False):
+def load_dataset(
+    dataset_name, file, detect_headers=None, infer_types=None, load_format='csv',
+    options=None, validate=False
+):
     """Create instance of load dataset command.
 
     Parameters
@@ -168,6 +171,14 @@ def load_dataset(dataset_name, file, validate=False):
     file: dict
         Dictionary containing at least one of 'fileId' or 'uri' and optional
         'userName' and 'password'.
+    detect_headers: bool, optional
+        Detect column names in loaded file if True
+    infer_types: bool, optional
+        Infer column types for loaded dataset if True
+    load_format: string, optional
+        Format identifier
+    options: list, optional
+        Additional options for Mimirs load command
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -175,13 +186,30 @@ def load_dataset(dataset_name, file, validate=False):
     -------
     vizier.engine.module.ModuleCommand
     """
+    arguments = [
+        md.ARG(id=vizual.PARA_FILE, value=file),
+        md.ARG(id=pckg.PARA_NAME, value=dataset_name)
+    ]
+    if not detect_headers is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_DETECT_HEADERS, value=detect_headers)
+        )
+    if not infer_types is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_INFER_TYPES, value=infer_types)
+        )
+    if not load_format is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_LOAD_FORMAT, value=load_format)
+        )
+    if not options is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_LOAD_OPTIONS, value=options)
+        )
     return md.ModuleCommand(
         vizual.PACKAGE_VIZUAL,
         vizual.VIZUAL_LOAD,
-        arguments =[
-            md.ARG(id=vizual.PARA_FILE, value=file),
-            md.ARG(id=pckg.PARA_NAME, value=dataset_name)
-        ],
+        arguments=arguments,
         packages=PACKAGE(validate=validate)
     )
 
@@ -386,7 +414,7 @@ def update_cell(dataset_name, column, row, value, validate=False):
     column: int
         Cell column identifier
     row: int
-        Cell row index
+        Unique row identifier for cell
     value: string
         New cell value
     validate: bool, optional

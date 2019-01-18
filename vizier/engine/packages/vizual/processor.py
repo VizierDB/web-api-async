@@ -394,12 +394,26 @@ class VizualTaskProcessor(TaskProcessor):
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
         reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
+        load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
+        detect_headers = args.get_value(cmd.PARA_DETECT_HEADERS, raise_error=False)
+        infer_types = args.get_value(cmd.PARA_INFER_TYPES, raise_error=False)
+        options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
+        m_opts = []
+        if not options is None:
+            for option in options:
+                load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
+                load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
+                m_opts.append({load_opt_key: load_opt_val})
         # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,
             filestore=context.filestore,
             file_id=file_id,
             uri=uri,
+            detect_headers=detect_headers,
+            infer_types=infer_types,
+            load_format=load_format,
+            options=m_opts,
             username=username,
             password=password,
             resources=context.resources,
@@ -636,7 +650,7 @@ class VizualTaskProcessor(TaskProcessor):
         # Get dataset name, cell coordinates, and update value.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
         column_id = args.get_value(pckg.PARA_COLUMN)
-        row_index = args.get_value(cmd.PARA_ROW)
+        row_id = args.get_value(cmd.PARA_ROW)
         value = args.get_value(cmd.PARA_VALUE, as_int=True)
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
@@ -647,7 +661,7 @@ class VizualTaskProcessor(TaskProcessor):
         result = self.api.update_cell(
             identifier=ds.identifier,
             column_id=column_id,
-            row_index=row_index,
+            row_id=row_id,
             value=value,
             datastore=context.datastore
         )

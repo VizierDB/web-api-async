@@ -194,7 +194,7 @@ def get_engine(config):
         base_path=os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR),
         object_store=object_store
     )
-    if config.engine.identifier == base.DEV_ENGINE:
+    if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
         datastore_factory=FileSystemDatastoreFactory(datastores_dir)

@@ -4,10 +4,12 @@ import os
 import shutil
 import unittest
 
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.mimir.store import MimirDatastore
 from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URI
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
+from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.filestore.fs.base import FileSystemFilestore
+
+import vizier.mimir as mimir
 
 
 SERVER_DIR = './.tmp'
@@ -19,11 +21,12 @@ SORT_FILE = './.files/dataset_for_sort.csv'
 # Note that some tests access an external resource to test download capabilities.
 # The test will fail if the specified resource is not available. Set the URI
 # to an available resource or to None to skip the download tests
-URI = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
+URI = None #'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
 
 
 
 class TestDefaultVizualApi(unittest.TestCase):
+
     def setUp(self):
         """Create an instance of the default vizier API for an empty server
         directory.
@@ -32,8 +35,8 @@ class TestDefaultVizualApi(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.makedirs(SERVER_DIR)
-        self.api = DefaultVizualApi()
-        self.datastore=FileSystemDatastore(DATASTORE_DIR)
+        self.api = MimirVizualApi()
+        self.datastore=MimirDatastore(DATASTORE_DIR)
         self.filestore=FileSystemFilestore(FILESTORE_DIR)
 
 
@@ -43,7 +46,37 @@ class TestDefaultVizualApi(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
 
-    def test_delete_column(self):
+    def test_api(self):
+        """Run all tests after we initialize mimir. Make sure to create a
+        fresh environment after each test.
+        """
+        mimir.initialize()
+        #self.delete_column()
+        #self.setUp()
+        #self.delete_row()
+        #self.setUp()
+        #self.filter_columns()
+        #self.setUp()
+        #self.insert_column()
+        #self.setUp()
+        #self.insert_row()
+        #self.setUp()
+        #self.load_dataset()
+        #self.setUp()
+        #self.move_column()
+        #self.setUp()
+        #self.move_row()
+        #self.setUp()
+        #self.rename_column()
+        #self.setUp()
+        self.sequence_of_steps()
+        #self.setUp()
+        #self.sort_dataset()
+        #self.setUp()
+        #self.update_cell()
+        mimir.finalize()
+
+    def delete_column(self):
         """Test functionality to delete a column."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -98,7 +131,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.delete_column(ds.identifier, col_id, self.datastore)
 
-    def test_delete_row(self):
+    def delete_row(self):
         """Test functionality to delete a row."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -144,7 +177,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.delete_row(ds.identifier, 100, self.datastore)
 
-    def test_filter_columns(self):
+    def filter_columns(self):
         """Test projection of a dataset."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -166,7 +199,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.filter_columns(ds.identifier, [0, 1], ['BD', None], self.datastore)
 
-    def test_insert_column(self):
+    def insert_column(self):
         """Test functionality to insert a columns."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -224,16 +257,15 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.insert_column('unknown:uri', 1, 'Height', self.datastore)
         # Ensure exception is thrown if column name is invalid
-        self.api.insert_column(ds.identifier, 1, 'Height from ground', self.datastore)
+        self.api.insert_column(ds.identifier, 1, 'Height_from_ground', self.datastore)
         with self.assertRaises(ValueError):
             self.api.insert_column(ds.identifier, 1, 'Height from ground!@#', self.datastore)
         # Ensure exception is thrown if column position is out of bounds
         with self.assertRaises(ValueError):
             self.api.insert_column(ds.identifier, 100, 'Height', self.datastore)
 
-    def test_insert_row(self):
+    def insert_row(self):
         """Test functionality to insert a row."""
-        # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
         ds = self.api.load_dataset(
             datastore=self.datastore,
@@ -296,7 +328,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         # Ensure no exception is raised
         self.api.insert_row(ds.identifier, 4, self.datastore)
 
-    def test_load_dataset(self):
+    def load_dataset(self):
         """Test functionality to load a dataset."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -347,7 +379,8 @@ class TestDefaultVizualApi(unittest.TestCase):
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
-            uri=URI
+            uri=URI,
+            options=[{'delimiter':'\t'}]
         )
         ds = result.dataset
         resources = result.resources
@@ -377,11 +410,12 @@ class TestDefaultVizualApi(unittest.TestCase):
             filestore=self.filestore,
             uri=URI,
             resources=resources,
-            reload=True
+            reload=True,
+            options=[{'delimiter':'\t'}]
         )
         self.assertNotEqual(result.dataset.identifier, prev_id)
 
-    def test_move_column(self):
+    def move_column(self):
         """Test functionality to move a column."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -483,7 +517,7 @@ class TestDefaultVizualApi(unittest.TestCase):
                 self.datastore
             )
 
-    def test_move_row(self):
+    def move_row(self):
         """Test functionality to move a row."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -575,7 +609,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.move_row(ds.identifier, 1, 4, self.datastore)
 
-    def test_rename_column(self):
+    def rename_column(self):
         """Test functionality to rename a column."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -633,7 +667,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.rename_column(ds.identifier, 500, 'BDate', self.datastore)
 
-    def test_sequence_of_steps(self):
+    def sequence_of_steps(self):
         """Test sequence of calls that modify a dataset."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -642,16 +676,20 @@ class TestDefaultVizualApi(unittest.TestCase):
             filestore=self.filestore,
             file_id=fh.identifier
         ).dataset
+        row_ids = ds.row_ids
+        row0 = row_ids[0]
+        row1 = row_ids[1]
+        row2 = ds.row_counter + 1
         ds = self.api.insert_row(ds.identifier, 1, self.datastore).dataset
         ds = self.api.insert_column(ds.identifier, 3, 'HDate', self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('HDate').identifier, 0, '180', self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('HDate').identifier, 2, '160', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('HDate').identifier, row0, '180', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('HDate').identifier, row2, '160', self.datastore).dataset
         ds = self.api.rename_column(ds.identifier, ds.column_by_name('HDate').identifier, 'Height', self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Height').identifier, 1, '170', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Height').identifier, row1, '170', self.datastore).dataset
         ds = self.api.move_row(ds.identifier, 1, 2, self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, 2, 'Carla', self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Age').identifier, 2, '45', self.datastore).dataset
-        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Salary').identifier, 2, '56K', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier,row2, 'Carla', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Age').identifier, row2, '45', self.datastore).dataset
+        ds = self.api.update_cell(ds.identifier, ds.column_by_name('Salary').identifier, row2, '56K', self.datastore).dataset
         ds = self.api.move_column(ds.identifier, ds.column_by_name('Salary').identifier, 4, self.datastore).dataset
         ds = self.api.delete_column(ds.identifier, ds.column_by_name('Age').identifier, self.datastore).dataset
         ds = self.api.delete_row(ds.identifier, 0, self.datastore).dataset
@@ -666,9 +704,9 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEquals([col.identifier for col in ds.columns], [0, 3, 2])
         self.assertEquals(len(ds_rows), 1)
         self.assertEquals(ds_rows[0].values, ['Carla', '160', '56K'])
-        self.assertEquals(ds_rows[0].identifier, 2)
+        self.assertEquals(int(ds_rows[0].identifier), 4)
 
-    def test_sort_dataset(self):
+    def sort_dataset(self):
         """Test sorting a dataset."""
         # Create a new dataset
         fh = self.filestore.upload_file(SORT_FILE)
@@ -703,7 +741,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.sort_dataset(ds.identifier, [2, 10, 0], [True, False, True], self.datastore)
 
-    def test_update_cell(self):
+    def update_cell(self):
         """Test functionality to update a dataset cell."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -719,16 +757,27 @@ class TestDefaultVizualApi(unittest.TestCase):
         # Update cell [0, 0]. Ensure that one row was updated and a new
         # identifier is generated. Also ensure that the resulting datasets
         # has the new value in cell [0, 0]
-        result = self.api.update_cell(ds.identifier, 0, 0, 'MyValue', self.datastore)
+        row_id = row_ids[0]
+        result = self.api.update_cell(ds.identifier, 0, int(row_id), 'MyValue', self.datastore)
         self.assertNotEquals(ds.identifier, result.dataset.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds_rows[0].values[0], 'MyValue')
-        result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, 0, 'AValue', self.datastore)
+        row = None
+        for r in ds.fetch_rows():
+            if r.identifier == row_id:
+                row = r
+                break
+        self.assertEquals(row.values[0], 'MyValue')
+        result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, int(row_id), 'AValue', self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds_rows[0].values[0], 'AValue')
-        self.assertEquals(ds_rows[0].values[ds.column_index('Name')], 'AValue')
+        row = None
+        for r in ds.fetch_rows():
+            if r.identifier == row_id:
+                row = r
+                break
+        self.assertEquals(row.values[0], 'AValue')
+        self.assertEquals(row.values[ds.column_index('Name')], 'AValue')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
             self.assertEquals(ds_rows[i].identifier, row_ids[i])
@@ -736,11 +785,16 @@ class TestDefaultVizualApi(unittest.TestCase):
         for i in range(len(ds.columns)):
             self.assertEquals(ds.columns[i].identifier, col_ids[i])
         # Set value to None
-        result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, 0, None, self.datastore)
+        result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, int(row_id), None, self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertIsNone(ds_rows[0].values[0])
-        self.assertIsNone(ds_rows[0].values[ds.column_index('Name')])
+        row = None
+        for r in ds.fetch_rows():
+            if r.identifier == row_id:
+                row = r
+                break
+        self.assertIsNone(row.values[0])
+        self.assertIsNone(row.values[ds.column_index('Name')])
         # Ensure exception is thrown if dataset is unknown
         with self.assertRaises(ValueError):
             self.api.update_cell('unknown:uri', 0, 0, 'MyValue', self.datastore)

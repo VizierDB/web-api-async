@@ -98,7 +98,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             command=cmd
         )
         for i in range(10):
-            cmd = command=python_cell(PY_ADD_ONE)
+            cmd = python_cell(PY_ADD_ONE)
             self.engine.append_workflow_module(
                 project_id=project.identifier,
                 branch_id=branch_id,

@@ -142,5 +142,3 @@ def finalize():
     #_mimir.shutdown()
     global _gateway
     _gateway.shutdown()
-
-###############################################################################

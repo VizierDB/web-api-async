@@ -4,6 +4,7 @@ import os
 import shutil
 import unittest
 
+from vizier.config.app import AppConfig
 from vizier.core.io.base import DefaultObjectStore
 from vizier.engine.project.cache.container import ContainerProjectCache
 from vizier.viztrail.base import PROPERTY_NAME
@@ -56,8 +57,7 @@ class TestContainerCache(unittest.TestCase):
         projects = ContainerProjectCache(
             viztrails=viztrails,
             container_file=filename,
-            ports=20171,
-            container_image='vizierdb/projectcontainer'
+            config=AppConfig()
         )
         self.assertEquals(len(projects.list_projects()), 2)
         self.assertEquals(projects.get_project(vt1.identifier).container_api, 'API1')

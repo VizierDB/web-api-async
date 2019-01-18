@@ -59,6 +59,14 @@ class TestVizualCommandValidation(unittest.TestCase):
             file={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
             validate=True
         )
+        vizual.load_dataset(
+            dataset_name='ABC',
+            file={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
+            load_format='json',
+            detect_headers=True,
+            infer_types=True,
+            validate=True
+        )
 
     def test_move_column(self):
         """Test validation of the move column command."""

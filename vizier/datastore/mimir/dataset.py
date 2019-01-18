@@ -328,6 +328,16 @@ class MimirDatasetHandle(DatasetHandle):
                         )
             return annotations
 
+    def max_row_id(self):
+        """Get maximum identifier for all rows in the dataset. If the dataset
+        is empty the result is -1.
+
+        Returns
+        -------
+        int
+        """
+        return max(self.row_ids) if len(self.row_ids) > 0 else -1
+
     def reader(self, offset=0, limit=-1, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of

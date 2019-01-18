@@ -141,6 +141,7 @@ DT_LIST = 'list'
 DT_PYTHON_CODE = 'pyCode'
 DT_RECORD = 'record'
 DT_ROW_INDEX = 'rowidx'
+DT_ROW_ID = 'rowid'
 DT_SCALAR = 'scalar'
 DT_STRING = 'string'
 
@@ -155,12 +156,13 @@ DATA_TYPES = [
     DT_PYTHON_CODE,
     DT_RECORD,
     DT_ROW_INDEX,
+    DT_ROW_ID,
     DT_SCALAR,
     DT_STRING
 ]
 
 """Argument data types that expect an integer or string values."""
-INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX]
+INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX, DT_ROW_ID]
 STRING_TYPES = [DT_DATASET_ID, DT_PYTHON_CODE, DT_STRING]
 
 

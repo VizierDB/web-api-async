@@ -41,7 +41,13 @@ VIZUAL_UPD_CELL = 'UPDATE_CELL'
 
 # VizUAL command arguments
 PARA_COLUMNS = 'columns'
+PARA_DETECT_HEADERS = 'loadDetectHeaders'
 PARA_FILE = 'file'
+PARA_INFER_TYPES = 'loadInferTypes'
+PARA_LOAD_FORMAT = 'loadFormat'
+PARA_LOAD_OPTIONS = 'loadOptions'
+PARA_LOAD_OPTION_KEY = 'loadOptionKey'
+PARA_LOAD_OPTION_VALUE = 'loadOptionValue'
 PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'
@@ -72,7 +78,23 @@ def para_position(index):
     )
 
 
-def para_row(index):
+def para_row_id(index):
+    """Return dictionary specifying the a row identifier parameter (currently
+    used by the update cell command).
+
+    Returns
+    -------
+    dict
+    """
+    return pckg.parameter_declaration(
+        PARA_ROW,
+        name='Row',
+        data_type=pckg.DT_ROW_ID,
+        index=index
+    )
+
+
+def para_row_index(index):
     """Return dictionary specifying the default row parameter used by most
     modules.
 
@@ -111,7 +133,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
             name='Delete Row',
             parameters=[
                 pckg.para_dataset(0),
-                para_row(1)
+                para_row_index(1)
             ],
             format=[
                 pckg.constant_format('DELETE'),
@@ -189,6 +211,60 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     name='Source File',
                     data_type=pckg.DT_FILE_ID,
                     index=1
+                ),
+                pckg.parameter_declaration(
+                    PARA_LOAD_FORMAT,
+                    name='Load Format',
+                    data_type=pckg.DT_STRING,
+                    values=[
+                        pckg.enum_value(value='csv', text='CSV', is_default=True),
+                        pckg.enum_value(value='json', text='JSON'),
+                        pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
+                        pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
+                        pckg.enum_value(value='jdbc', text='JDBC Source'),
+                        pckg.enum_value(value='text', text='Text'),
+                        pckg.enum_value(value='parquet', text='Parquet'),
+                        pckg.enum_value(value='orc', text='ORC')
+                    ],
+                    index=2,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    PARA_INFER_TYPES,
+                    name='Infer Types',
+                    data_type=pckg.DT_BOOL,
+                    index=3,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_DETECT_HEADERS,
+                    name='Detect Headers',
+                    data_type=pckg.DT_BOOL,
+                    index=4,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_LOAD_OPTIONS,
+                    name='Load Options',
+                    data_type=pckg.DT_LIST,
+                    index=5,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_LOAD_OPTION_KEY,
+                    name='Option Key',
+                    data_type=pckg.DT_STRING,
+                    index=6,
+                    parent=PARA_LOAD_OPTIONS,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_LOAD_OPTION_VALUE,
+                    name='Option Value',
+                    data_type=pckg.DT_STRING,
+                    index=7,
+                    parent=PARA_LOAD_OPTIONS,
+                    required=False
                 )
             ],
             format=[
@@ -223,7 +299,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
             name='Move Row',
             parameters=[
                 pckg.para_dataset(0),
-                para_row(1),
+                para_row_index(1),
                 para_position(2)
             ],
             format=[
@@ -372,7 +448,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
-                para_row(2),
+                para_row_id(2),
                 pckg.parameter_declaration(
                     identifier=PARA_VALUE,
                     name='Value',

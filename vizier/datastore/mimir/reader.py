@@ -63,6 +63,8 @@ class MimirDatasetReader(DatasetReader):
         # offset or limit where given (True) or not (False). This information is
         # later used to generate the query for the database.
         self.row_ids = dict()
+        for i in range(len(row_ids)):
+            self.row_ids[row_ids[i]] = i
         if offset > 0 or limit > 0:
             self.is_range_query = True
         else:
@@ -121,7 +123,7 @@ class MimirDatasetReader(DatasetReader):
             rs = json.loads(
                 mimir._mimir.vistrailsQueryMimirJson(sql, True, False)
             )
-            self.row_ids = rs['prov']
+            #self.row_ids = rs['prov']
             # Initialize mapping of column rdb names to index positions in
             # dataset rows
             self.col_map = dict()
@@ -136,15 +138,15 @@ class MimirDatasetReader(DatasetReader):
             self.rows = list()
             for row_index in range(len(rs_rows)):
                 row = rs_rows[row_index]
-                row_id = str(row[self.col_map[base.ROW_ID]])
+                row_id = str(row[rowid_idx])
                 values = [None] * len(self.columns)
-                row_annos = [False] * len(values)
                 for i in range(len(self.columns)):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = row[col_index]
                 self.rows.append(DatasetRow(row_id, values))
-            self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
+            #self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
+            self.rows.sort(key=lambda row: self.row_ids[int(row.identifier)])
             self.read_index = 0
             self.is_open = True
         return self
