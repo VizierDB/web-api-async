@@ -22,7 +22,7 @@ from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.stream import OutputStream
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
@@ -105,7 +105,7 @@ class PyCellTaskProcessor(TaskProcessor):
         for tag, text in stream:
             text = ''.join(text).strip()
             if tag == 'out':
-                outputs.stdout.append(TextOutput(text))
+                outputs.stdout.append(HtmlOutput(text))
             else:
                 outputs.stderr.append(TextOutput(text))
                 is_success = False

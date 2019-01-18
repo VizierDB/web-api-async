@@ -19,8 +19,9 @@ standard output and one for error messages.
 """
 
 """Predefined output types."""
-OUTPUT_CHART = 'chart'
-OUTPUT_TEXT = 'txt'
+OUTPUT_CHART = 'chart/view'
+OUTPUT_TEXT = 'text/plain'
+OUTPUT_HTML = 'text/html'
 
 
 class ModuleOutputs(object):
@@ -104,6 +105,36 @@ class ChartOutput(OutputObject):
         )
 
 
+class HtmlOutput(OutputObject):
+    """Output object where the value is a Html string."""
+    def __init__(self, value):
+        """Initialize the output string.
+
+        Parameters
+        ----------
+        value, string
+            Output string
+        """
+        super(HtmlOutput, self).__init__(type=OUTPUT_HTML, value=value)
+
+
+class TextOutput(OutputObject):
+    """Output object where the value is a string."""
+    def __init__(self, value):
+        """Initialize the output string.
+
+        Parameters
+        ----------
+        value, string
+            Output string
+        """
+        super(TextOutput, self).__init__(type=OUTPUT_TEXT, value=value)
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
 def CHART_VIEW_DATA(view, rows):
     """Create a dictionary serialization of daraset chart view results. The
     output is a dictionary with the following format (the xAxis element is
@@ -149,16 +180,3 @@ def CHART_VIEW_DATA(view, rows):
             'data': [row[s_idx] for row in rows]
         })
     return obj
-
-
-class TextOutput(OutputObject):
-    """Output object where the value is a string."""
-    def __init__(self, value):
-        """Initialize the output string.
-
-        Parameters
-        ----------
-        value, string
-            Output string
-        """
-        super(TextOutput, self).__init__(type=OUTPUT_TEXT, value=value)
