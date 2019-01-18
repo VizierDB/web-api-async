@@ -6,11 +6,6 @@ from vizier.engine.packages.scala.command import scala_cell
 from vizier.engine.packages.scala.processor import ScalaTaskProcessor
 from vizier.engine.task.base import TaskContext
 
-#from vizier.datastore.fs.base import FileSystemDatastore
-#from vizier.engine.packages.pycell.client.base import VizierDBClient
-#from vizier.engine.packages.pycell.client.dataset import DatasetClient
-#from vizier.filestore.fs.base import FileSystemFilestore
-
 import vizier.mimir as mimir
 
 
