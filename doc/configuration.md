@@ -1,36 +1,39 @@
-Vizier Configuration
-====================
+Configuration
+=============
 
-We attempt to follow [The Twelve-Factor App methodology](https://12factor.net/) and store all configuration parameters in environment variables. The following sections describe the configuration options for the web service API, remote celery workers, and the container worker API.
+The Vizier API and all worker components are configured using environment variables in an attempt to follow [The Twelve-Factor App methodology](https://12factor.net/) for web application development. All relevant environment variables have default values that allow to run the web service using a default configuration without the need to set any variables. The current default configuration will run the service in development mode. 
+
 
 Web Service REST-API
 --------------------
 
-The following variables can be used to control different parameters of the web service API server. Additional environment variables are defined for different execution backends.
+The following environment variables control different parameters of the web API server. Additional variables to configure the different execution backends are described below.
 
 
-**General**
+### General
 
-- **VIZIERSERVER_NAME**: Web service name
-- **VIZIERSERVER_LOG_DIR**: Log file directory used by the web server (DEFAULT: *./.vizierdb/logs*)
-- **VIZIERSERVER_DEBUG**: Flag indicating whether server is started in debug mode (DEFAULT: *True*)
+- ***VIZIERSERVER_NAME***: Web service name
+- ***VIZIERSERVER_LOG_DIR***: Log file directory used by the web server (DEFAULT: *./.vizierdb/logs*)
+- ***VIZIERSERVER_DEBUG***: Flag indicating whether server is started in debug mode (DEFAULT: *True*)
 
-**Web Service**
+### Web Service
 
-- **VIZIERSERVER_BASE_URL**: Url of the server (DEFAULT: *http://localhost*)
-- **VIZIERSERVER_SERVER_PORT**: Public server port (DEFAULT: *5000*)
-- **VIZIERSERVER_SERVER_LOCAL_PORT**: Locally bound server port (DEFAULT: *5000*)
-- **VIZIERSERVER_APP_PATH**: Application path for Web API (DEFAULT: */vizier-db/api/v1*)
+- ***VIZIERSERVER_BASE_URL***: Base url of the server running the web service (DEFAULT: *http://localhost*)
+- ***VIZIERSERVER_SERVER_PORT***: Public server port (DEFAULT: *5000*)
+- ***VIZIERSERVER_SERVER_LOCAL_PORT***: Locally bound server port (DEFAULT: *5000*)
+- ***VIZIERSERVER_APP_PATH***: Application path for Web API (DEFAULT: */vizier-db/api/v1*)
+- ***VIZIERSERVER_ROW_LIMIT***: Default row limit for requests that read datasets (DEFAULT: *25*)
+- ***VIZIERSERVER_MAX_ROW_LIMIT***: Maximum row limit for requests that read datasets (DEFAULT: *-1* (returns all rows))
+- ***VIZIERSERVER_MAX_UPLOAD_SIZE***: Maximum size for file uploads in bytes (DEFAULT: *16777216*)
 
-- **VIZIERSERVER_ROW_LIMIT**: Default row limit for requests that read datasets (DEFAULT: *25*)
-- **VIZIERSERVER_MAX_ROW_LIMIT**: Maximum row limit for requests that read datasets (DEFAULT: *-1* (returns all rows))
-- **VIZIERSERVER_MAX_UPLOAD_SIZE**: Maximum size for file uploads in byte (DEFAULT: *16777216*)
+The destinction between *VIZIERSERVER_SERVER_PORT* and *VIZIERSERVER_SERVER_LOCAL_PORT* is relevant when running the web service inside a Docker container. Otherwise the value for both variables should be identical.
 
-**Workflow Execution Engine**
 
-- **VIZIERSERVER_ENGINE**: Name of the workflow execution engine (DEFAULT: *DEV*)
-- **VIZIERSERVER_PACKAGE_PATH**: Path to the package declaration directory (DEFAULT: *./resources/packages*)
-- **VIZIERSERVER_PROCESSOR_PATH**: Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors*)
+### Workflow Execution Engine
+
+- ***VIZIERSERVER_ENGINE***: Name of the workflow execution engine (DEFAULT: *DEV*)
+- ***VIZIERSERVER_PACKAGE_PATH***: Path to the package declaration directory (DEFAULT: *./resources/packages/dev*)
+- ***VIZIERSERVER_PROCESSOR_PATH***: Path to the task processor definitions for supported packages (DEFAULT: *./resources/processors/dev*)
 
 
 The files in the package directory are used to initialize the registry of supported packages. Each file in the packages directory is expected to contain the declaration of a vizier packages. All files are read during service initialization to create the repository of available workflow packages.
@@ -40,14 +43,20 @@ The files in the package directory are used to initialize the registry of suppor
 Workflow Engine
 -------------
 
-The **Vizier Engine** defines the interface that is used by the API for creating, deleting, and manipulating projects. Different implementations of the engine will use different implementations for datasores, filestores, vitrails repositories and backends.
+The *vizier workflow engine* is used by the web API for creating, deleting, and manipulating projects and workflows. Different configurations for the engine can use different implementations of datasores, filestores, vitrails repositories, and execution backends. The engine configuration is controlled using the variable *VIZIERSERVER_ENGINE*. Vizier currently supports three different engine configurations:
 
-The class that contains the engine that is being used by a Vizier instance is defined in the *engine* section of the configuration file. The section may contain another element *properties* that contains an engine-specific dictionary of configuration parameters. This dictionary is passed to the specified engine object when it is instantiated.
+- *DEV*: Development engine uses a simple datastore that maintains all datasets as separate files on the file system (*vizier.datastore.fs*). 
+- *MIMIR*: The Mimir engine uses the Mimir gateway to store and manipulate datasets.
+- *CLUSTER*: The cluster engine runs each project in an individual Docker container. The engine iteself does not have instances of the datstore and filestore. Instead, each of the containers will have ther own datastore, filestore, and execution backend.
 
+At this point there exists only one implementation for the viztrails repository interface (*vizier.viztrails.objectstore*) as wel as for the filestore interface (*vizier.filestore.fs*). Both implementations are therefore used by all three configurations.
 
-## Configuring the Local Vizier Engine
 
 The community edition environment runs on the local machine. Expects the definition of the datastore, filestore and viztrail repository that is used for all projects. Intended for single user that works on a single project. Uses multi-process backend.
+
+- ***VIZIERENGINE_BACKEND***: Name of the used backend (CELERY, MULTIPROCESS, or CONTAINER) (DEFAULT: MULTIPROCESS)
+- ***VIZIERENGINE_SYNCHRONOUS***: Colon separated list of package.command strings that identify the commands that are executed synchronously
+- ***VIZIERENGINE_USE_SHORT_IDENTIFIER***: Flag indicating whether short identifier are used by the viztrail repository
 
 A running Vizier instance has four main components: (1)) data store, (2) file store, (3) viztrails repository, and (4) workflow execution engine. For each of these components different implementations are possible. When initializing the instance the components that are to be used are loaded based on the respective configuration parameters.
 
@@ -57,12 +66,12 @@ Not all of them are supported by each of the engines. Look at the engine specifi
 - **VIZIERENGINE_USE_SHORT_IDENTIFIER**: Flag indicating whether short identifier are used by the viztrail repository
 - **VIZIERENGINE_SYNCHRONOUS**: Colon separated list of package.command strings that identify the commands that are executed synchronously
 
-###Development
+### Development
 
 - **VIZIERENGINE_DATA_DIR**: Base data directory for the default engine
 
 
-###Celery
+### Celery
 
 - **VIZIERENGINE_CELERY_ROUTES**: Colon separated list of package.command=queue strings that define routing information for individual commands
 - **CELERY_BROKER_URL**: Url for the celery broker
