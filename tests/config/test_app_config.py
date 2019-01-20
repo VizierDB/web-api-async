@@ -75,7 +75,7 @@ class TestAppConfig(unittest.TestCase):
         os.environ[env.VIZIERENGINE_SYNCHRONOUS] = 'ABC'
         os.environ[env.VIZIERENGINE_BACKEND] = 'THE_BACKEND'
         os.environ[env.VIZIERENGINE_CELERY_ROUTES] = 'Some Routes'
-        os.environ[env.VIZIERENGINE_CONTAINER_PORTS] = '8080'
+        os.environ[env.VIZIERENGINE_CONTAINER_PORTS] = '8080-8084,9000,10001-10010'
         config = AppConfig()
         self.assertEquals(config.webservice.name, 'Some Name')
         self.assertEquals(config.webservice.server_url, 'http://webapi')
@@ -92,7 +92,8 @@ class TestAppConfig(unittest.TestCase):
         self.assertEquals(config.engine.sync_commands, 'ABC')
         self.assertEquals(config.engine.backend.identifier, 'THE_BACKEND')
         self.assertEquals(config.engine.backend.celery.routes, 'Some Routes')
-        self.assertEquals(config.engine.backend.container.ports, 8080)
+        ports = range(8080, 8084) + [9000] + range(10001,10010)
+        self.assertEquals(config.engine.backend.container.ports, ports)
         self.assertEquals(config.engine.backend.container.image, env.DEFAULT_SETTINGS[env.VIZIERENGINE_CONTAINER_IMAGE])
 
 

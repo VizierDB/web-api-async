@@ -40,9 +40,10 @@ MIMIR_ENGINE= 'MIMIR'
 BOOL = 'bool'
 FLOAT = 'float'
 INTEGER = 'int'
+LIST = 'list' # List of integers
 STRING = 'str'
 
-ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, STRING]
+ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, LIST, STRING]
 
 """Configuration default values for various properties."""
 DEFAULT_MAX_ROW_LIMIT = 1000
@@ -138,4 +139,17 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
                 val = int(val)
             except ValueError as ex:
                 raise ValueError('expected integer value for \'' + env_variable + '\'')
+        elif attribute_type == LIST and isinstance(val, basestring):
+            int_list = list()
+            try:
+                for token in val.split(','):
+                    if '-' in token:
+                        start = int(token[:token.find('-')].strip())
+                        end = int(token[token.find('-')+1:].strip())
+                        int_list.extend(range(int(start), int(end)))
+                    else:
+                        int_list.append(int(token))
+            except ValueError as ex:
+                raise ValueError('expected integer list for \'' + env_variable + '\'')
+            val = int_list
     return val

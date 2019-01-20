@@ -124,8 +124,8 @@ class ContainerProjectCache(ProjectCache):
         self.container_file = container_file
         self.config = config
         self.container_image = config.engine.backend.container.image
-        # Keep track of the port number of the next project container.
-        self.next_port_number = config.engine.backend.container.ports
+        # Keep track of the port numbers for the project containers.
+        self.ports = config.engine.backend.container.ports
         # Instantiate the Docker daemon client using the default socket or
         # configuration in the environment. This may need to be adjusted for
         # production deployments.
@@ -148,8 +148,6 @@ class ContainerProjectCache(ProjectCache):
                 container_id=container['containerId']
             )
             self.projects[viztrail.identifier] = project
-            if project.port >= self.next_port_number:
-                self.next_port_number += 1
 
     def create_project(self, properties=None):
         """Create a new project. Will (i) create a viztrail in the underlying
@@ -167,10 +165,15 @@ class ContainerProjectCache(ProjectCache):
         # Create the viztrail for the project
         viztrail = self.viztrails.create_viztrail(properties=properties)
         # Start a new docker container for the project on the next unused
-        # port. Note that we assume that all ports that are greater or equal
-        # to the port number that was passed as argument at object instantiation
-        # are available.
-        port = self.next_port_number
+        # port. Raises ValueError if all given port numbers are currently used.
+        used_ports = [p.port for p in self.projects.values()]
+        port = None
+        for port_nr in self.ports:
+            if not port_nr in used_ports:
+                port = port_nr
+                break
+        if port is None:
+            raise ValueError('no port number available')
         project_id = viztrail.identifier
         container = self.client.containers.run(
             image=self.container_image,
@@ -196,7 +199,6 @@ class ContainerProjectCache(ProjectCache):
             port=port,
             container_id=container.id
         )
-        self.next_port_number += 1
         self.projects[project.identifier] = project
         self.write_container_info()
         return project

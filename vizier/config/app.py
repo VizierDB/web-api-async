@@ -142,7 +142,7 @@ DEFAULT_SETTINGS = {
     VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
     VIZIERENGINE_SYNCHRONOUS: None,
     VIZIERENGINE_CELERY_ROUTES: None,
-    VIZIERENGINE_CONTAINER_PORTS: 20171,
+    VIZIERENGINE_CONTAINER_PORTS: range(20171, 20271),
     VIZIERENGINE_CONTAINER_IMAGE: 'heikomueller/vizierdbprojectcontainer',
     'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
 }
@@ -252,7 +252,7 @@ class AppConfig(object):
         # engine.backend.container
         container = base.ConfigObject(
             attributes=[
-                ('ports', VIZIERENGINE_CONTAINER_PORTS, base.INTEGER),
+                ('ports', VIZIERENGINE_CONTAINER_PORTS, base.LIST),
                 ('image', VIZIERENGINE_CONTAINER_IMAGE, base.STRING)],
             default_values=default_values
         )
