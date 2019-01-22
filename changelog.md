@@ -64,7 +64,12 @@
 * Upload files from URL
 
 
-### 0.5.0 - ???
+### 0.5.0 - 2019-01-??
+
+This is the first prototype that supports asynchronous execution of workflow modules. The prototype was created from the code base of the web API version 0.4.4. It incorporates changes that were made to the UB branch and that were merged into the master branch while the prototype was under development.
 
 * Change definition and handling of packages
 * Allow concurrent execution of workflow modules
+* Datastore that uses the web API to access and manipulate dataset instead of the file system
+* Support containerization of individual projects
+* Command Line Interface to interact with the web API

@@ -149,7 +149,6 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
             if not ds.identifier in datasets:
                 datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
                     dataset=ds,
-                    name=name,
                     project=project,
                     urls=urls
                 )
@@ -281,7 +280,6 @@ def WORKFLOW_UPDATE_RESULT(project, branch, workflow, modified_modules, urls):
             if not ds.identifier in datasets:
                 datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
                     dataset=ds,
-                    name=name,
                     project=project,
                     urls=urls
                 )

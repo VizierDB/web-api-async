@@ -140,7 +140,8 @@ class VizierApi(object):
                 'maxFileSize': self.config.webservice.defaults.max_file_size
             },
             'environment': {
-                'name': self.engine.name
+                'name': self.engine.name,
+                'version': VERSION_INFO,
             },
             labels.LINKS: serialize.HATEOAS({
                 ref.SELF: self.urls.service_descriptor(),
