@@ -119,7 +119,10 @@ class MimirDatasetReader(DatasetReader):
             if self.rowid != None:
                 sql += ' WHERE ROWID() = ' + str(self.rowid)
             if self.is_range_query:
-                sql +=  ' LIMIT ' + str(self.limit) + ' OFFSET ' + str(self.offset)
+                if self.limit > 0:
+                    sql +=  ' LIMIT ' + str(self.limit)
+                if self.offset > 0:
+                    sql += ' OFFSET ' + str(self.offset)
             rs = json.loads(
                 mimir._mimir.vistrailsQueryMimirJson(sql, True, False)
             )

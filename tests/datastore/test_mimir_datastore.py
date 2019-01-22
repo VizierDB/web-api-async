@@ -13,7 +13,7 @@ from vizier.filestore.fs.base import FileSystemFilestore
 CSV_FILE = './.files/dataset.csv'
 
 SERVER_DIR = '.tmp'
-DATASTORE_DIRECTORY = os.path.join(SERVER_DIR, 'ds')
+DATASTORE_DIR = os.path.join(SERVER_DIR, 'ds')
 FILESERVER_DIR = os.path.join(SERVER_DIR, 'fs')
 
 
@@ -31,7 +31,7 @@ class TestMimirDatastore(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
         os.mkdir(SERVER_DIR)
-        self.db = MimirDatastore(DATASTORE_DIRECTORY)
+        self.db = MimirDatastore(DATASTORE_DIR)
 
     def tear_down(self):
         """Delete data store directory.
@@ -61,7 +61,7 @@ class TestMimirDatastore(unittest.TestCase):
         """Test initalizing a datastore with existing datasets."""
         self.setup_fileserver()
         ds = self.db.load_dataset(self.fileserver.upload_file(CSV_FILE))
-        self.db = MimirDatastore(DATASTORE_DIRECTORY)
+        self.db = MimirDatastore(DATASTORE_DIR)
 
     def dataset_column_index(self):
         """Test the column by id index of the dataset handle."""
