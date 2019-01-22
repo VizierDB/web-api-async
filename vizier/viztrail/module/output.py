@@ -18,6 +18,10 @@
 standard output and one for error messages.
 """
 
+import sys
+import traceback
+
+
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
 OUTPUT_TEXT = 'text/plain'
@@ -47,6 +51,14 @@ class ModuleOutputs(object):
         """
         self.stdout = stdout if not stdout is None else list()
         self.stderr = stderr if not stderr is None else list()
+
+    def error(self, ex):
+        """
+        """
+        template = "{0}:{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        message = message + ': ' + traceback.format_exc(sys.exc_info())
+        self.stderr.append(TextOutput(message))
 
 
 class OutputObject(object):

@@ -14,21 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Create instances of scala package commands."""
+"""Create instances of SQL package commands."""
 
 import vizier.engine.packages.base as pckg
-import vizier.engine.packages.scala.base as scala
+import vizier.engine.packages.sql.base as sql
 import vizier.viztrail.command as md
 
 
-def scala_cell(source, validate=False):
-    """Get command specification for a Scala cell. Primarily intended for unit
+def sql_cell(source, output_dataset=None, validate=False):
+    """Get command specification for a SQL cell. Primarily intended for unit
     tests.
 
     Parameters
     ----------
     source: string
-        Scala code for cell body
+        SQL code for cell body
+    output_dataset: string, optional
+        Optional dataset name. If given result is materialized as new dataset.
     validate: bool, optional
         If true, the command is validated
 
@@ -37,14 +39,19 @@ def scala_cell(source, validate=False):
     vizier.viztrail.command.ModuleCommand
     """
     # If the validate flag is true create a package index that contains the
-    # scala package declaration
+    # SQL package declaration
     if validate:
-        packages = {scala.PACKAGE_SCALA: pckg.PackageIndex(scala.SCALA_COMMANDS)}
+        packages = {sql.PACKAGE_SQL: pckg.PackageIndex(sql.SQL_COMMANDS)}
     else:
         packages = None
+    arguments = [md.ARG(id=sql.PARA_SQL_SOURCE, value=source)]
+    if not output_dataset is None:
+        arguments.append(
+            md.ARG(id=sql.PARA_OUTPUT_DATASET, value=output_dataset)
+        )
     return md.ModuleCommand(
-        scala.PACKAGE_SCALA,
-        scala.SCALA_CODE,
-        arguments=[md.ARG(id=scala.PARA_SCALA_SOURCE, value=source)],
+        sql.PACKAGE_SQL,
+        sql.SQL_QUERY,
+        arguments=arguments,
         packages=packages
     )

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Specification of parameters for Scala cell."""
+"""Specification of parameters for SQL cell."""
 
 import vizier.engine.packages.base as pckg
 
@@ -22,32 +22,41 @@ import vizier.engine.packages.base as pckg
 """Global constants."""
 
 # Package name
-PACKAGE_SCALA = 'scala'
+PACKAGE_SQL = 'sql'
 
 # Command identifier (unique within the package)
-SCALA_CODE = 'code'
+SQL_QUERY = 'query'
 
-# Scala source code parameter
-PARA_SCALA_SOURCE = 'source'
+# SQL command parameters
+PARA_OUTPUT_DATASET = 'output_dataset'
+PARA_SQL_SOURCE = 'source'
 
 
-"""Define the scala cell command structure."""
-SCALA_COMMANDS = pckg.package_declaration(
-    identifier=PACKAGE_SCALA,
+"""Define SQL command structure."""
+SQL_COMMANDS = pckg.package_declaration(
+    identifier=PACKAGE_SQL,
     commands=[
         pckg.command_declaration(
-            identifier=SCALA_CODE,
-            name='Scala Script',
+            identifier=SQL_QUERY,
+            name='SQL Query',
             parameters=[
                 pckg.parameter_declaration(
-                    identifier=PARA_SCALA_SOURCE,
-                    name='Scala Code',
-                    data_type=pckg.DT_SCALA_CODE,
+                    identifier=PARA_SQL_SOURCE,
+                    name='SQL Code',
+                    data_type=pckg.DT_SQL_CODE,
                     index=0
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_OUTPUT_DATASET,
+                    name='Output Dataset',
+                    data_type=pckg.DT_STRING,
+                    index=1,
+                    required=False
                 )
             ],
             format=[
-                pckg.variable_format(PARA_SCALA_SOURCE)
+                pckg.variable_format(PARA_SQL_SOURCE),
+                pckg.optional_format(PARA_OUTPUT_DATASET, prefix='AS ')
             ]
         )
     ]
@@ -70,7 +79,7 @@ def export_package(filename, format='YAML'):
     """
     pckg.export_package(
         filename,
-        PACKAGE_SCALA,
-        SCALA_COMMANDS,
+        PACKAGE_SQL,
+        SQL_COMMANDS,
         format=format
     )

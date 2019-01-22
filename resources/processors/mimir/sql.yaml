@@ -1,0 +1,5 @@
+packages:
+    - sql
+engine:
+    className: 'SQLTaskProcessor'
+    moduleName: 'vizier.engine.packages.sql.processor'

@@ -88,20 +88,20 @@ class PyCellTaskProcessor(TaskProcessor):
         stream = list()
         sys.stdout = OutputStream(tag='out', stream=stream)
         sys.stderr = OutputStream(tag='err', stream=stream)
+        # Keep track of exception that is thrown by the code
+        exception = None
         # Run the Pyhton code
         try:
             exec source in variables, variables
         except Exception as ex:
-            template = "{0}:{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            sys.stderr.write(str(message) + '\n')
+            exception = ex
         finally:
             # Make sure to reverse redirection of output streams
             sys.stdout = out
             sys.stderr = err
         # Set module outputs
         outputs = ModuleOutputs()
-        is_success = True
+        is_success = (exception is None)
         for tag, text in stream:
             text = ''.join(text).strip()
             if tag == 'out':
@@ -143,6 +143,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 delete=client.delete
             )
         else:
+            output.error(exception)
             provenance = ModuleProvenance()
         # Return execution result
         return ExecResult(

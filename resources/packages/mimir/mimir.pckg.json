@@ -286,10 +286,25 @@
                         "value": "FOR"
                     }, 
                     {
+                        "format": [
+                            {
+                                "lspace": true, 
+                                "rspace": true, 
+                                "type": "var", 
+                                "value": "column"
+                            }, 
+                            {
+                                "lspace": true, 
+                                "prefix": "WITH CONSTRAINT ", 
+                                "rspace": true, 
+                                "type": "opt", 
+                                "value": "constraint"
+                            }
+                        ], 
                         "lspace": true, 
                         "rspace": true, 
                         "type": "var", 
-                        "value": "column"
+                        "value": "columns"
                     }, 
                     {
                         "lspace": true, 
@@ -302,13 +317,6 @@
                         "rspace": true, 
                         "type": "var", 
                         "value": "dataset"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "prefix": "WITH CONSTRAINT ", 
-                        "rspace": true, 
-                        "type": "opt", 
-                        "value": "constraint"
                     }
                 ], 
                 "id": "missing_value", 
@@ -323,26 +331,36 @@
                         "required": true
                     }, 
                     {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "columns", 
+                        "index": 1, 
+                        "name": "Columns", 
+                        "required": true
+                    }, 
+                    {
                         "datatype": "colid", 
                         "hidden": false, 
                         "id": "column", 
-                        "index": 1, 
+                        "index": 2, 
                         "name": "Column", 
+                        "parent": "columns", 
                         "required": true
                     }, 
                     {
                         "datatype": "string", 
                         "hidden": false, 
                         "id": "constraint", 
-                        "index": 2, 
+                        "index": 3, 
                         "name": "Constraint", 
+                        "parent": "columns", 
                         "required": false
                     }, 
                     {
                         "datatype": "bool", 
                         "hidden": false, 
                         "id": "makeInputCertain", 
-                        "index": 3, 
+                        "index": 4, 
                         "name": "Make Input Certain", 
                         "required": false
                     }

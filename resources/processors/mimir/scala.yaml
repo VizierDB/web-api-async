@@ -1,0 +1,5 @@
+packages:
+    - scala
+engine:
+    className: 'ScalaTaskProcessor'
+    moduleName: 'vizier.engine.packages.scala.processor'

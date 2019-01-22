@@ -16,21 +16,17 @@
 
 """Implementation of the task processor for the Scala package."""
 
-import sys
-
-from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
-import vizier.engine.packages.base as pckg
 import vizier.engine.packages.scala.base as cmd
 import vizier.mimir as mimir
 
 
 class ScalaTaskProcessor(TaskProcessor):
-    """Implementation of the task processor for the Python cell package."""
+    """Implementation of the task processor for the scala package."""
     def compute(self, command_id, arguments, context):
         """Execute the Scala script that is contained in the given arguments.
 
@@ -70,7 +66,7 @@ class ScalaTaskProcessor(TaskProcessor):
         vizier.engine.task.processor.ExecResult
         """
         # Get Scala script from user arguments
-        source = args.get_value(cmd.SCALA_SOURCE)
+        source = args.get_value(cmd.PARA_SCALA_SOURCE)
         # Redirect standard output and standard error streams
         out = sys.stdout
         err = sys.stderr
@@ -88,9 +84,7 @@ class ScalaTaskProcessor(TaskProcessor):
             if not oerr == '':
                 outputs.stderr.append(TextOutput(oerr))
         except Exception as ex:
-            template = "{0}:{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            sys.stderr.write(str(message) + '\n')
+            outputs.error(ex)
         finally:
             # Make sure to reverse redirection of output streams
             sys.stdout = out

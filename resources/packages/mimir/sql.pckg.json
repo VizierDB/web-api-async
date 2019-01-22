@@ -1,0 +1,44 @@
+{
+    "sql": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "source"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "prefix": "AS ", 
+                        "rspace": true, 
+                        "type": "opt", 
+                        "value": "output_dataset"
+                    }
+                ], 
+                "id": "query", 
+                "name": "SQL Query", 
+                "parameter": [
+                    {
+                        "datatype": "sqlCode", 
+                        "hidden": false, 
+                        "id": "source", 
+                        "index": 0, 
+                        "name": "SQL Code", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "output_dataset", 
+                        "index": 1, 
+                        "name": "Output Dataset", 
+                        "required": false
+                    }
+                ]
+            }
+        ], 
+        "id": "sql"
+    }
+}
