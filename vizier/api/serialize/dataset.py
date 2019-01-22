@@ -20,6 +20,7 @@ serialize datasets.
 
 import vizier.api.serialize.base as serialize
 import vizier.api.routes.base as routes
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
@@ -71,7 +72,7 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
     }
     # Add references to update annotations
     obj[labels.LINKS] = serialize.HATEOAS({
-        'annotations:update': urls.update_dataset_annotations(
+        ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
             project_id=project.identifier,
             dataset_id=dataset.identifier
         )
@@ -132,17 +133,17 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
             dataset_id=dataset_id
         )
         obj[labels.LINKS] = serialize.HATEOAS({
-            labels.SELF: dataset_url,
-            'fetch:all': dataset_url + '?' + routes.PAGE_LIMIT + '=-1',
-            'dataset:download': urls.download_dataset(
+            ref.SELF: dataset_url,
+            ref.DATASET_FETCH_ALL: dataset_url + '?' + routes.PAGE_LIMIT + '=-1',
+            ref.DATASET_DOWNLOAD: urls.download_dataset(
                 project_id=project_id,
                 dataset_id=dataset_id
             ),
-            'annotations:get': urls.get_dataset_annotations(
+            ref.ANNOTATIONS_GET: urls.get_dataset_annotations(
                 project_id=project_id,
                 dataset_id=dataset_id
             ),
-            'annotations:update': urls.update_dataset_annotations(
+            ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
                 project_id=project_id,
                 dataset_id=dataset_id
             )
@@ -203,7 +204,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     dataset_id = dataset.identifier
     links.extend(
         serialize.HATEOAS({
-            labels.PAGE_FIRST: urls.dataset_pagination(
+            ref.PAGE_FIRST: urls.dataset_pagination(
                 project_id=project_id,
                 dataset_id=dataset_id,
                 offset=offset,
@@ -218,7 +219,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
                 prev_offset = max(offset - max_rows_per_request, 0)
                 links.extend(
                     serialize.HATEOAS({
-                        labels.PAGE_PREV: urls.dataset_pagination(
+                        ref.PAGE_PREV: urls.dataset_pagination(
                             project_id=project_id,
                             dataset_id=dataset_id,
                             offset=prev_offset,
@@ -233,7 +234,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
         if next_offset < dataset.row_count:
             links.extend(
                 serialize.HATEOAS({
-                    labels.PAGE_NEXT: urls.dataset_pagination(
+                    ref.PAGE_NEXT: urls.dataset_pagination(
                         project_id=project_id,
                         dataset_id=dataset_id,
                         offset=next_offset,
@@ -245,7 +246,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
         if last_offset > offset:
             links.extend(
                 serialize.HATEOAS({
-                    labels.PAGE_LAST: urls.dataset_pagination(
+                    ref.PAGE_LAST: urls.dataset_pagination(
                         project_id=project_id,
                         dataset_id=dataset_id,
                         offset=last_offset,

@@ -57,6 +57,7 @@ from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
 import vizier.config.base as base
@@ -142,10 +143,10 @@ class VizierApi(object):
                 'name': self.engine.name
             },
             labels.LINKS: serialize.HATEOAS({
-                'self': self.urls.service_descriptor(),
-                'doc': self.urls.api_doc(),
-                'project:create': self.urls.create_project(),
-                'project:list': self.urls.list_projects()
+                ref.SELF: self.urls.service_descriptor(),
+                ref.API_DOC: self.urls.api_doc(),
+                ref.PROJECT_CREATE: self.urls.create_project(),
+                ref.PROJECT_LIST: self.urls.list_projects()
             })
         }
 

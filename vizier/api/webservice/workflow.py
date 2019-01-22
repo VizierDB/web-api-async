@@ -91,10 +91,11 @@ class VizierWorkflowApi(object):
                 packages=self.engine.packages
             )
         )
-        return serialmd.MODULE_HANDLE(
+        return serialwf.WORKFLOW_UPDATE_RESULT(
             project=project,
             branch=branch,
-            module=module,
+            workflow=branch.head,
+            modified_modules=[module],
             urls=self.urls
         )
 
@@ -123,14 +124,16 @@ class VizierWorkflowApi(object):
         branch = project.viztrail.get_branch(branch_id)
         if branch is None:
             return None
-        # Cancel excecution and return the workflow handle
-        return serialwf.WORKFLOW_HANDLE(
+        # Cancel excecution and return the workflow update result
+        modules = self.engine.cancel_exec(
+            project_id=project_id,
+            branch_id=branch_id
+        )
+        return serialwf.WORKFLOW_UPDATE_RESULT(
             project=project,
             branch=branch,
-            workflow=self.engine.cancel_exec(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
+            workflow=branch.head,
+            modified_modules=modules,
             urls=self.urls
         )
 
@@ -169,10 +172,11 @@ class VizierWorkflowApi(object):
             module_id=module_id
         )
         if not modules is None:
-            return serialmd.MODULE_HANDLE_LIST(
+            return serialwf.WORKFLOW_UPDATE_RESULT(
                 project=project,
                 branch=branch,
-                modules=modules,
+                workflow=branch.head,
+                modified_modules=modules,
                 urls=self.urls
             )
         return None
@@ -315,10 +319,11 @@ class VizierWorkflowApi(object):
             ),
         )
         if not modules is None:
-            return serialmd.MODULE_HANDLE_LIST(
+            return serialwf.WORKFLOW_UPDATE_RESULT(
                 project=project,
                 branch=branch,
-                modules=modules,
+                workflow=branch.head,
+                modified_modules=modules,
                 urls=self.urls
             )
         return None
@@ -373,10 +378,11 @@ class VizierWorkflowApi(object):
             )
         )
         if not modules is None:
-            return serialmd.MODULE_HANDLE_LIST(
+            return serialwf.WORKFLOW_UPDATE_RESULT(
                 project=project,
                 branch=branch,
-                modules=modules,
+                workflow=branch.head,
+                modified_modules=modules,
                 urls=self.urls
             )
         return None

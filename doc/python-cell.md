@@ -1,7 +1,7 @@
 Access and Manipulate Datasets from Python Code
 ===============================================
 
-The Python cell provides access to the underlying data store. This makes it possible to create, read, update, and delete datasets using Python  code. To interact with the data store, the Python cell contains the pre-initialized variable ```vizierdb```.
+The Python cell provides access to the underlying data store. This makes it possible to create, read, update, and delete datasets using Python code. To interact with the data store, the Python cell contains the pre-initialized variable ```vizierdb```.
 
 Read Dataset
 ------------

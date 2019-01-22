@@ -46,11 +46,11 @@ def PROJECT_DESCRIPTOR(project, urls):
         'properties': serialize.ANNOTATIONS(project.viztrail.properties),
         labels.LINKS: serialize.HATEOAS({
             ref.SELF: urls.get_project(project_id),
-            'home': urls.service_descriptor(),
-            'doc': urls.api_doc(),
-            'project:delete': urls.delete_project(project_id),
-            'project:update': urls.update_project(project_id),
-            'branch:create': urls.create_branch(project_id),
+            ref.API_HOME: urls.service_descriptor(),
+            ref.API_DOC: urls.api_doc(),
+            ref.PROJECT_DELETE: urls.delete_project(project_id),
+            ref.PROJECT_UPDATE: urls.update_project(project_id),
+            ref.BRANCH_CREATE: urls.create_branch(project_id),
             ref.FILE_UPLOAD: urls.upload_file(project_id)
         })
     }

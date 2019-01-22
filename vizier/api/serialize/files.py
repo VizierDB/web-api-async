@@ -19,6 +19,7 @@ serialize file resources.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
@@ -46,8 +47,8 @@ def FILE_HANDLE(f_handle, project, urls):
         'id': file_id,
         'name': f_handle.file_name,
         labels.LINKS: serialize.HATEOAS({
-            'self': download_url,
-            'file:download': download_url
+            ref.SELF: download_url,
+            ref.FILE_DOWNLOAD: download_url
         })
     }
     # Add mimetype and encoding if not None

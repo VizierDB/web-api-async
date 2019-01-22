@@ -29,11 +29,6 @@ VALUE = 'value'
 # HATEOAS
 HREF = 'href'
 LINKS = 'links'
-PAGE_FIRST = 'page:first'
-PAGE_LAST = 'page:last'
-PAGE_NEXT = 'page:next'
-PAGE_PREV = 'page:prev'
-SELF = 'self'
 REL = 'rel'
 
 # Datasets

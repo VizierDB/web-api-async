@@ -313,9 +313,9 @@ class UrlFactory(object):
         return self.get_branch_head(project_id, branch_id)
 
     def workflow_module_delete(self, project_id, branch_id, module_id):
-        """Url to delete a module to a given branch. Modules can only be
-        deleted from the branch head. Therefore, the workflow identifier is not
-        needed to identify the target workflow.
+        """Url to delete a module in the head workflow of a given branch.
+        Modules can only be deleted from the branch head. Therefore, the
+        workflow identifier is not needed to identify the target workflow.
 
         Parameters
         ----------
@@ -337,6 +337,26 @@ class UrlFactory(object):
         given module identifier. Modules can only be inserted into the branch
         head. Therefore, the workflow identifier is not needed to identify the
         target workflow.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        branch_id: string
+            Unique branch identifier
+        module_id: string
+            Unique module identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_workflow_module(project_id, branch_id, module_id)
+
+    def workflow_module_replace(self, project_id, branch_id, module_id):
+        """Url to replace a module in the head workflow of a given branch.
+        Modules can only be replaced in the branch head. Therefore, the
+        workflow identifier is not needed to identify the target workflow.
 
         Parameters
         ----------

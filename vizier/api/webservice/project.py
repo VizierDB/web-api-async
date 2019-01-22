@@ -21,6 +21,7 @@ vizier projects.
 from vizier.api.base import validate_name
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.project as serialpr
 
@@ -120,8 +121,8 @@ class VizierProjectApi(object):
                     for project in self.projects.list_projects()
             ],
             labels.LINKS: serialize.HATEOAS({
-                'self': self.urls.list_projects(),
-                'project:create': self.urls.create_project()
+                ref.SELF: self.urls.list_projects(),
+                ref.PROJECT_CREATE: self.urls.create_project()
             })
         }
 

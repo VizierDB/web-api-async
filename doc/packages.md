@@ -1,6 +1,8 @@
 Packages
 ========
 
+***THIS DOCUMENT NEEDS TO BE REVISED***
+
 Packages are collections of commands that can be executed by workflow modules. Each package is registered with the Vizier API using a package declaration that is represented as a single dictionary object.
 
 

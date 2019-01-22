@@ -19,6 +19,7 @@ serialize branches.
 """
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.workflow as workflow
 
@@ -48,11 +49,10 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
         'isDefault': project.viztrail.is_default_branch(branch_id),
         'properties': serialize.ANNOTATIONS(branch.properties),
         labels.LINKS: serialize.HATEOAS({
-            'self': urls.get_branch(project_id, branch_id),
-            'branch:delete': urls.delete_branch(project_id, branch_id),
-            'branch:head': urls.get_branch_head(project_id, branch_id),
-            'branch:project': urls.get_project(project_id),
-            'branch:update': urls.update_branch(project_id, branch_id)
+            ref.SELF: urls.get_branch(project_id, branch_id),
+            ref.BRANCH_DELETE: urls.delete_branch(project_id, branch_id),
+            ref.BRANCH_HEAD: urls.get_branch_head(project_id, branch_id),
+            ref.BRANCH_UPDATE: urls.update_branch(project_id, branch_id)
         })
     }
 

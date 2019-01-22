@@ -17,6 +17,7 @@
 """Methods for serializing chart view data."""
 
 import vizier.api.serialize.base as serialize
+import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
@@ -50,7 +51,7 @@ def CHART_VIEW(project_id, branch_id, workflow_id, module_id, chart_id, name, da
         labels.NAME: name,
         labels.DATA: data,
         labels.LINKS: serialize.HATEOAS({
-            labels.SELF: urls.get_chart_view(
+            ref.SELF: urls.get_chart_view(
                 project_id=project_id,
                 branch_id=branch_id,
                 workflow_id=workflow_id,

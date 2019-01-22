@@ -245,7 +245,7 @@ class VizierEngine(WorkflowController):
 
         Returns
         -------
-        vizier.viztrail.workflow.WorkflowHandle
+        list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
             # Get the handle for the head workflow of the specified branch.
@@ -256,16 +256,23 @@ class VizierEngine(WorkflowController):
             if workflow is None:
                 raise ValueError('empty workflow at branch head')
             # Set the state of all active modules to canceled
-            for module in workflow.modules:
+            first_active_module_index = None
+            for i in range(len(workflow.modules)):
+                module = workflow.modules[i]
                 if module.is_active:
                     module.set_canceled()
+                    if first_active_module_index is None:
+                        first_active_module_index = i
             # Cancel all running tasks for the project branch
             for task_id in self.tasks.keys():
                 task = self.tasks[task_id]
                 if task.project_id == project_id and task.branch_id == branch_id:
                     self.backend.cancel_task(task_id)
                     del self.tasks[task_id]
-            return workflow
+            if not first_active_module_index is None:
+                return workflow.modules[first_active_module_index:]
+            else:
+                return list()
 
     def delete_workflow_module(self, project_id, branch_id, module_id):
         """Delete the module with the given identifier from the workflow at the

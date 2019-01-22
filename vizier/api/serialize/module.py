@@ -70,10 +70,6 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
             labels.CREATED_AT: timestamp.created_at.isoformat()
         },
         labels.LINKS: serialize.HATEOAS({
-            'branch:head': urls.get_branch_head(
-                project_id=project_id,
-                branch_id=branch_id
-            ),
             ref.MODULE_INSERT: urls.workflow_module_insert(
                 project_id=project_id,
                 branch_id=branch_id,
@@ -83,7 +79,7 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
     }
     if include_self:
         obj[labels.LINKS].extend(serialize.HATEOAS({
-            'self': urls.get_workflow_module(
+            ref.SELF: urls.get_workflow_module(
                 project_id=project_id,
                 branch_id=branch_id,
                 module_id=module_id
@@ -92,11 +88,16 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
                 project_id=project_id,
                 branch_id=branch_id,
                 module_id=module_id
+            ),
+            ref.MODULE_REPLACE: urls.workflow_module_replace(
+                project_id=project_id,
+                branch_id=branch_id,
+                module_id=module_id
             )
         }))
     if not timestamp.started_at is None:
         obj[labels.TIMESTAMPS][labels.STARTED_AT] = timestamp.started_at.isoformat()
-    # Add outputs and datasets if module is not active. Else add cancel link
+    # Add outputs and datasets if module is not active.
     if not module.is_active:
         datasets = list()
         for name in module.datasets:
@@ -111,7 +112,7 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
             available_charts.append({
                 labels.NAME: c_handle.chart_name,
                 labels.LINKS: serialize.HATEOAS({
-                    labels.SELF: urls.get_chart_view(
+                    ref.SELF: urls.get_chart_view(
                         project_id=project_id,
                         branch_id=branch_id,
                         workflow_id=workflow.identifier,
@@ -125,44 +126,7 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
         obj[labels.OUTPUTS] = serialize.OUTPUTS(module.outputs)
         if not timestamp.finished_at is None:
             obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()
-    else:
-        obj[labels.LINKS].extend(serialize.HATEOAS({
-            'workflow:cancel': urls.cancel_workflow(
-                project_id=project_id,
-                branch_id=branch_id
-            )
-        }))
     return obj
-
-
-def MODULE_HANDLE_LIST(project, branch, modules, urls):
-    """Serialize a list of module handles into a dictionary.
-
-    Parameters
-    ----------
-    project: vizier.engine.project.base.ProjectHandle
-        Handle for the containing project
-    branch : vizier.viztrail.branch.BranchHandle
-        Branch handle
-    modules: list(vizier.viztrail.module.base.ModuleHandle)
-        Module handle
-    urls: vizier.api.routes.base.UrlFactory
-        Factory for resource urls
-
-    Returns
-    -------
-    dict
-    """
-    return {
-        'modules': [
-            MODULE_HANDLE(
-                project=project,
-                branch=branch,
-                module=m,
-                urls=urls
-            ) for m in modules
-        ]
-    }
 
 
 def PROVENANCE(prov):

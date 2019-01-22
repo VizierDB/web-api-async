@@ -21,13 +21,44 @@ of serialized objects that are returned by the web service API.
 # General
 SELF = 'self'
 
+# API
+API_DOC = 'api.doc'
+API_HOME = 'api.doc'
+
+# Branch
+BRANCH_CREATE = 'branch.create'
+BRANCH_DELETE = 'branch.delete'
+BRANCH_HEAD = 'branch.head'
+BRANCH_UPDATE = 'branch.update'
+
+# Dataset
+ANNOTATIONS_UPDATE = 'annotations.update'
+ANNOTATIONS_GET = 'annotations.get'
+DATASET_DOWNLOAD = 'dataset.download'
+DATASET_FETCH_ALL = 'dataset.fetch'
+
+PAGE_FIRST = 'page.first'
+PAGE_LAST = 'page.last'
+PAGE_NEXT = 'page.next'
+PAGE_PREV = 'page.prev'
+
 # Files
-FILE_DOWNLOAD = 'file:download'
-FILE_UPLOAD = 'file:upload'
+FILE_DOWNLOAD = 'file.download'
+FILE_UPLOAD = 'file.upload'
 
 # Modules
-MODULE_DELETE = 'module:delete'
-MODULE_INSERT = 'module:insert'
+MODULE_DELETE = 'module.delete'
+MODULE_INSERT = 'module.insert'
+MODULE_REPLACE = 'module.replace'
+
+# Projects
+PROJECT_CREATE = 'project.create'
+PROJECT_LIST = 'project.list'
+PROJECT_DELETE = 'project.delete'
+PROJECT_UPDATE = 'project.update'
 
 # Workflow
-WORKFLOW_APPEND = 'workflow:append'
+WORKFLOW_APPEND = 'workflow.append'
+WORKFLOW_BRANCH = 'workflow.branch'
+WORKFLOW_CANCEL = 'workflow.cancel'
+WORKFLOW_PROJECT = 'workflow.project'
