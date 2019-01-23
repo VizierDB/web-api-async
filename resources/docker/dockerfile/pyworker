@@ -2,8 +2,7 @@ FROM python:2.7-slim
 COPY requirements.txt /app/requirements.txt
 COPY setup.py /app/setup.py
 COPY ./vizier/ /app/vizier/
-COPY ./resources/packages/ /app/resources/packages/
-COPY ./resources/config/config.dev.docker-pyworker.yaml /app/config.yaml
+COPY ./resources/processors/ /app/resources/processors/
 WORKDIR /app/
 RUN pip install -r requirements.txt
 RUN pip install .

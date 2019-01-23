@@ -185,8 +185,8 @@ class ContainerProjectCache(ProjectCache):
                 app.VIZIERSERVER_APP_PATH: self.config.webservice.app_path,
                 app.VIZIERSERVER_LOG_DIR: '/app/data/logs/container',
                 app.VIZIERENGINE_DATA_DIR: '/app/data',
-                app.VIZIERSERVER_PACKAGE_PATH: '/app/resources/packages',
-                app.VIZIERSERVER_PROCESSOR_PATH: '/app/resources/processors',
+                app.VIZIERSERVER_PACKAGE_PATH: '/app/resources/packages/common',
+                app.VIZIERSERVER_PROCESSOR_PATH: '/app/resources/processors/common:/app/resources/processors/dev',
                 contnr.VIZIERCONTAINER_PROJECT_ID: project_id,
                 contnr.VIZIERCONTAINER_CONTROLLER_URL: self.config.app_base_url
             },

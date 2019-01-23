@@ -1,4 +1,4 @@
-# Command Line Interface
+# Vizier API Command Line Interface
 
 The **Vizier Web API Command Line Interface** allows a user to interact with a running instance of the Vizier web API from the command line of a terminal on their computer. While this is by no means the preferred and intended interface for Vizier it has proven to be a helpful tool during development. It also allows quick and simple manipulations of notebooks and dataset downloads without the need for a web browser.
 
@@ -8,7 +8,7 @@ The **Vizier Web API Command Line Interface** allows a user to interact with a r
 The command line interface is included as part of the vizier web-api-async repository. See the installations instructions in the README file for the repository. After cloning the repository, change the current working directory to the directoy that contains the cloned web-api-async repository. You can run the command line interface either either by typing `python vizier` followind by the command that you want to execute or using the simple shell script that is included in the tools folder of the repository. In order to use the shell script include that path to the tools folder in your global PATH variable, e.g.,
 
 ```
-$> export PATH=$PATH:./tools
+export PATH=$PATH:./tools
 ```
 
 ## Configuration
@@ -16,7 +16,7 @@ $> export PATH=$PATH:./tools
 The command line interface requires the URL of the Vizier web API that it interacts with. To initialize the URL use the `vizier init` command:
 
 ```
-$> vizier init {<url>}
+vizier init {<url>}
 ```
 
 If no URL is given it is assumed that the web service is running at the default URL `http://localhost:5000/vizier-db/api/v1`.
@@ -25,7 +25,7 @@ If no URL is given it is assumed that the web service is running at the default 
 
 The `vizier help` command prints a list of the available commands. At this point only the `plot`, `python`, and `vizual` packages for notebooks are supported.
 ```
-$> vizier help
+vizier help
 
 Vizier Command Line Interface - Version 0.1.0
 

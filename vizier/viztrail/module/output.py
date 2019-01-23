@@ -53,12 +53,23 @@ class ModuleOutputs(object):
         self.stderr = stderr if not stderr is None else list()
 
     def error(self, ex):
-        """
+        """Add stack trace for execution error to STDERR stream of the output
+        object.
+
+        Parameters
+        ----------
+        ex: Exception
+            Exception that was raised during mudule execution
+
+        Returns
+        -------
+        vizier.viztrail.module.output.ModuleOutputs
         """
         template = "{0}:{1!r}"
         message = template.format(type(ex).__name__, ex.args)
         message = message + ': ' + traceback.format_exc(sys.exc_info())
         self.stderr.append(TextOutput(message))
+        return self
 
 
 class OutputObject(object):

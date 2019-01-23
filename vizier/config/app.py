@@ -143,7 +143,7 @@ DEFAULT_SETTINGS = {
     VIZIERENGINE_SYNCHRONOUS: None,
     VIZIERENGINE_CELERY_ROUTES: None,
     VIZIERENGINE_CONTAINER_PORTS: range(20171, 20271),
-    VIZIERENGINE_CONTAINER_IMAGE: 'heikomueller/vizierdbprojectcontainer',
+    VIZIERENGINE_CONTAINER_IMAGE: 'heikomueller/vizierapi:container',
     'doc_url': 'http://cds-swg1.cims.nyu.edu/doc/vizier-db/'
 }
 

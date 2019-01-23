@@ -6,7 +6,7 @@ import vizier.config.container as cont
 
 client = docker.from_env()
 
-container_image = 'heikomueller/vizierdbprojectcontainer'
+container_image = 'heikomueller/vizierapi:container'
 port = 5005
 project_id = '0123456789'
 controller_url = 'http://localhost:5000/vizier-db/api/v1'

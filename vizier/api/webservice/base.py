@@ -134,7 +134,6 @@ class VizierApi(object):
         # Initialize the service descriptor
         self.service_descriptor = {
             'name': self.config.webservice.name,
-            'version': VERSION_INFO,
             'startedAt': get_current_time().isoformat(),
             'defaults': {
                 'maxFileSize': self.config.webservice.defaults.max_file_size
@@ -142,6 +141,8 @@ class VizierApi(object):
             'environment': {
                 'name': self.engine.name,
                 'version': VERSION_INFO,
+                'backend': self.config.engine.backend.identifier,
+                'packages': self.engine.packages.keys()
             },
             labels.LINKS: serialize.HATEOAS({
                 ref.SELF: self.urls.service_descriptor(),

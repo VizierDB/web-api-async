@@ -38,7 +38,7 @@ def config_routes(config):
     dict
     """
     routes = None
-    routing = config.backend.celery.routes
+    routing = config.engine.backend.celery.routes
     if not routing is None and not routing.strip() == '':
         routes = dict()
         for rt in routing.split(':'):

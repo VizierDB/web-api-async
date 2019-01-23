@@ -9,9 +9,12 @@ services:
         ports:
             - "5673:5672"
     webapi:
-        image: heikomueller/vizierapi:dev
+        image: heikomueller/vizierapi:server
         environment:
             - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
+            - VIZIERENGINE_BACKEND=CELERY
+            - VIZIERENGINE_DATA_DIR=/data
+            - VIZIERENGINE_CELERY_ROUTES=python.code.pycell
         ports:
             - "5000:5000"
         volumes:
@@ -19,18 +22,20 @@ services:
         depends_on:
             - rabbit
     worker:
-        image: heikomueller/vizierworker:dev
+        image: heikomueller/vizierapi:worker
         environment:
             - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
+            - VIZIERWORKER_CONTROLLER_URL=http://webapi:5000/vizier-db/api/v1
+            - VIZIERENGINE_DATA_DIR=/data
         volumes:
           - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
         depends_on:
             - rabbit
     pyworker:
-        image: heikomueller/vizierpyworker:dev
+        image: heikomueller/vizierapi:pyworker
         environment:
             - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
-        volumes:
-          - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
+            - VIZIERWORKER_CONTROLLER_URL=http://webapi:5000/vizier-db/api/v1
+            - VIZIERWORKER_ENV=REMOTE
         depends_on:
             - rabbit

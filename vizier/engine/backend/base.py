@@ -280,10 +280,6 @@ def exec_command(task_id, command, context, processor):
             context=context
         )
     except Exception as ex:
-        template = "{0}:{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        result = ExecResult(
-            is_success=False,
-            outputs=ModuleOutputs(stderr=[TextOutput(message)])
-        )
+        outputs = ModuleOutputs().error(ex)
+        result = ExecResult(is_success=False, outputs=outputs)
     return task_id, result

@@ -21,7 +21,7 @@ remote vizier instance.
 from vizier.api.client.resources.chart import ChartHandle
 from vizier.api.client.resources.dataset import DatasetDescriptor
 from vizier.core.timestamp import to_datetime
-from vizier.viztrail.module.output import OUTPUT_TEXT
+from vizier.viztrail.module.output import OUTPUT_HTML, OUTPUT_TEXT
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 import vizier.viztrail.module.base as states
@@ -62,7 +62,7 @@ class ModuleResource(object):
         outputs = list()
         if 'outputs' in obj:
             for out in obj['outputs']['stdout']:
-                if out['type'] == OUTPUT_TEXT:
+                if out['type'] in [OUTPUT_TEXT, OUTPUT_HTML]:
                     outputs.append(out['value'])
             for out in obj['outputs']['stderr']:
                 outputs.append(out['value'])

@@ -322,10 +322,11 @@ class VizierApiClient(object):
         """Print information about the API (from the API service descriptor)."""
         r = requests.get(self.urls.service_descriptor())
         r.raise_for_status()
-        doc = json.loads(r.text)
         print 'Name    : ' + doc['name']
         print 'URL     : ' + deserialize.HATEOAS(doc['links'])['self']
         print 'Engine  : ' + doc['environment']['name']
+        print 'Backend : ' + doc['environment']['backend']
+        print 'Packages: ' + ', '.join(doc['environment']['packages'])
         print 'Version : ' + doc['environment']['version']
         print 'Started : ' + doc['startedAt']
 

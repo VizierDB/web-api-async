@@ -659,11 +659,19 @@ ServiceDescriptor:
             required:
                 - name
                 - version
+                - backend
+                - packages
             properties:
                 name:
                     type: string
                 version:
                     type: string
+                backend:
+                    type: string
+                packages:
+                    type: array
+                    items:
+                        type: string
         links:
             type: array
             items:

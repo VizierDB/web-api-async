@@ -1,0 +1,32 @@
+version: '3'
+services:
+    rabbit:
+        hostname: rabbit
+        image: rabbitmq:latest
+        environment:
+            - RABBITMQ_DEFAULT_USER=admin
+            - RABBITMQ_DEFAULT_PASS=mypass
+        ports:
+            - "5673:5672"
+    webapi:
+        image: heikomueller/vizierapi:server
+        environment:
+            - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
+            - VIZIERENGINE_BACKEND=CELERY
+            - VIZIERENGINE_DATA_DIR=/data
+        ports:
+            - "5000:5000"
+        volumes:
+          - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
+        depends_on:
+            - rabbit
+    worker:
+        image: heikomueller/vizierapi:worker
+        environment:
+            - CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
+            - VIZIERWORKER_CONTROLLER_URL=http://webapi:5000/vizier-db/api/v1
+            - VIZIERENGINE_DATA_DIR=/data
+        volumes:
+          - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
+        depends_on:
+            - rabbit

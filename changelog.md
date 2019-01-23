@@ -1,4 +1,4 @@
-# Vizier DB Web API - Changelog
+# Vizier Web API - Changelog
 
 ### 0.1.0
 

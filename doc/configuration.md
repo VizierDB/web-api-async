@@ -1,4 +1,4 @@
-# Configuration
+# Vizier Configuration
 
 The Vizier web service API and all worker components are configured using environment variables in an attempt to follow [The Twelve-Factor App methodology](https://12factor.net/) for web application development. All relevant environment variables have default values that allow you to run the web service using a default configuration without the need to set any of the variables. The current default configuration will run the service in development mode.
 
@@ -55,7 +55,7 @@ The vizier engine is further configured using the following four environment var
 - ***VIZIERENGINE_BACKEND***: Name of the execution backend. The currently implemented backends are CELERY, MULTIPROCESS, or CONTAINER (DEFAULT: MULTIPROCESS).
 - ***VIZIERENGINE_SYNCHRONOUS***: Colon separated list of package.command strings that identify the commands that are executed synchronously (DEFAULT: None)
 - ***VIZIERENGINE_USE_SHORT_IDENTIFIER***: Flag indicating whether short identifiers (eight characters instead of 32) are used by the viztrail repository (DEFAULT: True)
-- **VIZIERENGINE_DATA_DIR**: Base data directory for storing data. The datastore, filestore, and viztrail repository will create sub-folders in the directory for maintaining information and resources they maintain.
+- ***VIZIERENGINE_DATA_DIR***: Base data directory for storing data. The datastore, filestore, and viztrail repository will create sub-folders in the directory for maintaining information and resources they maintain.
 
 Each execution backend may use additional environment variables for its configuration. **Note** that not all combinations of engine configuration and backend name are valid. The backends *MULTIPROCESS* and *CELERY* can only be used in combination with engine configurations *DEV* and *MIMIR*. Backend *CONTAINER* is the backend when using engine configuration *CLUSTER*.
 
@@ -82,7 +82,7 @@ The default configuration uses [RabbitMQ](https://www.rabbitmq.com) as the messa
 When using the CONTAINER backend each vizier projects runs in a separate isolated container. This configuration is intended to prevent users from manipulating (or destroying) the projects of other users. The CONTAINER backend can only be used in combination with *CLUSTER* as the engine configuration. The CONTAINER backend is configured using two additional environment variables:
 
 - ***VIZIERENGINE_CONTAINER_PORTS*** : List of port numbers for new project containers. Expects a comma-separated list of port number of number intervals (e.g. 8080-8088,9000,9090-9099)  (DEFAULT: 20171-20271)
-- ***VIZIERENGINE_CONTAINER_IMAGE***: Unique identifier of the docker image for project containers (DEFAULT: *heikomueller/vizierdbprojectcontainer*)
+- ***VIZIERENGINE_CONTAINER_IMAGE***: Unique identifier of the docker image for project containers (DEFAULT: *heikomueller/vizierapi:container*)
 
 Each project container exposes a limited version of the web service API via a given port on the host machine. Port numbers are drawn from the list of number in *VIZIERENGINE_CONTAINER_PORTS*. It is assumed that all port numbers in the given list are available. Once all numbers are in use no new projects can be added. Port numbers are released when a project is deleted.
 
