@@ -64,7 +64,7 @@
 * Upload files from URL
 
 
-### 0.5.0 - 2019-01-??
+### 0.5.0 - 2019-01-23
 
 This is the first prototype that supports asynchronous execution of workflow modules. The prototype was created from the code base of the web API version 0.4.4. It incorporates changes that were made to the UB branch and that were merged into the master branch while the prototype was under development.
 
