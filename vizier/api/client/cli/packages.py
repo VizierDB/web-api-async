@@ -271,7 +271,7 @@ def parse_command(tokens, notebook, datasets=dict()):
 
 def print_commands():
     """Print command syntax listing for supported commands."""
-    print '  chart <chart-name> on <dataset-name> with <column-name:label:start-end> ...'
+    print '  chart <name> on <dataset> with <column:label:start-end> ...'
     print '  delete column <name> from <dataset>'
     print '  delete row <row-index> from <dataset>'
     print '  drop dataset <dataset>'

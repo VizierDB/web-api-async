@@ -133,6 +133,21 @@ class Notebook(object):
         # by the delete operation
         return WorkflowResource.from_dict(json.loads(r.text))
 
+    def download_dataset(self, dataset, target_file):
+        """Download the given datast to the given target path.
+
+        Parameters
+        ----------
+        dataset: vizier.api.client.resources.DatasetDescriptor
+            Descriptor for dataset that is downloaded
+        target_file: string
+            Target path for storing downloaded file
+        """
+        url = dataset.links[ref.DATASET_DOWNLOAD]
+        r = requests.get(url, allow_redirects=True)
+        with open(target_file, 'wb') as f:
+            f.write(r.content)
+
     def fetch_dataset(self, dataset):
         """Fetch handle for the dataset with the given identifier.
 
@@ -164,7 +179,7 @@ class Notebook(object):
         if not identifier in self.workflow.datasets:
             raise ValueError('unknown datasets \'' + identifier + '\'')
         return self.workflow.datasets[identifier]
-        
+
     def get_module(self, module_id):
         """Get the workflow module with the given identifier. Returns None if
         no module with the given identifier exists.
@@ -178,9 +193,12 @@ class Notebook(object):
         -------
         vizier.api.client.resources.module.ModuleResource
         """
+        if module_id is None and len(self.workflow.modules) > 0:
+            return self.workflow.modules[-1]
         for module in self.workflow.modules:
             if module.identifier == module_id:
                 return module
+        return None
 
     def insert_cell(self, command, before_module):
         """Insert a new module to the notebook that executes te given command.

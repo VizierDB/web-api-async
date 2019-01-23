@@ -20,12 +20,8 @@ repository.
 
 from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
-from vizier.core.timestamp import utc_to_local
+from vizier.api.client.cli.util import ts
 from vizier.viztrail.base import PROPERTY_NAME
-
-
-"""Default timestamp format."""
-TIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 
 class ViztrailsCommands(Command):
@@ -109,9 +105,6 @@ class ViztrailsCommands(Command):
             # show history
             elif tokens[0] == 'show' and tokens[1] in ['history', 'notebooks']:
                 return self.list_workflows()
-            # show workflow
-            elif tokens[0] == 'show' and tokens[1] in ['nb', 'notebook']:
-                return self.show_notebook()
         elif len(tokens) == 3:
             # create branch <name>
             if tokens[0] == 'create' and tokens[1] == 'branch':
@@ -131,9 +124,6 @@ class ViztrailsCommands(Command):
             # rename project <name>
             elif tokens[0] == 'rename' and tokens[1] == 'project':
                 return self.rename_project(tokens[2])
-            # show workflow <workflow-id>
-            elif tokens[0] == 'show' and tokens[1] in ['nb', 'notebook']:
-                return self.show_notebook(workflow_id=tokens[2])
         elif len(tokens) == 6:
             # create branch <name> from module <module-id>
             if tokens[0:2] == ['create', 'branch'] and tokens[3:5] == ['from', 'module']:
@@ -168,7 +158,6 @@ class ViztrailsCommands(Command):
         print '  rename branch <name>'
         print '  rename project <name>'
         print '  show [history | notebooks]'
-        print '  show notebook {<workflow-id>}'
 
     def list_branches(self):
         """Print listing of branches for default project in tabular format."""
@@ -244,56 +233,3 @@ class ViztrailsCommands(Command):
         )
         print 'Project renamed to ' + name
         return True
-
-    def show_notebook(self, workflow_id=None):
-        """List all modules for a given workflow. If the workflow identifier is
-        not given the branch head is used as the workflow.
-        """
-        workflow = self.api.get_workflow(
-            project_id=self.api.get_default_project(),
-            branch_id=self.api.get_default_branch(),
-            workflow_id=workflow_id
-        )
-        if workflow.is_empty:
-            print 'Notebook is empty'
-            return True
-        print 'Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')'
-        for i in range(len(workflow.modules)):
-            module = workflow.modules[i]
-            cell_id = '[' + str(i+1) + '] '
-            indent = ' ' * len(cell_id)
-            print '\n' + cell_id + '(' + module.state.upper() + ') ' + module.identifier
-            timestamps = 'Created @ ' + ts(module.timestamp.created_at)
-            if not module.timestamp.started_at is None:
-                timestamps += ', Started @ ' + ts(module.timestamp.started_at)
-            if not module.timestamp.finished_at is None:
-                timestamps += ', Finished @ ' + ts(module.timestamp.finished_at)
-            print indent + timestamps
-            print indent + '--'
-            for line in module.external_form.split('\n'):
-                print indent + line
-            if len(module.outputs) > 0:
-                print indent + '--'
-                for line in module.outputs:
-                    if '\n' in line:
-                        sublines = line.split('\n')
-                        for l in sublines:
-                            print indent + l
-                    else:
-                        print indent + line
-            if len(module.datasets) > 0:
-                print indent + '--'
-                print indent + 'Datasets: ' + ', '.join(module.datasets)
-            if len(module.charts) > 0:
-                print indent + 'Charts: ' + ', '.join(module.charts.keys())
-            print '.'
-        return True
-
-
-# ------------------------------------------------------------------------------
-# Helper Methods
-# ------------------------------------------------------------------------------
-
-def ts(timestamp):
-    """Convert datatime timestamp to string."""
-    return  utc_to_local(timestamp).strftime(TIME_FORMAT)
