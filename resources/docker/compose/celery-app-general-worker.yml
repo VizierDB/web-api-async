@@ -17,7 +17,7 @@ services:
         ports:
             - "5000:5000"
         volumes:
-          - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
+          - "/home/user/vizier/vizier-api/.vizierdb:/data"
         depends_on:
             - rabbit
     worker:
@@ -27,6 +27,6 @@ services:
             - VIZIERWORKER_CONTROLLER_URL=http://webapi:5000/vizier-db/api/v1
             - VIZIERENGINE_DATA_DIR=/data
         volumes:
-          - "/home/heiko/projects/vizier/vizier-api/.vizierdb:/data"
+          - "/home/user/vizier/vizier-api/.vizierdb:/data"
         depends_on:
             - rabbit

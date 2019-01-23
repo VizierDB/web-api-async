@@ -1,6 +1,6 @@
-# Copyright (C) 2018 New York University
-#                    University at Buffalo,
-#                    Illinois Institute of Technology.
+# Copyright (C) 2017-2019 New York University,
+#                         University at Buffalo,
+#                         Illinois Institute of Technology.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -221,7 +221,7 @@ class DatasetDescriptor(object):
             if not col_name.upper() in names:
                 return col_name
             index += 1
-            
+
     def max_column_id(self):
         """Get maximum identifier for columns in the dataset schema. If the
         schema is empty the result is -1.

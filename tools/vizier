@@ -1,11 +1,8 @@
 #!/bin/bash
 
-#export PATH=$PATH:/home/heiko/projects/vizier/vizier-api/tools
-#source activate vapi &&
-
 ARGS=()
 for a in "$@"; do
     ARGS+=("${a}")
 done
 
-python /home/heiko/projects/vizier/vizier-api/vizier "${ARGS[@]}"
+python ./vizier "${ARGS[@]}"
