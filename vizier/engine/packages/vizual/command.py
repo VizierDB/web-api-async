@@ -48,8 +48,6 @@ def delete_column(dataset_name, column, validate=False):
     )
 
 
-
-
 def delete_row(dataset_name, row, validate=False):
     """Create instance of delete dataset row command.
 

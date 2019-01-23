@@ -42,6 +42,9 @@ Settings
 
 Projects
   create branch <name>
+  create branch <name> from module <module-id>
+  create branch <name> from workflow <workflow-id> module <module-id>
+  create branch <name>
   create project <name>
   delete branch <branch-id>
   delete project <project-id>
@@ -63,8 +66,19 @@ Notebooks
 
 Commands
   chart <chart-name> on <dataset-name> with <column-name:label:start-end> ...
+  delete column <name> from <dataset>
+  delete row <row-index> from <dataset>
+  drop dataset <dataset>
+  filter <column-1>{::<new-name>} ... from <dataset>
+  insert column <name> into <dataset> at position <column-index>
+  insert row into <dataset> at position <row-index>
   load <name> from file <file>
   load <name> from url <url>
+  move column <name> in <dataset> to position <column-index>
+  move row <row-index> in <dataset> to position <target-index>
   python [<script> | <file>]
+  rename column <name> in <dataset> to <new-name>
+  rename dataset <dataset> to <new-name>
+  sort <dataset> by <column-1>{::[DESC|ASC]} ...
   update <dataset-name> <column-name> <row-index>{ <value>}
 ```

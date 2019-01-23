@@ -232,9 +232,10 @@ class NotebookCommands(Command):
             ds = notebook.fetch_dataset(
                 dataset=notebook.workflow.datasets[module.datasets[name]]
             )
-            rows = [[col.name for col in ds.columns]]
+            header = ['[ID]'] + [col.name for col in ds.columns]
+            rows = [header]
             for row in ds.fetch_rows():
-                values = [str(val) for val in row.values]
+                values = [str(row.identifier)] + [str(val) for val in row.values]
                 rows.append(values)
             self.output(rows)
         else:
