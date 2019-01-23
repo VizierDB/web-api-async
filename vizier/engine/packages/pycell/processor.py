@@ -143,7 +143,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 delete=client.delete
             )
         else:
-            output.error(exception)
+            outputs.error(exception)
             provenance = ModuleProvenance()
         # Return execution result
         return ExecResult(

@@ -71,6 +71,7 @@ class TestMimirProcessor(unittest.TestCase):
         )
         self.assertTrue(result.is_success)
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
+        rows = ds.fetch_rows()
         self.assertNotEquals(rows[2].values[ds.column_index('Age')], '')
         # Introduce an error. Make sure command formating is correct
         command = cmd.mimir_domain('MY DS', 'MY COL')
@@ -329,7 +330,6 @@ class TestMimirProcessor(unittest.TestCase):
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        print columns
         self.assertEquals(len(ds.columns), 6)
         self.assertTrue('PICK_ONE_AGE_SALARY' in columns)
         self.assertTrue('MY_COLUMN' in columns)
@@ -353,7 +353,6 @@ class TestMimirProcessor(unittest.TestCase):
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        print columns
         self.assertTrue('MY_NEXT_COLUMN' in columns)
         mimir.finalize()
 

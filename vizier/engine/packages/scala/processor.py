@@ -16,6 +16,8 @@
 
 """Implementation of the task processor for the Scala package."""
 
+import sys
+
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput

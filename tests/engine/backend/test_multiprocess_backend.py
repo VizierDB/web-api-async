@@ -132,7 +132,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.assertEquals(controller.task_id, '000')
         self.assertEquals(controller.state, 'ERROR')
         self.assertEquals(len(controller.outputs.stdout), 0)
-        self.assertEquals(controller.outputs.stderr[0].value, 'NotImplementedError:()')
+        self.assertNotEquals(len(controller.outputs.stderr), 0)
 
     def test_execute(self):
         """Test executing a sequence of supported commands."""
