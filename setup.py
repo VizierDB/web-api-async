@@ -11,15 +11,17 @@ setup(
     packages=['vizier'],
     package_data={'': ['LICENSE.txt']},
     install_requires=[
-	'Flask>=1.0',
-	'flask-cors',
-    'celery',
-    'docker',
-    'jsonschema',
-	'pyyaml',
-	'py4j>=0.10.6',
-    'requests',
-	'spylon>=0.3.0',
-    'unicodecsv>=0.14.1'
-    ]
+        'Flask>=1.0',
+        'flask-cors',
+        'celery',
+        'docker',
+        'jsonschema',
+        'pyyaml',
+        'py4j>=0.10.6',
+        'requests',
+        'spylon>=0.3.0',
+        'unicodecsv>=0.14.1'
+    ],
+    include_package_data=True,
+    scripts=['tools/vizier'],
 )

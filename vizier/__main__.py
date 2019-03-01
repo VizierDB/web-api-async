@@ -64,7 +64,7 @@ def main(args):
         with open(config_file, 'w') as f:
             json.dump({'url': url}, f)
     elif not os.path.isfile(config_file):
-        raise ValueError('missing config file')
+        raise ValueError('vizier client is not initialized')
     else:
         config = read_object_from_file(config_file)
         defaults_file = os.path.join(app_dir, 'defaults.json')
