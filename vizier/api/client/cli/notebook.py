@@ -159,7 +159,10 @@ class NotebookCommands(Command):
                 notebook = self.api.get_notebook()
                 datasets = None
                 if len(notebook.workflow.modules) > 0:
-                    datasets = notebook.workflow.modules[-1].datasets
+                    datasets = dict()
+                    for m in notebook.workflow.modules:
+                        for name in m.datasets:
+                            datasets[name] = m.datasets[name]
                 return self.append_module(
                     command=parse_command(
                         tokens=tokens[2:],

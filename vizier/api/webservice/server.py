@@ -14,17 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Vizier Web Service - The web service is the main access point for the Vizier
-front end and for any other (remote) clients. Implements the requests for the
-Vizier Web API as documented in http://cds-swg1.cims.nyu.edu/vizier/api/v1/doc/.
+"""Blueprint for the Vizier web service application. Implements the requests
+for the Vizier Web API as documented in:
+
+    http://cds-swg1.cims.nyu.edu/vizier/api/v1/doc/
 """
 
 import csv
 import os
 import StringIO
 
-from flask import Flask, jsonify, make_response, request, send_file
-from flask_cors import CORS
+from flask import Blueprint, jsonify, make_response, request, send_file
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
@@ -35,29 +35,22 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
-import vizier.config.base as const
 
 
 # -----------------------------------------------------------------------------
 #
-# App Initialization
+# App Blueprint
 #
 # -----------------------------------------------------------------------------
 
 """Get application configuration parameters from environment variables."""
 config = AppConfig()
 
-# Create the app and enable cross-origin resource sharing
-app = Flask(__name__)
-app.config['APPLICATION_ROOT'] = config.webservice.app_path
-app.config['DEBUG'] = config.run.debug
-# Set size limit for uploaded files
-app.config['MAX_CONTENT_LENGTH'] = config.webservice.defaults.max_file_size
+global api
+api = VizierApi(config, init=True)
 
-CORS(app)
-
-# Get the Web Service API.
-api = VizierApi(config)
+# Create the application blueprint
+bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path)
 
 
 # ------------------------------------------------------------------------------
@@ -69,7 +62,7 @@ api = VizierApi(config)
 # ------------------------------------------------------------------------------
 # Service
 # ------------------------------------------------------------------------------
-@app.route('/')
+@bp.route('/')
 def service_descriptor():
     """Retrieve essential information about the web service including relevant
     links to access resources and interact with the service.
@@ -80,7 +73,7 @@ def service_descriptor():
 # ------------------------------------------------------------------------------
 # Projects
 # ------------------------------------------------------------------------------
-@app.route('/projects')
+@bp.route('/projects')
 def list_projects():
     """Get a list of descriptors for all projects that are currently being
     managed by the API.
@@ -88,7 +81,7 @@ def list_projects():
     return jsonify(api.projects.list_projects())
 
 
-@app.route('/projects', methods=['POST'])
+@bp.route('/projects', methods=['POST'])
 def create_project():
     """Create a new project. The request is expected to contain a Json object
     with an optional list of properties as (key,value)-pairs.
@@ -117,7 +110,7 @@ def create_project():
         raise srv.InvalidRequest(str(ex))
 
 
-@app.route('/projects/<string:project_id>')
+@bp.route('/projects/<string:project_id>')
 def get_project(project_id):
     """Retrieve information for project with given identifier."""
     # Retrieve project serialization. If project does not exist the result
@@ -128,7 +121,7 @@ def get_project(project_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>', methods=['DELETE'])
+@bp.route('/projects/<string:project_id>', methods=['DELETE'])
 def delete_project(project_id):
     """Delete an existing project."""
     if api.projects.delete_project(project_id):
@@ -136,7 +129,7 @@ def delete_project(project_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>', methods=['PUT'])
+@bp.route('/projects/<string:project_id>', methods=['PUT'])
 def update_project(project_id):
     """Update the set of user-defined properties. Expects a Json object with
     a list of property update statements. These statements are (key,value)
@@ -174,7 +167,7 @@ def update_project(project_id):
 # ------------------------------------------------------------------------------
 # Branches
 # ------------------------------------------------------------------------------
-@app.route('/projects/<string:project_id>/branches', methods=['POST'])
+@bp.route('/projects/<string:project_id>/branches', methods=['POST'])
 def create_branch(project_id):
     """Create a new branch for a project. Expects a description of the parent
     workflow in the request body together with an optional list of branch
@@ -235,7 +228,7 @@ def create_branch(project_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['DELETE'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['DELETE'])
 def delete_branch(project_id, branch_id):
     """Delete branch from a given project."""
     try:
@@ -247,7 +240,7 @@ def delete_branch(project_id, branch_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>')
 def get_branch(project_id, branch_id):
     """Get handle for a branch in a given project."""
     # Get the branch handle. The result is None if the project or the branch
@@ -258,7 +251,7 @@ def get_branch(project_id, branch_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['PUT'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['PUT'])
 def update_branch(project_id, branch_id):
     """Update properties for a given project workflow branch. Expects a set of
     key,value-pairs in the request body. Properties with given key but missing
@@ -298,7 +291,7 @@ def update_branch(project_id, branch_id):
 # Workflows
 # ------------------------------------------------------------------------------
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head')
 def get_branch_head(project_id, branch_id):
     """Get handle for a workflow at the HEAD of a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
@@ -309,7 +302,7 @@ def get_branch_head(project_id, branch_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head', methods=['POST'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head', methods=['POST'])
 def append_branch_head(project_id, branch_id):
     """Append a module to the workflow that is at the HEAD of the given branch.
 
@@ -345,7 +338,7 @@ def append_branch_head(project_id, branch_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/cancel', methods=['POST'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/cancel', methods=['POST'])
 def cancel_workflow(project_id, branch_id):
     """Cancel execution for all running and pending modules in the head
     workflow of a given project branch.
@@ -361,7 +354,7 @@ def cancel_workflow(project_id, branch_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')
 def get_workflow(project_id, branch_id, workflow_id):
     """Get handle for a workflow in a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
@@ -376,7 +369,7 @@ def get_workflow(project_id, branch_id, workflow_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')
 def get_workflow_module(project_id, branch_id, module_id):
     """Get handle for a module in the head workflow of a given project branch.
     """
@@ -392,7 +385,7 @@ def get_workflow_module(project_id, branch_id, module_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['DELETE'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['DELETE'])
 def delete_workflow_module(project_id, branch_id, module_id):
     """Delete a module in the head workflow of a given project branch."""
     result = api.workflows.delete_workflow_module(
@@ -405,7 +398,7 @@ def delete_workflow_module(project_id, branch_id, module_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['POST'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['POST'])
 def insert_workflow_module(project_id, branch_id, module_id):
     """Insert a module into a workflow branch before the specified module and
     execute the resulting workflow.
@@ -443,7 +436,7 @@ def insert_workflow_module(project_id, branch_id, module_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['PUT'])
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['PUT'])
 def replace_workflow_module(project_id, branch_id, module_id):
     """Replace a module in the current project workflow branch and execute the
     resulting workflow.
@@ -485,7 +478,7 @@ def replace_workflow_module(project_id, branch_id, module_id):
 # Tasks
 # ------------------------------------------------------------------------------
 
-@app.route('/tasks/<string:task_id>', methods=['PUT'])
+@bp.route('/tasks/<string:task_id>', methods=['PUT'])
 def update_task_state(task_id):
     """Update the state of a running task."""
     # Abort with BAD REQUEST if request body is not in Json format or does not
@@ -522,7 +515,7 @@ def update_task_state(task_id):
 # Datasets
 # ------------------------------------------------------------------------------
 
-@app.route('/projects/<string:project_id>/datasets', methods=['POST'])
+@bp.route('/projects/<string:project_id>/datasets', methods=['POST'])
 def create_dataset(project_id):
     """Create a new dataset in the datastore for the given project. The dataset
     schema and rows are given in the request body. Dataset annotations are
@@ -587,7 +580,7 @@ def create_dataset(project_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>')
 def get_dataset(project_id, dataset_id):
     """Get the dataset with given identifier that has been generated by a
     curation workflow.
@@ -607,7 +600,7 @@ def get_dataset(project_id, dataset_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
 def get_dataset_annotations(project_id, dataset_id):
     """Get annotations that are associated with the given dataset.
     """
@@ -627,7 +620,7 @@ def get_dataset_annotations(project_id, dataset_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
 def get_dataset_descriptor(project_id, dataset_id):
     """Get the descriptor for the dataset with given identifier."""
     try:
@@ -642,7 +635,7 @@ def get_dataset_descriptor(project_id, dataset_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
 def update_dataset_annotation(project_id, dataset_id):
     """Update an annotation that is associated with a component of the given
     dataset.
@@ -687,7 +680,7 @@ def update_dataset_annotation(project_id, dataset_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/datasets/<string:dataset_id>/csv')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/csv')
 def download_dataset(project_id, dataset_id):
     """Get the dataset with given identifier in CSV format.
     """
@@ -713,7 +706,7 @@ def download_dataset(project_id, dataset_id):
 # ------------------------------------------------------------------------------
 # Views
 # ------------------------------------------------------------------------------
-@app.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')
 def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, chart_id):
     """Get content of a dataset chart view for a given workflow module.
     """
@@ -744,7 +737,7 @@ def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, chart_
 # Files
 # ------------------------------------------------------------------------------
 
-@app.route('/projects/<string:project_id>/files', methods=['POST'])
+@bp.route('/projects/<string:project_id>/files', methods=['POST'])
 def upload_file(project_id):
     """Upload file (POST) - Upload a data file to the project's filestore.
     """
@@ -772,7 +765,7 @@ def upload_file(project_id):
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
-@app.route('/projects/<string:project_id>/files/<string:file_id>')
+@bp.route('/projects/<string:project_id>/files/<string:file_id>')
 def download_file(project_id, file_id):
     """Download file from file server."""
     # Get handle for file from the project's filestore
@@ -790,104 +783,3 @@ def download_file(project_id, file_id):
             as_attachment=True
         )
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or file \'' + file_id + '\'')
-
-
-# ------------------------------------------------------------------------------
-#
-# Error Handler
-#
-# ------------------------------------------------------------------------------
-
-@app.errorhandler(srv.ServerRequestException)
-def invalid_request_or_resource_not_found(error):
-    """JSON response handler for invalid requests or requests that access
-    unknown resources.
-
-    Parameters
-    ----------
-    error : Exception
-        Exception thrown by request Handler
-
-    Returns
-    -------
-    Http response
-    """
-    app.logger.error(error.message)
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
-
-
-@app.errorhandler(413)
-def upload_error(exception):
-    """Exception handler for file uploads that exceed the file size limit."""
-    app.logger.error(exception)
-    return make_response(jsonify({'error': str(exception)}), 413)
-
-
-@app.errorhandler(500)
-def internal_error(exception):
-    """Exception handler that logs exceptions."""
-    app.logger.error(exception)
-    return make_response(jsonify({'error': str(exception)}), 500)
-
-
-# ------------------------------------------------------------------------------
-#
-# Initialize
-#
-# ------------------------------------------------------------------------------
-
-@app.before_first_request
-def initialize():
-    """Initialize the API before the first request. This can help avoid loading
-    data twice since the API object is usually instatiated twice when the server
-    starts.
-    """
-    # Initialize the Mimir gateway if using Mimir engine
-    if config.engine.identifier == const.MIMIR_ENGINE:
-        import vizier.mimir as mimir
-        mimir.initialize()
-    api.init()
-
-# ------------------------------------------------------------------------------
-#
-# Main
-#
-# ------------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    # Relevant documents:
-    # http://werkzeug.pocoo.org/docs/middlewares/
-    # http://flask.pocoo.org/docs/patterns/appdispatch/
-    from werkzeug.serving import run_simple
-    from werkzeug.wsgi import DispatcherMiddleware
-    # Switch logging on
-    import logging
-    from logging.handlers import RotatingFileHandler
-    log_dir = os.path.abspath(config.logs.server)
-    # Create the directory if it does not exist
-    if not os.path.isdir(log_dir):
-        os.makedirs(log_dir)
-    # File handle for server logs
-    file_handler = RotatingFileHandler(
-        os.path.join(log_dir, 'vizier-webapi.log'),
-        maxBytes=1024 * 1024 * 100,
-        backupCount=20
-    )
-    file_handler.setLevel(logging.ERROR)
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    )
-    app.logger.addHandler(file_handler)
-    # Load a dummy app at the root URL to give 404 errors.
-    # Serve app at APPLICATION_ROOT for localhost development.
-    application = DispatcherMiddleware(Flask('dummy_app'), {
-        app.config['APPLICATION_ROOT']: app,
-    })
-    run_simple(
-        '0.0.0.0',
-        config.webservice.server_local_port,
-        application,
-        use_reloader=config.run.debug
-    )

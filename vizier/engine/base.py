@@ -123,11 +123,11 @@ class VizierEngine(WorkflowController):
         -------
         vizier.viztrail.module.base.ModuleHandle
         """
-        # Get the handle for the specified branch
-        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
-        if branch is None:
-            return None
         with self.backend.lock:
+            # Get the handle for the specified branch
+            branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
+            if branch is None:
+                return None
             # Get the current database state from the last module in the current
             # branch head. At the same time we retrieve the list of modules for
             # the current head of the branch.
@@ -224,7 +224,7 @@ class VizierEngine(WorkflowController):
                         module=workflow.modules[-1],
                         datasets=datasets
                     )
-            return workflow.modules[-1]
+        return workflow.modules[-1]
 
     def cancel_exec(self, project_id, branch_id):
         """Cancel the execution of all active modules for the head workflow of
@@ -297,11 +297,11 @@ class VizierEngine(WorkflowController):
         -------
         list(vizier.viztrail.module.base.ModuleHandle)
         """
-        # Get the handle for the specified branch and the branch head
-        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
-        if branch is None:
-            return None
         with self.backend.lock:
+            # Get the handle for the specified branch and the branch head
+            branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
+            if branch is None:
+                return None
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
@@ -493,11 +493,11 @@ class VizierEngine(WorkflowController):
         -------
         list(vizier.viztrail.module.base.ModuleHandle)
         """
-        # Get the handle for the specified branch and the branch head
-        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
-        if branch is None:
-            return None
         with self.backend.lock:
+            # Get the handle for the specified branch and the branch head
+            branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
+            if branch is None:
+                return None
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
@@ -578,11 +578,11 @@ class VizierEngine(WorkflowController):
         -------
         list(vizier.viztrail.module.base.ModuleHandle)
         """
-        # Get the handle for the specified branch and the branch head
-        branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
-        if branch is None:
-            return None
         with self.backend.lock:
+            # Get the handle for the specified branch and the branch head
+            branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
+            if branch is None:
+                return None
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
