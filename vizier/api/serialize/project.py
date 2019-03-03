@@ -43,6 +43,7 @@ def PROJECT_DESCRIPTOR(project, urls):
         'id': project_id,
         'createdAt': project.created_at.isoformat(),
         'lastModifiedAt': project.last_modified_at.isoformat(),
+        'defaultBranch': project.viztrail.default_branch.identifier,
         'properties': serialize.ANNOTATIONS(project.viztrail.properties),
         labels.LINKS: serialize.HATEOAS({
             ref.SELF: urls.get_project(project_id),

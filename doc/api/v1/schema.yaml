@@ -534,6 +534,7 @@ ProjectDescriptor:
         - id
         - createdAt
         - lastModifiedAt
+        - defaultBranch
         - properties
         - links
     properties:
@@ -542,6 +543,8 @@ ProjectDescriptor:
         createdAt:
             type: string
         lastModifiedAt:
+            type: string
+        defaultBranch:
             type: string
         properties:
             type: array
