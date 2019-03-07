@@ -42,7 +42,8 @@ PYTHON_COMMANDS = pckg.package_declaration(
                 pckg.parameter_declaration(
                     identifier=PYTHON_SOURCE,
                     name='Python Code',
-                    data_type=pckg.DT_PYTHON_CODE,
+                    data_type=pckg.DT_CODE,
+                    language='python',
                     index=0
                 )
             ],

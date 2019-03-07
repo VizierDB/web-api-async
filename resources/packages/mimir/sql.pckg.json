@@ -21,10 +21,11 @@
                 "name": "SQL Query", 
                 "parameter": [
                     {
-                        "datatype": "sqlCode", 
+                        "datatype": "code", 
                         "hidden": false, 
                         "id": "source", 
                         "index": 0, 
+                        "language": "sql", 
                         "name": "SQL Code", 
                         "required": true
                     }, 

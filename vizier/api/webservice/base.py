@@ -126,12 +126,26 @@ class VizierApi(object):
         )
         self.projects = VizierProjectApi(
             projects=self.engine.projects,
-            packages=self.engine.packages,
             urls=self.urls
         )
         self.tasks = VizierTaskApi(engine=self.engine)
         self.workflows = VizierWorkflowApi(engine=self.engine, urls=self.urls)
-        # Initialize the service descriptor
+        # Initialize the service descriptor. The service descriptor contains
+        # the list of packages and commands that are supported by the engine
+        package_listing = list()
+        for pckg in self.engine.packages.values():
+            pckg_obj = {'id': pckg.identifier, 'name': pckg.name}
+            if not pckg.description is None:
+                pckg_obj['description'] = pckg.description
+            pckg_commands = list()
+            for cmd in pckg.commands.values():
+                cmd_obj = {'id': cmd.identifier, 'name': cmd.name}
+                if not cmd.description is None:
+                    cmd_obj['description'] = cmd.description
+                cmd_obj['parameters'] = cmd.parameters.values()
+                pckg_commands.append(cmd_obj)
+            pckg_obj['commands'] = pckg_commands
+            package_listing.append(pckg_obj)
         self.service_descriptor = {
             'name': self.config.webservice.name,
             'startedAt': get_current_time().isoformat(),
@@ -142,7 +156,7 @@ class VizierApi(object):
                 'name': self.engine.name,
                 'version': VERSION_INFO,
                 'backend': self.config.engine.backend.identifier,
-                'packages': self.engine.packages.keys()
+                'packages': package_listing
             },
             labels.LINKS: serialize.HATEOAS({
                 ref.SELF: self.urls.service_descriptor(),

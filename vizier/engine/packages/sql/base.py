@@ -43,7 +43,8 @@ SQL_COMMANDS = pckg.package_declaration(
                 pckg.parameter_declaration(
                     identifier=PARA_SQL_SOURCE,
                     name='SQL Code',
-                    data_type=pckg.DT_SQL_CODE,
+                    data_type=pckg.DT_CODE,
+                    language='sql',
                     index=0
                 ),
                 pckg.parameter_declaration(

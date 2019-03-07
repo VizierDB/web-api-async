@@ -1,31 +1,30 @@
 {
     "python": {
-        "className": "PyCellTaskProcessor", 
         "command": [
             {
                 "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "source"
                     }
-                ], 
-                "id": "code", 
-                "name": "Python Script", 
+                ],
+                "id": "code",
+                "name": "Python Script",
                 "parameter": [
                     {
-                        "datatype": "pyCode", 
-                        "hidden": false, 
-                        "id": "source", 
-                        "index": 0, 
-                        "name": "Python Code", 
+                        "datatype": "code",
+                        "hidden": false,
+                        "id": "source",
+                        "index": 0,
+                        "language": "python",
+                        "name": "Python Code",
                         "required": true
                     }
                 ]
             }
-        ], 
-        "id": "python", 
-        "moduleName": "vizier.engine.packages.pycell.processor"
+        ],
+        "id": "python"
     }
 }

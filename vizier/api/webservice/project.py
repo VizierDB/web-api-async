@@ -30,20 +30,17 @@ class VizierProjectApi(object):
     """The Vizier project API implements the methods that correspond to
     requests that access and manipulate projects.
     """
-    def __init__(self, projects, packages, urls):
+    def __init__(self, projects, urls):
         """Initialize the API components.
 
         Parameters
         ----------
         projects: vizier.engine.project.cache.base.ProjectCache
             Cache for project handles
-        packages: dict(vizier.engine.package.base.PackageIndex)
-            Dictionary of supported packages
         urls: vizier.api.routes.base.UrlFactory
             Factory for resource urls
         """
         self.projects = projects
-        self.packages = packages
         self.urls = urls
 
     def create_project(self, properties):
@@ -103,7 +100,6 @@ class VizierProjectApi(object):
         # Get serialization for project handle.
         return serialpr.PROJECT_HANDLE(
             project=project,
-            packages=self.packages,
             urls=self.urls
         )
 

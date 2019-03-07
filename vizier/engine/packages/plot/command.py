@@ -22,7 +22,7 @@ import vizier.viztrail.command as md
 
 
 def create_plot(
-    dataset_name, chart_name, series, chart_type='bar', chart_grouped=False,
+    dataset_name, chart_name, series, chart_type='Bar Chart', chart_grouped=False,
     xaxis_range=None, xaxis_column=None, validate=False
 ):
     """Create an instance of a create plot command.

@@ -579,7 +579,7 @@ class VizualTaskProcessor(TaskProcessor):
         del datasets[ds_name]
         datasets[new_name] = ds
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[TextOutput('D1 dataset renamed')]),
+            outputs=ModuleOutputs(stdout=[TextOutput('1 dataset renamed')]),
             provenance=ModuleProvenance(
                 read=dict(),
                 write={

@@ -42,7 +42,8 @@ SCALA_COMMANDS = pckg.package_declaration(
                 pckg.parameter_declaration(
                     identifier=PARA_SCALA_SOURCE,
                     name='Scala Code',
-                    data_type=pckg.DT_SCALA_CODE,
+                    data_type=pckg.DT_CODE,
+                    language='scala',
                     index=0
                 )
             ],

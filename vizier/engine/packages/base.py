@@ -41,6 +41,7 @@ LABEL_DESCRIPTION = 'description'
 LABEL_FORMAT = 'format'
 LABEL_GROUPID = 'groupId'
 LABEL_ID = 'id'
+LABEL_LANGUAGE = 'language'
 LABEL_LEFTSPACE = 'lspace'
 LABEL_NAME = 'name'
 LABEL_PARAMETER = 'parameter'
@@ -75,6 +76,7 @@ PACKAGE_SCHEMA = {
                                 LABEL_NAME: {'type': 'string'},
                                 LABEL_DESCRIPTION: {'type': 'string'},
                                 LABEL_DATATYPE: {'type': 'string'},
+                                LABEL_LANGUAGE: {'type': 'string'},
                                 LABEL_PARENT: {'type': 'string'},
                                 'enum': {
                                     'type': 'array',
@@ -138,37 +140,32 @@ DT_DECIMAL = 'decimal'
 DT_FILE_ID = 'fileid'
 DT_INT = 'int'
 DT_LIST = 'list'
-DT_PYTHON_CODE = 'pyCode'
+DT_CODE = 'code'
 DT_RECORD = 'record'
 DT_ROW_INDEX = 'rowidx'
 DT_ROW_ID = 'rowid'
-DT_SCALA_CODE = 'scalaCode'
 DT_SCALAR = 'scalar'
-DT_SQL_CODE = 'sqlCode'
 DT_STRING = 'string'
 
 DATA_TYPES = [
     DT_BOOL,
+    DT_CODE,
     DT_COLUMN_ID,
     DT_DATASET_ID,
     DT_DECIMAL,
     DT_FILE_ID,
     DT_INT,
     DT_LIST,
-    DT_PYTHON_CODE,
     DT_RECORD,
     DT_ROW_INDEX,
     DT_ROW_ID,
-    DT_SCALA_CODE,
     DT_SCALAR,
-    DT_SQL_CODE,
     DT_STRING
 ]
 
 """Argument data types that expect an integer or string values."""
-DT_CODE = [DT_PYTHON_CODE, DT_SCALA_CODE, DT_SQL_CODE]
 INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX, DT_ROW_ID]
-STRING_TYPES = [DT_DATASET_ID, DT_STRING] + DT_CODE
+STRING_TYPES = [DT_DATASET_ID, DT_STRING, DT_CODE]
 
 
 
@@ -319,7 +316,7 @@ def enum_value(value, text=None, is_default=False):
 
 def parameter_declaration(
         identifier, name=None, data_type=None, index=0, required=True,
-        values=None, parent=None, hidden=False
+        values=None, parent=None, language=None, hidden=False
     ):
     """Create a dictionary that contains a module parameter specification.
 
@@ -339,6 +336,12 @@ def parameter_declaration(
         List of valid parameter values
     parent: int, optional
         Identifier of a grouping element
+    language: string, optional
+        If the parameter is of type 'code' the language can be used to further
+        specify the programming language / grammar for the code text.
+    hidden: bool, optional
+        Defines if the parameter is vizible or hidden when displaying an input
+        for at the front-end
 
     Returns
     -------
@@ -358,6 +361,8 @@ def parameter_declaration(
         para['values'] = values
     if not parent is None:
         para[LABEL_PARENT] = parent
+    if not language is None:
+        para[LABEL_LANGUAGE] = language
     return para
 
 
