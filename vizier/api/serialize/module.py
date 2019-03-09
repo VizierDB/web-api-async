@@ -18,11 +18,12 @@
 serialize workflow modules.
 """
 
+from vizier.viztrail.module.output import ModuleOutputs
+
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
-
 
 def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, include_self=True):
     """Dictionary serialization for a handle in the workflow at the branch
@@ -126,6 +127,12 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
         obj[labels.OUTPUTS] = serialize.OUTPUTS(module.outputs)
         if not timestamp.finished_at is None:
             obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()
+    else:
+        # Add empty lists for outputs, datasets and charts if the module is
+        # active
+        obj[labels.DATASETS] = list()
+        obj[labels.CHARTS] = list()
+        obj[labels.OUTPUTS] = serialize.OUTPUTS(ModuleOutputs())
     return obj
 
 
