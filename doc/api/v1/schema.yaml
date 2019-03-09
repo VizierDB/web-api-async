@@ -563,7 +563,6 @@ ProjectHandle:
         - lastModifiedAt
         - properties
         - branches
-        - packages
         - links
     properties:
         id:
@@ -674,7 +673,7 @@ ServiceDescriptor:
                 packages:
                     type: array
                     items:
-                        type: string
+                        $ref: '#/PackageDeclaration'
         links:
             type: array
             items:
