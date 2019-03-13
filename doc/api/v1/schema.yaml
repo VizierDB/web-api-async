@@ -485,8 +485,6 @@ PackageDeclaration:
                         type: string
                     description:
                         type: string
-                    group:
-                        type: string
                     parameters:
                         type: array
                         items:
@@ -581,10 +579,6 @@ ProjectHandle:
             type: array
             items:
                 $ref: '#/BranchDescriptor'
-        packages:
-            type: array
-            items:
-                $ref: '#/PackageDeclaration'
         links:
             type: array
             items:
