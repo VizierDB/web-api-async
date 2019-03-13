@@ -504,6 +504,8 @@ PackageDeclaration:
                                     type: string
                                 datatype:
                                     type: string
+                                defaultValue:
+                                    type: string
                                 index:
                                     type: integer
                                 hidden:
@@ -737,7 +739,7 @@ TaskStatement:
             type: object
 TaskRequestResult:
     type: object
-    desciption: Result of a task execute or cancel request
+    description: Result of a task execute or cancel request
     required:
         - result
     properties:

@@ -393,6 +393,7 @@
                     }, 
                     {
                         "datatype": "bool", 
+                        "defaultValue": true, 
                         "hidden": false, 
                         "id": "loadInferTypes", 
                         "index": 3, 
@@ -401,6 +402,7 @@
                     }, 
                     {
                         "datatype": "bool", 
+                        "defaultValue": true, 
                         "hidden": false, 
                         "id": "loadDetectHeaders", 
                         "index": 4, 

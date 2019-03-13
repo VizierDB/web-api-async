@@ -854,5 +854,3 @@ paths:
                     description: File
                 404:
                     description: Unknown file
-definitions:
-    $ref: './schema.yaml

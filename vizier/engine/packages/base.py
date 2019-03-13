@@ -36,6 +36,7 @@ from jsonschema import validate, ValidationError
 """Components and schema of package declaration."""
 LABEL_COMMAND = 'command'
 LABEL_DATATYPE = 'datatype'
+LABEL_DEFAULT = 'defaultValue'
 LABEL_DELIMITER = 'delimiter'
 LABEL_DESCRIPTION = 'description'
 LABEL_FORMAT = 'format'
@@ -91,6 +92,11 @@ PACKAGE_SCHEMA = {
                                     }
                                 },
                                 LABEL_REQUIRED: {'type': 'boolean'},
+                                LABEL_DEFAULT: {'oneOf': [
+                                    {'type': 'boolean'},
+                                    {'type': 'string'},
+                                    {'type': 'number'}
+                                ]},
                                 'index': {'type': 'number'},
                                 'hidden': {'type': 'boolean'}
                             },
@@ -317,7 +323,7 @@ def enum_value(value, text=None, is_default=False):
 
 def parameter_declaration(
         identifier, name=None, data_type=None, index=0, required=True,
-        values=None, parent=None, language=None, hidden=False
+        values=None, parent=None, language=None, default_value=None, hidden=False
     ):
     """Create a dictionary that contains a module parameter specification.
 
@@ -340,6 +346,8 @@ def parameter_declaration(
     language: string, optional
         If the parameter is of type 'code' the language can be used to further
         specify the programming language / grammar for the code text.
+    default_value: bool, string, number, optional
+        Optional default value for a scalar parameter
     hidden: bool, optional
         Defines if the parameter is vizible or hidden when displaying an input
         for at the front-end
@@ -364,6 +372,8 @@ def parameter_declaration(
         para[LABEL_PARENT] = parent
     if not language is None:
         para[LABEL_LANGUAGE] = language
+    if not default_value is None:
+        para[LABEL_DEFAULT] = default_value
     return para
 
 

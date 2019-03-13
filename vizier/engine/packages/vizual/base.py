@@ -234,6 +234,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     name='Infer Types',
                     data_type=pckg.DT_BOOL,
                     index=3,
+                    default_value=True,
                     required=False
                 ),
                 pckg.parameter_declaration(
@@ -241,6 +242,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     name='Detect Headers',
                     data_type=pckg.DT_BOOL,
                     index=4,
+                    default_value=True,
                     required=False
                 ),
                 pckg.parameter_declaration(
