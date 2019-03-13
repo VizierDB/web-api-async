@@ -337,7 +337,7 @@ paths:
                 200:
                     description: Handle forthe resulting workflow
                     schema:
-                        $ref: './schema.yaml#/WorkflowUpdateResult'
+                        $ref: './schema.yaml#/WorkflowHandle'
                 404:
                     description: Unknown project or branch
     /projects/{projectId}/branches/{branchId}/head/modules/{moduleId}:
@@ -369,7 +369,7 @@ paths:
                 200:
                     description: Modified workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowUpdateResult'
+                        $ref: './schema.yaml#/WorkflowHandle'
                 404:
                     description: Unknown project, branch, workflow, or module
         get:

@@ -208,7 +208,12 @@ def WORKFLOW_HANDLE_LINKS(urls, project_id, branch_id, workflow_id=None, links=N
         project_id=project_id,
         branch_id=branch_id
     )
+    # References to the workflow branch
     links[ref.WORKFLOW_BRANCH] = urls.get_branch(
+        project_id=project_id,
+        branch_id=branch_id
+    )
+    links[ref.BRANCH_HEAD] = urls.get_branch_head(
         project_id=project_id,
         branch_id=branch_id
     )

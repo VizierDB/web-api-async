@@ -49,7 +49,7 @@ The project handle is an extended project descriptor that is returned by the res
 ## Branch Descriptor
 
 Branch descriptors are returned as part of project handles (`/projects/{projectId} (GET)`) and in the responses to the `/projects/{projectId}/branches (POST)` and `/projects/{projectId}/branches/{branchId} (PUT)` routes. Each descriptor contains the following references:
- 
+
 - **self**: Self-reference (*GET*)
 - **branch.delete**: Delete a given branch (*DELETE*)
 - **branch.head**: Get the workflow at the branch head (*GET*)
@@ -68,6 +68,7 @@ A branch handle is an extended branch descriptor that is returned as response to
 Workflow descriptors are included in the branch handle that is returned as response to the `/projects/{projectId}/branches/{branchId} (GET)` route. The workflow descriptor contains the following references:
 
 - **self**: Self-reference (*GET*)
+- **branch.head**: Fetch workflow at head of the branch that this workflow belongs to (*GET*)
 - **workflow.append**: Append a new module to the workflow (*POST*)
 - **workflow.branch**: The project branch that contains the workflow (*GET*)
 - **workflow.project**: The project that contains the branch and the workflow (*GET*)

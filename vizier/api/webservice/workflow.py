@@ -123,16 +123,15 @@ class VizierWorkflowApi(object):
         branch = project.viztrail.get_branch(branch_id)
         if branch is None:
             return None
-        # Cancel excecution and return the workflow update result
-        modules = self.engine.cancel_exec(
+        # Cancel excecution and return the workflow handle
+        self.engine.cancel_exec(
             project_id=project_id,
             branch_id=branch_id
         )
-        return serialwf.WORKFLOW_UPDATE_RESULT(
+        return serialwf.WORKFLOW_HANDLE(
             project=project,
             branch=branch,
             workflow=branch.head,
-            modified_modules=modules,
             urls=self.urls
         )
 
@@ -140,8 +139,8 @@ class VizierWorkflowApi(object):
         """Delete a module in the head workflow of the identified project
         branch.
 
-        Returns a list of affected modules or None if either of the identified
-        resources is unknown.
+        Returns the handle for the modified head of the workflow branch. The
+        result is None if either of the identified resources is unknown.
 
         Parameters
         ----------
@@ -171,11 +170,10 @@ class VizierWorkflowApi(object):
             module_id=module_id
         )
         if not modules is None:
-            return serialwf.WORKFLOW_UPDATE_RESULT(
+            return serialwf.WORKFLOW_HANDLE(
                 project=project,
                 branch=branch,
                 workflow=branch.head,
-                modified_modules=modules,
                 urls=self.urls
             )
         return None
@@ -231,7 +229,9 @@ class VizierWorkflowApi(object):
 
     def get_workflow_module(self, project_id, branch_id, module_id):
         """Get handle for a module in the head workflow of a given project
-        branch.
+        branch. The result is a pair of module handle and list of dataset
+        descriptors for the datasets in the module state (if the module is
+        not active and not in an error state).
 
         Returns None if the project, branch, or module do not exist.
 
@@ -258,13 +258,22 @@ class VizierWorkflowApi(object):
             return None
         # If the branch is empty we return a special empty workflow handle
         if not branch.head is None:
-            for module in branch.head.modules:
+            workflow = branch.head
+            for module in workflow.modules:
                 if module.identifier == module_id:
-                    return serialmd.MODULE_HANDLE(
+                    charts = list()
+                    if module.is_success:
+                        # Compute available charts only if the module is in
+                        # a success state.
+                        charts = get_module_charts(workflow, module_id)
+                    return  serialmd.MODULE_HANDLE(
                         project=project,
                         branch=branch,
                         module=module,
-                        urls=self.urls
+                        urls=self.urls,
+                        workflow=workflow,
+                        charts=charts,
+                        include_self=True
                     )
         return None
 
@@ -385,3 +394,38 @@ class VizierWorkflowApi(object):
                 urls=self.urls
             )
         return None
+
+
+# ------------------------------------------------------------------------------
+# Helper Methods
+# ------------------------------------------------------------------------------
+
+def get_module_charts(workflow, module_id):
+    """Get the list of charts that are available for a given module.
+
+    Parameters
+    ----------
+    workflow: vizier.viztrail.workflow.WorkflowHandle
+        Handle for workflow containing the module
+    module_id: string
+        Unique module identifier
+
+    Returns
+    -------
+    list(vizier.view.chart.ChartViewHandle)
+    """
+    result = list()
+    charts = dict()
+    for m in workflow.modules:
+        if not m.provenance.charts is None:
+            for c_handle in m.provenance.charts:
+                charts[c_handle.chart_name.lower()] = c_handle
+        # Only include charts for modules that have any datasets. Otherwise the
+        # result is empty by definition.
+        if m.identifier == module_id:
+            if not m.datasets is None:
+                for c_handle in charts.values():
+                    if c_handle.dataset_name in m.datasets:
+                        result.append(c_handle)
+            break
+    return result
