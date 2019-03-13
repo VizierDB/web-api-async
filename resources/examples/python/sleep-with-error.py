@@ -1,6 +1,6 @@
 import time
 
-t = 1000
+t = 240
 
 print 'Go to sleep for ' + str(t) + 's'
 time.sleep(t)

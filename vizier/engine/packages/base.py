@@ -78,15 +78,16 @@ PACKAGE_SCHEMA = {
                                 LABEL_DATATYPE: {'type': 'string'},
                                 LABEL_LANGUAGE: {'type': 'string'},
                                 LABEL_PARENT: {'type': 'string'},
-                                'enum': {
+                                'values': {
                                     'type': 'array',
                                     'items': {
                                         'type': 'object',
                                         'properties': {
                                             'isDefault': {'type': 'boolean'},
-                                            'text': {'type': 'string'}
+                                            'text': {'type': 'string'},
+                                            'value': {'type': 'string'}
                                         },
-                                        'required': ['text']
+                                        'required': ['value']
                                     }
                                 },
                                 LABEL_REQUIRED: {'type': 'boolean'},
@@ -134,13 +135,13 @@ PACKAGE_SCHEMA = {
 
 """Definition of parameter data types."""
 DT_BOOL = 'bool'
+DT_CODE = 'code'
 DT_COLUMN_ID = 'colid'
 DT_DATASET_ID = 'dataset'
 DT_DECIMAL = 'decimal'
 DT_FILE_ID = 'fileid'
 DT_INT = 'int'
 DT_LIST = 'list'
-DT_CODE = 'code'
 DT_RECORD = 'record'
 DT_ROW_INDEX = 'rowidx'
 DT_ROW_ID = 'rowid'
