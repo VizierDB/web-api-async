@@ -334,6 +334,10 @@ class VizierEngine(WorkflowController):
                 first_remaining_module = module_index
                 while not modules[module_index].provenance.requires_exec(datasets):
                     if module_index == module_count - 1:
+                        # Update the counter before we exit the loop. Otherwise
+                        # the last module would be executed.
+                        print 'No need to execute anything'
+                        module_index = module_count
                         break
                     else:
                         m = modules[module_index]
@@ -385,6 +389,7 @@ class VizierEngine(WorkflowController):
                         module=workflow.modules[module_index],
                         datasets=datasets
                     )
+                    return workflow.modules[first_remaining_module:]
                 else:
                     # None of the module required execution and the workflow is
                     # complete
@@ -393,14 +398,13 @@ class VizierEngine(WorkflowController):
                         action=wf.ACTION_DELETE,
                         command=deleted_module.command
                     )
-                return workflow.modules[first_remaining_module:]
             else:
                 branch.append_workflow(
                     modules=modules,
                     action=wf.ACTION_DELETE,
                     command=deleted_module.command
                 )
-                return list()
+            return list()
 
     def execute_module(self, project_id, branch_id, module, datasets):
         """Create a new task for the given module and execute the module in
