@@ -177,7 +177,7 @@ STRING_TYPES = [DT_DATASET_ID, DT_STRING, DT_CODE]
 
 
 """Elements for fileid dictionaries."""
-FILE_ID = 'fileId'
+FILE_ID = 'fileid'
 FILE_NAME = 'filename'
 FILE_URL = 'url'
 FILE_USERNAME = 'userName'

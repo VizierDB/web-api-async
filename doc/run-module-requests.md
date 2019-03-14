@@ -23,7 +23,7 @@ Example
 {
     "command": "chart",
     "arguments": [
-        {
+        { 
             "id": "series",
             "value": [
                 [

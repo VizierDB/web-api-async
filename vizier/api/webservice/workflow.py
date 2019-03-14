@@ -79,8 +79,8 @@ class VizierWorkflowApi(object):
             return None
         # Create module command (will ensure that it is a valid command) and
         # append it to the workflow at the branch head. The result is the handle
-        # for the appended module.
-        module = self.engine.append_workflow_module(
+        # for the modified workflow.
+        self.engine.append_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             command=ModuleCommand(
@@ -90,11 +90,10 @@ class VizierWorkflowApi(object):
                 packages=self.engine.packages
             )
         )
-        return serialwf.WORKFLOW_UPDATE_RESULT(
+        return serialwf.WORKFLOW_HANDLE(
             project=project,
             branch=branch,
             workflow=branch.head,
-            modified_modules=[module],
             urls=self.urls
         )
 
@@ -327,11 +326,10 @@ class VizierWorkflowApi(object):
             ),
         )
         if not modules is None:
-            return serialwf.WORKFLOW_UPDATE_RESULT(
+            return serialwf.WORKFLOW_HANDLE(
                 project=project,
                 branch=branch,
                 workflow=branch.head,
-                modified_modules=modules,
                 urls=self.urls
             )
         return None
@@ -386,11 +384,10 @@ class VizierWorkflowApi(object):
             )
         )
         if not modules is None:
-            return serialwf.WORKFLOW_UPDATE_RESULT(
+            return serialwf.WORKFLOW_HANDLE(
                 project=project,
                 branch=branch,
                 workflow=branch.head,
-                modified_modules=modules,
                 urls=self.urls
             )
         return None

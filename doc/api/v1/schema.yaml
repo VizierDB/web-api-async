@@ -819,32 +819,3 @@ WorkflowHandle:
             type: array
             items:
                 $ref: '#/Reference'
-WorkflowUpdateResult:
-    type: object
-    description: List of handles for modules that were affected by a workflow update
-    required:
-        - identifier
-        - createdAt
-        - state
-        - modules
-        - datasets
-        - links
-    properties:
-        identifier:
-            type: string
-        createdAt:
-            type: string
-        state:
-            type: integer
-        modules:
-            type: array
-            items:
-                $ref: '#/ModuleHandle'
-        datasets:
-            type: array
-            items:
-                $ref: '#/DatasetDescriptor'
-        links:
-            type: array
-            items:
-                $ref: '#/Reference'
