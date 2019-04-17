@@ -123,6 +123,5 @@ def create_app():
         # Initialize the Mimir gateway if using Mimir engine
         if config.engine.identifier == const.MIMIR_ENGINE:
             import vizier.mimir as mimir
-            mimir.initialize()
 
     return app

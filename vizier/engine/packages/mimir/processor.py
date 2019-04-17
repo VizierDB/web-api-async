@@ -99,7 +99,7 @@ class MimirProcessor(TaskProcessor):
             params += ['MISSING_ONLY(FALSE)']
             # Need to run this lens twice in order to generate row ids for
             # any potential new tuple
-            mimir_lens_response = mimir._mimir.createLens(
+            mimir_lens_response = mimir.createLens(
                 dataset.table_name,
                 mimir._jvmhelper.to_scala_seq(params),
                 command_id,
@@ -168,13 +168,13 @@ class MimirProcessor(TaskProcessor):
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
         if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
-            lens_name = mimir._mimir.createAdaptiveSchema(
+            lens_name = mimir.createAdaptiveSchema(
                 mimir_table_name,
                 mimir._jvmhelper.to_scala_seq(params),
                 command_id.upper()
             )
         else:
-            mimir_lens_response = mimir._mimir.createLens(
+            mimir_lens_response = mimir.createLens(
                 mimir_table_name,
                 mimir._jvmhelper.to_scala_seq(params),
                 command_id.upper(),

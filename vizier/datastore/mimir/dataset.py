@@ -283,7 +283,7 @@ class MimirDatasetHandle(DatasetHandle):
             # dataset.
             #sql = 'SELECT * '
             #sql += 'FROM ' + self.table_name + ' '
-            #annoList = json.loads(mimir._mimir.explainEverythingJson(sql))
+            #annoList = mimir.explainEverythingJson(sql)
             #for anno in annoList:
             #    annotations.add(ANNO_UNCERTAIN, anno)
             #return [item for sublist in map(lambda (i,x): self.annotations.for_column(i).values(), enumerate(self.columns)) for item in sublist]
@@ -300,7 +300,7 @@ class MimirDatasetHandle(DatasetHandle):
             column = self.column_by_id(column_id)
             sql = 'SELECT * '
             sql += 'FROM ' + self.table_name + ' '
-            buffer = mimir._mimir.explainCell(sql, column.name_in_rdb, str(row_id))
+            buffer = mimir.explainCell(sql, column.name_in_rdb, str(row_id))
             has_reasons = buffer.size() > 0
             if has_reasons:
                 for value in buffer.mkString("-*-*-").split("-*-*-"):

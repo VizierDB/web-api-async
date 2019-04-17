@@ -50,7 +50,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         """Run all tests after we initialize mimir. Make sure to create a
         fresh environment after each test.
         """
-        mimir.initialize()
         self.delete_column()
         self.setUp()
         self.delete_row()
@@ -74,7 +73,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.sort_dataset()
         self.setUp()
         self.update_cell()
-        mimir.finalize()
 
     def delete_column(self):
         """Test functionality to delete a column."""

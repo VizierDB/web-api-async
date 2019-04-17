@@ -55,7 +55,6 @@ class TestMimirProcessor(unittest.TestCase):
         """Test DOMAIN lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(INCOMPLETE_CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         col_age = ds.column_by_name('Age')
@@ -85,13 +84,11 @@ class TestMimirProcessor(unittest.TestCase):
                     datasets={DATASET_NAME: ds.identifier}
                 )
             )
-        mimir.finalize()
 
     def test_geocode_lens(self):
         """Test GEOCODE lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(GEO_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         # Geocode Lens
@@ -134,13 +131,11 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue('LATITUDE_1' in columns)
         self.assertTrue('LONGITUDE_1' in columns)
         self.assertEquals(len(ds.columns), 8)
-        mimir.finalize()
 
     def test_key_repair_lens(self):
         """Test KEY REPAIR lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(KEY_REPAIR_FILE)
         ds1 = self.datastore.load_dataset(f_handle=f_handle)
         # Missing Value Lens
@@ -181,13 +176,11 @@ class TestMimirProcessor(unittest.TestCase):
                     datasets={DATASET_NAME: ds.identifier}
                 )
             )
-        mimir.finalize()
 
     def test_missing_value_lens(self):
         """Test MISSING_VALUE lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(INCOMPLETE_CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         # Missing Value Lens
@@ -235,13 +228,11 @@ class TestMimirProcessor(unittest.TestCase):
         for row in rows:
             self.assertIsNotNone(row.values[1])
         self.assertTrue(rows[2].values[ds.column_index('Age')] > 30)
-        mimir.finalize()
 
     def test_missing_key_lens(self):
         """Test MISSING_KEY lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(INCOMPLETE_CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         # Missing Value Lens
@@ -281,13 +272,11 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertEquals(len(ds.columns), 3)
         rows = ds.fetch_rows()
         self.assertEquals(len(rows), 55)
-        mimir.finalize()
 
     def test_picker_lens(self):
         """Test PICKER lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(PICKER_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         command = cmd.mimir_picker(DATASET_NAME, [
@@ -354,13 +343,11 @@ class TestMimirProcessor(unittest.TestCase):
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
         self.assertTrue('MY_NEXT_COLUMN' in columns)
-        mimir.finalize()
 
     def test_schema_matching_lens(self):
         """Test SCHEMA_MATCHING lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         # Missing Value Lens
@@ -383,13 +370,11 @@ class TestMimirProcessor(unittest.TestCase):
         ds = self.datastore.get_dataset(result.provenance.write['new_' + DATASET_NAME].identifier)
         self.assertEquals(len(ds.columns), 2)
         self.assertEquals(ds.row_count, 2)
-        mimir.finalize()
 
     def test_type_inference_lens(self):
         """Test TYPE INFERENCE lens."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         f_handle = self.filestore.upload_file(INCOMPLETE_CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         # Infer type
@@ -412,7 +397,6 @@ class TestMimirProcessor(unittest.TestCase):
         ds2_rows = ds2.fetch_rows()
         for i in range(ds2.row_count):
             self.assertEquals(ds1_rows[i].values, ds2_rows[i].values)
-        mimir.finalize()
 
 
 if __name__ == '__main__':

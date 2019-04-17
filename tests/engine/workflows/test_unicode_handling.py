@@ -69,9 +69,7 @@ class TestUnicodeHandling(unittest.TestCase):
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
         import vizier.mimir as mimir
-        mimir.initialize()
         self.run_workflow(MimirDatastore(DATASTORE_DIR))
-        mimir.finalize()
 
     def run_workflow(self, datastore):
         """Test functionality to execute a Python script that creates a dataset

@@ -67,7 +67,7 @@ class MimirVizualApi(VizualApi):
         for col in schema:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -115,7 +115,7 @@ class MimirVizualApi(VizualApi):
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
         sql += ' WHERE ' + ROW_ID + ' <> ' + dataset.rowid_column.to_sql_value(row_id)
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -174,7 +174,7 @@ class MimirVizualApi(VizualApi):
                 schema.append(col)
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -237,7 +237,7 @@ class MimirVizualApi(VizualApi):
             else:
                 col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -284,12 +284,12 @@ class MimirVizualApi(VizualApi):
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        mimirSchema = json.loads(mimir._mimir.getSchema(sql))
+        mimirSchema = mimir.getSchema(sql)
         union_list = [dataset.rowid_column.to_sql_value(row_id) + ' AS ' + ROW_ID]
         for col in mimirSchema[1:]:
             union_list.append('CAST(NULL AS '+col['base_type']+') AS ' + col['name'])
         sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ')'
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -583,12 +583,10 @@ class MimirVizualApi(VizualApi):
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM {{input}} ORDER BY '
         sql += ','.join(order_by_clause)
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Query the row ids in the database sorted by the given order by clause
         sql = 'SELECT ' + ROW_ID + ' FROM ' + view_name
-        rs = json.loads(
-            mimir._mimir.vistrailsQueryMimirJson(sql, True, False)
-        )
+        rs = mimir.vistrailsQueryMimirJson(sql, True, False)
         # The result contains the sorted list of row ids
         rows = rs['prov']
         # Register new dataset with only a modified list of row identifier
@@ -652,7 +650,7 @@ class MimirVizualApi(VizualApi):
             else:
                 col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,

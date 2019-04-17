@@ -108,17 +108,17 @@ class MimirDatastore(DefaultDatastore):
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
         # Load CSV file using Mimirs loadCSV method.
-        table_name = mimir._mimir.loadCSV(tmp_file, ',', True, True)
+        table_name = mimir.loadCSV(tmp_file, ',', True, True)
         os.remove(tmp_file)
         sql = 'SELECT '+ colSql +' FROM {{input}}'
-        view_name = mimir._mimir.createView(table_name, sql)
+        view_name = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
         sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-        rs_count = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
         row_count = int(rs_count['data'][0][0])
         # Get unique identifier for all rows in the created dataset
         sql = 'SELECT * FROM ' + view_name
-        rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         row_ids = sorted(rs['prov'])
         # Insert the new dataset metadata information into the datastore
         return self.register_dataset(
@@ -207,7 +207,7 @@ class MimirDatastore(DefaultDatastore):
         elif not url is None:
             abspath = url
         # Load dataset into Mimir
-        init_load_name = mimir._mimir.loadCSV(
+        init_load_name = mimir.loadCSV(
             abspath,
             load_format,
             infer_types,
@@ -216,7 +216,7 @@ class MimirDatastore(DefaultDatastore):
         )
         # Retrieve schema information for the created dataset
         sql = 'SELECT * FROM ' + init_load_name
-        mimirSchema = mimir._mimir.getSchema(sql)
+        mimirSchema = mimir.getSchema(sql)
         # Create list of dataset columns
         columns = list()
         colSql = 'ROWID() AS ' + base.ROW_ID
@@ -233,7 +233,7 @@ class MimirDatastore(DefaultDatastore):
             columns.append(col)
         # Create view for loaded dataset
         sql = 'SELECT '+ colSql +' FROM {{input}}'
-        view_name = mimir._mimir.createView(init_load_name, sql)
+        view_name = mimir.createView(init_load_name, sql)
         # TODO: this is a hack to speed up this step a bit.
         #  we get the first row id and the count and take a range;
         #  this is fragile and should be made better
@@ -243,15 +243,15 @@ class MimirDatastore(DefaultDatastore):
         # first.
         #
         #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-        #rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        #rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         #sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ' ORDER BY CAST(' + base.ROW_ID + ' AS INTEGER) LIMIT 1'
-        #rsfr = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        #rsfr = mimir.vistrailsQueryMimirJson(sql, False, False)
         #row_count = int(rs['data'][0][0])
         #first_row_id = int(rsfr['data'][0][0])
         #row_ids = map(str, range(first_row_id, first_row_id+row_count))
         # Insert the new dataset metadata information into the datastore
         sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name
-        rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         row_ids = sorted(rs['prov'])
         row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
         return self.register_dataset(
@@ -296,12 +296,10 @@ class MimirDatastore(DefaultDatastore):
         # database or just get the schema. In either case mimir_schema will
         # contain a the returned Mimir schema information.
         sql = base.get_select_query(table_name, columns=columns)
-        mimir_schema = json.loads(mimir._mimir.getSchema(sql))
+        mimir_schema = mimir.getSchema(sql)
         if update_rows:
             sql = base.get_select_query(table_name)
-            rs = json.loads(
-                mimir._mimir.vistrailsQueryMimirJson(sql, False, False)
-            )
+            rs = mimir.vistrailsQueryMimirJson(sql, False, False)
             # Get list of row identifier in current dataset. Row ID's are
             # expected to be the only values in the returned result set.
             dataset_row_ids = set()
@@ -334,7 +332,7 @@ class MimirDatastore(DefaultDatastore):
         # Set row counter to max. row id + 1 if None
         #if row_counter is None:
         #    sql = 'SELECT COUNT(*) AS RECCNT FROM ' + table_name
-        #    rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+        #    rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         #    row_counter = int(rs['data'][0][0]) + 1
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
@@ -383,7 +381,7 @@ def create_missing_key_view(dataset, lens_name, key_column):
     key_col_name = key_column.name_in_rdb
     sql = 'SELECT ' + key_col_name + ' FROM ' + lens_name
     sql += ' WHERE ' + ROW_ID + ' IS NULL'
-    rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+    rs = mimir.vistrailsQueryMimirJson(sql, False, False)
     case_conditions = []
     for row in rs['data']:
         row_id = dataset.row_counter + len(case_conditions)
@@ -405,5 +403,5 @@ def create_missing_key_view(dataset, lens_name, key_column):
     for column in dataset.columns:
         col_list.append(column.name_in_rdb)
     sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name
-    view_name = mimir._mimir.createView(dataset.table_name, sql)
+    view_name = mimir.createView(dataset.table_name, sql)
     return view_name, dataset.row_counter + len(case_conditions)

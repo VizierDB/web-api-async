@@ -89,12 +89,12 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name = mimir._mimir.createView(
+            view_name = mimir.createView(
                 mimir._jvmhelper.to_scala_map(mimir_table_names),
                 source
             )
             sql = 'SELECT * FROM ' + view_name
-            mimirSchema = json.loads(mimir._mimir.getSchema(sql))
+            mimirSchema = mimir.getSchema(sql)
 
             columns = list()
             colSql = 'ROWID() AS ' + ROW_ID
@@ -113,14 +113,14 @@ class SQLTaskProcessor(TaskProcessor):
                 columns.append(col)
 
             sql = 'SELECT ' + colSql + ' FROM {{input}}'
-            view_name = mimir._mimir.createView(view_name, sql)
+            view_name = mimir.createView(view_name, sql)
 
             sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-            rs_count = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+            rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
             row_count = int(rs_count['data'][0][0])
 
             sql = 'SELECT * FROM ' + view_name + ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT)
-            rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+            rs = mimir.vistrailsQueryMimirJson(sql, False, False)
 
             provenance = None
             if ds_name is None or ds_name == '':

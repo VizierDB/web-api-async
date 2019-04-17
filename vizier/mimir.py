@@ -18,127 +18,116 @@
 lenses.
 """
 
-from __future__ import division
+import requests
+import json
 
-#import base
-import argparse
-import os
+_mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
-import py4j.java_gateway as jgw
+def createLens(dataset, params, type, make_input_certain, materialize):
+    req_json = {
+      "input": dataset,
+      "params": params,
+      "type": type,
+      "materialize": materialize
+    }
+    resp = requests.post(_mimir_url + 'lens/create', json=req_json)
+    return resp.json()['lensName']
 
-from spylon.simple import SimpleJVMHelpers
+def createView(dataset, query):
+    req_json = {
+      "input": dataset,
+      "query": query
+    }
+    resp = requests.post(_mimir_url + 'view/create', json=req_json)
+    return resp.json()['viewName']
+        
+def createAdaptiveSchema(dataset, params, type):
+    req_json = {
+      "input": dataset,
+      "params": params,
+      "type": type
+    } 
+    resp = requests.post(_mimir_url + 'adaptive/create', json=req_json)
+    return resp.json()['adaptiveSchemaName']
+    
+def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
+    return ''
+    
+def loadCSV(file, delim, infer_types, detect_headers, format = 'csv', backend_options = []):
+    req_json ={
+      "file": file,
+      "format": format,
+      "inferTypes": infer_types,
+      "detectHeaders": detect_headers,
+      "backendOption": backend_options
+    }
+    resp = requests.post(_mimir_url + 'dataSource/load', json=req_json)
+    return resp.json()['name']
+    
+def repairReason(reasons, reasonIdx):
+    return ''
+    
+def feedback(reasons, idx, ack, rvalue): 
+    reason = reasons(idx)
+    req_json = {
+      "reason": reason,
+      "idx": reason.idx,
+      "ack": ack,
+      "repairStr": rvalue
+    } 
+    resp = requests.post(_mimir_url + 'annotations/feedback', json=req_json)
+    
+#def feedbackCell(query, col, row, ack): 
+    #req_json = 
+    #resp = requests.post(_mimir_url + '', json=req_json)
+    #return resp.json()
+    
+def explainRow(query, rowProv):  
+    req_json = {
+      "query": query,
+      "row": rowProv,
+      "col": 0
+    }
+    resp = requests.post(_mimir_url + 'annotations/cell', json=req_json)
+    return resp.json()['reasons']
+    
+def explainCell(query, col, rowProv): 
+    req_json = {
+      "query": query,
+      "row": rowProv,
+      "col": col
+    }
+    resp = requests.post(_mimir_url + 'annotations/cell', json=req_json)
+    return resp.json()['reasons']
 
-"""Global variables that are initialized for Mimir."""
-#_mimirCallInterface = None
-_gateway = None
-_mimir = None
-_jvmhelper = None
+def explainEverythingJson(query):
+    req_json = {
+      "query": query
+    }
+    resp = requests.post(_mimir_url + 'annotations/all', json=req_json)
+    return resp.json()['reasons']     
+    
+def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input = ''): 
+    req_json = {
+      "input": input,
+      "query": query,
+      "includeUncertainty": include_uncertainty,
+      "includeReasons": include_reasons
+    } 
+    resp = requests.post(_mimir_url + 'query/data', json=req_json)
+    return resp.json()
 
+def getSchema(query):
+    req_json = {
+      "query": query
+    }
+    resp = requests.post(_mimir_url + '/schema', json=req_json)
+    return resp.json()
+  
+def getAvailableLansTypes():
+    return requests.get(_mimir_url + 'lens').json()['lensTypes']
+    
+def getAvailableAdaptiveSchemas():
+    return requests.get(_mimir_url + 'adaptive').json()['adaptiveSchemaTypes']
 
-class MimirCallInterface(object):
-
-    def __init__(self, gateway):
-        self.gateway = gateway
-
-    def callToPython(self, obj):
-
-        print("JVM Who?")
-        print(obj)
-        self.gateway.jvm.System.out.println("jvm in your python")
-        return "spylon"
-
-    class Java:
-        implements = ["mimir.PythonMimirCallInterface"]
-
-def jvm_gateway(bindAddr, bindPort):
-    gw = jgw.JavaGateway(
-        jgw.GatewayClient(
-            address=bindAddr,
-            port=bindPort
-        ),
-        auto_convert=True,
-        callback_server_parameters=jgw.CallbackServerParameters()
-    )
-    return gw
-
-def simple_jvm_helper(jvm_gateway):
-    j = SimpleJVMHelpers(jvm_gateway)
-    return j
-
-def started(sender, **kwargs):
-    server = kwargs["server"]
-    print("JavaGateway Server started")
-
-def connection_started(sender, **kwargs):
-    connection = kwargs["connection"]
-    print("JavaGateway Server connection_started")
-
-def connection_stopped(sender, **kwargs):
-    connection = kwargs["connection"]
-    print("JavaGateway Server ")
-
-def stopped(sender, **kwargs):
-    server = kwargs["server"]
-    print("JavaGateway Server stopped")
-
-def pre_shutdown(sender, **kwargs):
-    server = kwargs["server"]
-    print("JavaGateway Server pre_shutdown")
-
-def post_shutdown(sender, **kwargs):
-    server = kwargs["server"]
-    print("JavaGateway Server post_shutdown")
-
-
-
-def initialize():
-    jgw.server_started.connect(started)
-    global _gateway
-    _gateway = jvm_gateway('127.0.0.1', 33388)
-    global _jvmhelper
-    _jvmhelper = simple_jvm_helper(_gateway)
-    global _mimir
-    _mimir = _jvmhelper.gateway.entry_point
-    #global _mimirCallInterface
-    #_mimirCallInterface = MimirCallInterface(_gateway)
-    _mimir.registerPythonMimirCallListener(MimirCallInterface(_gateway))
-    # Mimir lenses
-    global _mimirLenses
-    _mimirLenses = []
-    _mimirLenses.append(_mimir.getAvailableLenses().split (','))
-    # Adaptive schemas
-    global _mimirAdaptiveSchemas
-    _mimirAdaptiveSchemas = []
-    _mimirAdaptiveSchemas.append(_mimir.getAvailableAdaptiveSchemas().split (','))
-
-    jgw.server_stopped.connect(
-        stopped,
-        sender=_gateway.get_callback_server()
-    )
-    jgw.server_connection_started.connect(
-        connection_started,
-        sender=_gateway.get_callback_server()
-    )
-    jgw.server_connection_stopped.connect(
-        connection_stopped,
-        sender=_gateway.get_callback_server()
-    )
-    jgw.pre_server_shutdown.connect(
-        pre_shutdown,
-        sender=_gateway.get_callback_server()
-    )
-    jgw.post_server_shutdown.connect(
-        post_shutdown,
-        sender=_gateway.get_callback_server()
-    )
-
-    #base._mimir = _mimir
-    #base._jvmhelper = _jvmhelper
-
-
-def finalize():
-    print("Shutting Down Gateway...")
-    #global _mimir
-    #_mimir.shutdown()
-    global _gateway
-    _gateway.shutdown()
+       

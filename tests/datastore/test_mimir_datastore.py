@@ -41,7 +41,6 @@ class TestMimirDatastore(unittest.TestCase):
 
     def test_mimir_datastore(self):
         """Run test for Mimir datastore."""
-        mimir.initialize()
         self.set_up()
         self.dataset_load()
         self.tear_down()
@@ -55,7 +54,6 @@ class TestMimirDatastore(unittest.TestCase):
         self.dataset_column_index()
         self.tear_down()
         self.tear_down()
-        mimir.finalize()
 
     def datastore_init(self):
         """Test initalizing a datastore with existing datasets."""

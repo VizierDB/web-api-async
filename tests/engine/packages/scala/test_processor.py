@@ -15,7 +15,6 @@ class TestScalaProcessor(unittest.TestCase):
         """Test running a very simple script to ensure that the basic
         functionality is there.
         """
-        mimir.initialize()
         cmd = scala_cell(
             source='println("Hello, world!")',
             validate=True
@@ -32,7 +31,6 @@ class TestScalaProcessor(unittest.TestCase):
         self.assertIsNone(result.provenance.read)
         self.assertIsNone(result.provenance.write)
         self.assertEquals(result.outputs.stdout[0].value, 'Hello, world!')
-        mimir.finalize()
 
 
 if __name__ == '__main__':

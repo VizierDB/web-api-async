@@ -78,7 +78,7 @@ class ScalaTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         # Run the scala code
         try:
-            evalresp = mimir._mimir.evalScala(source)
+            evalresp = mimir.evalScala(source)
             ostd = evalresp.stdout()
             oerr = evalresp.stderr()
             if not ostd == '':
