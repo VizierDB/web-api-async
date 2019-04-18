@@ -1,3 +1,3 @@
-from vizier.api.webservice.server import create_app
+from vizier.api.webservice import create_app
 
 app = create_app()
