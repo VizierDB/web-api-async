@@ -220,7 +220,7 @@ class MimirDatastore(DefaultDatastore):
         # Create list of dataset columns
         columns = list()
         colSql = 'ROWID() AS ' + base.ROW_ID
-        for col in json.loads(mimirSchema):
+        for col in mimirSchema:
             col_id = len(columns)
             name_in_dataset = self.bad_col_names.get(col['name'].upper(),col['name'])
             name_in_rdb = self.bad_col_names.get(col['name'].upper(),col['name'])
