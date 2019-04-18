@@ -66,7 +66,7 @@ class MimirVizualApi(VizualApi):
         col_list = [ROW_ID]
         for col in schema:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -114,7 +114,7 @@ class MimirVizualApi(VizualApi):
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        sql += ' WHERE ' + ROW_ID + ' <> ' + dataset.rowid_column.to_sql_value(row_id)
+        sql += ' WHERE ' + ROW_ID + ' <> ' + dataset.rowid_column.to_sql_value(row_id) + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -173,7 +173,7 @@ class MimirVizualApi(VizualApi):
             else:
                 schema.append(col)
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -236,7 +236,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append('NULL ' + col.name_in_rdb)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -288,7 +288,7 @@ class MimirVizualApi(VizualApi):
         union_list = [dataset.rowid_column.to_sql_value(row_id) + ' AS ' + ROW_ID]
         for col in mimirSchema[1:]:
             union_list.append('CAST(NULL AS '+col['base_type']+') AS ' + col['name'])
-        sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ')'
+        sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ');'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -582,10 +582,10 @@ class MimirVizualApi(VizualApi):
                 stmt += ' DESC'
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM {{input}} ORDER BY '
-        sql += ','.join(order_by_clause)
+        sql += ','.join(order_by_clause) + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Query the row ids in the database sorted by the given order by clause
-        sql = 'SELECT ' + ROW_ID + ' FROM ' + view_name
+        sql = 'SELECT ' + ROW_ID + ' FROM ' + view_name + ';'
         rs = mimir.vistrailsQueryMimirJson(sql, True, False)
         # The result contains the sorted list of row ids
         rows = rs['prov']
@@ -649,7 +649,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append(stmt)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(

@@ -122,8 +122,8 @@ class MimirDatasetReader(DatasetReader):
                 if self.limit > 0:
                     sql +=  ' LIMIT ' + str(self.limit)
                 if self.offset > 0:
-                    sql += ' OFFSET ' + str(self.offset)
-            rs = mimir.vistrailsQueryMimirJson(sql, True, False)
+                    sql += ' OFFSET ' + str(self.offset) 
+            rs = mimir.vistrailsQueryMimirJson(sql+ ';', True, False)
             #self.row_ids = rs['prov']
             # Initialize mapping of column rdb names to index positions in
             # dataset rows
