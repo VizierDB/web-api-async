@@ -20,6 +20,7 @@ lenses.
 
 import requests
 import json
+import os
 
 _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
