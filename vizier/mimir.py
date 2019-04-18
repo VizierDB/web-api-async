@@ -123,7 +123,7 @@ def getSchema(query):
       "query": query
     }
     resp = requests.post(_mimir_url + 'schema', json=req_json)
-    return resp.json()
+    return resp.json()['schema']
   
 def getAvailableLansTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']
