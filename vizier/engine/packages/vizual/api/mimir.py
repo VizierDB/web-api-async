@@ -287,7 +287,7 @@ class MimirVizualApi(VizualApi):
         mimirSchema = mimir.getSchema(sql)
         union_list = [dataset.rowid_column.to_sql_value(row_id) + ' AS ' + ROW_ID]
         for col in mimirSchema[1:]:
-            union_list.append('CAST(NULL AS '+col['base_type']+') AS ' + col['name'])
+            union_list.append('CAST(NULL AS '+col['baseType']+') AS ' + col['name'])
         sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ');'
         view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
