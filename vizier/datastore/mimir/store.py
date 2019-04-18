@@ -108,7 +108,7 @@ class MimirDatastore(DefaultDatastore):
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
         # Load CSV file using Mimirs loadCSV method.
-        table_name = mimir.loadCSV(tmp_file, ',', True, True)
+        table_name = mimir.loadDataSource(tmp_file, True, True)
         os.remove(tmp_file)
         sql = 'SELECT '+ colSql +' FROM {{input}}'
         view_name = mimir.createView(table_name, sql)
@@ -207,11 +207,11 @@ class MimirDatastore(DefaultDatastore):
         elif not url is None:
             abspath = url
         # Load dataset into Mimir
-        init_load_name = mimir.loadCSV(
+        init_load_name = mimir.loadDataSource(
             abspath,
-            load_format,
             infer_types,
             detect_headers,
+            load_format,
             options
         )
         # Retrieve schema information for the created dataset

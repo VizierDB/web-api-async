@@ -54,7 +54,7 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadCSV(file, delim, infer_types, detect_headers, format = 'csv', backend_options = []):
+def loadDataSource(file, infer_types, detect_headers, format = 'csv', backend_options = []):
     req_json ={
       "file": file,
       "format": format,
