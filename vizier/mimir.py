@@ -122,7 +122,7 @@ def getSchema(query):
     req_json = {
       "query": query
     }
-    resp = requests.post(_mimir_url + '/schema', json=req_json)
+    resp = requests.post(_mimir_url + 'schema', json=req_json)
     return resp.json()
   
 def getAvailableLansTypes():
