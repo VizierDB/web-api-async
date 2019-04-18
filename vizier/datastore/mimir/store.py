@@ -212,7 +212,7 @@ class MimirDatastore(DefaultDatastore):
             load_format,
             infer_types,
             detect_headers,
-            mimir._jvmhelper.to_scala_seq(options)
+            options
         )
         # Retrieve schema information for the created dataset
         sql = 'SELECT * FROM ' + init_load_name

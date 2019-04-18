@@ -101,7 +101,7 @@ class MimirProcessor(TaskProcessor):
             # any potential new tuple
             mimir_lens_response = mimir.createLens(
                 dataset.table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id,
                 arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False
@@ -170,13 +170,13 @@ class MimirProcessor(TaskProcessor):
         if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
             lens_name = mimir.createAdaptiveSchema(
                 mimir_table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id.upper()
             )
         else:
             mimir_lens_response = mimir.createLens(
                 mimir_table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id.upper(),
                 arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False

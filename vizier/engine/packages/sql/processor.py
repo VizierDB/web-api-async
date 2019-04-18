@@ -90,7 +90,7 @@ class SQLTaskProcessor(TaskProcessor):
         try:
             # Create the view from the SQL source
             view_name = mimir.createView(
-                mimir._jvmhelper.to_scala_map(mimir_table_names),
+                mimir_table_names,
                 source
             )
             sql = 'SELECT * FROM ' + view_name
