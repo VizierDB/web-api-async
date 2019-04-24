@@ -262,7 +262,7 @@ class MimirDatastore(DefaultDatastore):
         )
 
     def register_dataset(
-        self, table_name, columns, row_ids, row_counter=None, annotations=None,
+        self, table_name, columns, row_ids, row_counter, annotations=None,
         update_rows=False
     ):
         """Create a new record for a database table or view. Note that this
@@ -340,7 +340,7 @@ class MimirDatastore(DefaultDatastore):
             rowid_column=rowid_column,
             table_name=table_name,
             row_ids=row_ids,
-            row_counter=max(row_ids) + 1,
+            row_counter=row_counter,
             annotations=annotations
         )
         # Create a new directory for the dataset if it doesn't exist.
