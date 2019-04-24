@@ -125,7 +125,7 @@ class MimirDatastore(DefaultDatastore):
             table_name=view_name,
             columns=db_columns,
             row_ids=row_ids,
-            row_counter=max(row_ids) + 1,
+            row_counter=row_count + 1,
             annotations=annotations
         )
 
@@ -242,23 +242,23 @@ class MimirDatastore(DefaultDatastore):
         # Thus, sorting not necessarily returns the smallest integer value
         # first.
         #
-        #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-        #rs = mimir.vistrailsQueryMimirJson(sql, False, False)
+        sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
+        rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         #sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ' ORDER BY CAST(' + base.ROW_ID + ' AS INTEGER) LIMIT 1;'
         #rsfr = mimir.vistrailsQueryMimirJson(sql, False, False)
-        #row_count = int(rs['data'][0][0])
+        row_count = int(rs['data'][0][0])
         #first_row_id = int(rsfr['data'][0][0])
         #row_ids = map(str, range(first_row_id, first_row_id+row_count))
         # Insert the new dataset metadata information into the datastore
         sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ';'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         row_ids = sorted(rs['prov'])
-        row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
+        #row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
         return self.register_dataset(
             table_name=view_name,
             columns=columns,
             row_ids=row_ids,
-            row_counter=row_counter
+            row_counter=row_count
         )
 
     def register_dataset(
