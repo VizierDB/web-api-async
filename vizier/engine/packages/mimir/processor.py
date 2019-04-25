@@ -32,6 +32,24 @@ import vizier.mimir as mimir
 
 
 class MimirProcessor(TaskProcessor):
+    """Implmentation of the task processor for the mimir package. The processor
+    uses an instance of the vizual API to allow running on different types of
+    datastores (e.g., the default datastore or the Mimir datastore).
+    """
+    def __init__(self, api=None, properties=None):
+        """Initialize the vizual API instance. Either expects an API instance or
+        a dictionary from which an instance can be loaded. The second option is
+        only attempted if the given api is None.
+
+        Parameters
+        ----------
+        api: vizier.engine.packages.vizual.api.base.VizualApi, optional
+            Instance of the vizual API
+        """
+        if not api is None:
+            self.api = api
+        
+    
     """Task processor  to execute commands in the Mimir package."""
     def compute(self, command_id, arguments, context):
         """Compute results for commands in the Mimir package using the set of
@@ -124,7 +142,7 @@ class MimirProcessor(TaskProcessor):
                 if col_constraint == '':
                     col_constraint = None
                 if not col_constraint is None:
-                    param = param + ' ' + str(col_constraint).replace("'", "''").replace("OR", ") OR (")
+                    param = param + ' ' + str(col_constraint).replace("'", "\'\'").replace("OR", ") OR (")
                 param = '\'(' + param + ')\''
                 params.append(param)
         elif command_id == cmd.MIMIR_PICKER:

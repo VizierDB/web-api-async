@@ -5,5 +5,5 @@ engine:
     moduleName: 'vizier.engine.packages.vizual.processor'
     properties:
         api:
-            className: 'MimirVizualApi'
-            moduleName: 'vizier.engine.packages.vizual.api.mimir'
+            className: 'DefaultVizualApi'
+            moduleName: 'vizier.engine.packages.vizual.api.fs'
