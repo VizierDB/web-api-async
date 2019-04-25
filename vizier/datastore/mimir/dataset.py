@@ -361,6 +361,7 @@ class MimirDatasetHandle(DatasetHandle):
         return MimirDatasetReader(
             table_name=self.table_name,
             columns=self.columns,
+            row_idxs=self.row_idxs,
             row_ids=self.row_ids,
             rowid_column_numeric=self.rowid_column.is_numeric(),
             offset=offset,

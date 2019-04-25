@@ -28,7 +28,7 @@ import vizier.datastore.mimir.base as base
 class MimirDatasetReader(DatasetReader):
     """Dataset reader for Mimir datasets."""
     def __init__(
-        self, table_name, columns, row_ids, rowid_column_numeric=True,
+        self, table_name, columns, row_idxs, row_ids, rowid_column_numeric=True,
         offset=0, limit=-1, rowid=None
     ):
         """Initialize information about the delimited file and the file format.
@@ -62,9 +62,8 @@ class MimirDatasetReader(DatasetReader):
         # dictionary. The internal flag .is_range_query keeps track of whether
         # offset or limit where given (True) or not (False). This information is
         # later used to generate the query for the database.
-        self.row_ids = dict()
-        for i in range(len(row_ids)):
-            self.row_ids[row_ids[i]] = i
+        self.row_ids = row_ids
+        self.row_idxs = row_idxs
         if offset > 0 or limit > 0:
             self.is_range_query = True
         else:
