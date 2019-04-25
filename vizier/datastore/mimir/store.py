@@ -113,19 +113,21 @@ class MimirDatastore(DefaultDatastore):
         sql = 'SELECT '+ colSql +' FROM {{input}};'
         view_name = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
-        sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
-        rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_count = int(rs_count['data'][0][0])
+        #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
+        #rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
+        #row_count = int(rs_count['data'][0][0])
         # Get unique identifier for all rows in the created dataset
-        sql = 'SELECT * FROM ' + view_name + ';'
+        sql = 'SELECT 1 AS NOP FROM ' + view_name + ';'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_ids = sorted(rs['prov'])
+        row_ids = rs['prov']
+        row_idxs = range(len(row_ids))
         # Insert the new dataset metadata information into the datastore
         return self.register_dataset(
             table_name=view_name,
             columns=db_columns,
+            row_idxs=row_idxs,
             row_ids=row_ids,
-            row_counter=row_count + 1,
+            row_counter=len(row_idxs) + 1,
             annotations=annotations
         )
 
@@ -242,27 +244,29 @@ class MimirDatastore(DefaultDatastore):
         # Thus, sorting not necessarily returns the smallest integer value
         # first.
         #
-        sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-        rs = mimir.vistrailsQueryMimirJson(sql, False, False)
+        #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
+        #rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         #sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ' ORDER BY CAST(' + base.ROW_ID + ' AS INTEGER) LIMIT 1;'
         #rsfr = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_count = int(rs['data'][0][0])
+        #row_count = int(rs['data'][0][0])
         #first_row_id = int(rsfr['data'][0][0])
         #row_ids = map(str, range(first_row_id, first_row_id+row_count))
         # Insert the new dataset metadata information into the datastore
-        sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ';'
+        sql = 'SELECT 1 AS NOP FROM ' + view_name + ';'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_ids = sorted(rs['prov'])
+        row_ids = rs['prov']
+        row_idxs = range(len(row_ids))
         #row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
         return self.register_dataset(
             table_name=view_name,
             columns=columns,
+            row_idxs=row_idxs,
             row_ids=row_ids,
-            row_counter=row_count
+            row_counter=len(row_idxs)+1
         )
 
     def register_dataset(
-        self, table_name, columns, row_ids, row_counter, annotations=None,
+        self, table_name, columns, row_idxs, row_ids, row_counter, annotations=None,
         update_rows=False
     ):
         """Create a new record for a database table or view. Note that this
@@ -304,7 +308,7 @@ class MimirDatastore(DefaultDatastore):
             # expected to be the only values in the returned result set.
             dataset_row_ids = set()
             for row in rs['data']:
-                dataset_row_ids.add(int(row[0]))
+                dataset_row_ids.add(row[0])
             modified_row_ids = list()
             # Remove row id's that are no longer in the data.
             for row_id in row_ids:
@@ -339,6 +343,7 @@ class MimirDatastore(DefaultDatastore):
             columns=map(lambda cn: self.bad_col_names.get(cn, cn), columns),
             rowid_column=rowid_column,
             table_name=table_name,
+            row_idxs=row_idxs,
             row_ids=row_ids,
             row_counter=row_counter,
             annotations=annotations

@@ -201,7 +201,7 @@ class MimirDatasetHandle(DatasetHandle):
     dataset.
     """
     def __init__(
-        self, identifier, columns, rowid_column, table_name, row_ids,
+        self, identifier, columns, rowid_column, table_name, row_idxs, row_ids,
         row_counter, annotations=None
     ):
         """Initialize the descriptor.
@@ -218,7 +218,9 @@ class MimirDatasetHandle(DatasetHandle):
         table_name: string
             Reference to relational database table containing the dataset.
         row_ids: list(int)
-            List of row ids. Determines the order of rows in the dataset
+            List of row indexes. Determines the order of rows in the dataset
+        row_ids: list(string)
+            List of row ids. for provenance of dataset
         row_counter: int
             Counter for unique row ids
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata
@@ -232,6 +234,7 @@ class MimirDatasetHandle(DatasetHandle):
         )
         self.rowid_column = rowid_column
         self.table_name = table_name
+        self.row_idxs = row_idxs
         self.row_ids = row_ids
         self.row_counter = row_counter
 
@@ -257,6 +260,7 @@ class MimirDatasetHandle(DatasetHandle):
             columns=[MimirDatasetColumn.from_dict(obj) for obj in doc['columns']],
             rowid_column=MimirDatasetColumn.from_dict(doc['rowIdColumn']),
             table_name=doc['tableName'],
+            row_idxs=doc['idxs'],
             row_ids=doc['rows'],
             row_counter=doc['rowCounter']
         )
@@ -328,7 +332,7 @@ class MimirDatasetHandle(DatasetHandle):
                         )
             return annotations
 
-    def max_row_id(self):
+    def max_row_idx(self):
         """Get maximum identifier for all rows in the dataset. If the dataset
         is empty the result is -1.
 
@@ -336,7 +340,7 @@ class MimirDatasetHandle(DatasetHandle):
         -------
         int
         """
-        return max(self.row_ids) if len(self.row_ids) > 0 else -1
+        return max(self.row_idxs) if len(self.row_idxs) > 0 else -1
 
     def reader(self, offset=0, limit=-1, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional
@@ -376,6 +380,7 @@ class MimirDatasetHandle(DatasetHandle):
             'id': self.identifier,
             'columns': [col.to_dict() for col in self.columns],
             'rowIdColumn': self.rowid_column.to_dict(),
+            'idxs': self.row_idxs,
             'rows': self.row_ids,
             'tableName': str(self.table_name),
             'rowCounter': self.row_counter

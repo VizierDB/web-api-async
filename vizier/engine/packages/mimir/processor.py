@@ -208,6 +208,7 @@ class MimirProcessor(TaskProcessor):
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=columns,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 annotations=dataset.annotations,
                 update_rows=True
@@ -217,6 +218,7 @@ class MimirProcessor(TaskProcessor):
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=dataset.columns,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations,
