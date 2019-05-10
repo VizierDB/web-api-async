@@ -32,7 +32,7 @@ def createLens(dataset, params, type, make_input_certain, materialize):
       "materialize": materialize
     }
     resp = requests.post(_mimir_url + 'lens/create', json=req_json)
-    return resp.json()['lensName']
+    return resp.json()
 
 def createView(dataset, query):
     req_json = {

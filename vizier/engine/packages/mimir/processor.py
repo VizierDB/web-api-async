@@ -200,8 +200,8 @@ class MimirProcessor(TaskProcessor):
                 False
             )
             (lens_name, lens_annotations) = (
-                mimir_lens_response.lensName(),
-                mimir_lens_response.annotations()
+                mimir_lens_response['lensName'],
+                mimir_lens_response['annotations']
             )
         # Create a view including missing row ids for the result of a
         # MISSING KEY lens
@@ -313,7 +313,6 @@ def print_lens_annotations(outputs, annotations):
         Annotations from first 200 rows of queried lens
     """
     if not annotations is None:
-        if len(annotations) > 0:
-            outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
-            for a in annotations:
-                outputs.stdout.append(TextOutput(str(a)))
+        if annotations > 0:
+            outputs.stdout.append(TextOutput('Repairs in first 200 rows: ' + str(annotations)))
+
