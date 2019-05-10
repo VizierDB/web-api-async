@@ -247,7 +247,7 @@ class MimirProcessor(TaskProcessor):
         print_lens_annotations(outputs, lens_annotations)
         # Return task result
         return ExecResult(
-            outputs=ModuleOutputs(stdout=outputs),
+            outputs=outputs,
             provenance=ModuleProvenance(
                 read={input_ds_name: dataset.identifier},
                 write={ds_name: ds}
@@ -314,5 +314,5 @@ def print_lens_annotations(outputs, annotations):
     """
     if not annotations is None:
         if annotations > 0:
-            outputs.stdout.append(TextOutput('Repairs in first 200 rows: ' + str(annotations)))
-
+            outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
+            outputs.stdout.append(TextOutput(str(annotations))
