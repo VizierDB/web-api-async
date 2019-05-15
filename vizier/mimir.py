@@ -118,6 +118,13 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
     resp = requests.post(_mimir_url + 'query/data', json=req_json)
     return resp.json()
 
+def evalScala(source):
+    req_json = {
+      "source": source
+    }
+    resp = requests.post(_mimir_url + 'eval/scala', json=req_json)
+    return resp.json()
+
 def getSchema(query):
     req_json = {
       "query": query
