@@ -315,4 +315,4 @@ def print_lens_annotations(outputs, annotations):
     if not annotations is None:
         if annotations > 0:
             outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
-            outputs.stdout.append(TextOutput(str(annotations))
+            outputs.stdout.append(TextOutput(str(annotations)))
