@@ -287,13 +287,18 @@ class ModuleArguments(object):
         """
         # Keep track of the parameter identifier in the argument list
         keys = set()
+        required_key_values = parameters.mandatory(parent=self.parent)
+        
         for arg_id in self.arguments:
             arg_value = self.arguments[arg_id]
             # Get the parameter declaration. This will raise an exception if the
             # parameter id is unknown.
             para = parameters.get(arg_id)
             datatype = para[pckg.LABEL_DATATYPE]
-            if datatype == pckg.DT_BOOL:
+            if arg_value is None:
+                if arg_id in required_key_values:
+                    raise ValueError('missing value for parameter \'' + str(arg_id) + '\'')
+            elif datatype == pckg.DT_BOOL:
                 if not isinstance(arg_value, bool):
                     raise ValueError('expected bool for \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_DECIMAL:
@@ -328,7 +333,7 @@ class ModuleArguments(object):
                 raise RuntimeError('unknonw data type \'' + str(datatype) + '\'')
             keys.add(arg_id)
         # Ensure that all mandatory arguments are given
-        for key in parameters.mandatory(parent=self.parent):
+        for key in required_key_values:
             if not key in keys:
                 raise ValueError('missing value for parameter \'' + key + '\'')
 

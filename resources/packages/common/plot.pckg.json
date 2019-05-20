@@ -51,7 +51,7 @@
                         "id": "name", 
                         "index": 1, 
                         "name": "Chart Name", 
-                        "required": true
+                        "required": false
                     }, 
                     {
                         "datatype": "list", 
