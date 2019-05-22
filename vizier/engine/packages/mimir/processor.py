@@ -182,10 +182,15 @@ class MimirProcessor(TaskProcessor):
                 column_names.append(c_name)
         elif command_id == cmd.MIMIR_TYPE_INFERENCE:
             params = [str(arguments.get_value(cmd.PARA_PERCENT_CONFORM))]
+        elif command_id == cmd.MIMIR_SHAPE_DETECTOR:
+            dseModel = arguments.get_value(cmd.PARA_MODEL_NAME)
+            params = []
+            if not dseModel is None:
+                params = [str(dseModel)]
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
-        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
+        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE, cmd.MIMIR_SHAPE_DETECTOR]:
             lens_name = mimir.createAdaptiveSchema(
                 mimir_table_name,
                 params,

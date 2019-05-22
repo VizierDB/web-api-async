@@ -410,10 +410,18 @@
                         "required": false
                     }, 
                     {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "loadDataSourceErrors", 
+                        "index": 5, 
+                        "name": "Data Source Error Annotations", 
+                        "required": false
+                    }, 
+                    {
                         "datatype": "list", 
                         "hidden": false, 
                         "id": "loadOptions", 
-                        "index": 5, 
+                        "index": 6, 
                         "name": "Load Options", 
                         "required": false
                     }, 
@@ -421,7 +429,7 @@
                         "datatype": "string", 
                         "hidden": false, 
                         "id": "loadOptionKey", 
-                        "index": 6, 
+                        "index": 7, 
                         "name": "Option Key", 
                         "parent": "loadOptions", 
                         "required": false
@@ -430,7 +438,7 @@
                         "datatype": "string", 
                         "hidden": false, 
                         "id": "loadOptionValue", 
-                        "index": 7, 
+                        "index": 8, 
                         "name": "Option Value", 
                         "parent": "loadOptions", 
                         "required": false
