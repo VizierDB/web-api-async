@@ -33,7 +33,7 @@ MIMIR_MISSING_VALUE = 'missing_value'
 MIMIR_PICKER ='picker'
 MIMIR_SCHEMA_MATCHING ='schema_matching'
 MIMIR_TYPE_INFERENCE ='type_inference'
-MIMIR_SHAPE_DETECTOR ='shape_detector'
+MIMIR_SHAPE_DETECTOR ='shape_watcher'
 
 # Command arguments
 PARA_CITY = 'city'

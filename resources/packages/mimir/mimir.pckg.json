@@ -711,7 +711,7 @@
 			      "value": "modelName"
 			    }
 			  ],
-			  "id": "shape_detector",
+			  "id": "shape_watcher",
 			  "name": "Shape Detector Adaptive Schema",
 			  "parameter": [
 			    {
