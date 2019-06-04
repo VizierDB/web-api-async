@@ -54,8 +54,8 @@ class DatasetAnnotation(object):
         row_id: int, optional
             Unique row identifier
         """
-        if column_id is None and row_id is None:
-            raise ValueError('invalid dataset resource identifier')
+        #if column_id is None and row_id is None:
+        #    raise ValueError('invalid dataset resource identifier')
         self.key = key
         self.value = value
         self.column_id = column_id

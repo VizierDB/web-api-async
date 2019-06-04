@@ -43,6 +43,7 @@ class DatasetMetadata(object):
         cells: list(vizier.datastpre.annotation.base.CellAnnotation), optional
             Annotations for dataset cells
         """
+        self.annotations = list()
         self.columns = columns if not columns is None else list()
         self.rows = rows if not rows is None else list()
         self.cells = cells if not cells is None else list()
@@ -71,6 +72,8 @@ class DatasetMetadata(object):
             column_id=column_id,
             row_id=row_id
         )
+        if row_id is None and column_id is None:
+            self.annotations.append(annotation) 
         if row_id is None:
             self.columns.append(annotation)
         elif column_id is None:

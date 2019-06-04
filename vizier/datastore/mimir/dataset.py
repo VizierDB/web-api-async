@@ -285,13 +285,15 @@ class MimirDatasetHandle(DatasetHandle):
             # all dataset cells we should add those annotations here. By now
             # this command will only return user-defined annotations for the
             # dataset.
-            #sql = 'SELECT * '
-            #sql += 'FROM ' + self.table_name + ' '
-            #annoList = mimir.explainEverythingJson(sql)
-            #for anno in annoList:
-            #    annotations.add(ANNO_UNCERTAIN, anno)
+            annotations = DatasetMetadata()
+            sql = 'SELECT * '
+            sql += 'FROM ' + self.table_name + ' '
+            annoList = mimir.explainEverythingJson(sql)
+            for anno in annoList:
+                annotations.add(ANNO_UNCERTAIN, anno['english'])
             #return [item for sublist in map(lambda (i,x): self.annotations.for_column(i).values(), enumerate(self.columns)) for item in sublist]
-            return self.annotations.values
+            #return self.annotations.values
+            return annotations
         elif row_id is None:
             return self.annotations.for_column(column_id)
         elif column_id is None:

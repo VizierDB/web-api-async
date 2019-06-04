@@ -171,6 +171,27 @@ class MimirDatastore(DefaultDatastore):
             annotations=annotations
         )
 
+    def get_annotations(self, identifier, column_id=-1, row_id='-1'):
+        """Get list of annotations for a dataset component. Expects at least one
+        of the given identifier to be a valid identifier (>= 0).
+
+        Parameters
+        ----------
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optiona
+            Unique row identifier
+
+        Returns
+        -------
+        list(vizier.datastore.metadata.Annotation)
+        """
+        # Return immediately if request is for column or row annotations. At the
+        # moment we only maintain uncertainty information for cells. If cell
+        # annotations are requested we need to query the database to retrieve
+        # any existing uncertainty annotations for the cell.
+        return self.get_dataset(identifier).get_annotations(column_id,row_id)
+    
     def load_dataset(
         self, f_handle=None, url=None, detect_headers=True, infer_types=True,
         load_format='csv', options=[]
