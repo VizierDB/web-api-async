@@ -290,7 +290,7 @@ class MimirDatasetHandle(DatasetHandle):
             sql += 'FROM ' + self.table_name + ' '
             annoList = mimir.explainEverythingJson(sql)
             for anno in annoList:
-                annotations.add(ANNO_UNCERTAIN, anno['english'])
+                annotations.add(ANNO_UNCERTAIN, anno)
             #return [item for sublist in map(lambda (i,x): self.annotations.for_column(i).values(), enumerate(self.columns)) for item in sublist]
             #return self.annotations.values
             return annotations
