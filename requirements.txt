@@ -6,3 +6,8 @@ jsonschema
 pyyaml
 requests
 unicodecsv>=0.14.1
+numpy
+pandas
+geopandas
+bokeh
+shapely
