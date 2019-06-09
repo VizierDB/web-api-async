@@ -25,6 +25,8 @@ from bokeh.io.notebook import install_notebook_hook
 from bokeh.embed import json_item, file_html
 
 def python_cell_preload(variables):
+  """Convenient place to hook extension code that needs to run before a python cell"""
+
   ## Set up Bokeh
   output_notebook(notebook_type = 'vizier')
 
@@ -33,9 +35,13 @@ def python_cell_preload(variables):
 # https://bokeh.pydata.org/en/latest/docs/reference.html
 
 def vizier_bokeh_load(resources, verbose, hide_banner, load_timeout):
+    """Hook called by Bokeh before the first show operation."""
+    # We reset the execution environment before every call. No use
+    # in doing anything specific here.
     pass
 
 def vizier_bokeh_show(obj, state, notebook_handle):
+    """Hook called by Bokeh when show() is called"""
     # r = "bokeh_plot_"+str([ random.choice(range(0, 10)) for x in range(0, 20) ])
     plot_object_id = "bokeh_plot_{}".format(obj.id)
 
@@ -53,7 +59,8 @@ def vizier_bokeh_show(obj, state, notebook_handle):
     print('<img src onError="Bokeh.embed.embed_item('+content+');"/>')
 
 def vizier_bokeh_app(app, state, notebook_url, **kwargs):
-    # Presently unsupported.
+    """Hook called by Bokeh when an app is started."""
+    # Apps are presently unsupported.
     raise
 
 install_notebook_hook('vizier', vizier_bokeh_load, vizier_bokeh_show, vizier_bokeh_app)
