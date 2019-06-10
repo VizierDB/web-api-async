@@ -19,7 +19,7 @@
 
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
 from vizier.datastore.annotation.dataset import DatasetMetadata
-
+from bokeh.models.sources import ColumnDataSource
 
 class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
@@ -267,6 +267,29 @@ class DatasetClient(object):
                     )
                 )
         return self._rows
+
+    def to_bokeh(self, columns = None):
+        """Convert the dataset to a bokeh ColumnDataSource
+
+        Parameters
+        ----------
+        columns: list(string or int) (optional)
+            The columns to include.  (default: All columns)
+
+        Returns
+        -------
+        bokeh.models.sources.ColumnDataSource  
+        """
+
+        if columns == None:
+            columns = self.columns
+        return ColumnDataSource(dict([
+            (
+                column.name, 
+                [ row.get_value(column.identifier if column.identifier >= 0 else column.name) for row in self.rows ]
+            )
+            for column in self.columns
+        ]))
 
 
 class MutableDatasetRow(DatasetRow):
