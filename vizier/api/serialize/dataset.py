@@ -66,6 +66,7 @@ def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
     dict
     """
     obj = {
+        'annotations': [ANNOTATION(a) for a in annotations.annotations],
         'columns': [ANNOTATION(a) for a in annotations.columns],
         'rows': [ANNOTATION(a) for a in annotations.rows],
         'cells': [ANNOTATION(a) for a in annotations.cells]

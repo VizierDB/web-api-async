@@ -1,0 +1,9 @@
+packages:
+    - mimir
+engine:
+    className: 'MimirProcessor'
+    moduleName: 'vizier.engine.packages.mimir.processor'
+    properties:
+        api:
+            className: 'MimirVizualApi'
+            moduleName: 'vizier.engine.packages.vizual.api.mimir'

@@ -48,6 +48,7 @@ PARA_LOAD_FORMAT = 'loadFormat'
 PARA_LOAD_OPTIONS = 'loadOptions'
 PARA_LOAD_OPTION_KEY = 'loadOptionKey'
 PARA_LOAD_OPTION_VALUE = 'loadOptionValue'
+PARA_LOAD_DSE = 'loadDataSourceErrors'
 PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'
@@ -219,6 +220,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     values=[
                         pckg.enum_value(value='csv', text='CSV', is_default=True),
                         pckg.enum_value(value='json', text='JSON'),
+                        pckg.enum_value(value='com.github.potix2.spark.google.spreadsheets', text='google sheet'),
                         pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
                         pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
                         pckg.enum_value(value='jdbc', text='JDBC Source'),
@@ -246,17 +248,24 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     required=False
                 ),
                 pckg.parameter_declaration(
+                    PARA_LOAD_DSE,
+                    name='Data Source Error Annotations',
+                    data_type=pckg.DT_BOOL,
+                    index=5,
+                    required=False
+                ),
+                pckg.parameter_declaration(
                     PARA_LOAD_OPTIONS,
                     name='Load Options',
                     data_type=pckg.DT_LIST,
-                    index=5,
+                    index=6,
                     required=False
                 ),
                 pckg.parameter_declaration(
                     PARA_LOAD_OPTION_KEY,
                     name='Option Key',
                     data_type=pckg.DT_STRING,
-                    index=6,
+                    index=7,
                     parent=PARA_LOAD_OPTIONS,
                     required=False
                 ),
@@ -264,7 +273,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     PARA_LOAD_OPTION_VALUE,
                     name='Option Value',
                     data_type=pckg.DT_STRING,
-                    index=7,
+                    index=8,
                     parent=PARA_LOAD_OPTIONS,
                     required=False
                 )

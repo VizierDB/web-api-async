@@ -36,7 +36,6 @@ class TestMimirDatasetAnnotations(unittest.TestCase):
 
     def test_dataset_annotations(self):
         """Run test for Mimir datastore."""
-        mimir.initialize()
         dh = self.db.load_dataset(
             f_handle=self.fileserver.upload_file(DATA_FILE)
         )
@@ -48,7 +47,6 @@ class TestMimirDatasetAnnotations(unittest.TestCase):
         for row_id in ds.row_ids:
             for anno in ds.get_annotations(column_id=1, row_id=row_id):
                 print str(row_id) + '\t' + anno.key + '=' + str(anno.value)
-        mimir.finalize()
 
 
 if __name__ == '__main__':

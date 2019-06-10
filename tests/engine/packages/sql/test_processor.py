@@ -40,7 +40,6 @@ class TestSQLProcessor(unittest.TestCase):
 
     def test_run_sql_query(self):
         """Test running a SQL query without materializing the result."""
-        mimir.initialize()
         f_handle = self.filestore.upload_file(CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         cmd = sql_cell(
@@ -82,7 +81,6 @@ class TestSQLProcessor(unittest.TestCase):
         self.assertTrue('ge' in result.provenance.write)
         self.assertTrue(len(result.outputs.stdout) > 0)
         self.assertEquals(len(result.outputs.stderr), 0)
-        mimir.finalize()
 
 
 if __name__ == '__main__':

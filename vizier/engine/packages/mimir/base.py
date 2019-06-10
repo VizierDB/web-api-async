@@ -33,6 +33,7 @@ MIMIR_MISSING_VALUE = 'missing_value'
 MIMIR_PICKER ='picker'
 MIMIR_SCHEMA_MATCHING ='schema_matching'
 MIMIR_TYPE_INFERENCE ='type_inference'
+MIMIR_SHAPE_DETECTOR ='shape_watcher'
 
 # Command arguments
 PARA_CITY = 'city'
@@ -50,6 +51,7 @@ PARA_SCHEMA = 'schema'
 PARA_STATE = 'state'
 PARA_STREET = 'strname'
 PARA_TYPE = 'type'
+PARA_MODEL_NAME = 'modelName'
 
 
 """Mimir lens specification schema."""
@@ -339,6 +341,30 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.constant_format('percent_conform'),
                 pckg.constant_format('='),
                 pckg.variable_format(PARA_PERCENT_CONFORM)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=MIMIR_SHAPE_DETECTOR,
+            name='Shape Detector Adaptive Schema',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_MODEL_NAME,
+                    name='Model Name',
+                    data_type=pckg.DT_STRING,
+                    index=1,
+                    required=False
+                )
+            ],
+            format=[
+                pckg.constant_format('SHAPE'),
+                pckg.constant_format('DETECTOR'),
+                pckg.constant_format('FOR'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('WITH'),
+                pckg.constant_format('model_name'),
+                pckg.constant_format('='),
+                pckg.variable_format(PARA_MODEL_NAME)
             ]
         )
     ]

@@ -66,12 +66,13 @@ class MimirVizualApi(VizualApi):
         col_list = [ROW_ID]
         for col in schema:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=schema,
+            row_idxs=dataset.row_idxs,
             row_ids=dataset.row_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations
@@ -106,21 +107,24 @@ class MimirVizualApi(VizualApi):
             raise ValueError('invalid row index \'' + str(row_index) + '\'')
         # Get the id of the row that is being deleted and modify the row id list
         # for the resulting dataset
-        rows = list(dataset.row_ids)
+        rows = list(dataset.row_idxs)
+        rows_ids = list(dataset.row_ids)
         row_id = rows[row_index]
         del rows[row_index]
+        del rows_ids[row_index]
         # Create a view for the modified dataset
         col_list = [ROW_ID]
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        sql += ' WHERE ' + ROW_ID + ' <> ' + dataset.rowid_column.to_sql_value(row_id)
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql += ' WHERE ' + ROW_ID + ' <> ' + dataset.rowid_column.to_sql_value(row_id) + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=dataset.columns,
-            row_ids=rows,
+            row_idxs=rows,
+            row_ids=rows_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations
         )
@@ -173,12 +177,13 @@ class MimirVizualApi(VizualApi):
             else:
                 schema.append(col)
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=schema,
+            row_idxs=dataset.row_idxs,
             row_ids=dataset.row_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations.filter(
@@ -236,12 +241,13 @@ class MimirVizualApi(VizualApi):
                 col_list.append('NULL ' + col.name_in_rdb)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=schema,
+            row_idxs=dataset.row_idxs,
             row_ids=dataset.row_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations
@@ -275,25 +281,28 @@ class MimirVizualApi(VizualApi):
         if position < 0 or position > len(dataset.row_ids):
             raise ValueError('invalid row index \'' + str(position) + '\'')
         # Get unique id for new row
-        row_id = dataset.row_counter
+        row_idx = dataset.row_counter
         dataset.row_counter += 1
         row_ids = list(dataset.row_ids)
-        row_ids.insert(position, row_id)
+        row_ids.insert(position, str(row_idx))
+        row_idxs = list(dataset.row_idxs)
+        row_idxs.append(row_idx)
         # Create a view for the modified schema
         col_list = [ROW_ID]
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        mimirSchema = json.loads(mimir._mimir.getSchema(sql))
+        mimirSchema = mimir.getSchema(sql)
         union_list = [dataset.rowid_column.to_sql_value(row_id) + ' AS ' + ROW_ID]
         for col in mimirSchema[1:]:
-            union_list.append('CAST(NULL AS '+col['base_type']+') AS ' + col['name'])
-        sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ')'
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+            union_list.append('CAST(NULL AS '+col['baseType']+') AS ' + col['name'])
+        sql = '(' + sql + ') UNION ALL (SELECT ' + ','.join(union_list) + ');'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=dataset.columns,
+            row_idxs=row_idxs,
             row_ids=row_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations
@@ -437,6 +446,7 @@ class MimirVizualApi(VizualApi):
             ds = datastore.register_dataset(
                 table_name=dataset.table_name,
                 columns=schema,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations
@@ -483,6 +493,7 @@ class MimirVizualApi(VizualApi):
             ds = datastore.register_dataset(
                 table_name=dataset.table_name,
                 columns=dataset.columns,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations
@@ -532,6 +543,7 @@ class MimirVizualApi(VizualApi):
             ds = datastore.register_dataset(
                 table_name=dataset.table_name,
                 columns=schema,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations
@@ -582,19 +594,19 @@ class MimirVizualApi(VizualApi):
                 stmt += ' DESC'
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM {{input}} ORDER BY '
-        sql += ','.join(order_by_clause)
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql += ','.join(order_by_clause) + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Query the row ids in the database sorted by the given order by clause
-        sql = 'SELECT ' + ROW_ID + ' FROM ' + view_name
-        rs = json.loads(
-            mimir._mimir.vistrailsQueryMimirJson(sql, True, False)
-        )
+        sql = 'SELECT 1 AS NOP FROM ' + view_name + ';'
+        rs = mimir.vistrailsQueryMimirJson(sql, True, False)
         # The result contains the sorted list of row ids
         rows = rs['prov']
+        rows_idxs = range(len(rows))
         # Register new dataset with only a modified list of row identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=dataset.columns,
+            row_idxs=row_idxs,
             row_ids=rows,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations
@@ -651,12 +663,13 @@ class MimirVizualApi(VizualApi):
                 col_list.append(stmt)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        view_name = mimir._mimir.createView(dataset.table_name, sql)
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        view_name = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
             table_name=view_name,
             columns=dataset.columns,
+            row_idxs=dataset.row_idxs,
             row_ids=dataset.row_ids,
             row_counter=dataset.row_counter,
             annotations=dataset.annotations

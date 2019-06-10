@@ -405,8 +405,11 @@ class VizualTaskProcessor(TaskProcessor):
             raise_error=False,
             default_value=True
         )
+        datasource_errors = args.get_value(cmd.PARA_LOAD_DSE, raise_error=False)
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
+        if not datasource_errors is None:
+            m_opts.append({'datasourceErrors': 'true'})
         if not options is None:
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)

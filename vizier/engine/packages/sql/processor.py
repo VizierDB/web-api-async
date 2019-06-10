@@ -75,6 +75,8 @@ class SQLTaskProcessor(TaskProcessor):
         # Get SQL source code that is in this cell and the global
         # variables
         source = args.get_value(cmd.PARA_SQL_SOURCE)
+        if not source.endswith(';'):
+            source = source + ';'
         ds_name = args.get_value(cmd.PARA_OUTPUT_DATASET, raise_error=False)
         # Get mapping of datasets in the context to their respective table
         # name in the Mimir backend
@@ -89,12 +91,12 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name = mimir._mimir.createView(
-                mimir._jvmhelper.to_scala_map(mimir_table_names),
+            view_name = mimir.createView(
+                mimir_table_names,
                 source
             )
             sql = 'SELECT * FROM ' + view_name
-            mimirSchema = json.loads(mimir._mimir.getSchema(sql))
+            mimirSchema = mimir.getSchema(sql)
 
             columns = list()
             colSql = 'ROWID() AS ' + ROW_ID
@@ -112,15 +114,15 @@ class SQLTaskProcessor(TaskProcessor):
                 colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_dataset
                 columns.append(col)
 
-            sql = 'SELECT ' + colSql + ' FROM {{input}}'
-            view_name = mimir._mimir.createView(view_name, sql)
+            sql = 'SELECT ' + colSql + ' FROM {{input}};'
+            view_name = mimir.createView(view_name, sql)
 
-            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name
-            rs_count = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
+            rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
             row_count = int(rs_count['data'][0][0])
 
-            sql = 'SELECT * FROM ' + view_name + ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT)
-            rs = json.loads(mimir._mimir.vistrailsQueryMimirJson(sql, False, False))
+            sql = 'SELECT * FROM ' + view_name + ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT) + ';'
+            rs = mimir.vistrailsQueryMimirJson(sql, False, False)
 
             provenance = None
             if ds_name is None or ds_name == '':
@@ -133,10 +135,12 @@ class SQLTaskProcessor(TaskProcessor):
                 provenance = ModuleProvenance()
             else:
                 row_ids = rs['prov']
-
+                row_idxs = range(len(row_ids))
+                
                 ds = context.datastore.register_dataset(
                         table_name=view_name,
                         columns=columns,
+                        row_idxs=row_idxs,
                         row_ids=row_ids,
                         row_counter=row_count
                     )

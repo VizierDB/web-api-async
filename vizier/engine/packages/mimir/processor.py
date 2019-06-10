@@ -32,6 +32,24 @@ import vizier.mimir as mimir
 
 
 class MimirProcessor(TaskProcessor):
+    """Implmentation of the task processor for the mimir package. The processor
+    uses an instance of the vizual API to allow running on different types of
+    datastores (e.g., the default datastore or the Mimir datastore).
+    """
+    def __init__(self, api=None, properties=None):
+        """Initialize the vizual API instance. Either expects an API instance or
+        a dictionary from which an instance can be loaded. The second option is
+        only attempted if the given api is None.
+
+        Parameters
+        ----------
+        api: vizier.engine.packages.vizual.api.base.VizualApi, optional
+            Instance of the vizual API
+        """
+        if not api is None:
+            self.api = api
+        
+    
     """Task processor  to execute commands in the Mimir package."""
     def compute(self, command_id, arguments, context):
         """Compute results for commands in the Mimir package using the set of
@@ -99,9 +117,9 @@ class MimirProcessor(TaskProcessor):
             params += ['MISSING_ONLY(FALSE)']
             # Need to run this lens twice in order to generate row ids for
             # any potential new tuple
-            mimir_lens_response = mimir._mimir.createLens(
+            mimir_lens_response = mimir.createLens(
                 dataset.table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id,
                 arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False
@@ -124,7 +142,7 @@ class MimirProcessor(TaskProcessor):
                 if col_constraint == '':
                     col_constraint = None
                 if not col_constraint is None:
-                    param = param + ' ' + str(col_constraint).replace("'", "''").replace("OR", ") OR (")
+                    param = param + ' ' + str(col_constraint).replace("'", "\'\'").replace("OR", ") OR (")
                 param = '\'(' + param + ')\''
                 params.append(param)
         elif command_id == cmd.MIMIR_PICKER:
@@ -164,26 +182,31 @@ class MimirProcessor(TaskProcessor):
                 column_names.append(c_name)
         elif command_id == cmd.MIMIR_TYPE_INFERENCE:
             params = [str(arguments.get_value(cmd.PARA_PERCENT_CONFORM))]
+        elif command_id == cmd.MIMIR_SHAPE_DETECTOR:
+            dseModel = arguments.get_value(cmd.PARA_MODEL_NAME)
+            params = []
+            if not dseModel is None:
+                params = [str(dseModel)]
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
-        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE]:
-            lens_name = mimir._mimir.createAdaptiveSchema(
+        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE, cmd.MIMIR_SHAPE_DETECTOR]:
+            lens_name = mimir.createAdaptiveSchema(
                 mimir_table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id.upper()
             )
         else:
-            mimir_lens_response = mimir._mimir.createLens(
+            mimir_lens_response = mimir.createLens(
                 mimir_table_name,
-                mimir._jvmhelper.to_scala_seq(params),
+                params,
                 command_id.upper(),
                 arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
                 False
             )
             (lens_name, lens_annotations) = (
-                mimir_lens_response.lensName(),
-                mimir_lens_response.annotations()
+                mimir_lens_response['lensName'],
+                mimir_lens_response['annotations']
             )
         # Create a view including missing row ids for the result of a
         # MISSING KEY lens
@@ -208,6 +231,7 @@ class MimirProcessor(TaskProcessor):
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=columns,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 annotations=dataset.annotations,
                 update_rows=True
@@ -217,6 +241,7 @@ class MimirProcessor(TaskProcessor):
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=dataset.columns,
+                row_idxs=dataset.row_idxs,
                 row_ids=dataset.row_ids,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations,
@@ -227,7 +252,7 @@ class MimirProcessor(TaskProcessor):
         print_lens_annotations(outputs, lens_annotations)
         # Return task result
         return ExecResult(
-            outputs=ModuleOutputs(stdout=outputs),
+            outputs=outputs,
             provenance=ModuleProvenance(
                 read={input_ds_name: dataset.identifier},
                 write={ds_name: ds}
@@ -293,7 +318,6 @@ def print_lens_annotations(outputs, annotations):
         Annotations from first 200 rows of queried lens
     """
     if not annotations is None:
-        if len(annotations) > 0:
+        if annotations > 0:
             outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
-            for a in annotations:
-                outputs.stdout.append(TextOutput(str(a)))
+            outputs.stdout.append(TextOutput(str(annotations)))

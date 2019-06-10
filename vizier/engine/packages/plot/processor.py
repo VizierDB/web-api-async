@@ -77,7 +77,7 @@ class PlotProcessor(TaskProcessor):
         ds = context.get_dataset(ds_name)
         # Get user-provided name for the new chart and verify that it is a
         # valid name
-        chart_name = args.get_value(pckg.PARA_NAME)
+        chart_name = args.get_value(pckg.PARA_NAME, default_value=ds_name+' Plot') 
         if not is_valid_name(chart_name):
             raise ValueError('invalid chart name \'' + str(chart_name) + '\'')
         chart_args = args.get_value(cmd.PARA_CHART)
@@ -95,11 +95,12 @@ class PlotProcessor(TaskProcessor):
             x_axis = args.get_value(cmd.PARA_XAXIS)
             # X-Axis column may be empty. In that case, we ignore the
             # x-axis spec
-            col_id = x_axis.get_value(cmd.PARA_XAXIS_COLUMN)
             add_data_series(
                 args=x_axis,
                 view=view,
-                dataset=ds
+                dataset=ds,
+                col_arg_id=cmd.PARA_XAXIS_COLUMN,
+                range_arg_id=cmd.PARA_XAXIS_RANGE
             )
             view.x_axis = 0
         # Definition of data series. Each series is a pair of column
@@ -108,8 +109,7 @@ class PlotProcessor(TaskProcessor):
             add_data_series(
                 args=data_series,
                 view=view,
-                dataset=ds,
-                default_label='Series ' + str(len(view.data) + 1)
+                dataset=ds
             )
         # Execute the query and get the result
         rows = ChartQuery.exec_query(ds, view)
@@ -128,7 +128,7 @@ class PlotProcessor(TaskProcessor):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def add_data_series(args, view, dataset, default_label=None):
+def add_data_series(args, view, dataset, default_label=None, col_arg_id=cmd.PARA_SERIES_COLUMN, range_arg_id=cmd.PARA_SERIES_RANGE):
     """Add a data series handle to a given chart view handle. Expects a data
     series specification and a dataset descriptor.
 
@@ -143,11 +143,11 @@ def add_data_series(args, view, dataset, default_label=None):
     default_label: string, optional
         Default label for dataseries if not given in the specification.
     """
-    col_id = args.get_value(cmd.PARA_SERIES_COLUMN)
+    col_id = args.get_value(col_arg_id)
     # Get column index to ensure that the column exists. Will raise
     # an exception if c_name does not specify a valid column.
     c_name = dataset.column_by_id(col_id).name
-    if args.has(cmd.PARA_SERIES_LABEL):
+    if args.has(cmd.PARA_SERIES_LABEL) and not args.get_value(cmd.PARA_SERIES_LABEL) is None:
         s_label = args.get_value(cmd.PARA_SERIES_LABEL)
         if s_label.strip() == '':
             s_label = default_label if not default_label is None else c_name
@@ -158,8 +158,8 @@ def add_data_series(args, view, dataset, default_label=None):
     # the first.
     range_start = None
     range_end = None
-    if args.has(cmd.PARA_SERIES_RANGE):
-        s_range = args.get_value(cmd.PARA_SERIES_RANGE).strip()
+    if args.has(range_arg_id) and not args.get_value(range_arg_id) is None:
+        s_range = args.get_value(range_arg_id).strip()
         if s_range != '':
             pos = s_range.find(':')
             if pos > 0:

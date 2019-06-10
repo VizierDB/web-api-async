@@ -54,7 +54,8 @@ PLOT_COMMANDS = pckg.package_declaration(
                     identifier=pckg.PARA_NAME,
                     name='Chart Name',
                     data_type=pckg.DT_STRING,
-                    index=1
+                    index=1,
+                    required=False
                 ),
                 pckg.parameter_declaration(
                     identifier=PARA_SERIES,

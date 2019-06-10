@@ -28,7 +28,7 @@ import vizier.datastore.mimir.base as base
 class MimirDatasetReader(DatasetReader):
     """Dataset reader for Mimir datasets."""
     def __init__(
-        self, table_name, columns, row_ids, rowid_column_numeric=True,
+        self, table_name, columns, row_idxs, row_ids, rowid_column_numeric=True,
         offset=0, limit=-1, rowid=None
     ):
         """Initialize information about the delimited file and the file format.
@@ -62,9 +62,8 @@ class MimirDatasetReader(DatasetReader):
         # dictionary. The internal flag .is_range_query keeps track of whether
         # offset or limit where given (True) or not (False). This information is
         # later used to generate the query for the database.
-        self.row_ids = dict()
-        for i in range(len(row_ids)):
-            self.row_ids[row_ids[i]] = i
+        self.row_ids = row_ids
+        self.row_idxs = row_idxs
         if offset > 0 or limit > 0:
             self.is_range_query = True
         else:
@@ -122,10 +121,8 @@ class MimirDatasetReader(DatasetReader):
                 if self.limit > 0:
                     sql +=  ' LIMIT ' + str(self.limit)
                 if self.offset > 0:
-                    sql += ' OFFSET ' + str(self.offset)
-            rs = json.loads(
-                mimir._mimir.vistrailsQueryMimirJson(sql, True, False)
-            )
+                    sql += ' OFFSET ' + str(self.offset) 
+            rs = mimir.vistrailsQueryMimirJson(sql+ ';', True, False)
             #self.row_ids = rs['prov']
             # Initialize mapping of column rdb names to index positions in
             # dataset rows
@@ -147,9 +144,9 @@ class MimirDatasetReader(DatasetReader):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = row[col_index]
-                self.rows.append(DatasetRow(row_id, values))
+                self.rows.append(DatasetRow(rowid_idx, values))
             #self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
-            self.rows.sort(key=lambda row: self.row_ids[int(row.identifier)])
+            self.rows.sort(key=lambda row: self.row_idxs[int(row.identifier)])
             self.read_index = 0
             self.is_open = True
         return self

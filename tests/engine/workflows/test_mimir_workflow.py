@@ -66,7 +66,6 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         """Run workflows for Mimir configurations."""
         # Create new work trail and retrieve the HEAD workflow of the default
         # branch
-        mimir.initialize()
         project = self.engine.projects.create_project()
         branch_id = project.viztrail.default_branch.identifier
         fh = project.filestore.upload_file(CSV_FILE)
@@ -118,7 +117,6 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         rows = ds.fetch_rows()
         self.assertEquals(rows[0].values, ['Yonder', 23])
         self.assertEquals(rows[1].values, ['Zoe', 34])
-        mimir.finalize()
 
 
 if __name__ == '__main__':

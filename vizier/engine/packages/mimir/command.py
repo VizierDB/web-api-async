@@ -307,6 +307,33 @@ def mimir_type_inference(
         packages=PACKAGE(validate=validate)
     )
 
+def mimir_shape_detector(
+    dataset_name, model_name, validate=False
+):
+    """Create instance of mimir type inference lens command.
+
+    Parameters
+    ----------
+    dataset_name: string
+        Name of the dataset
+    model_name: float
+        the mimir model name that gets created or compared
+    validate: bool, optional
+        Validate the created command specification (if true)
+
+    Returns
+    -------
+    vizier.viztrail.module.ModuleCommand
+    """
+    return md.ModuleCommand(
+        mimir.PACKAGE_MIMIR,
+        mimir.MIMIR_SHAPE_DETECTOR,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=mimir.PARA_MODEL_NAME, value=model_name)
+        ],
+        packages=PACKAGE(validate=validate)
+    )
 
 # ------------------------------------------------------------------------------
 # Helper Methods
