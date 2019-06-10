@@ -21,6 +21,7 @@ import sys
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
+from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -90,8 +91,9 @@ class PyCellTaskProcessor(TaskProcessor):
         sys.stderr = OutputStream(tag='err', stream=stream)
         # Keep track of exception that is thrown by the code
         exception = None
-        # Run the Pyhton code
+        # Run the Python code
         try:
+            python_cell_preload(variables)
             exec source in variables, variables
         except Exception as ex:
             exception = ex
