@@ -217,7 +217,7 @@ class MimirDatasetHandle(DatasetHandle):
             Descriptor for unique row id column
         table_name: string
             Reference to relational database table containing the dataset.
-        row_ids: list(int)
+        row_idxs: list(int)
             List of row indexes. Determines the order of rows in the dataset
         row_ids: list(string)
             List of row ids. for provenance of dataset
