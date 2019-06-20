@@ -132,20 +132,21 @@ class MimirDatasetReader(DatasetReader):
                 self.col_map[col['name']] = i
             # Initialize rows (make sure to sort them according to order in
             # row_ids list), read index and open flag
-            rowid_idx = self.col_map[base.ROW_ID]
+            #rowid_idx = self.col_map[base.ROW_ID]
             # Filter rows if this is a range query (needed until IN works)
             rs_rows = rs['data']
+            row_ids = rs['prov']
             self.rows = list()
             for row_index in range(len(rs_rows)):
                 row = rs_rows[row_index]
-                row_id = str(row[rowid_idx])
+                row_id = str(row_ids[row_index])
                 values = [None] * len(self.columns)
                 for i in range(len(self.columns)):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = row[col_index]
                 self.rows.append(DatasetRow(int(row_id.replace("'", "")), values))
-            #self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
+            self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
             #self.rows.sort(key=lambda row: self.row_idxs[int(row.identifier)])
             self.read_index = 0
             self.is_open = True
@@ -157,6 +158,6 @@ class MimirDatasetReader(DatasetReader):
         except ValueError:
             pass
         try:
-            return int(s.split(':')[0])
+            return int(s.split('|')[0])
         except:
             return 0

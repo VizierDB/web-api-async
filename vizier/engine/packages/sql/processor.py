@@ -117,11 +117,11 @@ class SQLTaskProcessor(TaskProcessor):
             sql = 'SELECT ' + colSql + ' FROM {{input}};'
             view_name = mimir.createView(view_name, sql)
 
-            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
-            rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
-            row_count = int(rs_count['data'][0][0])
+            #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
+            #rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
+            #row_count = int(rs_count['data'][0][0])
 
-            sql = 'SELECT * FROM ' + view_name + ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT) + ';'
+            sql = 'SELECT 1 AS NOP FROM ' + view_name + ';' #+ ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT) + ';'
             rs = mimir.vistrailsQueryMimirJson(sql, False, False)
 
             provenance = None
@@ -135,7 +135,8 @@ class SQLTaskProcessor(TaskProcessor):
                 provenance = ModuleProvenance()
             else:
                 row_ids = rs['prov']
-                row_idxs = range(len(row_ids))
+                row_count = len(row_ids)
+                row_idxs = range(row_count)
                 
                 ds = context.datastore.register_dataset(
                         table_name=view_name,
