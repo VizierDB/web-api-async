@@ -145,7 +145,7 @@ class MimirDatasetReader(DatasetReader):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = row[col_index]
-                self.rows.append(DatasetRow(int(row_id.replace("'", "")), values))
+                self.rows.append(DatasetRow(base.convertrowid(row_id, row_index), values))
             self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
             #self.rows.sort(key=lambda row: self.row_idxs[int(row.identifier)])
             self.read_index = 0

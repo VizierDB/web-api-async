@@ -48,3 +48,17 @@ def get_select_query(table_name, columns=None):
         return 'SELECT ' + ROW_ID + ',' + col_list + ' FROM ' + table_name
     else:
         return 'SELECT ' + ROW_ID + ' FROM ' + table_name
+
+def convertrowid(s, idx):
+        try:
+            return int(s)
+        except ValueError:
+            pass
+        try:
+            return int(s.replace("'", ""))
+        except ValueError:
+            pass
+        try:
+            return int(s.split('|')[0])
+        except:
+            return idx
