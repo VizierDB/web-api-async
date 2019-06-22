@@ -19,6 +19,7 @@ in the Mimir lenses package.
 """
 
 from vizier.core.util import is_valid_name
+from vizier.datastore.dataset import DATATYPE_REAL
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
 from vizier.datastore.mimir.base import ROW_ID
 from vizier.datastore.mimir.store import create_missing_key_view
@@ -96,13 +97,15 @@ class MimirProcessor(TaskProcessor):
             dataset.columns.append(
                 MimirDatasetColumn(
                     identifier=column_counter,
-                    name_in_dataset=cname_lat
+                    name_in_dataset=cname_lat,
+                    data_type=DATATYPE_REAL
                 )
             )
             dataset.columns.append(
                 MimirDatasetColumn(
                     identifier=column_counter + 1,
-                    name_in_dataset=cname_lon
+                    name_in_dataset=cname_lon,
+                    data_type=DATATYPE_REAL
                 )
             )
             params.append('RESULT_COLUMNS(' + cname_lat + ',' + cname_lon + ')')
