@@ -194,7 +194,7 @@ class MimirDatastore(DefaultDatastore):
     
     def load_dataset(
         self, f_handle=None, url=None, detect_headers=True, infer_types=True,
-        load_format='csv', options=[]
+        load_format='csv', options=[], human_readable_name = None
     ):
         """Create a new dataset from a given file or url. Expects that either
         the file handle or the url are not None. Raises ValueError if both are
@@ -235,6 +235,7 @@ class MimirDatastore(DefaultDatastore):
             infer_types,
             detect_headers,
             load_format,
+            human_readable_name,
             options
         )
         # Retrieve schema information for the created dataset

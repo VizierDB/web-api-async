@@ -280,7 +280,7 @@ class DefaultVizualApi(VizualApi):
     def load_dataset(
         self, datastore, filestore, file_id=None, url=None, detect_headers=True,
         infer_types=True, load_format='csv', options=[], username=None,
-        password=None, resources=None, reload=False,
+        password=None, resources=None, reload=False, human_readable_name=None
     ):
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
@@ -355,7 +355,8 @@ class DefaultVizualApi(VizualApi):
             # specified file
             if dataset is None:
                 dataset = datastore.load_dataset(
-                    f_handle=filestore.get_file(file_id)
+                    f_handle=filestore.get_file(file_id),
+                    human_readable_name = human_readable_name
                 )
             result_resources[base.RESOURCE_FILEID] = file_id
         # Ensure that the dataset is not None at this point

@@ -405,10 +405,10 @@ class VizualTaskProcessor(TaskProcessor):
             raise_error=False,
             default_value=True
         )
-        datasource_errors = args.get_value(cmd.PARA_LOAD_DSE, raise_error=False)
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
-        if not datasource_errors is None:
+        print(args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False))
+        if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
             m_opts.append({'datasourceErrors': 'true'})
         if not options is None:
             for option in options:
@@ -428,7 +428,8 @@ class VizualTaskProcessor(TaskProcessor):
             username=username,
             password=password,
             resources=context.resources,
-            reload=reload
+            reload=reload,
+            human_readable_name = ds_name
         )
         # Delete the uploaded file (of load was from file). A reference to the
         # created dataset is in the resources and will be used if the module is

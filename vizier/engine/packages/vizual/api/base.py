@@ -184,7 +184,7 @@ class VizualApi(object):
     def load_dataset(
         self, datastore, filestore, file_id=None, url=None, detect_headers=True,
         infer_types=True, load_format='csv', options=[], username=None,
-        password=None, resources=None, reload=False,
+        password=None, resources=None, reload=False, human_readable_name=None
     ):
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
