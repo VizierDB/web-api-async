@@ -385,9 +385,9 @@ class VizualTaskProcessor(TaskProcessor):
         source_desc = args.get_value(cmd.PARA_FILE)
         file_id = None
         url = None
-        if pckg.FILE_ID in source_desc:
+        if pckg.FILE_ID in source_desc and source_desc[pckg.FILE_ID] is not None:
             file_id = source_desc[pckg.FILE_ID]
-        elif pckg.FILE_URL in source_desc:
+        elif pckg.FILE_URL in source_desc and source_desc[pckg.FILE_URL] is not None:
             url = source_desc[pckg.FILE_URL]
         else:
             raise ValueError('invalid source descriptor')
