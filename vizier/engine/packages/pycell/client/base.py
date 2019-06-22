@@ -101,7 +101,8 @@ class VizierDBClient(object):
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations
+            annotations=dataset.annotations,
+            human_readable_name=name.upper()
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
