@@ -659,6 +659,86 @@
                         "required": false
                     }
                 ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "TYPE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "INFERENCE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "IN"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "WITH"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "PERCENT"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CONFORM"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "percentConform"
+                    }
+                ], 
+                "id": "type_inference", 
+                "name": "Type Inference Adaptive Schema", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "percentConform", 
+                        "index": 1, 
+                        "name": "Percent Conform", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "makeInputCertain", 
+                        "index": 2, 
+                        "name": "Make Input Certain", 
+                        "required": false
+                    }
+                ]
             }, 
             {
 			  "format": [
