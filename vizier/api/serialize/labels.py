@@ -40,6 +40,7 @@ ROW = 'row'
 ROWS = 'rows'
 ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
+ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
 
 # Annotations
 COLUMN_ID = 'columnId'

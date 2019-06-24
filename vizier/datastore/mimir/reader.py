@@ -136,16 +136,20 @@ class MimirDatasetReader(DatasetReader):
             # Filter rows if this is a range query (needed until IN works)
             rs_rows = rs['data']
             row_ids = rs['prov']
+            annotation_flags = rs['colTaint']
             self.rows = list()
             for row_index in range(len(rs_rows)):
                 row = rs_rows[row_index]
+                row_annotation_flags = annotation_flags[row_index]  
                 row_id = str(row_ids[row_index])
                 values = [None] * len(self.columns)
+                annotation_flag_values = [None] * len(self.columns)
                 for i in range(len(self.columns)):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = row[col_index]
-                self.rows.append(DatasetRow(base.convertrowid(row_id, row_index), values))
+                    annotation_flag_values[i] = row_annotation_flags[col_index]
+                self.rows.append(DatasetRow(base.convertrowid(row_id, row_index), values, annotation_flag_values))
             self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
             #self.rows.sort(key=lambda row: self.row_idxs[int(row.identifier)])
             self.read_index = 0
@@ -155,6 +159,10 @@ class MimirDatasetReader(DatasetReader):
     def sortbyrowid(self, s):
         try:
             return int(s)
+        except ValueError:
+            pass
+        try:
+            return int(s.replace("'", ""))
         except ValueError:
             pass
         try:

@@ -290,7 +290,43 @@ class DatasetClient(object):
             )
             for column in self.columns
         ]))
-
+        
+    def show_map(self, lat_col, lon_col, label_col=None, center_lat=None, center_lon=None, zoom=8, height="500", map_provider='OSM'):
+        import numpy as np
+        width="100%"
+        addrpts = list()
+        lats = []
+        lons = []
+        for row in self.rows:
+            lon, lat = float(row.get_value(lon_col)), float(row.get_value(lat_col))  
+            lats.append(lat) 
+            lons.append(lon)
+            if map_provider == 'Google':
+                addrpts.append({"lat":str(lat), "lng":str(lon)})
+            elif map_provider == 'OSM':
+                label = ''
+                if not label_col is None:
+                    label = str(row.get_value(label_col))
+                rowstr = '[' + str(lat) + ', ' + \
+                            str(lon) + ', \'' + \
+                            label + '\']'
+                addrpts.append(rowstr)
+                
+        if center_lat is None:
+            center_lat = np.mean(lats)
+            
+        if center_lon is None:
+            center_lon = np.mean(lons)
+        
+        if map_provider == 'Google':
+            import json
+            from vizier.engine.packages.pycell.packages.wrappers import GoogleMapClusterWrapper
+            GoogleMapClusterWrapper().do_output(json.dumps(addrpts), center_lat, center_lon, zoom, width, height) 
+        elif map_provider == 'OSM':  
+            from vizier.engine.packages.pycell.packages.wrappers import LeafletClusterWrapper
+            LeafletClusterWrapper().do_output(addrpts, center_lat, center_lon, zoom, width, height) 
+        else:
+            print("Unknown map provider: please specify: OSM or Google")
 
 class MutableDatasetRow(DatasetRow):
     """Row in a Vizier DB dataset.

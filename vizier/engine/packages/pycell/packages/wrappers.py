@@ -9,9 +9,9 @@ import json
 
 class GoogleMapClusterWrapper():
     
-    def do_output(self, centerlat, centerlon, latlngjson):
+    def do_output(self, latlngjson, centerlat, centerlon, zoom, width, height):
         print("""
-        <div style="width:100%; height:500px">
+        <div style="width:"""+str(width)+"""; height:"""+str(int(height)-30)+"""">
             <style>
               /* Always set the map height explicitly to define the size of the div
                * element that contains the map. */
@@ -53,7 +53,7 @@ class GoogleMapClusterWrapper():
                 window.initMap = function(){
                     var map = new google.maps.Map(document.getElementById("map"), {
                       center: {lat: """+str(centerlat)+""", lng: """+str(centerlon)+"""},
-                      zoom: 8
+                      zoom: """+str(zoom)+"""
                     });
                     var json = """+latlngjson+""";
         
@@ -111,7 +111,7 @@ class LeafletClusterWrapper():
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
             #map {
-                width: """+width+"""; 
+                width: """+str(width)+"""; 
                 height: """+str(int(height)-30)+"""px; 
                 border: 1px solid #ccc;
             }
@@ -154,9 +154,9 @@ class LeafletClusterWrapper():
                 var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 18
                     }),
-                    latlng = L.latLng("""+centerlat+""","""+centerlon+""");
+                    latlng = L.latLng("""+str(centerlat)+""","""+str(centerlon)+""");
         
-                var map = L.map('map', {center: latlng, zoom: """+zoom+""", layers: [tiles]});
+                var map = L.map('map', {center: latlng, zoom: """+str(zoom)+""", layers: [tiles]});
         
                 var markers = L.markerClusterGroup();
                 
