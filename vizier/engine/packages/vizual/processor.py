@@ -429,7 +429,7 @@ class VizualTaskProcessor(TaskProcessor):
             password=password,
             resources=context.resources,
             reload=reload,
-            human_readable_name = ds_name
+            human_readable_name = ds_name.upper()
         )
         # Delete the uploaded file (of load was from file). A reference to the
         # created dataset is in the resources and will be used if the module is
