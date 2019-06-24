@@ -205,7 +205,8 @@ class MimirProcessor(TaskProcessor):
                 params,
                 command_id.upper(),
                 arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
-                False
+                False,
+                human_readable_name = ds_name.upper()
             )
             (lens_name, lens_annotations) = (
                 mimir_lens_response['lensName'],

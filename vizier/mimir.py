@@ -24,12 +24,13 @@ import os
 
 _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
-def createLens(dataset, params, type, make_input_certain, materialize):
+def createLens(dataset, params, type, make_input_certain, materialize, human_readable_name = None):
     req_json = {
       "input": dataset,
       "params": params,
       "type": type,
-      "materialize": materialize
+      "materialize": materialize,
+      "humanReadableName": human_readable_name
     }
     resp = requests.post(_mimir_url + 'lens/create', json=req_json)
     return resp.json()
