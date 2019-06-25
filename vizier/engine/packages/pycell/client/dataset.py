@@ -328,6 +328,56 @@ class DatasetClient(object):
         else:
             print("Unknown map provider: please specify: OSM or Google")
 
+    def show_d3_plot(self, chart_type, keys=list(), labels=list(), labels_inner=list(), value_cols=list(), key_col='KEY', width=600, height=400, title='', subtitle='', legend_title='Legend', x_cols=list(), y_cols=list(), date_cols=list(), open_cols=list(), high_cols=list(), low_cols=list(), close_cols=list(), volume_cols=list()):
+        from vizier.engine.packages.pycell.packages.wrappers import D3ChartWrapper
+
+        charttypes = ["table", "bar", "bar_stacked", "bar_horizontal", "bar_circular", "bar_cluster", "donut", 
+                     "polar", "heat_rad", "heat_table", "punch", "bubble", "candle", "line", "radar", "rose"];
+        
+        if chart_type not in charttypes:
+            print("Please specify a valid chart type: one of: " + str(charttypes))
+            return
+        
+        if not labels:
+            labels = keys
+        
+        if not labels_inner:
+            labels_inner = value_cols
+               
+        data = []
+        for key_idx, label in enumerate(labels):
+            entry = {}
+            entry['key'] = label
+            entry['values'] = []
+            for idx, label_inner in enumerate(labels_inner):
+                inner_entry = {}
+                inner_entry['key'] = label_inner
+                for row in self.rows:
+                    if len(keys) == 0 or (len(keys) >= key_idx and row.get_value(key_col) == keys[key_idx]):
+                        if value_cols and len(value_cols) >= idx:
+                            inner_entry['value'] = row.get_value(value_cols[idx])
+                        if x_cols and len(x_cols) >= idx: 
+                            inner_entry['x'] = row.get_value(x_cols[idx])
+                        if y_cols and len(y_cols) >= idx: 
+                            inner_entry['y'] = row.get_value(y_cols[idx])
+                        if date_cols and len(date_cols) >= idx: 
+                            inner_entry['date'] = row.get_value(date_cols[idx])
+                        if open_cols and len(open_cols) >= idx:
+                            inner_entry['open'] = row.get_value(open_cols[idx])
+                        if high_cols and len(high_cols) >= idx:
+                            inner_entry['high'] = row.get_value(high_cols[idx])
+                        if low_cols and len(low_cols) >= idx:
+                            inner_entry['low'] = row.get_value(low_cols[idx])
+                        if close_cols and len(close_cols) >= idx:
+                            inner_entry['close'] = row.get_value(close_cols[idx])
+                        if volume_cols and len(volume_cols) >= idx:
+                            inner_entry['volume'] = row.get_value(volume_cols[idx])
+                entry['values'].append(inner_entry)
+            data.append(entry)      
+            
+        D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height), 
+            title=title, subtitle=subtitle, legendtitle=legend_title)
+        
 class MutableDatasetRow(DatasetRow):
     """Row in a Vizier DB dataset.
 
