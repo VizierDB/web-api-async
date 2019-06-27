@@ -22,6 +22,8 @@
 """
 ROW_ID = 'RID'
 
+from vizier.datastore.dataset import DATATYPE_DATE, DATATYPE_DATETIME, DATATYPE_INT, DATATYPE_REAL, DATATYPE_VARCHAR
+from datetime import date, datetime
 
 # ------------------------------------------------------------------------------
 # Helper Methods
@@ -62,3 +64,17 @@ def convertrowid(s, idx):
             return int(s.split('|')[0])
         except:
             return idx
+
+def mimir_value_to_python(encoded, column):
+    if column.data_type == DATATYPE_DATE and type(encoded) is dict:
+        return date(encoded["year"], encoded["month"], encoded["date"])
+    elif column.data_type == DATATYPE_DATETIME and type(encoded) is dict:
+        return datetime(
+                encoded["year"], encoded["month"], encoded["date"],
+                encoded.get("hour", 0), 
+                encoded.get("min", 0), 
+                encoded.get("sec", 0), 
+                encoded.get("msec", 0)
+            )
+    else:
+        return encoded
