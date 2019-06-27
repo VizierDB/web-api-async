@@ -147,7 +147,7 @@ class MimirDatasetReader(DatasetReader):
                 for i in range(len(self.columns)):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
-                    values[i] = row[col_index]
+                    values[i] = base.mimir_value_to_python(row[col_index], col)
                     annotation_flag_values[i] = row_annotation_flags[col_index]
                 self.rows.append(DatasetRow(base.convertrowid(row_id, row_index), values, annotation_flag_values))
             self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
