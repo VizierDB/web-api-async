@@ -23,6 +23,7 @@ for the Vizier Web API as documented in:
 import csv
 import os
 import StringIO
+import tarfile
 
 from flask import Blueprint, jsonify, make_response, request, send_file
 from werkzeug.utils import secure_filename
@@ -35,7 +36,7 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
-
+import vizier.config.app as app
 
 # -----------------------------------------------------------------------------
 #
@@ -109,6 +110,28 @@ def create_project():
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
 
+
+@bp.route('/projects/<string:project_id>/export')
+def export_project(project_id):
+    """Export the project data files as tar.gz.
+    """
+    # Get the handle for the dataset with given identifier. The result is None
+    # if no dataset with given identifier exists.
+    base_dir = config.engine.data_dir
+    vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+    filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
+    datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+    si = StringIO.StringIO()
+    with tarfile.open(fileobj=si, mode="w:gz") as tar:
+        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep)
+        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep)
+        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep)
+    
+    # Return the tar file 
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename="+project_id+".tar.gz"
+    output.headers["Content-type"] = "application/x-gzip"
+    return output
 
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):

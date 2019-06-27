@@ -328,7 +328,7 @@ class DatasetClient(object):
         else:
             print("Unknown map provider: please specify: OSM or Google")
 
-    def show_d3_plot(self, chart_type, keys=list(), labels=list(), labels_inner=list(), value_cols=list(), key_col='KEY', width=600, height=400, title='', subtitle='', legend_title='Legend', x_cols=list(), y_cols=list(), date_cols=list(), open_cols=list(), high_cols=list(), low_cols=list(), close_cols=list(), volume_cols=list()):
+    def show_d3_plot(self, chart_type, keys=list(), labels=list(), labels_inner=list(), value_cols=list(), key_col='KEY', width=600, height=400, title='', subtitle='', legend_title='Legend', x_cols=list(), y_cols=list(), date_cols=list(), open_cols=list(), high_cols=list(), low_cols=list(), close_cols=list(), volume_cols=list(), key=None):
         from vizier.engine.packages.pycell.packages.wrappers import D3ChartWrapper
 
         charttypes = ["table", "bar", "bar_stacked", "bar_horizontal", "bar_circular", "bar_cluster", "donut", 
@@ -373,7 +373,10 @@ class DatasetClient(object):
                         if volume_cols and len(volume_cols) >= idx:
                             inner_entry['volume'] = row.get_value(volume_cols[idx])
                 entry['values'].append(inner_entry)
-            data.append(entry)      
+            data.append(entry)  
+            
+        if key is not None:
+            data=data[data.index(key)]    
             
         D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height), 
             title=title, subtitle=subtitle, legendtitle=legend_title)

@@ -274,7 +274,7 @@ class MimirDatastore(DefaultDatastore):
         #first_row_id = int(rsfr['data'][0][0])
         #row_ids = map(str, range(first_row_id, first_row_id+row_count))
         # Insert the new dataset metadata information into the datastore
-        sql = 'SELECT * FROM ' + view_name + ' LIMIT 1;'
+        sql = 'SELECT 1 AS NOP FROM ' + view_name + ' LIMIT 1;'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         first_row_id = int(rs['prov'][0])
         row_ids = range(first_row_id, first_row_id+row_count)
