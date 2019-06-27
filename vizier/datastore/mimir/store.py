@@ -348,7 +348,7 @@ class MimirDatastore(DefaultDatastore):
         # column descriptors.
         col_types = dict()
         for col in mimir_schema:
-            col_types[col['name']] = col['baseType']
+            col_types[self.bad_col_names.get(col['name'].upper(),col['name'])] = col['baseType']
         for col in columns:
             col.data_type = col_types[col.name_in_rdb]
         # Create column for row Identifier
