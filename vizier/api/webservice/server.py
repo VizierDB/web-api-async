@@ -133,6 +133,55 @@ def export_project(project_id):
     output.headers["Content-type"] = "application/x-gzip"
     return output
 
+@bp.route('/projects/import', methods=['POST'])
+def import_project():
+    """Upload file (POST) - Upload a data files for a project.
+    """
+    # The upload request may contain a file object or an Url from where to
+    # download the data.
+    if request.files and 'file' in request.files:
+        file = request.files['file']
+        # A browser may submit a empty part without filename
+        if file.filename == '':
+            raise srv.InvalidRequest('empty file name')
+        # Save uploaded file to temp directory
+        filename = secure_filename(file.filename)
+        try:
+            base_dir = config.engine.data_dir
+            vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+            filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
+            datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+            si = StringIO.StringIO()
+            file.save(dst=si)
+            project_id = ""
+            with tarfile.open(fileobj=si, mode="r:gz") as tar:
+                ds_files = [
+                    tarinfo for tarinfo in tar.getmembers()
+                    if tarinfo.name.startswith("ds/")
+                ]
+                fs_files = [
+                    tarinfo for tarinfo in tar.getmembers()
+                    if tarinfo.name.startswith("fs/")
+                ]
+                vt_files = [
+                    tarinfo for tarinfo in tar.getmembers()
+                    if tarinfo.name.startswith("vt/")
+                ]
+                tarinfo for tarinfo in tar.getmembers()
+                    if tarinfo.name.startswith("ds/")
+                        project_id = tarinfo.name[1]
+                tar.extractall(path=datastores_dir,members=ds_files)
+                tar.extractall(path=filestores_dir,members=fs_files)
+                tar.extractall(path=vistrails_dir,members=vt_files)
+            pj = api.projects.get_project(project_id)
+            if not pj is None:
+                return jsonify(pj)
+        except ValueError as ex:
+            raise srv.InvalidRequest(str(ex))
+    else:
+        raise srv.InvalidRequest('no file or url specified in request')
+    raise srv.ResourceNotFound('unknown project format')
+
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):
     """Retrieve information for project with given identifier."""

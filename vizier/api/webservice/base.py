@@ -162,7 +162,8 @@ class VizierApi(object):
                 ref.SELF: self.urls.service_descriptor(),
                 ref.API_DOC: self.urls.api_doc(),
                 ref.PROJECT_CREATE: self.urls.create_project(),
-                ref.PROJECT_LIST: self.urls.list_projects()
+                ref.PROJECT_LIST: self.urls.list_projects(),
+                ref.PROJECT_IMPORT: self.urls.import_project()
             })
         }
 

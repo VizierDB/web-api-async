@@ -53,6 +53,7 @@ MODULE_REPLACE = 'module.replace'
 
 # Projects
 PROJECT_CREATE = 'project.create'
+PROJECT_IMPORT = 'project.import'
 PROJECT_LIST = 'project.list'
 PROJECT_DELETE = 'project.delete'
 PROJECT_UPDATE = 'project.update'

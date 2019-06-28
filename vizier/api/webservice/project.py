@@ -118,7 +118,8 @@ class VizierProjectApi(object):
             ],
             labels.LINKS: serialize.HATEOAS({
                 ref.SELF: self.urls.list_projects(),
-                ref.PROJECT_CREATE: self.urls.create_project()
+                ref.PROJECT_CREATE: self.urls.create_project(),
+                ref.PROJECT_IMPORT: self.urls.import_project()
             })
         }
 
