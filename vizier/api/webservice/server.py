@@ -123,9 +123,9 @@ def export_project(project_id):
     datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
     si = StringIO.StringIO()
     with tarfile.open(fileobj=si, mode="w:gz") as tar:
-        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep)
-        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep)
-        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep)
+        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
+        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
+        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep+project_id+os.path.sep)
     
     # Return the tar file 
     output = make_response(si.getvalue())
@@ -153,26 +153,42 @@ def import_project():
             datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
             si = StringIO.StringIO()
             file.save(dst=si)
+            si.seek(0)
             project_id = ""
             with tarfile.open(fileobj=si, mode="r:gz") as tar:
-                ds_files = [
-                    tarinfo for tarinfo in tar.getmembers()
-                    if tarinfo.name.startswith("ds/")
-                ]
-                fs_files = [
-                    tarinfo for tarinfo in tar.getmembers()
-                    if tarinfo.name.startswith("fs/")
-                ]
-                vt_files = [
-                    tarinfo for tarinfo in tar.getmembers()
-                    if tarinfo.name.startswith("vt/")
-                ]
-                tarinfo for tarinfo in tar.getmembers()
-                    if tarinfo.name.startswith("ds/")
-                        project_id = tarinfo.name[1]
-                tar.extractall(path=datastores_dir,members=ds_files)
-                tar.extractall(path=filestores_dir,members=fs_files)
-                tar.extractall(path=vistrails_dir,members=vt_files)
+                for tarinfo in tar:
+                    if tarinfo.name.startswith("ds/"):
+                        project_id = tarinfo.name.split('/')[1]
+                        break
+            
+                def ds_files(members):
+                    for tarinfo in members:
+                        if tarinfo.name.startswith("ds/"):
+                            yield tarinfo
+                
+                def fs_files(members):
+                    for tarinfo in tar:
+                        if tarinfo.name.startswith("fs/"):
+                            yield tarinfo
+                
+                def vt_files(members):
+                    for tarinfo in tar:
+                        if tarinfo.name.startswith("vt/"):
+                            yield tarinfo
+                
+                
+                tar.extractall(path=base_dir,members=ds_files(tar))
+                tar.extractall(path=base_dir,members=fs_files(tar))
+                tar.extractall(path=base_dir,members=vt_files(tar))
+            vtfpath = base_dir+os.path.sep+"vt"+os.path.sep+"viztrails"
+            vtf = open(vtfpath, "r")
+            contents = "".join(vtf.readlines())
+            vtf.close()
+            vtf = open(vtfpath, "w")
+            vtf.write(contents.replace(']',', "'+project_id+'"]'))
+            vtf.close()
+            global api
+            api = VizierApi(config, init=True)
             pj = api.projects.get_project(project_id)
             if not pj is None:
                 return jsonify(pj)
