@@ -123,15 +123,80 @@ def export_project(project_id):
     datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
     si = StringIO.StringIO()
     with tarfile.open(fileobj=si, mode="w:gz") as tar:
-        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep)
-        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep)
-        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep)
+        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
+        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
+        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep+project_id+os.path.sep)
     
     # Return the tar file 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename="+project_id+".tar.gz"
     output.headers["Content-type"] = "application/x-gzip"
     return output
+
+@bp.route('/projects/import', methods=['POST'])
+def import_project():
+    """Upload file (POST) - Upload a data files for a project.
+    """
+    # The upload request may contain a file object or an Url from where to
+    # download the data.
+    if request.files and 'file' in request.files:
+        file = request.files['file']
+        # A browser may submit a empty part without filename
+        if file.filename == '':
+            raise srv.InvalidRequest('empty file name')
+        # Save uploaded file to temp directory
+        filename = secure_filename(file.filename)
+        try:
+            base_dir = config.engine.data_dir
+            vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+            filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
+            datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+            si = StringIO.StringIO()
+            file.save(dst=si)
+            si.seek(0)
+            project_id = ""
+            with tarfile.open(fileobj=si, mode="r:gz") as tar:
+                for tarinfo in tar:
+                    if tarinfo.name.startswith("ds/"):
+                        project_id = tarinfo.name.split('/')[1]
+                        break
+            
+                def ds_files(members):
+                    for tarinfo in members:
+                        if tarinfo.name.startswith("ds/"):
+                            yield tarinfo
+                
+                def fs_files(members):
+                    for tarinfo in tar:
+                        if tarinfo.name.startswith("fs/"):
+                            yield tarinfo
+                
+                def vt_files(members):
+                    for tarinfo in tar:
+                        if tarinfo.name.startswith("vt/"):
+                            yield tarinfo
+                
+                
+                tar.extractall(path=base_dir,members=ds_files(tar))
+                tar.extractall(path=base_dir,members=fs_files(tar))
+                tar.extractall(path=base_dir,members=vt_files(tar))
+            vtfpath = base_dir+os.path.sep+"vt"+os.path.sep+"viztrails"
+            vtf = open(vtfpath, "r")
+            contents = "".join(vtf.readlines())
+            vtf.close()
+            vtf = open(vtfpath, "w")
+            vtf.write(contents.replace(']',', "'+project_id+'"]'))
+            vtf.close()
+            global api
+            api = VizierApi(config, init=True)
+            pj = api.projects.get_project(project_id)
+            if not pj is None:
+                return jsonify(pj)
+        except ValueError as ex:
+            raise srv.InvalidRequest(str(ex))
+    else:
+        raise srv.InvalidRequest('no file or url specified in request')
+    raise srv.ResourceNotFound('unknown project format')
 
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):

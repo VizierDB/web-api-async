@@ -98,6 +98,15 @@ class UrlFactory(object):
         string
         """
         return self.list_projects()
+    
+    def import_project(self):
+        """Url to create a new project.
+
+        Returns
+        -------
+        string
+        """
+        return self.base_url + '/projects/import'
 
     def delete_project(self, project_id):
         """Url to delete the project with the given identifier.
