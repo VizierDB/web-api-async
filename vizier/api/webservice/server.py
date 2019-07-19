@@ -25,7 +25,7 @@ import os
 import StringIO
 import tarfile
 
-from flask import Blueprint, jsonify, make_response, request, send_file
+from flask import Blueprint, jsonify, make_response, request, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
@@ -37,6 +37,7 @@ import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
+import pkg_resources
 
 # -----------------------------------------------------------------------------
 #
@@ -47,11 +48,13 @@ import vizier.config.app as app
 """Get application configuration parameters from environment variables."""
 config = AppConfig()
 
+webui_file_dir = pkg_resources.resource_filename(__name__, "../../../../../../web-ui/build/")
+
 global api
 api = VizierApi(config, init=True)
 
 # Create the application blueprint
-bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path)
+bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path, static_folder=webui_file_dir)
 
 
 # ------------------------------------------------------------------------------
@@ -110,6 +113,14 @@ def create_project():
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
 
+
+@bp.route('/web-ui', defaults={'path': ''})
+@bp.route('/web-ui/<path:path>')
+def static_files(path):
+    if path != "" and os.path.exists(webui_file_dir + path):
+        return send_from_directory(webui_file_dir, path)
+    else:
+        return send_from_directory(webui_file_dir, 'index.html')
 
 @bp.route('/projects/<string:project_id>/export')
 def export_project(project_id):
