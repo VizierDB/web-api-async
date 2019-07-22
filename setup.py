@@ -24,7 +24,7 @@ print(str(data_files))
 
 setup(
     name='vizier-webapi',
-    version='0.5.3',
+    version='0.5.4',
     description='API to query and manipulate Vizier DB data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',

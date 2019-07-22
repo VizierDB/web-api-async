@@ -48,7 +48,8 @@ import pkg_resources
 """Get application configuration parameters from environment variables."""
 config = AppConfig()
 
-webui_file_dir = pkg_resources.resource_filename(__name__, "../../../../../../web-ui/build/")
+webui_file_dir = os.getenv('WEB_UI_STATIC_FILES', "./web-ui/build/")#pkg_resources.resource_filename(__name__, os.getenv('WEB_UI_STATIC_FILES', "./web-ui/build/"))
+print(webui_file_dir)
 
 global api
 api = VizierApi(config, init=True)
