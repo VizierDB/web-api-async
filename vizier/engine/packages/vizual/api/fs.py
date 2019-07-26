@@ -341,7 +341,12 @@ class DefaultVizualApi(VizualApi):
                 dataset = datastore.download_dataset(
                     url=url,
                     username=username,
-                    password=password
+                    password=password,
+                    detect_headers=detect_headers,
+                    infer_types=infer_types,
+                    load_format=load_format,
+                    options=options,
+                    human_readable_name=human_readable_name
                 )
             result_resources[base.RESOURCE_URL] = url
         else:
@@ -356,6 +361,10 @@ class DefaultVizualApi(VizualApi):
             if dataset is None:
                 dataset = datastore.load_dataset(
                     f_handle=filestore.get_file(file_id),
+                    detect_headers=detect_headers,
+                    infer_types=infer_types,
+                    load_format=load_format,
+                    options=options,
                     human_readable_name = human_readable_name
                 )
             result_resources[base.RESOURCE_FILEID] = file_id

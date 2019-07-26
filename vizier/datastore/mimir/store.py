@@ -63,7 +63,6 @@ class MimirDatastore(DefaultDatastore):
             Name of the directory where metadata is stored
         """
         super(MimirDatastore, self).__init__(base_path)
-        self.bad_col_names = {"ABORT":"`ABORT`", "ACTION":"`ACTION`", "ADD":"`ADD`", "AFTER":"`AFTER`", "ALL":"`ALL`", "ALTER":"`ALTER`", "ANALYZE":"`ANALYZE`", "AND":"`AND`", "AS":"`AS`", "ASC":"`ASC`", "ATTACH":"`ATTACH`", "AUTOINCREMENT":"`AUTOINCREMENT`", "BEFORE":"`BEFORE`", "BEGIN":"`BEGIN`", "BETWEEN":"`BETWEEN`", "BY":"`BY`", "CASCADE":"`CASCADE`", "CASE":"`CASE`", "CAST":"`CAST`", "CHECK":"`CHECK`", "COLLATE":"`COLLATE`", "COLUMN":"`COLUMN`", "COMMIT":"`COMMIT`", "CONFLICT":"`CONFLICT`", "CONSTRAINT":"`CONSTRAINT`", "CREATE":"`CREATE`", "CROSS":"`CROSS`", "CURRENT":"`CURRENT`", "CURRENT_DATE":"`CURRENT_DATE`", "CURRENT_TIME":"`CURRENT_TIME`", "CURRENT_TIMESTAMP":"`CURRENT_TIMESTAMP`", "DATABASE":"`DATABASE`", "DEFAULT":"`DEFAULT`", "DEFERRABLE":"`DEFERRABLE`", "DEFERRED":"`DEFERRED`", "DELETE":"`DELETE`", "DESC":"`DESC`", "DETACH":"`DETACH`", "DISTINCT":"`DISTINCT`", "DO":"`DO`", "DROP":"`DROP`", "EACH":"`EACH`", "ELSE":"`ELSE`", "END":"`END`", "ESCAPE":"`ESCAPE`", "EXCEPT":"`EXCEPT`", "EXCLUSIVE":"`EXCLUSIVE`", "EXISTS":"`EXISTS`", "EXPLAIN":"`EXPLAIN`", "FAIL":"`FAIL`", "FILTER":"`FILTER`", "FOLLOWING":"`FOLLOWING`", "FOR":"`FOR`", "FOREIGN":"`FOREIGN`", "FROM":"`FROM`", "FULL":"`FULL`", "GLOB":"`GLOB`", "GROUP":"`GROUP`", "HAVING":"`HAVING`", "IF":"`IF`", "IGNORE":"`IGNORE`", "IMMEDIATE":"`IMMEDIATE`", "IN":"`IN`", "INDEX":"`INDEX`", "INDEXED":"`INDEXED`", "INITIALLY":"`INITIALLY`", "INNER":"`INNER`", "INSERT":"`INSERT`", "INSTEAD":"`INSTEAD`", "INTERSECT":"`INTERSECT`", "INTO":"`INTO`", "IS":"`IS`", "ISNULL":"`ISNULL`", "JOIN":"`JOIN`", "KEY":"`KEY`", "LEFT":"`LEFT`", "LIKE":"`LIKE`", "LIMIT":"`LIMIT`", "MATCH":"`MATCH`", "NATURAL":"`NATURAL`", "NO":"`NO`", "NOT":"`NOT`", "NOTHING":"`NOTHING`", "NOTNULL":"`NOTNULL`", "NULL":"`NULL`", "OF":"`OF`", "OFFSET":"`OFFSET`", "ON":"`ON`", "OR":"`OR`", "ORDER":"`ORDER`", "OUTER":"`OUTER`", "OVER":"`OVER`", "PARTITION":"`PARTITION`", "PLAN":"`PLAN`", "PRAGMA":"`PRAGMA`", "PRECEDING":"`PRECEDING`", "PRIMARY":"`PRIMARY`", "QUERY":"`QUERY`", "RAISE":"`RAISE`", "RANGE":"`RANGE`", "RECURSIVE":"`RECURSIVE`", "REFERENCES":"`REFERENCES`", "REGEXP":"`REGEXP`", "REINDEX":"`REINDEX`", "RELEASE":"`RELEASE`", "RENAME":"`RENAME`", "REPLACE":"`REPLACE`", "RESTRICT":"`RESTRICT`", "RIGHT":"`RIGHT`", "ROLLBACK":"`ROLLBACK`", "ROW":"`ROW`", "ROWS":"`ROWS`", "SAVEPOINT":"`SAVEPOINT`", "SELECT":"`SELECT`", "SET":"`SET`", "TABLE":"`TABLE`", "TEMP":"`TEMP`", "TEMPORARY":"`TEMPORARY`", "THEN":"`THEN`", "TO":"`TO`", "TRANSACTION":"`TRANSACTION`", "TRIGGER":"`TRIGGER`", "UNBOUNDED":"`UNBOUNDED`", "UNION":"`UNION`", "UNIQUE":"`UNIQUE`", "UPDATE":"`UPDATE`", "USING":"`USING`", "VACUUM":"`VACUUM`", "VALUES":"`VALUES`", "VIEW":"`VIEW`", "VIRTUAL":"`VIRTUAL`", "WHEN":"`WHEN`", "WHERE":"`WHERE`", "WINDOW":"`WINDOW`", "WITH":"`WITH`", "WITHOUT":"`WITHOUT`"}
 
     def create_dataset(self, columns, rows, human_readable_name = None, annotations=None):
         """Create a new dataset in the datastore. Expects at least the list of
@@ -91,7 +90,7 @@ class MimirDatastore(DefaultDatastore):
         # the name in the database
         db_columns = list()
         colSql = 'ROWID() AS ' + base.ROW_ID
-        for col in map(lambda cn: self.bad_col_names.get(cn, cn), columns):
+        for col in map(base.sanitize_column_name, columns):
             db_columns.append(
                 MimirDatasetColumn(
                     identifier=col.identifier,
@@ -192,9 +191,57 @@ class MimirDatastore(DefaultDatastore):
         # any existing uncertainty annotations for the cell.
         return self.get_dataset(identifier).get_annotations(column_id,row_id)
     
+    def download_dataset(
+        self, url, username=None, password=None, filestore=None, detect_headers=True, 
+        infer_types=True, load_format='csv', options=[], human_readable_name=None
+    ):
+        """Create a new dataset from a given file. Returns the handle for the
+        downloaded file only if the filestore has been provided as an argument
+        in which case the file handle is meaningful file handle.
+
+        Raises ValueError if the given file could not be loaded as a dataset.
+
+        Parameters
+        ----------
+        url : string
+            Unique resource identifier for external resource that is accessed
+        username: string, optional
+            Optional user name for authentication
+        password: string, optional
+            Optional password for authentication
+        detect_headers: bool, optional
+            Detect column names in loaded file if True
+        infer_types: bool, optional
+            Infer column types for loaded dataset if True
+        load_format: string, optional
+            Format identifier
+        options: list, optional
+            Additional options for Mimirs load command
+        filestore: vizier.filestore.base.Filestore, optional
+            Optional filestore to save a local copy of the downloaded resource
+        human_readable_name: string, optional
+            Optional human readable name for the resulting table.
+        Returns
+        -------
+        vizier.datastore.fs.dataset.FileSystemDatasetHandle,
+        vizier.filestore.base.FileHandle
+        """
+        if username is not None:
+            options += [("username", username)]
+        if password is not None:
+            options += [("password", password)]
+        self.load_dataset(
+            url = url, 
+            options = options,
+            detect_headers = detect_headers,
+            infer_types = infer_types,
+            load_format = load_format,
+            human_readable_name = human_readable_name
+        )
+
     def load_dataset(
         self, f_handle=None, url=None, detect_headers=True, infer_types=True,
-        load_format='csv', options=[], human_readable_name = None
+        load_format='csv', options=[], human_readable_name=None
     ):
         """Create a new dataset from a given file or url. Expects that either
         the file handle or the url are not None. Raises ValueError if both are
@@ -215,6 +262,8 @@ class MimirDatastore(DefaultDatastore):
             Format identifier
         options: list, optional
             Additional options for Mimirs load command
+        human_readable_name: string, optional
+            Optional human readable name for the resulting table
 
         Returns
         -------
@@ -246,8 +295,8 @@ class MimirDatastore(DefaultDatastore):
         colSql = 'ROWID() AS ' + base.ROW_ID
         for col in mimirSchema:
             col_id = len(columns)
-            name_in_dataset = self.bad_col_names.get(col['name'].upper(),col['name'])
-            name_in_rdb = self.bad_col_names.get(col['name'].upper(),col['name'])
+            name_in_dataset = base.sanitize_column_name(col['name'].upper())
+            name_in_rdb = base.sanitize_column_name(col['name'].upper())
             col = MimirDatasetColumn(
                 identifier=col_id,
                 name_in_dataset=name_in_dataset,
@@ -348,7 +397,7 @@ class MimirDatastore(DefaultDatastore):
         # column descriptors.
         col_types = dict()
         for col in mimir_schema:
-            col_types[self.bad_col_names.get(col['name'].upper(),col['name'])] = col['baseType']
+            col_types[base.sanitize_column_name(col['name'].upper())] = col['baseType']
         for col in columns:
             col.data_type = col_types[col.name_in_rdb]
         # Create column for row Identifier
@@ -363,7 +412,7 @@ class MimirDatastore(DefaultDatastore):
         #    row_counter = int(rs['data'][0][0]) + 1
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
-            columns=map(lambda cn: self.bad_col_names.get(cn, cn), columns),
+            columns=map(base.sanitize_column_name, columns),
             rowid_column=rowid_column,
             table_name=table_name,
             row_idxs=row_idxs,

@@ -129,7 +129,7 @@ class MimirDatasetReader(DatasetReader):
             self.col_map = dict()
             for i in range(len(rs['schema'])):
                 col = rs['schema'][i]
-                self.col_map[col['name']] = i
+                self.col_map[base.sanitize_column_name(col['name'])] = i
             # Initialize rows (make sure to sort them according to order in
             # row_ids list), read index and open flag
             #rowid_idx = self.col_map[base.ROW_ID]
