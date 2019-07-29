@@ -98,7 +98,11 @@ export FLASK_ENV
 WEB_UI_STATIC_FILES="${WEB_UI_STATIC_FILES:-$STATIC_UI_FILES_DIR}"
 export WEB_UI_STATIC_FILES
 
-echo $WEB_UI_STATIC_FILES
+# on macos there is a weird corner case bug in multiprocessing that will crash python when 
+# checking proxy settings before request. it is documented at the following url:
+# https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
+# the work around is to tell python to skip this check which works, but if you need proxy you are SOL
+export no_proxy='*'
 
 trap "kill 0" EXIT
 
