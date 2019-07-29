@@ -1,0 +1,3 @@
+recursive-include resources *
+graft vizier
+global-exclude *.py[cod] __pycache__ *.so

@@ -2,4 +2,4 @@
 
 export FLASK_APP=vizier.api.webservice
 export FLASK_ENV=development
-flask run --with-threads
+python -m flask run --with-threads
