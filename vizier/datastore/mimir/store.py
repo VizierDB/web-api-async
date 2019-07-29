@@ -230,7 +230,7 @@ class MimirDatastore(DefaultDatastore):
             options += [("username", username)]
         if password is not None:
             options += [("password", password)]
-        self.load_dataset(
+        return self.load_dataset(
             url = url, 
             options = options,
             detect_headers = detect_headers,
