@@ -16,6 +16,8 @@
 
 """Classes to support queries over datasets to generate simple plot charts."""
 
+from datetime import date, datetime
+import time
 
 class DataStreamConsumer(object):
     """Consumer for data rows. The row consumers are used to filter cell values
@@ -67,6 +69,8 @@ class DataStreamConsumer(object):
         # Check if the row index falls inside the consumed interval
         if row_index >= self.range_start and (self.range_end is None or row_index <= self.range_end):
             val = row.values[self.column_index]
+            if isinstance(val, date) or isinstance(val, datetime):
+                val = time.mktime(val.timetuple())
             if self.cast_to_number:
                 # Only convert if not already a numeric value. Assumes a
                 # string if not numeric
