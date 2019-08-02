@@ -130,7 +130,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         available_charts = list()
         # Only include charts for modules that completed successful
         if m.is_success:
-            for c_handle in charts.values():
+            for c_handle in list(charts.values()):
                 if c_handle.dataset_name in m.datasets:
                     available_charts.append(c_handle)
         modules.append(
@@ -175,7 +175,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         labels.COMMAND_ID: descriptor.command_id,
         'state': workflow.get_state().state,
         'modules': modules,
-        'datasets': datasets.values(),
+        'datasets': list(datasets.values()),
         'readOnly': read_only,
         labels.LINKS: links
     }

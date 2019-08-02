@@ -264,7 +264,7 @@ class VizierEngine(WorkflowController):
                     if first_active_module_index is None:
                         first_active_module_index = i
             # Cancel all running tasks for the project branch
-            for task_id in self.tasks.keys():
+            for task_id in list(self.tasks.keys()):
                 task = self.tasks[task_id]
                 if task.project_id == project_id and task.branch_id == branch_id:
                     self.backend.cancel_task(task_id)
@@ -336,7 +336,7 @@ class VizierEngine(WorkflowController):
                     if module_index == module_count - 1:
                         # Update the counter before we exit the loop. Otherwise
                         # the last module would be executed.
-                        print 'No need to execute anything'
+                        print('No need to execute anything')
                         module_index = module_count
                         break
                     else:

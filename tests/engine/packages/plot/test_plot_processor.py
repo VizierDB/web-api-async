@@ -59,12 +59,12 @@ class TestDefaultPlotProcessor(unittest.TestCase):
             )
         )
         chart = result.outputs.stdout[0].value
-        self.assertEquals(chart['data']['data'][0]['label'], 'A')
-        self.assertEquals(chart['data']['data'][1]['label'], 'Series 2')
-        self.assertEquals(chart['result']['series'][0]['label'], 'A')
-        self.assertEquals(chart['result']['series'][1]['label'], 'Series 2')
-        self.assertEquals(len(chart['result']['series'][0]['data']), 6)
-        self.assertEquals(len(chart['result']['series'][1]['data']), 6)
+        self.assertEqual(chart['data']['data'][0]['label'], 'A')
+        self.assertEqual(chart['data']['data'][1]['label'], 'Series 2')
+        self.assertEqual(chart['result']['series'][0]['label'], 'A')
+        self.assertEqual(chart['result']['series'][1]['label'], 'Series 2')
+        self.assertEqual(len(chart['result']['series'][0]['data']), 6)
+        self.assertEqual(len(chart['result']['series'][1]['data']), 6)
 
     def test_simple_plot(self):
         """Test running the simple plot command."""

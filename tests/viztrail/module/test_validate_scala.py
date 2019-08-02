@@ -24,7 +24,7 @@ class TestValidateScala(unittest.TestCase):
         ).to_external_form(
             command=PACKAGE.get(scala.SCALA_CODE)
         )
-        self.assertEquals(cmd, 'println("Hello, world!")')
+        self.assertEqual(cmd, 'println("Hello, world!")')
 
 
 if __name__ == '__main__':

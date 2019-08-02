@@ -22,7 +22,7 @@ for the Vizier Web API as documented in:
 
 import csv
 import os
-import StringIO
+import io
 import tarfile
 
 from flask import Blueprint, jsonify, make_response, request, send_file, send_from_directory
@@ -133,7 +133,7 @@ def export_project(project_id):
     vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
     datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
-    si = StringIO.StringIO()
+    si = io.StringIO()
     with tarfile.open(fileobj=si, mode="w:gz") as tar:
         tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
         tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
@@ -163,7 +163,7 @@ def import_project():
             vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
             filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
             datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
-            si = StringIO.StringIO()
+            si = io.StringIO()
             file.save(dst=si)
             si.seek(0)
             project_id = ""
@@ -790,7 +790,7 @@ def download_dataset(project_id, dataset_id):
     if dataset is None:
         raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
     # Read the dataset into a string buffer in memory
-    si = StringIO.StringIO()
+    si = io.StringIO()
     cw = csv.writer(si)
     cw.writerow([col.name for col in dataset.columns])
     with dataset.reader() as reader:

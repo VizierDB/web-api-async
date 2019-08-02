@@ -192,7 +192,7 @@ def CHART_VIEW_DATA(view, rows):
     }
     # Create a list of series indexes. Then remove the series that contains the
     # x-axis labels (if given). Keep x-axis data in a separate list
-    series = range(len(view.data))
+    series = list(range(len(view.data)))
     if not view.x_axis is None:
         obj['xAxis'] = {'data': [row[view.x_axis] for row in rows]}
         del series[view.x_axis]

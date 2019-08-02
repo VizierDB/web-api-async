@@ -82,7 +82,7 @@ class MimirDatasetReader(DatasetReader):
         self.col_map = None
         self.is_open = False
 
-    def next(self):
+    def __next__(self):
         """Return the next row in the dataset iterator. Raises StopIteration if
         end of row list is reached.
 

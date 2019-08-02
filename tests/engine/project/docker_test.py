@@ -29,8 +29,8 @@ container = client.containers.run(
     detach=True
 )
 
-print container
-print container.id
+print(container)
+print(container.id)
 
 
 """

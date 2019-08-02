@@ -17,7 +17,7 @@
 """Module containing the Celery instance. The broker url is expected to be set
 using environment variable VIZIERCELERYBROKER_URL."""
 
-from __future__ import absolute_import, unicode_literals
+
 from celery import Celery
 
 import os

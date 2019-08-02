@@ -58,32 +58,32 @@ class SettingCommands(Command):
 
     def help(self):
         """Print help statement."""
-        print '\nSettings'
-        print '  defaults'
-        print '  set project <project-id>'
-        print '  set branch <branch-id>'
+        print('\nSettings')
+        print('  defaults')
+        print('  set project <project-id>')
+        print('  set branch <branch-id>')
 
     def print_defaults(self):
         """Print the current defaults."""
         if not self.api.default_project is None:
             project = self.api.get_project(project_id=self.api.default_project)
-            print 'Project \'' + project.name + '\' (' + project.identifier + ')'
+            print('Project \'' + project.name + '\' (' + project.identifier + ')')
             if not self.api.default_branch is None:
                 branch = self.api.get_branch(
                     project_id=project.identifier,
                     branch_id=self.api.default_branch
                 )
-                print 'On branch \'' + branch.name + '\' (' + branch.identifier + ')'
+                print('On branch \'' + branch.name + '\' (' + branch.identifier + ')')
             else:
-                print MSG_NO_DEFAULT_BRANCH
+                print(MSG_NO_DEFAULT_BRANCH)
         else:
-            print MSG_NO_DEFAULT_PROJECT
+            print(MSG_NO_DEFAULT_PROJECT)
         return True
 
     def set_branch(self, branch_id):
         """Set the default branch."""
         if self.api.default_project is None:
-            print MSG_NO_DEFAULT_PROJECT
+            print(MSG_NO_DEFAULT_PROJECT)
             return True
         branch = None
         for br in self.api.list_branches(project_id=self.api.default_project):
@@ -96,9 +96,9 @@ class SettingCommands(Command):
                 value=branch_id,
                 replace=True
             )
-            print 'On branch \'' + branch.name + '\''
+            print('On branch \'' + branch.name + '\'')
         else:
-            print 'Unknown branch ' + branch_id
+            print('Unknown branch ' + branch_id)
         return True
 
     def set_project(self, project_id):
@@ -111,9 +111,9 @@ class SettingCommands(Command):
                 value=project_id,
                 replace=True
             )
-            print 'Default project is now \'' + project.name + '\''
+            print('Default project is now \'' + project.name + '\'')
             if not project.default_branch is None:
-                print 'Default branch is ' + project.default_branch
+                print('Default branch is ' + project.default_branch)
                 self.api.defaults.add(
                     key=KEY_DEFAULT_BRANCH,
                     value=project.default_branch,
@@ -122,5 +122,5 @@ class SettingCommands(Command):
             else:
                 self.api.defaults.delete(key=KEY_DEFAULT_BRANCH)
         else:
-            print 'Unknown project: ' + project_id
+            print('Unknown project: ' + project_id)
         return True

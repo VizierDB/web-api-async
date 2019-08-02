@@ -39,7 +39,7 @@ class TestValidatePlot(unittest.TestCase):
             command=PACKAGE.get(plot.PLOT_SIMPLE_CHART),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'CREATE PLOT \'My Chart\' FOR ds')
+        self.assertEqual(cmd, 'CREATE PLOT \'My Chart\' FOR ds')
 
 
 if __name__ == '__main__':

@@ -135,7 +135,7 @@ class DelimitedFileReader(DatasetReader):
         self.line_count = -1
         self.is_open = False
 
-    def next(self):
+    def __next__(self):
         """Return the next row in the dataset iterator. Raises StopIteration if
         end of file is reached or file has been closed.
 
@@ -149,7 +149,7 @@ class DelimitedFileReader(DatasetReader):
         if self.is_open:
             # Catch exception to close any open file
             try:
-                row = self.reader.next()
+                row = next(self.reader)
                 if self.has_row_ids:
                     row = DatasetRow(int(row[0]), row[1:])
                 else:
@@ -234,7 +234,7 @@ class DefaultJsonDatasetReader(DatasetReader):
         self.read_index = None
         self.is_open = False
 
-    def next(self):
+    def __next__(self):
         """Return the next row in the dataset iterator. Raises StopIteration if
         end of file is reached or file has been closed.
 
@@ -337,7 +337,7 @@ class InMemDatasetReader(DatasetReader):
         self.read_index = None
         self.is_open = False
 
-    def next(self):
+    def __next__(self):
         """Return the next row in the dataset iterator. Raises StopIteration if
         end of file is reached or file has been closed.
 

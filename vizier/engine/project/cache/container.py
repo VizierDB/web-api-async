@@ -166,7 +166,7 @@ class ContainerProjectCache(ProjectCache):
         viztrail = self.viztrails.create_viztrail(properties=properties)
         # Start a new docker container for the project on the next unused
         # port. Raises ValueError if all given port numbers are currently used.
-        used_ports = [p.port for p in self.projects.values()]
+        used_ports = [p.port for p in list(self.projects.values())]
         port = None
         for port_nr in self.ports:
             if not port_nr in used_ports:
@@ -272,7 +272,7 @@ class ContainerProjectCache(ProjectCache):
         -------
         list(vizier.engine.project.base.ProjectHandle)
         """
-        return self.projects.values()
+        return list(self.projects.values())
 
     def write_container_info(self):
         """Write the current mapping of project identifier to project containers
@@ -284,6 +284,6 @@ class ContainerProjectCache(ProjectCache):
                 'containerId': p.container_id,
                 'port': p.port,
                 'url': p.container_api
-            } for p in self.projects.values()],
+            } for p in list(self.projects.values())],
             object_path=self.container_file
         )

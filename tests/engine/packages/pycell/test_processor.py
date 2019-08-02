@@ -85,13 +85,13 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         self.assertIsNotNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.write)
-        self.assertEquals(len(result.provenance.read), 0)
-        self.assertEquals(len(result.provenance.write), 1)
+        self.assertEqual(len(result.provenance.read), 0)
+        self.assertEqual(len(result.provenance.write), 1)
         self.assertTrue('people' in result.provenance.write)
         self.assertIsNotNone(result.provenance.write['people'])
-        self.assertEquals(len(result.outputs.stdout), 1)
-        self.assertEquals(len(result.outputs.stderr), 0)
-        self.assertEquals(result.outputs.stdout[0].value, 'Alice\nBob')
+        self.assertEqual(len(result.outputs.stdout), 1)
+        self.assertEqual(len(result.outputs.stderr), 0)
+        self.assertEqual(result.outputs.stdout[0].value, 'Alice\nBob')
 
     def test_print_dataset_script(self):
         """Test running a script that prints rows in an existing datasets."""
@@ -113,13 +113,13 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         self.assertIsNotNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.write)
-        self.assertEquals(len(result.provenance.read), 1)
-        self.assertEquals(len(result.provenance.write), 0)
+        self.assertEqual(len(result.provenance.read), 1)
+        self.assertEqual(len(result.provenance.write), 0)
         self.assertTrue('people' in result.provenance.read)
         self.assertIsNotNone(result.provenance.read['people'])
-        self.assertEquals(len(result.outputs.stdout), 1)
-        self.assertEquals(len(result.outputs.stderr), 0)
-        self.assertEquals(result.outputs.stdout[0].value, 'Alice\nBob')
+        self.assertEqual(len(result.outputs.stdout), 1)
+        self.assertEqual(len(result.outputs.stderr), 0)
+        self.assertEqual(result.outputs.stdout[0].value, 'Alice\nBob')
 
     def test_simple_script(self):
         """Test running the simple python script."""
@@ -137,7 +137,7 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             )
         )
         self.assertTrue(result.is_success)
-        self.assertEquals(result.outputs.stdout[0].value, '4')
+        self.assertEqual(result.outputs.stdout[0].value, '4')
 
     def test_unknown_dataset_script(self):
         """Test running a script that accesses an unknown datasets."""
@@ -159,8 +159,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
         self.assertFalse(result.is_success)
         self.assertIsNone(result.provenance.read)
         self.assertIsNone(result.provenance.write)
-        self.assertEquals(len(result.outputs.stdout), 0)
-        self.assertEquals(len(result.outputs.stderr), 1)
+        self.assertEqual(len(result.outputs.stdout), 0)
+        self.assertEqual(len(result.outputs.stderr), 1)
         # Running a similar script that catches the error schould be a success
         # and the access to the dataset should be recorded in the resulting
         # read provenance
@@ -180,12 +180,12 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         self.assertIsNotNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.write)
-        self.assertEquals(len(result.provenance.read), 1)
-        self.assertEquals(len(result.provenance.write), 0)
+        self.assertEqual(len(result.provenance.read), 1)
+        self.assertEqual(len(result.provenance.write), 0)
         self.assertTrue('employees' in result.provenance.read)
         self.assertIsNone(result.provenance.read['employees'])
-        self.assertEquals(len(result.outputs.stdout), 1)
-        self.assertEquals(len(result.outputs.stderr), 0)
+        self.assertEqual(len(result.outputs.stdout), 1)
+        self.assertEqual(len(result.outputs.stderr), 0)
 
 
 if __name__ == '__main__':

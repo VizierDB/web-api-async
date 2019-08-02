@@ -24,7 +24,7 @@ class TestValidateSQL(unittest.TestCase):
         ).to_external_form(
             command=PACKAGE.get(sql.SQL_QUERY)
         )
-        self.assertEquals(cmd, 'SELECT * FROM dataset')
+        self.assertEqual(cmd, 'SELECT * FROM dataset')
         # Validate with given output dataset
         cmd = sql_cell(
             source='SELECT * FROM dataset',
@@ -33,7 +33,7 @@ class TestValidateSQL(unittest.TestCase):
         ).to_external_form(
             command=PACKAGE.get(sql.SQL_QUERY)
         )
-        self.assertEquals(cmd, 'SELECT * FROM dataset AS result')
+        self.assertEqual(cmd, 'SELECT * FROM dataset AS result')
 
 
 if __name__ == '__main__':

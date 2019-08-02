@@ -26,26 +26,26 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         annotations.add('A', 1)
         # Test default values
         self.assertIsNone(annotations.find_one('B'))
-        self.assertEquals(annotations.find_one('B', default_value='XYZ'), 'XYZ')
-        self.assertEquals(annotations.find_all('B'), [])
-        self.assertEquals(annotations.find_all('B', default_value=[1]), [1])
+        self.assertEqual(annotations.find_one('B', default_value='XYZ'), 'XYZ')
+        self.assertEqual(annotations.find_all('B'), [])
+        self.assertEqual(annotations.find_all('B', default_value=[1]), [1])
         # Set value for 'B'
         annotations.add('B', 'abc')
-        self.assertEquals(annotations.find_one('B'), 'abc')
-        self.assertEquals(annotations.find_one('B', default_value='XYZ'), 'abc')
-        self.assertEquals(annotations.find_all('B'), ['abc'])
-        self.assertEquals(annotations.find_all('B', default_value=[1]), ['abc'])
+        self.assertEqual(annotations.find_one('B'), 'abc')
+        self.assertEqual(annotations.find_one('B', default_value='XYZ'), 'abc')
+        self.assertEqual(annotations.find_all('B'), ['abc'])
+        self.assertEqual(annotations.find_all('B', default_value=[1]), ['abc'])
         annotations = DefaultAnnotationSet(elements={'A': 1})
         self.assertIsNone(annotations.find_one('B'))
-        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
         annotations = DefaultAnnotationSet(elements={'A': [1, 'XYZ']})
         self.assertIsNone(annotations.find_one('B'))
         self.assertIsNotNone(annotations.find_one('A', raise_error_on_multi_value=False))
         self.assertTrue(1 in annotations.find_all('A'))
         self.assertTrue('XYZ' in annotations.find_all('A'))
-        values = annotations.values()
+        values = list(annotations.values())
         self.assertTrue('A' in values)
-        self.assertEquals(values['A'], [1, 'XYZ'])
+        self.assertEqual(values['A'], [1, 'XYZ'])
 
     def test_delete_values(self):
         """Test functionality that deletes annotations.
@@ -71,12 +71,12 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         annotations = DefaultAnnotationSet()
         annotations.add('A', 1)
         # Test default values
-        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
         annotations.add('A', 1)
-        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
         annotations.add('A', 2)
         with self.assertRaises(ValueError):
-            self.assertEquals(annotations.find_one('A'), 1)
+            self.assertEqual(annotations.find_one('A'), 1)
         self.assertIsNotNone(annotations.find_one('A', raise_error_on_multi_value=False))
 
     def test_persistent_store(self):
@@ -127,14 +127,14 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         annotations.replace('A', 1)
         val = annotations.find_all('A')
         self.assertTrue(isinstance(val, list))
-        self.assertEquals(val, [1])
+        self.assertEqual(val, [1])
         annotations.add('A', 2)
         val = annotations.find_all('A')
         self.assertTrue(isinstance(val, list))
-        self.assertEquals(len(val), 2)
+        self.assertEqual(len(val), 2)
         annotations.replace('A', 2)
         val = annotations.find_one('A')
-        self.assertEquals(val, 2)
+        self.assertEqual(val, 2)
 
     def test_update(self):
         """Test updating an annotation set from a given dictionary."""
@@ -144,10 +144,10 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         annotations.add('B', 2)
         annotations.add('C', 3)
         annotations.update({'A': 4, 'B': [2, 3], 'D': 7})
-        self.assertEquals(annotations.find_one('A'), 4)
-        self.assertEquals(annotations.find_one('C'), 3)
-        self.assertEquals(annotations.find_one('D'), 7)
-        self.assertEquals(len(annotations.find_all('B')), 2)
+        self.assertEqual(annotations.find_one('A'), 4)
+        self.assertEqual(annotations.find_one('C'), 3)
+        self.assertEqual(annotations.find_one('D'), 7)
+        self.assertEqual(len(annotations.find_all('B')), 2)
         for val in [2, 3]:
             self.assertTrue(val in annotations.find_all('B'))
 
@@ -158,16 +158,16 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         annotations.add('A', 1)
         # Both find_one and find_all (with or without exception flag) should
         # return 1
-        self.assertEquals(annotations.find_one('A'), 1)
-        self.assertEquals(annotations.find_one('A', raise_error_on_multi_value=False), 1)
-        self.assertEquals(annotations.find_one('A', raise_error_on_multi_value=True), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A', raise_error_on_multi_value=False), 1)
+        self.assertEqual(annotations.find_one('A', raise_error_on_multi_value=True), 1)
         # Find all will always return a list of elements
-        self.assertEquals(annotations.find_all('A'), [1])
+        self.assertEqual(annotations.find_all('A'), [1])
         annotations.add('A', '2')
         # The result of find_all is a list with two elements
         val = annotations.find_all('A')
         self.assertTrue(isinstance(val, list))
-        self.assertEquals(len(val), 2)
+        self.assertEqual(len(val), 2)
         self.assertTrue(1 in val)
         self.assertTrue('2' in val)
         # Adding a duplicate annotation should not change anything
@@ -175,7 +175,7 @@ class TestDefaultAnnotationSet(unittest.TestCase):
         # The result of find_all is a list with two elements
         val = annotations.find_all('A')
         self.assertTrue(isinstance(val, list))
-        self.assertEquals(len(val), 2)
+        self.assertEqual(len(val), 2)
         self.assertTrue(1 in val)
         self.assertTrue('2' in val)
 

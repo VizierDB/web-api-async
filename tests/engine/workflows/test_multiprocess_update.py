@@ -73,14 +73,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
     def assert_module_count_is(self, project, value):
         """Assert number of modules in the workflow."""
         wf = project.viztrail.default_branch.head
-        self.assertEquals(len(wf.modules), value)
+        self.assertEqual(len(wf.modules), value)
 
     def assert_value_is(self, project, value):
         """Assert value of the updated dataset cell."""
         wf = project.viztrail.default_branch.head
         ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_NAME].identifier)
         rows = ds.fetch_rows()
-        self.assertEquals(rows[0].values[1], value)
+        self.assertEqual(rows[0].values[1], value)
 
     def create_workflow(self, project):
         """Create a completed workflow by loading the data file and updating the
@@ -121,7 +121,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             branch_id=branch_id,
             module_id=wf.modules[5].identifier
         )
-        self.assertEquals(len(result), 5)
+        self.assertEqual(len(result), 5)
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         wf = project.viztrail.default_branch.head
@@ -129,7 +129,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         self.assert_value_is(project, 32)
         wf = project.viztrail.default_branch.head
         for i in range(5):
-            self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
+            self.assertEqual(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
         datasets = [m.datasets[DATASET_NAME].identifier for m in wf.modules]
@@ -168,14 +168,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             before_module_id=wf.modules[5].identifier,
             command=cmd
         )
-        self.assertEquals(len(result), 7)
+        self.assertEqual(len(result), 7)
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(project, 12)
         self.assert_value_is(project, 43)
         wf = project.viztrail.default_branch.head
         for i in range(5):
-            self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
+            self.assertEqual(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
         # Ensure that None is returned when attempting to insert a module into
@@ -248,14 +248,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             module_id=wf.modules[5].identifier,
             command=cmd
         )
-        self.assertEquals(len(result), 6)
+        self.assertEqual(len(result), 6)
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(project, 11)
         self.assert_value_is(project, 42)
         wf = project.viztrail.default_branch.head
         for i in range(5):
-            self.assertEquals(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
+            self.assertEqual(datasets[i], wf.modules[i].datasets[DATASET_NAME].identifier)
         for i in range(5,len(wf.modules)):
             self.assertFalse(wf.modules[i].datasets[DATASET_NAME].identifier in datasets)
         # Ensure that None is returned when attempting to replace a module in
@@ -274,7 +274,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             module_id=wf.modules[0].identifier,
             command=cmd
         )
-        self.assertEquals(len(result), 11)
+        self.assertEqual(len(result), 11)
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         self.assert_module_count_is(project, 11)
@@ -339,7 +339,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         i = 0
         for module in wf.modules[4:]:
             self.assertNotEqual(datasets[i][DATASET_NAME].identifier, module.datasets[DATASET_NAME].identifier)
-            self.assertEquals(datasets[i][SECOND_DATASET_NAME].identifier, module.datasets[SECOND_DATASET_NAME].identifier)
+            self.assertEqual(datasets[i][SECOND_DATASET_NAME].identifier, module.datasets[SECOND_DATASET_NAME].identifier)
             i += 1
 
 

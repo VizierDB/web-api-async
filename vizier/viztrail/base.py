@@ -241,7 +241,7 @@ class ViztrailHandle(NamedObject):
         datatime.datatime
         """
         ts = self.created_at
-        for branch in self.branches.values():
+        for branch in list(self.branches.values()):
             branch_ts = branch.last_modified_at
             if ts < branch_ts:
                 ts = branch_ts
@@ -254,7 +254,7 @@ class ViztrailHandle(NamedObject):
         -------
         list(vizier.viztrail.branch.BranchHandle)
         """
-        return self.branches.values()
+        return list(self.branches.values())
 
     @abstractmethod
     def set_default_branch(self, branch_id):

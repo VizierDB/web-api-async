@@ -20,11 +20,11 @@ class TestCommandArguments(unittest.TestCase):
             xaxis_column=1,
             validate=True
         )
-        self.assertEquals(cmd.arguments.get_value(pckg.PARA_DATASET), 'ds')
-        self.assertEquals(cmd.arguments.get_value(pckg.PARA_NAME), 'My Chart')
-        self.assertEquals(cmd.arguments.get_value(pckg.PARA_NAME, as_int=True), 'My Chart')
-        self.assertEquals(cmd.arguments.get_value(plot.PARA_XAXIS).get_value(plot.PARA_XAXIS_COLUMN, as_int=True), 1)
-        self.assertEquals(cmd.arguments.get_value(plot.PARA_XAXIS_COLUMN, as_int=True, default_value='ABC'), 'ABC')
+        self.assertEqual(cmd.arguments.get_value(pckg.PARA_DATASET), 'ds')
+        self.assertEqual(cmd.arguments.get_value(pckg.PARA_NAME), 'My Chart')
+        self.assertEqual(cmd.arguments.get_value(pckg.PARA_NAME, as_int=True), 'My Chart')
+        self.assertEqual(cmd.arguments.get_value(plot.PARA_XAXIS).get_value(plot.PARA_XAXIS_COLUMN, as_int=True), 1)
+        self.assertEqual(cmd.arguments.get_value(plot.PARA_XAXIS_COLUMN, as_int=True, default_value='ABC'), 'ABC')
         self.assertNotEqual(cmd.arguments.get_value(plot.PARA_XAXIS_COLUMN, as_int=True, default_value='100'), 100)
         with self.assertRaises(ValueError):
             cmd.arguments.get_value(plot.PARA_XAXIS_COLUMN)

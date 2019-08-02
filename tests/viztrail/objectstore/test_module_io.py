@@ -63,7 +63,7 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path,
             prev_state=dict()
         )
-        self.assertEquals(len(m.datasets), 0)
+        self.assertEqual(len(m.datasets), 0)
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
@@ -79,22 +79,22 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path,
             prev_state=dict()
         )
-        self.assertEquals(len(m.datasets), 2)
-        self.assertEquals(m.datasets['DS1'].identifier, 'ID1')
-        self.assertEquals(len(m.datasets['DS1'].columns), 0)
-        self.assertEquals(m.datasets['DS1'].row_count, 0)
+        self.assertEqual(len(m.datasets), 2)
+        self.assertEqual(m.datasets['DS1'].identifier, 'ID1')
+        self.assertEqual(len(m.datasets['DS1'].columns), 0)
+        self.assertEqual(m.datasets['DS1'].row_count, 0)
         ds2 = m.datasets['DS2']
-        self.assertEquals(ds2.identifier, 'ID2')
-        self.assertEquals(len(ds2.columns), 2)
+        self.assertEqual(ds2.identifier, 'ID2')
+        self.assertEqual(len(ds2.columns), 2)
         col0 = ds2.columns[0]
-        self.assertEquals(col0.identifier, 0)
-        self.assertEquals(col0.name, 'ABC')
-        self.assertEquals(col0.data_type, 'int')
+        self.assertEqual(col0.identifier, 0)
+        self.assertEqual(col0.name, 'ABC')
+        self.assertEqual(col0.data_type, 'int')
         col1 = ds2.columns[1]
-        self.assertEquals(col1.identifier, 1)
-        self.assertEquals(col1.name, 'xyz')
-        self.assertEquals(col1.data_type, 'real')
-        self.assertEquals(ds2.row_count, 100)
+        self.assertEqual(col1.identifier, 1)
+        self.assertEqual(col1.name, 'xyz')
+        self.assertEqual(col1.data_type, 'real')
+        self.assertEqual(ds2.row_count, 100)
 
     def test_outputs(self):
         """Test reading and writing modules with output information."""
@@ -111,8 +111,8 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(len(m.outputs.stderr), 0)
-        self.assertEquals(len(m.outputs.stdout), 0)
+        self.assertEqual(len(m.outputs.stderr), 0)
+        self.assertEqual(len(m.outputs.stdout), 0)
         # Module with error output
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -127,10 +127,10 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(len(m.outputs.stderr), 1)
+        self.assertEqual(len(m.outputs.stderr), 1)
         self.assertTrue(m.outputs.stderr[0].is_text)
-        self.assertEquals(m.outputs.stderr[0].value, 'Some text')
-        self.assertEquals(len(m.outputs.stdout), 0)
+        self.assertEqual(m.outputs.stderr[0].value, 'Some text')
+        self.assertEqual(len(m.outputs.stdout), 0)
         # Module with standard output
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -145,12 +145,12 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(len(m.outputs.stdout), 2)
+        self.assertEqual(len(m.outputs.stdout), 2)
         self.assertTrue(m.outputs.stdout[0].is_text)
-        self.assertEquals(m.outputs.stdout[0].value, 'Some text')
+        self.assertEqual(m.outputs.stdout[0].value, 'Some text')
         self.assertFalse(m.outputs.stdout[1].is_text)
-        self.assertEquals(m.outputs.stdout[1].value, '123')
-        self.assertEquals(len(m.outputs.stderr), 0)
+        self.assertEqual(m.outputs.stdout[1].value, '123')
+        self.assertEqual(len(m.outputs.stderr), 0)
         # Module with standard error and standard output
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -168,8 +168,8 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(len(m.outputs.stdout), 2)
-        self.assertEquals(len(m.outputs.stderr), 1)
+        self.assertEqual(len(m.outputs.stdout), 2)
+        self.assertEqual(len(m.outputs.stderr), 1)
 
     def test_provenance(self):
         """Test reading and writing modules with provenance information."""
@@ -209,9 +209,9 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path
         )
         self.assertIsNotNone(m.provenance.read)
-        self.assertEquals(len(m.provenance.read), 1)
-        self.assertEquals(m.provenance.read['DS1'], 'ID1')
-        self.assertEquals(m.provenance.resources['fileId'], '0123456789')
+        self.assertEqual(len(m.provenance.read), 1)
+        self.assertEqual(m.provenance.read['DS1'], 'ID1')
+        self.assertEqual(m.provenance.resources['fileId'], '0123456789')
         self.assertIsNone(m.provenance.write)
         # Modules that only has write provenance
         mod0 = OSModuleHandle.create_module(
@@ -230,9 +230,9 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path
         )
         self.assertIsNotNone(m.provenance.write)
-        self.assertEquals(len(m.provenance.write), 2)
-        self.assertEquals(m.provenance.write['DS1'].identifier, 'ID1')
-        self.assertEquals(m.provenance.write['DS2'].identifier, 'ID2')
+        self.assertEqual(len(m.provenance.write), 2)
+        self.assertEqual(m.provenance.write['DS1'].identifier, 'ID1')
+        self.assertEqual(m.provenance.write['DS2'].identifier, 'ID2')
         self.assertIsNone(m.provenance.read)
         # Module with read and write provenance
         mod0 = OSModuleHandle.create_module(
@@ -253,13 +253,13 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path
         )
         self.assertIsNotNone(m.provenance.read)
-        self.assertEquals(len(m.provenance.read), 1)
-        self.assertEquals(m.provenance.read['DS1'], 'ID1')
+        self.assertEqual(len(m.provenance.read), 1)
+        self.assertEqual(m.provenance.read['DS1'], 'ID1')
         self.assertIsNotNone(m.provenance.write)
-        self.assertEquals(len(m.provenance.write), 2)
-        self.assertEquals(m.provenance.write['DS1'].identifier, 'ID1')
-        self.assertEquals(m.provenance.write['DS2'].identifier, 'ID2')
-        self.assertEquals(m.provenance.delete, ['A', 'B'])
+        self.assertEqual(len(m.provenance.write), 2)
+        self.assertEqual(m.provenance.write['DS1'].identifier, 'ID1')
+        self.assertEqual(m.provenance.write['DS2'].identifier, 'ID2')
+        self.assertEqual(m.provenance.delete, ['A', 'B'])
         # Module with chart
         chart = ChartViewHandle(
             identifier='A',
@@ -301,20 +301,20 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(len(m.provenance.charts), 1)
+        self.assertEqual(len(m.provenance.charts), 1)
         c = m.provenance.charts[0]
-        self.assertEquals(chart.identifier, c.identifier)
-        self.assertEquals(chart.dataset_name, c.dataset_name)
-        self.assertEquals(chart.chart_name, c.chart_name)
-        self.assertEquals(chart.x_axis, c.x_axis)
-        self.assertEquals(chart.chart_type, c.chart_type)
-        self.assertEquals(chart.grouped_chart, c.grouped_chart)
-        self.assertEquals(len(c.data), 3)
+        self.assertEqual(chart.identifier, c.identifier)
+        self.assertEqual(chart.dataset_name, c.dataset_name)
+        self.assertEqual(chart.chart_name, c.chart_name)
+        self.assertEqual(chart.x_axis, c.x_axis)
+        self.assertEqual(chart.chart_type, c.chart_type)
+        self.assertEqual(chart.grouped_chart, c.grouped_chart)
+        self.assertEqual(len(c.data), 3)
         for i in range(3):
-            self.assertEquals(c.data[i].column, chart.data[i].column)
-            self.assertEquals(c.data[i].label, chart.data[i].label)
-            self.assertEquals(c.data[i].range_start, chart.data[i].range_start)
-            self.assertEquals(c.data[i].range_end, chart.data[i].range_end)
+            self.assertEqual(c.data[i].column, chart.data[i].column)
+            self.assertEqual(c.data[i].label, chart.data[i].label)
+            self.assertEqual(c.data[i].range_start, chart.data[i].range_start)
+            self.assertEqual(c.data[i].range_end, chart.data[i].range_end)
 
     def test_read_write_module(self):
         """Test reading and writing modules."""
@@ -346,7 +346,7 @@ class TestOSModuleIO(unittest.TestCase):
             module_path=mod0.module_path
         )
         self.assertTrue(os.path.isfile(m.module_path))
-        self.assertEquals(m.external_form, 'TEST MODULE')
+        self.assertEqual(m.external_form, 'TEST MODULE')
         self.assertTrue(m.is_pending)
 
     def test_timestamps(self):
@@ -373,8 +373,8 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(m.timestamp.created_at, created_at)
-        self.assertEquals(m.timestamp.started_at, started_at)
+        self.assertEqual(m.timestamp.created_at, created_at)
+        self.assertEqual(m.timestamp.started_at, started_at)
         finished_at = to_datetime('2018-11-26T13:00:00.000010')
         m.timestamp.created_at = finished_at
         m.timestamp.finished_at = finished_at
@@ -383,9 +383,9 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(m.timestamp.created_at, finished_at)
-        self.assertEquals(m.timestamp.started_at, started_at)
-        self.assertEquals(m.timestamp.finished_at, finished_at)
+        self.assertEqual(m.timestamp.created_at, finished_at)
+        self.assertEqual(m.timestamp.started_at, started_at)
+        self.assertEqual(m.timestamp.finished_at, finished_at)
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
             external_form='TEST MODULE',
@@ -402,8 +402,8 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertEquals(m.timestamp.created_at, created_at)
-        self.assertEquals(m.timestamp.started_at, started_at)
+        self.assertEqual(m.timestamp.created_at, created_at)
+        self.assertEqual(m.timestamp.started_at, started_at)
         self.assertIsNone(m.timestamp.finished_at)
 
 

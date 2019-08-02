@@ -32,13 +32,13 @@ class TestPersistentAnnotationSet(unittest.TestCase):
             self.filename,
             annotations={'A': 1, 'B': ['a', 2, 'c']}
         )
-        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
         self.assertTrue('a' in annotations.find_all('B'))
         self.assertTrue(2 in annotations.find_all('B'))
         self.assertTrue('c' in annotations.find_all('B'))
         # Reload annotations to ensure they are persistent
         annotations = PersistentAnnotationSet(self.filename)
-        self.assertEquals(annotations.find_one('A'), 1)
+        self.assertEqual(annotations.find_one('A'), 1)
         self.assertTrue('a' in annotations.find_all('B'))
         self.assertTrue(2 in annotations.find_all('B'))
         self.assertTrue('c' in annotations.find_all('B'))
@@ -60,7 +60,7 @@ class TestPersistentAnnotationSet(unittest.TestCase):
         """Test manipulating annotations from an empty set."""
         # Create an empty properties file
         annotations = PersistentAnnotationSet(self.filename)
-        self.assertEquals(len(annotations.elements), 0)
+        self.assertEqual(len(annotations.elements), 0)
         self.assertIsNone(annotations.find_one('A'))
         self.assertFalse(os.path.isfile(self.filename))
         annotations.add('A', 1)
@@ -68,7 +68,7 @@ class TestPersistentAnnotationSet(unittest.TestCase):
         annotations.add('A', 2)
         annotations.add('B', 'XYZ')
         annotations = PersistentAnnotationSet(self.filename)
-        self.assertEquals(annotations.find_one('B'), 'XYZ')
+        self.assertEqual(annotations.find_one('B'), 'XYZ')
         self.assertTrue(1 in annotations.find_all('A'))
         self.assertTrue(2 in annotations.find_all('A'))
         annotations.delete('B', value='XYZ')

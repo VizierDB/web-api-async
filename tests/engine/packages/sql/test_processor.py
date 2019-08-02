@@ -59,7 +59,7 @@ class TestSQLProcessor(unittest.TestCase):
         self.assertIsNone(result.provenance.read)
         self.assertIsNone(result.provenance.write)
         self.assertTrue(len(result.outputs.stdout) > 0)
-        self.assertEquals(len(result.outputs.stderr), 0)
+        self.assertEqual(len(result.outputs.stderr), 0)
         # Materialize result
         cmd = sql_cell(
             source='SELECT grade_or_service_category FROM ' + DATASET_NAME + ' WHERE program = \'GENERAL EDUCATION\'',
@@ -80,7 +80,7 @@ class TestSQLProcessor(unittest.TestCase):
         self.assertIsNotNone(result.provenance.write)
         self.assertTrue('ge' in result.provenance.write)
         self.assertTrue(len(result.outputs.stdout) > 0)
-        self.assertEquals(len(result.outputs.stderr), 0)
+        self.assertEqual(len(result.outputs.stderr), 0)
 
 
 if __name__ == '__main__':

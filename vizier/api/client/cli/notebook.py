@@ -98,7 +98,7 @@ class NotebookCommands(Command):
             ds = notebook.get_dataset(module.datasets[name])
             notebook.download_dataset(dataset=ds, target_file=target_file)
         else:
-            print 'unknown dataset \'' + name + '\''
+            print('unknown dataset \'' + name + '\'')
         return True
 
     def eval(self, tokens):
@@ -200,23 +200,23 @@ class NotebookCommands(Command):
                         before_module=module.identifier
                     )
             else:
-                print tokens
+                print(tokens)
         return False
 
     def help(self):
         """Print help statement."""
-        print '\nNotebooks'
-        print '  [notebook | nb] append <command>'
-        print '  [notebook | nb] cancel'
-        print '  [notebook | nb] delete <module-id>'
-        print '  [notebook | nb] insert before <module-id> <command>'
-        print '  [notebook | nb] replace <module-id> <command>'
-        print '  show chart <name> {in <module-id>}'
-        print '  show [notebook | nb] {<workflow-id>}'
-        print '\nDatasets'
-        print '  download dataset <name> {in <module-id>} to <target-path>'
-        print '  show dataset <name> {in <module-id>}'
-        print '\nCommands'
+        print('\nNotebooks')
+        print('  [notebook | nb] append <command>')
+        print('  [notebook | nb] cancel')
+        print('  [notebook | nb] delete <module-id>')
+        print('  [notebook | nb] insert before <module-id> <command>')
+        print('  [notebook | nb] replace <module-id> <command>')
+        print('  show chart <name> {in <module-id>}')
+        print('  show [notebook | nb] {<workflow-id>}')
+        print('\nDatasets')
+        print('  download dataset <name> {in <module-id>} to <target-path>')
+        print('  show dataset <name> {in <module-id>}')
+        print('\nCommands')
         print_commands()
 
     def insert_module(self, command, notebook, before_module):
@@ -262,7 +262,7 @@ class NotebookCommands(Command):
                 rows.append([str(s.values[i]) for s in chart.data])
             self.output(rows)
         else:
-            print 'unknown dataset \'' + name + '\''
+            print('unknown dataset \'' + name + '\'')
         return True
 
     def show_dataset(self, name, module_id=None):
@@ -284,7 +284,7 @@ class NotebookCommands(Command):
                 rows.append(values)
             self.output(rows)
         else:
-            print 'unknown dataset \'' + name + '\''
+            print('unknown dataset \'' + name + '\'')
         return True
 
     def show_notebook(self, workflow_id=None):
@@ -297,38 +297,38 @@ class NotebookCommands(Command):
             workflow_id=workflow_id
         )
         if workflow.is_empty:
-            print 'Notebook is empty'
+            print('Notebook is empty')
             return True
-        print 'Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')'
+        print('Workflow ' + workflow.identifier + ' (created at ' + ts(workflow.created_at) + ')')
         for i in range(len(workflow.modules)):
             module = workflow.modules[i]
             cell_id = '[' + str(i+1) + '] '
             indent = ' ' * len(cell_id)
-            print '\n' + cell_id + '(' + module.state.upper() + ') ' + module.identifier
+            print('\n' + cell_id + '(' + module.state.upper() + ') ' + module.identifier)
             timestamps = 'Created @ ' + ts(module.timestamp.created_at)
             if not module.timestamp.started_at is None:
                 timestamps += ', Started @ ' + ts(module.timestamp.started_at)
             if not module.timestamp.finished_at is None:
                 timestamps += ', Finished @ ' + ts(module.timestamp.finished_at)
-            print indent + timestamps
-            print indent + '--'
+            print(indent + timestamps)
+            print(indent + '--')
             for line in module.external_form.split('\n'):
-                print indent + line
+                print(indent + line)
             if len(module.outputs) > 0:
-                print indent + '--'
+                print(indent + '--')
                 for line in module.outputs:
                     if '\n' in line:
                         sublines = line.split('\n')
                         for l in sublines:
-                            print indent + l
+                            print(indent + l)
                     else:
-                        print indent + line
+                        print(indent + line)
             if len(module.datasets) > 0:
-                print indent + '--'
-                print indent + 'Datasets: ' + ', '.join(module.datasets)
+                print(indent + '--')
+                print(indent + 'Datasets: ' + ', '.join(module.datasets))
             if len(module.charts) > 0:
-                print indent + 'Charts: ' + ', '.join(module.charts.keys())
-            print '.'
+                print(indent + 'Charts: ' + ', '.join(list(module.charts.keys())))
+            print('.')
         return True
 
     def replace_module(self, command, notebook, module_id):
@@ -371,5 +371,5 @@ def print_modules(modules):
         List of workflow modules
     """
     for m in modules:
-        print '[' + m.identifier + ']' '(' + m.state.upper() + ')'
-        print m.external_form
+        print('[' + m.identifier + ']' '(' + m.state.upper() + ')')
+        print(m.external_form)

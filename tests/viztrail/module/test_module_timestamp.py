@@ -19,8 +19,8 @@ class TestModuleTimestamp(unittest.TestCase):
         self.assertIsNotNone(ts.created_at)
         self.assertIsNotNone(ts.started_at)
         self.assertIsNone(ts.finished_at)
-        self.assertEquals(ts.created_at, created_at)
-        self.assertEquals(ts.started_at, created_at)
+        self.assertEqual(ts.created_at, created_at)
+        self.assertEqual(ts.started_at, created_at)
         # Ensure that ValueError is raised if created_at is None but one of
         # the other two timestamp arguments is not
         with self.assertRaises(ValueError):

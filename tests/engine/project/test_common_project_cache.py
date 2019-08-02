@@ -43,38 +43,38 @@ class TestCommonProjectCache(unittest.TestCase):
 
     def test_empty_repository(self):
         """Test accessing and deleting projects for an empty repository."""
-        self.assertEquals(len(self.cache.list_projects()), 0)
+        self.assertEqual(len(self.cache.list_projects()), 0)
         self.assertIsNone(self.cache.get_project('000'))
         self.assertFalse(self.cache.delete_project('000'))
 
     def test_project_life_cycle(self):
         """Test creating, accessing, and deleting projects."""
         pj1 = self.cache.create_project({PROPERTY_NAME: 'My First Project'})
-        self.assertEquals(len(self.cache.list_projects()), 1)
+        self.assertEqual(len(self.cache.list_projects()), 1)
         pj2 = self.cache.create_project({PROPERTY_NAME: 'My Second Project'})
-        self.assertEquals(len(self.cache.list_projects()), 2)
-        self.assertEquals(self.cache.get_project(pj1.identifier).identifier, pj1.identifier)
-        self.assertEquals(self.cache.get_project(pj1.identifier).name, 'My First Project')
-        self.assertEquals(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
-        self.assertEquals(self.cache.get_project(pj2.identifier).name, 'My Second Project')
+        self.assertEqual(len(self.cache.list_projects()), 2)
+        self.assertEqual(self.cache.get_project(pj1.identifier).identifier, pj1.identifier)
+        self.assertEqual(self.cache.get_project(pj1.identifier).name, 'My First Project')
+        self.assertEqual(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
+        self.assertEqual(self.cache.get_project(pj2.identifier).name, 'My Second Project')
         # Reload the repository
         self.cache = self.create_cache()
-        self.assertEquals(len(self.cache.list_projects()), 2)
-        self.assertEquals(self.cache.get_project(pj1.identifier).identifier, pj1.identifier)
-        self.assertEquals(self.cache.get_project(pj1.identifier).name, 'My First Project')
-        self.assertEquals(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
-        self.assertEquals(self.cache.get_project(pj2.identifier).name, 'My Second Project')
+        self.assertEqual(len(self.cache.list_projects()), 2)
+        self.assertEqual(self.cache.get_project(pj1.identifier).identifier, pj1.identifier)
+        self.assertEqual(self.cache.get_project(pj1.identifier).name, 'My First Project')
+        self.assertEqual(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
+        self.assertEqual(self.cache.get_project(pj2.identifier).name, 'My Second Project')
         # Delete project
         self.assertTrue(self.cache.delete_project(pj1.identifier))
-        self.assertEquals(len(self.cache.list_projects()), 1)
+        self.assertEqual(len(self.cache.list_projects()), 1)
         self.assertIsNone(self.cache.get_project(pj1.identifier))
-        self.assertEquals(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
+        self.assertEqual(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
         self.assertFalse(self.cache.delete_project(pj1.identifier))
         # Reload the repository
         self.assertFalse(self.cache.delete_project(pj1.identifier))
-        self.assertEquals(len(self.cache.list_projects()), 1)
+        self.assertEqual(len(self.cache.list_projects()), 1)
         self.assertIsNone(self.cache.get_project(pj1.identifier))
-        self.assertEquals(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
+        self.assertEqual(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)
 
 
 if __name__ == '__main__':

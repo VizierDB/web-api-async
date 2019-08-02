@@ -74,29 +74,29 @@ class TestFileSystemDatastore(unittest.TestCase):
             )
         )
         ds = store.get_dataset(ds.identifier)
-        self.assertEquals(len(ds.annotations.cells), 4)
-        self.assertEquals(len(ds.annotations.columns), 1)
-        self.assertEquals(len(ds.annotations.rows), 1)
+        self.assertEqual(len(ds.annotations.cells), 4)
+        self.assertEqual(len(ds.annotations.columns), 1)
+        self.assertEqual(len(ds.annotations.rows), 1)
         annos = ds.annotations.for_cell(column_id=0, row_id=0)
-        self.assertEquals(len(annos), 3)
+        self.assertEqual(len(annos), 3)
         self.assertTrue(1 in [a.value for a in annos])
         self.assertTrue(2 in [a.value for a in annos])
         self.assertFalse(3 in [a.value for a in annos])
-        self.assertEquals(len(ds.annotations.find_all(values=annos, key='X')), 2)
+        self.assertEqual(len(ds.annotations.find_all(values=annos, key='X')), 2)
         with self.assertRaises(ValueError):
             ds.annotations.find_one(values=annos, key='X')
-        self.assertEquals(len(ds.annotations.for_column(column_id=0)), 1)
-        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 1)
+        self.assertEqual(len(ds.annotations.for_column(column_id=0)), 1)
+        self.assertEqual(len(ds.annotations.for_row(row_id=0)), 1)
         annotations = ds.annotations.filter(columns=[1])
-        self.assertEquals(len(annotations.cells), 1)
-        self.assertEquals(len(annotations.columns), 0)
-        self.assertEquals(len(annotations.rows), 1)
+        self.assertEqual(len(annotations.cells), 1)
+        self.assertEqual(len(annotations.columns), 0)
+        self.assertEqual(len(annotations.rows), 1)
         # Reload datastore
         store = FileSystemDatastore(STORE_DIR)
         ds = store.get_dataset(ds.identifier)
-        self.assertEquals(len(ds.annotations.cells), 4)
-        self.assertEquals(len(ds.annotations.columns), 1)
-        self.assertEquals(len(ds.annotations.rows), 1)
+        self.assertEqual(len(ds.annotations.cells), 4)
+        self.assertEqual(len(ds.annotations.columns), 1)
+        self.assertEqual(len(ds.annotations.rows), 1)
 
     def test_create_dataset(self):
         """Test loading a dataset from file."""
@@ -110,34 +110,34 @@ class TestFileSystemDatastore(unittest.TestCase):
         )
         ds = store.get_dataset(ds.identifier)
         column_ids = [col.identifier for col in ds.columns]
-        self.assertEquals(len(ds.columns), 2)
+        self.assertEqual(len(ds.columns), 2)
         for id in [0, 1]:
             self.assertTrue(id in column_ids)
         column_names = [col.name for col in ds.columns]
         for name in ['A', 'B']:
             self.assertTrue(name in column_names)
         rows = ds.fetch_rows()
-        self.assertEquals(len(rows), 1)
-        self.assertEquals(rows[0].values, ['a', 'b'])
-        self.assertEquals(len(ds.annotations.cells), 0)
-        self.assertEquals(len(ds.annotations.columns), 0)
-        self.assertEquals(len(ds.annotations.rows), 0)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].values, ['a', 'b'])
+        self.assertEqual(len(ds.annotations.cells), 0)
+        self.assertEqual(len(ds.annotations.columns), 0)
+        self.assertEqual(len(ds.annotations.rows), 0)
         # Reload the datastore
         store = FileSystemDatastore(STORE_DIR)
         ds = store.get_dataset(ds.identifier)
         column_ids = [col.identifier for col in ds.columns]
-        self.assertEquals(len(ds.columns), 2)
+        self.assertEqual(len(ds.columns), 2)
         for id in [0, 1]:
             self.assertTrue(id in column_ids)
         column_names = [col.name for col in ds.columns]
         for name in ['A', 'B']:
             self.assertTrue(name in column_names)
         rows = ds.fetch_rows()
-        self.assertEquals(len(rows), 1)
-        self.assertEquals(rows[0].values, ['a', 'b'])
-        self.assertEquals(len(ds.annotations.cells), 0)
-        self.assertEquals(len(ds.annotations.columns), 0)
-        self.assertEquals(len(ds.annotations.rows), 0)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].values, ['a', 'b'])
+        self.assertEqual(len(ds.annotations.cells), 0)
+        self.assertEqual(len(ds.annotations.columns), 0)
+        self.assertEqual(len(ds.annotations.rows), 0)
 
     def test_create_base(self):
         """Test that the datastore base directory is created if it does not
@@ -208,30 +208,30 @@ class TestFileSystemDatastore(unittest.TestCase):
             )
         )
         ds = store.get_dataset(ds.identifier)
-        self.assertEquals(len(ds.annotations.cells), 4)
-        self.assertEquals(len(ds.annotations.columns), 2)
-        self.assertEquals(len(ds.annotations.rows), 1)
+        self.assertEqual(len(ds.annotations.cells), 4)
+        self.assertEqual(len(ds.annotations.columns), 2)
+        self.assertEqual(len(ds.annotations.rows), 1)
         annos = ds.annotations.for_cell(column_id=0, row_id=0)
-        self.assertEquals(len(annos), 3)
+        self.assertEqual(len(annos), 3)
         self.assertTrue(1 in [a.value for a in annos])
         self.assertTrue(2 in [a.value for a in annos])
         self.assertFalse(3 in [a.value for a in annos])
-        self.assertEquals(len(ds.annotations.find_all(values=annos, key='X')), 2)
+        self.assertEqual(len(ds.annotations.find_all(values=annos, key='X')), 2)
         with self.assertRaises(ValueError):
             ds.annotations.find_one(values=annos, key='X')
-        self.assertEquals(len(ds.annotations.for_column(column_id=0)), 1)
-        self.assertEquals(len(ds.annotations.for_row(row_id=0)), 1)
+        self.assertEqual(len(ds.annotations.for_column(column_id=0)), 1)
+        self.assertEqual(len(ds.annotations.for_row(row_id=0)), 1)
         annotations = ds.annotations.filter(columns=[1])
-        self.assertEquals(len(annotations.cells), 1)
-        self.assertEquals(len(annotations.columns), 1)
-        self.assertEquals(len(annotations.rows), 1)
+        self.assertEqual(len(annotations.cells), 1)
+        self.assertEqual(len(annotations.columns), 1)
+        self.assertEqual(len(annotations.rows), 1)
 
     def test_download_dataset(self):
         """Test loading a dataset from Url. Note that this test depends on the
         accessed web service to be running. It will fail otherwise."""
         # Skip test if DOWNLOAD_URL is None
         if DOWNLOAD_URL is None:
-            print 'Skipping download test'
+            print('Skipping download test')
             return
         store = FileSystemDatastore(STORE_DIR)
         ds = store.download_dataset(url=DOWNLOAD_URL)
@@ -248,7 +248,7 @@ class TestFileSystemDatastore(unittest.TestCase):
             filestore=fs
         )
         self.validate_class_size_dataset(ds)
-        self.assertEquals(len(fs.list_files()), 1)
+        self.assertEqual(len(fs.list_files()), 1)
         self.assertIsNotNone(fh)
         self.assertIsNotNone(fs.get_file(fh.identifier))
 
@@ -313,25 +313,25 @@ class TestFileSystemDatastore(unittest.TestCase):
             )
         )
         annos = store.get_annotations(ds.identifier, column_id=1)
-        self.assertEquals(len(annos.columns), 1)
-        self.assertEquals(len(annos.rows), 0)
-        self.assertEquals(len(annos.cells), 0)
+        self.assertEqual(len(annos.columns), 1)
+        self.assertEqual(len(annos.rows), 0)
+        self.assertEqual(len(annos.cells), 0)
         annos = store.get_annotations(ds.identifier, column_id=0)
-        self.assertEquals(len(annos.columns), 1)
-        self.assertEquals(len(annos.rows), 0)
-        self.assertEquals(len(annos.cells), 0)
+        self.assertEqual(len(annos.columns), 1)
+        self.assertEqual(len(annos.rows), 0)
+        self.assertEqual(len(annos.cells), 0)
         annos = store.get_annotations(ds.identifier, row_id=0)
-        self.assertEquals(len(annos.columns), 0)
-        self.assertEquals(len(annos.rows), 1)
-        self.assertEquals(len(annos.cells), 0)
+        self.assertEqual(len(annos.columns), 0)
+        self.assertEqual(len(annos.rows), 1)
+        self.assertEqual(len(annos.cells), 0)
         annos = store.get_annotations(ds.identifier, column_id=1, row_id=0)
-        self.assertEquals(len(annos.columns), 0)
-        self.assertEquals(len(annos.rows), 0)
-        self.assertEquals(len(annos.cells), 1)
+        self.assertEqual(len(annos.columns), 0)
+        self.assertEqual(len(annos.rows), 0)
+        self.assertEqual(len(annos.cells), 1)
         annos = store.get_annotations(ds.identifier, column_id=0, row_id=0)
-        self.assertEquals(len(annos.columns), 0)
-        self.assertEquals(len(annos.rows), 0)
-        self.assertEquals(len(annos.cells), 3)
+        self.assertEqual(len(annos.columns), 0)
+        self.assertEqual(len(annos.rows), 0)
+        self.assertEqual(len(annos.cells), 3)
 
     def test_update_annotations(self):
         """Test updating annotations via the datastore."""
@@ -366,7 +366,7 @@ class TestFileSystemDatastore(unittest.TestCase):
             new_value=200
         )
         annos = store.get_annotations(ds.identifier, row_id=0)
-        self.assertEquals(len(annos.rows), 2)
+        self.assertEqual(len(annos.rows), 2)
         for key in ['D', 'E']:
             self.assertTrue(key in [a.key for a in annos.rows])
         for val in [100, 200]:
@@ -380,8 +380,8 @@ class TestFileSystemDatastore(unittest.TestCase):
             new_value='y'
         )
         annos = store.get_annotations(ds.identifier, column_id=1)
-        self.assertEquals(annos.columns[0].key, 'A')
-        self.assertEquals(annos.columns[0].value, 'y')
+        self.assertEqual(annos.columns[0].key, 'A')
+        self.assertEqual(annos.columns[0].value, 'y')
         # DELETE cell annotation
         store.update_annotation(
             ds.identifier,
@@ -391,7 +391,7 @@ class TestFileSystemDatastore(unittest.TestCase):
             old_value=2,
         )
         annos = store.get_annotations(ds.identifier, column_id=0, row_id=0)
-        self.assertEquals(len(annos.cells), 2)
+        self.assertEqual(len(annos.cells), 2)
         for a in annos.cells:
             self.assertNotEqual(a.value, 2)
         result = store.update_annotation(
@@ -403,7 +403,7 @@ class TestFileSystemDatastore(unittest.TestCase):
         )
         self.assertTrue(result)
         annos = store.get_annotations(ds.identifier, column_id=1, row_id=0)
-        self.assertEquals(len(annos.cells), 0)
+        self.assertEqual(len(annos.cells), 0)
 
     def test_validate_dataset(self):
         """Test the validate dataset function."""
@@ -411,26 +411,26 @@ class TestFileSystemDatastore(unittest.TestCase):
         rows = []
         # Empty dataset
         max_col_id, max_row_id = validate_dataset(columns, rows)
-        self.assertEquals(max_col_id, -1)
-        self.assertEquals(max_row_id, -1)
+        self.assertEqual(max_col_id, -1)
+        self.assertEqual(max_row_id, -1)
         max_col_id, max_row_id = validate_dataset(
             columns=columns,
             rows=rows
         )
-        self.assertEquals(max_col_id, -1)
-        self.assertEquals(max_row_id, -1)
+        self.assertEqual(max_col_id, -1)
+        self.assertEqual(max_row_id, -1)
         # Valid set of columns and rows
         columns = [DatasetColumn(0, 'A'), DatasetColumn(10, 'B')]
         rows = [DatasetRow(0, [1, 2]), DatasetRow(4, [None, 2]), DatasetRow(2, [0, 0])]
         max_col_id, max_row_id = validate_dataset(columns, rows)
-        self.assertEquals(max_col_id, 10)
-        self.assertEquals(max_row_id, 4)
+        self.assertEqual(max_col_id, 10)
+        self.assertEqual(max_row_id, 4)
         max_col_id, max_row_id = validate_dataset(
             columns=columns,
             rows=rows
         )
-        self.assertEquals(max_col_id, 10)
-        self.assertEquals(max_row_id, 4)
+        self.assertEqual(max_col_id, 10)
+        self.assertEqual(max_row_id, 4)
         # Column errors
         with self.assertRaises(ValueError):
             validate_dataset(columns + [DatasetColumn()], [])
@@ -446,17 +446,17 @@ class TestFileSystemDatastore(unittest.TestCase):
 
     def validate_class_size_dataset(self, ds):
         """Validate some features of the loaded class size dataset."""
-        self.assertEquals(len(ds.columns), 4)
-        self.assertEquals(ds.max_column_id(), 3)
-        self.assertEquals(ds.column_by_name('average_class_size').identifier, 0)
-        self.assertEquals(ds.column_by_name('grade_or_service_category_').identifier, 1)
-        self.assertEquals(ds.column_by_name('program').identifier, 2)
-        self.assertEquals(ds.column_by_name('core_course_high_schools_only_').identifier, 3)
-        self.assertEquals(ds.row_count, 54)
-        self.assertEquals(ds.max_row_id(), 53)
+        self.assertEqual(len(ds.columns), 4)
+        self.assertEqual(ds.max_column_id(), 3)
+        self.assertEqual(ds.column_by_name('average_class_size').identifier, 0)
+        self.assertEqual(ds.column_by_name('grade_or_service_category_').identifier, 1)
+        self.assertEqual(ds.column_by_name('program').identifier, 2)
+        self.assertEqual(ds.column_by_name('core_course_high_schools_only_').identifier, 3)
+        self.assertEqual(ds.row_count, 54)
+        self.assertEqual(ds.max_row_id(), 53)
         # Get the first row
         row = ds.fetch_rows(offset=0, limit=1)[0]
-        self.assertEquals(row.identifier, 0)
+        self.assertEqual(row.identifier, 0)
         self.assertTrue(isinstance(row.values[0], float))
 
 

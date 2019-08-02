@@ -602,7 +602,7 @@ class MimirVizualApi(VizualApi):
         rs = mimir.vistrailsQueryMimirJson(sql, True, False)
         # The result contains the sorted list of row ids
         rows = rs['prov']
-        rows_idxs = range(len(rows))
+        rows_idxs = list(range(len(rows)))
         # Register new dataset with only a modified list of row identifier
         ds = datastore.register_dataset(
             table_name=view_name,
@@ -645,7 +645,7 @@ class MimirVizualApi(VizualApi):
         col_index = get_index_for_column(dataset, column_id)
         # Raise exception if row id is not valid
         if not row_id in dataset.row_ids:
-            print dataset.row_ids
+            print(dataset.row_ids)
             raise ValueError('invalid row id \'' + str(row_id) + '\'')
         # Create a view for the modified dataset
         col_list = [ROW_ID]

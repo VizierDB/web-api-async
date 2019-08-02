@@ -136,7 +136,7 @@ class SQLTaskProcessor(TaskProcessor):
             else:
                 row_ids = rs['prov']
                 row_count = len(row_ids)
-                row_idxs = range(row_count)
+                row_idxs = list(range(row_count))
                 
                 ds = context.datastore.register_dataset(
                         table_name=view_name,

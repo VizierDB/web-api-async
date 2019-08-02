@@ -21,17 +21,17 @@ class TestDatasetReader(unittest.TestCase):
         # There should be an exception when calling next on a reader that is
         # not open
         with self.assertRaises(StopIteration):
-            reader.next()
+            next(reader)
         reader = reader.open()
-        headline = reader.next()
-        self.assertEquals(headline.values, ['Name','Age','Salary'])
-        reader.next()
-        reader.next()
+        headline = next(reader)
+        self.assertEqual(headline.values, ['Name','Age','Salary'])
+        next(reader)
+        next(reader)
         reader.close()
         # There should be an exception when calling next on a reader that has
         # been closed
         with self.assertRaises(StopIteration):
-            reader.next()
+            next(reader)
         # Ensure that the different file formats are parsed correctly
         self.read_dataset(DelimitedFileReader(CSV_FILE))
         self.read_dataset(DelimitedFileReader(GZIP_CSV_FILE, compressed=True))
@@ -42,16 +42,16 @@ class TestDatasetReader(unittest.TestCase):
         """Test functionality of Json dataset reader."""
         reader = DefaultJsonDatasetReader(JSON_FILE)
         with self.assertRaises(StopIteration):
-            reader.next()
+            next(reader)
         count = 0
         with reader.open() as r:
             for row in r:
-                self.assertEquals(len(row.values), 3)
-                self.assertEquals(row.identifier, count)
+                self.assertEqual(len(row.values), 3)
+                self.assertEqual(row.identifier, count)
                 count += 1
-        self.assertEquals(count, 2)
+        self.assertEqual(count, 2)
         with self.assertRaises(StopIteration):
-            reader.next()
+            next(reader)
         # Create a new dataset and read it
         tmp_file = tempfile.mkstemp()[1]
         reader = DefaultJsonDatasetReader(tmp_file)
@@ -65,10 +65,10 @@ class TestDatasetReader(unittest.TestCase):
         count = 0
         with reader.open() as reader:
             for row in reader:
-                self.assertEquals(len(row.values), 4)
-                self.assertEquals(row.identifier, count)
+                self.assertEqual(len(row.values), 4)
+                self.assertEqual(row.identifier, count)
                 count += 1
-        self.assertEquals(count, len(rows))
+        self.assertEqual(count, len(rows))
         os.remove(tmp_file)
 
     def read_dataset(self, reader):
@@ -76,12 +76,12 @@ class TestDatasetReader(unittest.TestCase):
         count = 0
         with reader.open() as r:
             for row in r:
-                self.assertEquals(len(row.values), 3)
-                self.assertEquals(row.identifier, count)
+                self.assertEqual(len(row.values), 3)
+                self.assertEqual(row.identifier, count)
                 count += 1
-        self.assertEquals(count, 3)
+        self.assertEqual(count, 3)
         with self.assertRaises(StopIteration):
-            reader.next()
+            next(reader)
 
 
 if __name__ == '__main__':

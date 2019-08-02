@@ -24,7 +24,7 @@ import json
 import os
 import unicodecsv
 
-from StringIO import StringIO
+from io import StringIO
 
 from vizier.core.util import dump_json, load_json
 from vizier.core.util import get_unique_identifier, min_max
@@ -119,7 +119,7 @@ class MimirDatastore(DefaultDatastore):
         sql = 'SELECT 1 AS NOP FROM ' + view_name + ';'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         row_ids = rs['prov']
-        row_idxs = range(len(row_ids))
+        row_idxs = list(range(len(row_ids)))
         # Insert the new dataset metadata information into the datastore
         return self.register_dataset(
             table_name=view_name,
@@ -326,8 +326,8 @@ class MimirDatastore(DefaultDatastore):
         sql = 'SELECT 1 AS NOP FROM ' + view_name + ' LIMIT 1;'
         rs = mimir.vistrailsQueryMimirJson(sql, False, False)
         first_row_id = int(rs['prov'][0])
-        row_ids = range(first_row_id, first_row_id+row_count)
-        row_idxs = range(row_count)
+        row_ids = list(range(first_row_id, first_row_id+row_count))
+        row_idxs = list(range(row_count))
         #row_counter = (row_ids[-1] + 1) if len(row_ids) > 0 else 0
         return self.register_dataset(
             table_name=view_name,
@@ -412,7 +412,7 @@ class MimirDatastore(DefaultDatastore):
         #    row_counter = int(rs['data'][0][0]) + 1
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
-            columns=map(base.sanitize_column_name, columns),
+            columns=list(map(base.sanitize_column_name, columns)),
             rowid_column=rowid_column,
             table_name=table_name,
             row_idxs=row_idxs,

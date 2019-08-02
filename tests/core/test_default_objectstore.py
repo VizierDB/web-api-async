@@ -46,7 +46,7 @@ class TestDefaultObjectStore(unittest.TestCase):
         methods.
         """
         store = DefaultObjectStore()
-        self.assertEquals(store.create_folder(BASE_DIRECTORY, identifier='A'), 'A')
+        self.assertEqual(store.create_folder(BASE_DIRECTORY, identifier='A'), 'A')
         self.assertTrue(store.exists(store.join(BASE_DIRECTORY, 'A')))
         self.assertTrue(os.path.isdir(os.path.join(BASE_DIRECTORY, 'A')))
         identifier = store.create_folder(BASE_DIRECTORY)
@@ -83,11 +83,11 @@ class TestDefaultObjectStore(unittest.TestCase):
         store.create_object(BASE_DIRECTORY, identifier='B', content={'id': 100})
         self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B')))
         content = store.read_object(store.join(BASE_DIRECTORY, 'B'))
-        self.assertEquals(content['id'], 100)
+        self.assertEqual(content['id'], 100)
         store.create_object(BASE_DIRECTORY, identifier='A', content={'id': 100})
         self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'A')))
         content = store.read_object(store.join(BASE_DIRECTORY, 'A'))
-        self.assertEquals(content['id'], 100)
+        self.assertEqual(content['id'], 100)
         store.create_object(BASE_DIRECTORY, identifier='B')
         self.assertTrue(os.path.isfile(os.path.join(BASE_DIRECTORY, 'B')))
         with self.assertRaises(ValueError):
@@ -171,33 +171,33 @@ class TestDefaultObjectStore(unittest.TestCase):
         # is not created using the create flag
         dirname = store.join(BASE_DIRECTORY, 'A')
         dirs = store.list_folders(parent_folder=dirname, create=False)
-        self.assertEquals(len(dirs), 0)
+        self.assertEqual(len(dirs), 0)
         self.assertFalse(store.exists(dirname))
         # The result is an empty list after the folder is created using the
         # create flag
         dirs = store.list_folders(parent_folder=dirname, create=True)
-        self.assertEquals(len(dirs), 0)
+        self.assertEqual(len(dirs), 0)
         self.assertTrue(store.exists(dirname))
         # Create directories and files
         os.makedirs(store.join(dirname, 'A'))
         dirs = store.list_folders(parent_folder=dirname)
-        self.assertEquals(len(dirs), 1)
+        self.assertEqual(len(dirs), 1)
         self.assertTrue('A' in dirs)
         os.makedirs(store.join(dirname, 'B'))
         dirs = store.list_folders(parent_folder=dirname, create=True)
-        self.assertEquals(len(dirs), 2)
+        self.assertEqual(len(dirs), 2)
         self.assertTrue('A' in dirs)
         self.assertTrue('B' in dirs)
         filename = store.join(BASE_DIRECTORY, 'A.file')
         store.create_object(BASE_DIRECTORY, identifier='A.file')
         dirs = store.list_folders(parent_folder=dirname, create=True)
-        self.assertEquals(len(dirs), 2)
+        self.assertEqual(len(dirs), 2)
         self.assertTrue('A' in dirs)
         self.assertTrue('B' in dirs)
         # Re-create the store to ensure that this has no effect
         store = DefaultObjectStore()
         dirs = store.list_folders(parent_folder=dirname, create=True)
-        self.assertEquals(len(dirs), 2)
+        self.assertEqual(len(dirs), 2)
         self.assertTrue('A' in dirs)
         self.assertTrue('B' in dirs)
 

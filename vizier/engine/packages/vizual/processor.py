@@ -407,7 +407,7 @@ class VizualTaskProcessor(TaskProcessor):
         )
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
-        print(args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False))
+        print((args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False)))
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
             m_opts.append({'datasourceErrors': 'true'})
         if not options is None:

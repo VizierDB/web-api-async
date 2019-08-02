@@ -18,7 +18,7 @@
 
 import json
 import requests
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from vizier.api.client.resources.branch import BranchResource
 from vizier.api.client.resources.notebook import Notebook
@@ -211,7 +211,7 @@ class VizierApiClient(object):
         """
         # Fetch project resource
         url = self.urls.get_branch(project_id=project_id, branch_id=branch_id)
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = json.loads(response.read())
         # Convert result into instance of the project resource class
         return BranchResource.from_dict(data)
@@ -279,7 +279,7 @@ class VizierApiClient(object):
         """
         # Fetch project resource
         url = self.urls.get_project(project_id)
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = json.loads(response.read())
         # Convert result into instance of the project resource class
         return ProjectResource.from_dict(data)
@@ -313,7 +313,7 @@ class VizierApiClient(object):
                 branch_id=branch_id,
                 workflow_id=workflow_id
             )
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = json.loads(response.read())
         # Convert result into instance of a workflow resource
         return WorkflowResource.from_dict(data)
@@ -322,13 +322,13 @@ class VizierApiClient(object):
         """Print information about the API (from the API service descriptor)."""
         r = requests.get(self.urls.service_descriptor())
         r.raise_for_status()
-        print 'Name    : ' + doc['name']
-        print 'URL     : ' + deserialize.HATEOAS(doc['links'])['self']
-        print 'Engine  : ' + doc['environment']['name']
-        print 'Backend : ' + doc['environment']['backend']
-        print 'Packages: ' + ', '.join(doc['environment']['packages'])
-        print 'Version : ' + doc['environment']['version']
-        print 'Started : ' + doc['startedAt']
+        print('Name    : ' + doc['name'])
+        print('URL     : ' + deserialize.HATEOAS(doc['links'])['self'])
+        print('Engine  : ' + doc['environment']['name'])
+        print('Backend : ' + doc['environment']['backend'])
+        print('Packages: ' + ', '.join(doc['environment']['packages']))
+        print('Version : ' + doc['environment']['version'])
+        print('Started : ' + doc['startedAt'])
 
     def list_branches(self, project_id):
         """Fetch list of project from remote web service API.
@@ -340,7 +340,7 @@ class VizierApiClient(object):
         # There is no separate API call to fetch all project branches. Fetch
         # the project handle instead which will contain the branch descriptors.
         url = self.urls.get_project(project_id)
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = json.loads(response.read())
         # Convert branchs in result into list of branch resources
         branches = list()
@@ -357,7 +357,7 @@ class VizierApiClient(object):
         """
         # Fetch projects listing
         url = self.urls.list_projects()
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = json.loads(response.read())
         # Convert result into list of project resources
         projects = list()

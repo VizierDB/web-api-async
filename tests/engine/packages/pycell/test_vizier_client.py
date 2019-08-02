@@ -46,20 +46,20 @@ class TestVizierClient(unittest.TestCase):
         rows = ds.rows
         ds = client.create_dataset('MyDataset', ds)
         # Ensure the returned dataset contains the input data
-        self.assertEquals([c.name for c in ds.columns], ['Name', 'Age'])
-        self.assertEquals([str(v) for v in ds.rows[0].values], ['Alice', '23'])
-        self.assertEquals([str(v) for v in ds.rows[1].values], ['Bob', '25'])
+        self.assertEqual([c.name for c in ds.columns], ['Name', 'Age'])
+        self.assertEqual([str(v) for v in ds.rows[0].values], ['Alice', '23'])
+        self.assertEqual([str(v) for v in ds.rows[1].values], ['Bob', '25'])
         # Modify the reference to the original rows to ensure that the rows in
         # the loaded datasets are not affected
-        self.assertEquals([str(v) for v in rows[0].values], ['Alice', '23'])
+        self.assertEqual([str(v) for v in rows[0].values], ['Alice', '23'])
         rows[0].set_value(0, 'Jane')
-        self.assertEquals([str(v) for v in rows[0].values], ['Jane', '23'])
-        self.assertEquals([str(v) for v in ds.rows[0].values], ['Alice', '23'])
+        self.assertEqual([str(v) for v in rows[0].values], ['Jane', '23'])
+        self.assertEqual([str(v) for v in ds.rows[0].values], ['Alice', '23'])
         # Update dataset
         ds.rows[1].set_value('Age', '26')
         client.update_dataset('MyDataset', ds)
         ds = client.get_dataset('MyDataset')
-        self.assertEquals([str(v) for v in ds.rows[1].values], ['Bob', '26'])
+        self.assertEqual([str(v) for v in ds.rows[1].values], ['Bob', '26'])
         # Value error when creating dataset with existing name
         with self.assertRaises(ValueError):
             client.create_dataset('MyDataset', ds)
@@ -92,22 +92,22 @@ class TestVizierClient(unittest.TestCase):
         annotations.add(key='comment', value='Good', column_id=1, row_id=1)
         annotations.add(key='quality', value='Nice', column_id=0, row_id=1)
         ds = client.update_dataset(name=DATASET_NAME, dataset=ds)
-        self.assertEquals(len(ds.annotations.cells), 3)
+        self.assertEqual(len(ds.annotations.cells), 3)
         ds = client.get_dataset(DATASET_NAME)
-        self.assertEquals(len(ds.annotations.cells), 3)
+        self.assertEqual(len(ds.annotations.cells), 3)
         row = ds.rows[1]
         annotations = row.annotations(0)
         for key in ['comment', 'quality']:
-            self.assertTrue(key in annotations.keys())
+            self.assertTrue(key in list(annotations.keys()))
         annotations = row.annotations(1)
-        self.assertTrue('comment' in annotations.keys())
-        self.assertFalse('quality' in annotations.keys())
+        self.assertTrue('comment' in list(annotations.keys()))
+        self.assertFalse('quality' in list(annotations.keys()))
         row.set_value(0, 'New Value', clear_annotations=True)
-        self.assertEquals(len(ds.annotations.cells), 1)
+        self.assertEqual(len(ds.annotations.cells), 1)
         ds = client.update_dataset(name=DATASET_NAME, dataset=ds)
-        self.assertEquals(len(ds.annotations.cells), 1)
+        self.assertEqual(len(ds.annotations.cells), 1)
         ds = client.get_dataset(DATASET_NAME)
-        self.assertEquals(len(ds.annotations.cells), 1)
+        self.assertEqual(len(ds.annotations.cells), 1)
 
     def test_update_existing_dataset(self):
         """Test creating and updating an existing dataset via the client."""
@@ -126,23 +126,23 @@ class TestVizierClient(unittest.TestCase):
         ds = client.update_dataset(DATASET_NAME, ds)
         for i in range(len(ds.rows)):
             row = ds.rows[i]
-            self.assertEquals(row.values[1], col_2[i])
-            self.assertEquals(row.values[2], col_1[i])
+            self.assertEqual(row.values[1], col_2[i])
+            self.assertEqual(row.values[2], col_1[i])
         # Rename
         ds.columns[1].name = 'allnone'
         ds = client.update_dataset(DATASET_NAME, ds)
         for i in range(len(ds.rows)):
             row = ds.rows[i]
-            self.assertEquals(row.get_value('allnone'), col_2[i])
-            self.assertEquals(row.values[2], col_1[i])
+            self.assertEqual(row.get_value('allnone'), col_2[i])
+            self.assertEqual(row.values[2], col_1[i])
         # Insert row
         row = ds.insert_row()
         row.set_value('Name', 'Zoe')
         ds = client.create_dataset('upd', ds)
-        self.assertEquals(len(ds.rows), 3)
+        self.assertEqual(len(ds.rows), 3)
         r2 = ds.rows[2]
-        self.assertEquals(r2.identifier, 2)
-        self.assertEquals(r2.values, ['Zoe', None, None, None])
+        self.assertEqual(r2.identifier, 2)
+        self.assertEqual(r2.values, ['Zoe', None, None, None])
         # Annotations
         ds = client.get_dataset(DATASET_NAME)
         col = ds.get_column('Age')
@@ -155,10 +155,10 @@ class TestVizierClient(unittest.TestCase):
         )
         ds = client.update_dataset(DATASET_NAME, ds)
         annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        self.assertEquals(len(annotations), 1)
+        self.assertEqual(len(annotations), 1)
         anno = annotations[0]
-        self.assertEquals(anno.key, 'user:comment')
-        self.assertEquals(anno.value, 'My Comment')
+        self.assertEqual(anno.key, 'user:comment')
+        self.assertEqual(anno.value, 'My Comment')
         ds.annotations.add(
             column_id=col.identifier,
             row_id=row.identifier,
@@ -167,8 +167,8 @@ class TestVizierClient(unittest.TestCase):
         )
         ds = client.update_dataset(DATASET_NAME, ds)
         annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        self.assertEquals(len(annotations), 2)
-        self.assertEquals(ds.rows[0].annotations('Age').keys(), ['user:comment'])
+        self.assertEqual(len(annotations), 2)
+        self.assertEqual(list(ds.rows[0].annotations('Age').keys()), ['user:comment'])
         values = [a.value for a in annotations]
         for val in ['My Comment', 'Another Comment']:
             self.assertTrue(val in values)
@@ -177,8 +177,8 @@ class TestVizierClient(unittest.TestCase):
         anno.value = 'Some Issue'
         ds = client.update_dataset(DATASET_NAME, ds)
         annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        self.assertEquals(len(annotations), 1)
-        keys = ds.rows[0].annotations('Age').keys()
+        self.assertEqual(len(annotations), 1)
+        keys = list(ds.rows[0].annotations('Age').keys())
         for key in ['user:comment', 'user:issue']:
             self.assertTrue(key in keys)
         values = [a.value for a in ds.rows[0].annotations('Age').find_all('user:issue')]
@@ -191,9 +191,9 @@ class TestVizierClient(unittest.TestCase):
         )
         ds = client.update_dataset(DATASET_NAME, ds)
         annotations = ds.rows[0].annotations('Age').find_all('user:issue')
-        self.assertEquals(len(annotations), 0)
+        self.assertEqual(len(annotations), 0)
         annotations = ds.rows[0].annotations('Age').find_all('user:comment')
-        self.assertEquals(len(annotations), 1)
+        self.assertEqual(len(annotations), 1)
         # Delete column
         ds = client.get_dataset(DATASET_NAME)
         ds.delete_column('Age')

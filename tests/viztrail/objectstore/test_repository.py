@@ -40,7 +40,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         vt1 = repo.create_viztrail()
         vt_folder = os.path.join(REPO_DIR, vt1.identifier)
         self.assertFalse(os.path.isdir(vt_folder))
-        self.assertEquals(len(os.listdir(REPO_DIR)), 0)
+        self.assertEqual(len(os.listdir(REPO_DIR)), 0)
 
     def test_create_viztrail(self):
         """Test creating a new viztrail."""
@@ -58,7 +58,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         vt2 = repo.create_viztrail(properties={PROPERTY_NAME: 'My Viztrail'})
         vt_folder = os.path.join(REPO_DIR, vt2.identifier)
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
-        self.assertEquals(len(repo.list_viztrails()), 2)
+        self.assertEqual(len(repo.list_viztrails()), 2)
         # Ensure that each element in the listing has an identifier
         for vt in repo.list_viztrails():
             self.assertIsNotNone(vt.identifier)
@@ -66,21 +66,21 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         self.assertNotEqual(vt1.identifier, vt2.identifier)
         self.assertIsNone(vt1.name)
-        self.assertEquals(vt2.name, 'My Viztrail')
+        self.assertEqual(vt2.name, 'My Viztrail')
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         vt_index = repo.object_store.read_object(repo.viztrails_index)
         self.assertTrue(vt1.identifier in vt_index)
         self.assertTrue(vt2.identifier in vt_index)
         # Reload the repository
         repo = OSViztrailRepository(base_path=REPO_DIR)
-        self.assertEquals(len(repo.list_viztrails()), 2)
+        self.assertEqual(len(repo.list_viztrails()), 2)
         vt1 = repo.get_viztrail(vt1.identifier)
         vt2 = repo.get_viztrail(vt2.identifier)
         self.assertIsNotNone(vt1)
         self.assertIsNotNone(vt2)
         self.assertNotEqual(vt1.identifier, vt2.identifier)
         self.assertIsNone(vt1.name)
-        self.assertEquals(vt2.name, 'My Viztrail')
+        self.assertEqual(vt2.name, 'My Viztrail')
 
     def test_delete_viztrail(self):
         """Test creating a new viztrail."""
@@ -92,22 +92,22 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertFalse(repo.delete_viztrail(vt1.identifier + vt2.identifier))
         # Reload the repository
         repo = OSViztrailRepository(base_path=REPO_DIR)
-        self.assertEquals(len(repo.list_viztrails()), 2)
+        self.assertEqual(len(repo.list_viztrails()), 2)
         self.assertTrue(repo.delete_viztrail(vt1.identifier))
-        self.assertEquals(len(repo.list_viztrails()), 1)
+        self.assertEqual(len(repo.list_viztrails()), 1)
         self.assertIsNone(repo.get_viztrail(vt1.identifier))
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         # Reload the repository
         repo = OSViztrailRepository(base_path=REPO_DIR)
-        self.assertEquals(len(repo.list_viztrails()), 1)
+        self.assertEqual(len(repo.list_viztrails()), 1)
         self.assertIsNone(repo.get_viztrail(vt1.identifier))
         self.assertIsNotNone(repo.get_viztrail(vt2.identifier))
         self.assertFalse(repo.delete_viztrail(vt1.identifier))
         self.assertTrue(repo.delete_viztrail(vt2.identifier))
-        self.assertEquals(len(repo.list_viztrails()), 0)
+        self.assertEqual(len(repo.list_viztrails()), 0)
         # Reload the repository
         repo = OSViztrailRepository(base_path=REPO_DIR)
-        self.assertEquals(len(repo.list_viztrails()), 0)
+        self.assertEqual(len(repo.list_viztrails()), 0)
         self.assertFalse(repo.delete_viztrail(vt1.identifier))
         self.assertFalse(repo.delete_viztrail(vt2.identifier))
 

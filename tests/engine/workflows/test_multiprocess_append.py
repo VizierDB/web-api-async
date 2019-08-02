@@ -74,13 +74,13 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
             module = wf.modules[i]
             self.assertTrue(module.is_success or module.is_canceled)
             if module.is_success:
-                self.assertEquals(len(module.outputs.stdout), 1)
-                self.assertEquals(module.outputs.stdout[0].value, 'DONE')
+                self.assertEqual(len(module.outputs.stdout), 1)
+                self.assertEqual(module.outputs.stdout[0].value, 'DONE')
             else:
                 canceled_count += 1
         self.assertTrue(canceled_count > 0)
         # All workflows in the branch history should be finished as well
-        self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
+        self.assertEqual(len(project.viztrail.default_branch.get_history()), 10)
 
     def test_error(self):
         """Test running a sequence of steps where one generates an error."""
@@ -109,7 +109,7 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
             else:
                 self.assertTrue(module.is_canceled)
         # All workflows in the branch history should be finished as well
-        self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
+        self.assertEqual(len(project.viztrail.default_branch.get_history()), 10)
 
     def test_execute_with_error(self):
         """Test running a sequence of statements where we (potentially)append to
@@ -170,11 +170,11 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         for i in range(10):
             module = wf.modules[i]
             self.assertTrue(module.is_success)
-            self.assertEquals(len(module.outputs.stdout), 1)
-            self.assertEquals(module.outputs.stdout[0].value, str(i+i))
-            self.assertEquals(len(module.outputs.stderr), 0)
+            self.assertEqual(len(module.outputs.stdout), 1)
+            self.assertEqual(module.outputs.stdout[0].value, str(i+i))
+            self.assertEqual(len(module.outputs.stderr), 0)
         # All workflows in the branch history should be finished as well
-        self.assertEquals(len(project.viztrail.default_branch.get_history()), 10)
+        self.assertEqual(len(project.viztrail.default_branch.get_history()), 10)
 
 
 if __name__ == '__main__':

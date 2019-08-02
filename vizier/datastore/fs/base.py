@@ -24,7 +24,7 @@ import json
 import os
 import shutil
 import tempfile
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
@@ -183,7 +183,7 @@ class FileSystemDatastore(DefaultDatastore):
             # Manually download the file temporarily
             temp_dir = tempfile.mkdtemp()
             try:
-                response = urllib2.urlopen(url)
+                response = urllib.request.urlopen(url)
                 filename = get_download_filename(url, response.info())
                 download_file = os.path.join(temp_dir, filename)
                 mode = 'w'
@@ -259,7 +259,7 @@ class FileSystemDatastore(DefaultDatastore):
         rows = []
         with f_handle.open() as csvfile:
             reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
-            for col_name in reader.next():
+            for col_name in next(reader):
                 columns.append(
                     DatasetColumn(
                         identifier=len(columns),

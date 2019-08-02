@@ -75,7 +75,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         dataset_id = result.provenance.write[DATASET_NAME].identifier
         self.assertIsNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.resources)
-        self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
+        self.assertEqual(result.provenance.resources[RESOURCE_DATASET], dataset_id)
 
     def load_dataset(self):
         """Load a single dataset and return the resulting database state."""
@@ -189,7 +189,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         dataset_id = result.provenance.write['abc'].identifier
         self.assertIsNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.resources)
-        self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
+        self.assertEqual(result.provenance.resources[RESOURCE_DATASET], dataset_id)
         # Running load again will not change the dataset identifier
         result = self.processor.compute(
             command_id=cmd.command_id,
@@ -200,8 +200,8 @@ class TestDefaultVizualProcessor(unittest.TestCase):
                 resources=result.provenance.resources
             )
         )
-        self.assertEquals(result.provenance.write['abc'].identifier, dataset_id)
-        self.assertEquals(result.provenance.resources[RESOURCE_DATASET], dataset_id)
+        self.assertEqual(result.provenance.write['abc'].identifier, dataset_id)
+        self.assertEqual(result.provenance.resources[RESOURCE_DATASET], dataset_id)
 
     def test_move_column(self):
         """Test functionality to move a column."""
@@ -296,7 +296,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         )
         self.assertNotEqual(result.provenance.write[DATASET_NAME].identifier, dataset_id)
         self.assertIsNotNone(result.provenance.read)
-        self.assertEquals(result.provenance.read[DATASET_NAME], dataset_id)
+        self.assertEqual(result.provenance.read[DATASET_NAME], dataset_id)
         self.assertIsNotNone(result.provenance.write)
         with self.assertRaises(ValueError):
             result = self.processor.compute(

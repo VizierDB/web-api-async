@@ -57,7 +57,7 @@ def main(args):
             # Print the URL of the API in the configuration file
             config = read_object_from_file(config_file)
             print_header()
-            print '\nConnected to API at ' + config['url']
+            print('\nConnected to API at ' + config['url'])
             return
         if not os.path.isdir(app_dir):
             os.makedirs(app_dir)

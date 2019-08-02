@@ -84,7 +84,7 @@ class TestOSBranchCache(unittest.TestCase):
                 action=ACTION_INSERT,
                 command=command
             )
-            self.assertEquals(len(branch.cache), (i + 1))
+            self.assertEqual(len(branch.cache), (i + 1))
             self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
         module = OSModuleHandle.create_module(
             command=command,
@@ -107,7 +107,7 @@ class TestOSBranchCache(unittest.TestCase):
             command=command
         )
         # The active workflow should not be removed
-        self.assertEquals(len(branch.cache), DEFAULT_CACHE_SIZE + 1)
+        self.assertEqual(len(branch.cache), DEFAULT_CACHE_SIZE + 1)
         self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
         # Set module state to error and append another workflow. This should
         # evict two workflows
@@ -135,7 +135,7 @@ class TestOSBranchCache(unittest.TestCase):
             command=command
         )
         # The active workflow should not be removed
-        self.assertEquals(len(branch.cache), DEFAULT_CACHE_SIZE)
+        self.assertEqual(len(branch.cache), DEFAULT_CACHE_SIZE)
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
         self.assertFalse(second_wf.identifier in [w.identifier for w in branch.cache])
         self.assertTrue(third_wf.identifier in [w.identifier for w in branch.cache])
@@ -193,7 +193,7 @@ class TestOSBranchCache(unittest.TestCase):
                 action=ACTION_INSERT,
                 command=command
             )
-            self.assertEquals(len(branch.cache), (i + 1))
+            self.assertEqual(len(branch.cache), (i + 1))
             self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
         module = OSModuleHandle.create_module(
             command=command,
@@ -215,18 +215,18 @@ class TestOSBranchCache(unittest.TestCase):
             action=ACTION_INSERT,
             command=command
         )
-        self.assertEquals(len(branch.cache), DEFAULT_CACHE_SIZE)
+        self.assertEqual(len(branch.cache), DEFAULT_CACHE_SIZE)
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
         vt = OSViztrailHandle.load_viztrail(base_path)
         branch = vt.get_default_branch()
-        self.assertEquals(len(branch.cache), 0)
+        self.assertEqual(len(branch.cache), 0)
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
         branch.get_workflow(wf.identifier)
         self.assertTrue(wf.identifier in [w.identifier for w in branch.cache])
         for wf_desc in branch.get_history():
             if wf_desc.identifier != wf.identifier:
                 branch.get_workflow(wf_desc.identifier)
-        self.assertEquals(len(branch.cache), DEFAULT_CACHE_SIZE)
+        self.assertEqual(len(branch.cache), DEFAULT_CACHE_SIZE)
         self.assertFalse(wf.identifier in [w.identifier for w in branch.cache])
 
 

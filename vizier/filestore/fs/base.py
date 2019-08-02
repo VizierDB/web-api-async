@@ -23,7 +23,7 @@ import json
 import os
 import shutil
 import tempfile
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import Filestore, FileHandle
@@ -103,7 +103,7 @@ class FileSystemFilestore(Filestore):
         file_dir = self.get_file_dir(identifier, create=True)
         output_file = os.path.join(file_dir, DATA_FILENAME)
         # Write web resource to output file.
-        response = urllib2.urlopen(url)
+        response = urllib.request.urlopen(url)
         filename = get_download_filename(url, response.info())
         mode = 'w'
         if filename.endswith('.gz'):

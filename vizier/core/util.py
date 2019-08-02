@@ -98,7 +98,7 @@ def encode_values(values):
     """
     result = list()
     for val in values:
-        if isinstance(val, basestring):
+        if isinstance(val, str):
             try:
                 result.append(val.encode('utf-8'))
             except UnicodeDecodeError as ex:

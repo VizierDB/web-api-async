@@ -13,34 +13,34 @@ class TestUrlFactoryInit(unittest.TestCase):
     def test_init_url_factory(self):
         """Test initializing the main url factory."""
         urls = UrlFactory(base_url='http://abc.com/////')
-        self.assertEquals(urls.base_url, 'http://abc.com')
+        self.assertEqual(urls.base_url, 'http://abc.com')
         self.assertIsNone(urls.api_doc_url)
         urls = UrlFactory(base_url='http://abc.com/////', api_doc_url='ABC')
-        self.assertEquals(urls.base_url, 'http://abc.com')
-        self.assertEquals(urls.api_doc_url, 'ABC')
+        self.assertEqual(urls.base_url, 'http://abc.com')
+        self.assertEqual(urls.api_doc_url, 'ABC')
         # Override API doc url via properties
         urls = UrlFactory(
             base_url='http://abc.com/////',
             api_doc_url='ABC',
             properties={PROPERTIES_APIDOCURL: 'XYZ'}
         )
-        self.assertEquals(urls.base_url, 'http://abc.com')
-        self.assertEquals(urls.api_doc_url, 'XYZ')
+        self.assertEqual(urls.base_url, 'http://abc.com')
+        self.assertEqual(urls.api_doc_url, 'XYZ')
         # Override base url via properties
         urls = UrlFactory(
             base_url='http://abc.com/////',
             api_doc_url='ABC',
             properties={PROPERTIES_BASEURL: 'XYZ'}
         )
-        self.assertEquals(urls.base_url, 'XYZ')
-        self.assertEquals(urls.api_doc_url, 'ABC')
+        self.assertEqual(urls.base_url, 'XYZ')
+        self.assertEqual(urls.api_doc_url, 'ABC')
         # Initialize only via properties
         urls = UrlFactory(properties={
             PROPERTIES_BASEURL: 'XYZ',
             PROPERTIES_APIDOCURL: 'ABC'
         })
-        self.assertEquals(urls.base_url, 'XYZ')
-        self.assertEquals(urls.api_doc_url, 'ABC')
+        self.assertEqual(urls.base_url, 'XYZ')
+        self.assertEqual(urls.api_doc_url, 'ABC')
         # Value error if base url is not set
         with self.assertRaises(ValueError):
             urls = UrlFactory(
@@ -51,14 +51,14 @@ class TestUrlFactoryInit(unittest.TestCase):
     def test_tasks_url_factory(self):
         """Initialize the task url factory."""
         fact = TaskUrlFactory(base_url='http://abc.com/////')
-        self.assertEquals(fact.base_url, 'http://abc.com')
-        self.assertEquals(fact.set_task_state(task_id='TID'), 'http://abc.com/tasks/TID')
+        self.assertEqual(fact.base_url, 'http://abc.com')
+        self.assertEqual(fact.set_task_state(task_id='TID'), 'http://abc.com/tasks/TID')
         # Initialize from class loader
         fact = TaskUrlFactory(
             base_url='http://abc.com/////',
             properties={PROPERTIES_BASEURL: 'XYZ'}
         )
-        self.assertEquals(fact.base_url, 'XYZ')
+        self.assertEqual(fact.base_url, 'XYZ')
         # Value error is no url factory is given
         with self.assertRaises(ValueError):
             TaskUrlFactory()
