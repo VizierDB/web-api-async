@@ -1,6 +1,10 @@
-RUNNER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SITE_PACKAGES_DIR=$RUNNER_DIR/../lib/python2.7/site-packages
-USER_DATA_DIR=~/
+#!/bin/bash
+
+set -eu
+
+CWD="$(pwd)"
+RUNNER_DIR=$(exec 2>/dev/null;cd -- $(dirname "$0"); unset PWD; /usr/bin/pwd || /bin/pwd || pwd)
+USER_DATA_DIR="${USER_DATA_DIR:-$CWD/}"
 APP_DATA_DIR=$RUNNER_DIR/../
 STATIC_UI_FILES_DIR=${APP_DATA_DIR}web-ui/build/
 
@@ -85,6 +89,9 @@ export VIZIERWORKER_LOG_DIR
 VIZIERWORKER_CONTROLLER_URL="${VIZIERWORKER_CONTROLLER_URL:-http://localhost:5000/vizier-db/api/v1}"
 export VIZIERWORKER_CONTROLLER_URL
 
+COURSIER_CACHE="${COURSIER_CACHE:-${USER_DATA_DIR}/mimir/cache}"
+export COURSIER_CACHE
+
 MIMIR_HOST="${MIMIR_HOST:-"127.0.0.1"}"
 export MIMIR_HOST
 MIMIR_URL="${MIMIR_URL:-"http://127.0.0.1:8089/api/v2/"}"
@@ -103,6 +110,16 @@ export WEB_UI_STATIC_FILES
 # https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
 # the work around is to tell python to skip this check which works, but if you need proxy you are SOL
 export no_proxy='*'
+
+REQ_JAVA_VER="8"
+JAVA_VER=$(java -version 2>&1 | grep -i version | sed 's/.*version ".*\.\(.*\)\..*"/\1/; 1q')
+
+if [ $JAVA_VER != $REQ_JAVA_VER ]
+then
+    echo "Java version $REQ_JAVA_VER is required. You have: $JAVA_VER"
+    echo "Please install java $REQ_JAVA_VER and try again: apt install openjdk-$REQ_JAVA_VER-jre"
+    exit 1
+fi
 
 trap "kill 0" EXIT
 
