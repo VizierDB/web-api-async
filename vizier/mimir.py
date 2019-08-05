@@ -24,6 +24,13 @@ import os
 
 _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
+def readResponse(resp):
+    try:
+        jsonResponse = resp.json()
+        if 
+    except:
+        raise ValueError('Unknown error while making a request to mimir.')
+
 def createLens(dataset, params, type, make_input_certain, materialize, human_readable_name = None):
     req_json = {
       "input": dataset,
