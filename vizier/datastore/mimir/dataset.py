@@ -25,7 +25,6 @@ from vizier.datastore.mimir.reader import MimirDatasetReader
 
 import vizier.mimir as mimir
 
-
 """Mimir annotation keys."""
 ANNO_UNCERTAIN = 'mimir:uncertain'
 
@@ -152,7 +151,7 @@ class MimirDatasetColumn(DatasetColumn):
         # convert the given argument to check whether it actually is a numeric
         # value. Note that we always return a string beacuse the result is
         # intended to be concatenated as part of a SQL query string.
-        if self.is_numeric():
+        if self.data_type.lower() in ['int', 'real']:
             try:
                 int(value)
                 return str(value)
@@ -194,6 +193,9 @@ class MimirDatasetColumn(DatasetColumn):
         return '\'' + str(value) + '\''
 
 
+MIMIR_ROWID_COL= MimirDatasetColumn( name_in_dataset='', data_type='rowid')
+
+
 class MimirDatasetHandle(DatasetHandle):
     """Internal descriptor for datasets managed by the Mimir data store.
     Contains mapping for column names from a dataset to the corresponding object
@@ -201,7 +203,7 @@ class MimirDatasetHandle(DatasetHandle):
     dataset.
     """
     def __init__(
-        self, identifier, columns, rowid_column, table_name, row_idxs, row_ids,
+        self, identifier, columns, table_name,
         row_counter, annotations=None
     ):
         """Initialize the descriptor.
@@ -213,14 +215,8 @@ class MimirDatasetHandle(DatasetHandle):
         columns: list(vizier.datastore.mimir.MimirDatasetColumn)
             List of column names in the dataset schema and their corresponding
             names in the relational database table or view.
-        rowid_column: vizier.datastore.mimir.MimirDatasetColumn
-            Descriptor for unique row id column
         table_name: string
             Reference to relational database table containing the dataset.
-        row_idxs: list(int)
-            List of row indexes. Determines the order of rows in the dataset
-        row_ids: list(string)
-            List of row ids. for provenance of dataset
         row_counter: int
             Counter for unique row ids
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata
@@ -229,13 +225,10 @@ class MimirDatasetHandle(DatasetHandle):
         super(MimirDatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=len(row_ids),
+            row_count=row_counter,
             annotations=annotations
         )
-        self.rowid_column = rowid_column
         self.table_name = table_name
-        self.row_idxs = row_idxs
-        self.row_ids = row_ids
         self.row_counter = row_counter
 
     @staticmethod
@@ -258,10 +251,7 @@ class MimirDatasetHandle(DatasetHandle):
         return MimirDatasetHandle(
             identifier=doc['id'],
             columns=[MimirDatasetColumn.from_dict(obj) for obj in doc['columns']],
-            rowid_column=MimirDatasetColumn.from_dict(doc['rowIdColumn']),
             table_name=doc['tableName'],
-            row_idxs=doc['idxs'],
-            row_ids=doc['rows'],
             row_counter=doc['rowCounter']
         )
 
@@ -301,7 +291,7 @@ class MimirDatasetHandle(DatasetHandle):
         else:
             annotations = self.annotations.for_cell(
                 column_id=column_id,
-                row_id=int(row_id)
+                row_id=row_id
             )
             column = self.column_by_id(column_id)
             sql = 'SELECT * '
@@ -329,7 +319,7 @@ class MimirDatasetHandle(DatasetHandle):
                                 key=ANNO_UNCERTAIN,
                                 value=value,
                                 column_id=column_id,
-                                row_id=int(row_id)
+                                row_id=row_id
                             )
                         )
             return annotations
@@ -342,7 +332,7 @@ class MimirDatasetHandle(DatasetHandle):
         -------
         int
         """
-        return max(self.row_idxs) if len(self.row_idxs) > 0 else -1
+        return self.row_counter
 
     def reader(self, offset=0, limit=-1, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional
@@ -363,9 +353,6 @@ class MimirDatasetHandle(DatasetHandle):
         return MimirDatasetReader(
             table_name=self.table_name,
             columns=self.columns,
-            row_idxs=self.row_idxs,
-            row_ids=self.row_ids,
-            rowid_column_numeric=self.rowid_column.is_numeric(),
             offset=offset,
             limit=limit,
             rowid=rowid
@@ -382,9 +369,6 @@ class MimirDatasetHandle(DatasetHandle):
         doc = {
             'id': self.identifier,
             'columns': [col.to_dict() for col in self.columns],
-            'rowIdColumn': self.rowid_column.to_dict(),
-            'idxs': self.row_idxs,
-            'rows': self.row_ids,
             'tableName': str(self.table_name),
             'rowCounter': self.row_counter
         }
