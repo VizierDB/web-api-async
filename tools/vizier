@@ -16,7 +16,7 @@ export VIZIERSERVER_NAME
 VIZIERSERVER_LOG_DIR="${VIZIERSERVER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs}"
 export VIZIERSERVER_LOG_DIR
 # Flag indicating whether server is started in debug mode (DEFAULT: True)
-VIZIERSERVER_DEBUG="${VIZIERSERVER_DEBUG:-True}"
+VIZIERSERVER_DEBUG="${VIZIERSERVER_DEBUG:-False}"
 export VIZIERSERVER_DEBUG
 
 #Web Service
@@ -89,8 +89,8 @@ export VIZIERWORKER_LOG_DIR
 VIZIERWORKER_CONTROLLER_URL="${VIZIERWORKER_CONTROLLER_URL:-http://localhost:5000/vizier-db/api/v1}"
 export VIZIERWORKER_CONTROLLER_URL
 
-COURSIER_CACHE="${COURSIER_CACHE:-${USER_DATA_DIR}/mimir/cache}"
-export COURSIER_CACHE
+#COURSIER_CACHE="${COURSIER_CACHE:-${APP_DATA_DIR}mimir/cache}"
+#export COURSIER_CACHE
 
 MIMIR_HOST="${MIMIR_HOST:-"127.0.0.1"}"
 export MIMIR_HOST
@@ -114,7 +114,7 @@ export no_proxy='*'
 REQ_JAVA_VER="8"
 JAVA_VER=$(java -version 2>&1 | grep -i version | sed 's/.*version ".*\.\(.*\)\..*"/\1/; 1q')
 
-if [ $JAVA_VER != $REQ_JAVA_VER ]
+if [ "$JAVA_VER" != "$REQ_JAVA_VER" ]
 then
     echo "Java version $REQ_JAVA_VER is required. You have: $JAVA_VER"
     echo "Please install java $REQ_JAVA_VER and try again: apt install openjdk-$REQ_JAVA_VER-jre"

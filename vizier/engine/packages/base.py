@@ -171,8 +171,8 @@ DATA_TYPES = [
 ]
 
 """Argument data types that expect an integer or string values."""
-INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX, DT_ROW_ID]
-STRING_TYPES = [DT_DATASET_ID, DT_STRING, DT_CODE]
+INT_TYPES = [DT_COLUMN_ID, DT_INT, DT_ROW_INDEX]
+STRING_TYPES = [DT_DATASET_ID, DT_STRING, DT_CODE, DT_ROW_ID]
 
 
 

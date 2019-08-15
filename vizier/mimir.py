@@ -24,6 +24,27 @@ import os
 
 _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
+class MimirError(Exception):
+    def __init___(self,dErrorArguments):
+        Exception.__init__(self,"mimir exception with arguments {0}".format(dErrArguments))
+        self.dErrorArguments = dErrorArguements
+
+def readResponse(resp):
+    json_object = None
+    try:
+        json_object = resp.json()
+    except Exception as e: 
+        raise MimirError(e)
+    try:
+        if not json_object['errorType'] is None and not json_object['errorMessage'] is None:
+            message = str(json_object['errorType']) + ": " + str(json_object['errorMessage'])
+            if str(os.environ.get('VIZIERSERVER_DEBUG', False)) == "True":
+                message = message + "\n" + str(json_object['stackTrace'])
+            raise MimirError(message)
+    except KeyError as ke: 
+        pass
+    return json_object
+
 def createLens(dataset, params, type, make_input_certain, materialize, human_readable_name = None):
     req_json = {
       "input": dataset,
@@ -32,16 +53,16 @@ def createLens(dataset, params, type, make_input_certain, materialize, human_rea
       "materialize": materialize,
       "humanReadableName": human_readable_name
     }
-    resp = requests.post(_mimir_url + 'lens/create', json=req_json)
-    return resp.json()
+    resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
+    return resp
 
 def createView(dataset, query):
     req_json = {
       "input": dataset,
       "query": query
     }
-    resp = requests.post(_mimir_url + 'view/create', json=req_json)
-    return resp.json()['viewName']
+    resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
+    return resp['viewName']
         
 def createAdaptiveSchema(dataset, params, type):
     req_json = {
@@ -49,8 +70,8 @@ def createAdaptiveSchema(dataset, params, type):
       "params": params,
       "type": type
     } 
-    resp = requests.post(_mimir_url + 'adaptive/create', json=req_json)
-    return resp.json()['adaptiveSchemaName']
+    resp = readResponse(requests.post(_mimir_url + 'adaptive/create', json=req_json))
+    return resp['adaptiveSchemaName']
     
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
@@ -65,8 +86,8 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
     }
     if human_readable_name != None:
       req_json["humanReadableName"] = human_readable_name
-    resp = requests.post(_mimir_url + 'dataSource/load', json=req_json)
-    return resp.json()['name']
+    resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
+    return resp['name']
     
 def repairReason(reasons, reasonIdx):
     return ''
@@ -79,7 +100,7 @@ def feedback(reasons, idx, ack, rvalue):
       "ack": ack,
       "repairStr": rvalue
     } 
-    resp = requests.post(_mimir_url + 'annotations/feedback', json=req_json)
+    resp = readResponse(requests.post(_mimir_url + 'annotations/feedback', json=req_json))
     
 #def feedbackCell(query, col, row, ack): 
     #req_json = 
@@ -92,8 +113,8 @@ def explainRow(query, rowProv):
       "row": rowProv,
       "col": 0
     }
-    resp = requests.post(_mimir_url + 'annotations/cell', json=req_json)
-    return resp.json()['reasons']
+    resp = readResponse(requests.post(_mimir_url + 'annotations/cell', json=req_json))
+    return resp['reasons']
     
 def explainCell(query, col, rowProv): 
     req_json = {
@@ -101,15 +122,15 @@ def explainCell(query, col, rowProv):
       "row": rowProv,
       "col": col
     }
-    resp = requests.post(_mimir_url + 'annotations/cell', json=req_json)
-    return resp.json()['reasons']
+    resp = readResponse(requests.post(_mimir_url + 'annotations/cell', json=req_json))
+    return resp['reasons']
 
 def explainEverythingJson(query):
     req_json = {
       "query": query
     }
-    resp = requests.post(_mimir_url + 'annotations/all', json=req_json)
-    return resp.json()['reasons']     
+    resp = readResponse(requests.post(_mimir_url + 'annotations/all', json=req_json))
+    return resp['reasons']     
     
 def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input = ''): 
     req_json = {
@@ -118,22 +139,22 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
       "includeUncertainty": include_uncertainty,
       "includeReasons": include_reasons
     } 
-    resp = requests.post(_mimir_url + 'query/data', json=req_json)
-    return resp.json()
+    resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
+    return resp
 
 def evalScala(source):
     req_json = {
       "source": source
     }
-    resp = requests.post(_mimir_url + 'eval/scala', json=req_json)
-    return resp.json()
+    resp = readResponse(requests.post(_mimir_url + 'eval/scala', json=req_json))
+    return resp
 
 def getSchema(query):
     req_json = {
       "query": query
     }
-    resp = requests.post(_mimir_url + 'schema', json=req_json)
-    return resp.json()['schema']
+    resp = readResponse(requests.post(_mimir_url + 'schema', json=req_json))
+    return resp['schema']
   
 def getAvailableLansTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']

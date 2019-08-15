@@ -28,7 +28,7 @@ import vizier.datastore.mimir.base as base
 class MimirDatasetReader(DatasetReader):
     """Dataset reader for Mimir datasets."""
     def __init__(
-        self, table_name, columns, row_idxs, row_ids, rowid_column_numeric=True,
+        self, table_name, columns,
         offset=0, limit=-1, rowid=None
     ):
         """Initialize information about the delimited file and the file format.
@@ -39,11 +39,6 @@ class MimirDatasetReader(DatasetReader):
             Name of table or view in database that contains the dataset
         columns: vizier.datastore.mimir.MimirDatasetColumn
             List of descriptors for columns in the database
-        row_ids: list(int)
-            Sort order for rows in the dataset
-        rowid_column_numeric: bool, optional
-            Flag indicating if the ROW ID column is numeric (necessary when
-            generating the WHERE clause for pagination queries).
         offset: int, optional
             Number of rows at the beginning of the list that are skipped.
         limit: int, optional
@@ -53,7 +48,6 @@ class MimirDatasetReader(DatasetReader):
         """
         self.table_name = table_name
         self.columns = columns
-        self.rowid_column_numeric = rowid_column_numeric
         self.offset = offset
         self.limit = limit
         self.rowid = rowid
@@ -62,8 +56,6 @@ class MimirDatasetReader(DatasetReader):
         # dictionary. The internal flag .is_range_query keeps track of whether
         # offset or limit where given (True) or not (False). This information is
         # later used to generate the query for the database.
-        self.row_ids = row_ids
-        self.row_idxs = row_idxs
         if offset > 0 or limit > 0:
             self.is_range_query = True
         else:
@@ -130,10 +122,6 @@ class MimirDatasetReader(DatasetReader):
             for i in range(len(rs['schema'])):
                 col = rs['schema'][i]
                 self.col_map[base.sanitize_column_name(col['name'])] = i
-            # Initialize rows (make sure to sort them according to order in
-            # row_ids list), read index and open flag
-            #rowid_idx = self.col_map[base.ROW_ID]
-            # Filter rows if this is a range query (needed until IN works)
             rs_rows = rs['data']
             row_ids = rs['prov']
             annotation_flags = rs['colTaint']
@@ -149,23 +137,9 @@ class MimirDatasetReader(DatasetReader):
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = base.mimir_value_to_python(row[col_index], col)
                     annotation_flag_values[i] = row_annotation_flags[col_index]
-                self.rows.append(DatasetRow(base.convertrowid(row_id, row_index), values, annotation_flag_values))
-            self.rows.sort(key=lambda row: self.sortbyrowid(row.identifier))
-            #self.rows.sort(key=lambda row: self.row_idxs[int(row.identifier)])
+                self.rows.append(DatasetRow(row_id, values, annotation_flag_values))
             self.read_index = 0
             self.is_open = True
         return self
 
-    def sortbyrowid(self, s):
-        try:
-            return int(s)
-        except ValueError:
-            pass
-        try:
-            return int(s.replace("'", ""))
-        except ValueError:
-            pass
-        try:
-            return int(s.split('|')[0])
-        except:
-            return 0
+    

@@ -19,8 +19,9 @@ standard output and one for error messages.
 """
 
 import sys
+import os
 import traceback
-
+import vizier.config.base as config
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -67,7 +68,8 @@ class ModuleOutputs(object):
         """
         template = "{0}:{1!r}"
         message = template.format(type(ex).__name__, ex.args)
-        message = message + ': ' + traceback.format_exc(sys.exc_info())
+        if str(os.environ.get('VIZIERSERVER_DEBUG', False)) == "True":
+            message = message + ': ' + traceback.format_exc(sys.exc_info())
         self.stderr.append(TextOutput(message))
         return self
 

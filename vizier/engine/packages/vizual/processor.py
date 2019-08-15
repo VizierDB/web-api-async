@@ -409,12 +409,12 @@ class VizualTaskProcessor(TaskProcessor):
         m_opts = []
         print((args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False)))
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
-            m_opts.append({'datasourceErrors': 'true'})
+            m_opts.append({'name':'datasourceErrors', 'value':'true'})
         if not options is None:
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
-                m_opts.append({load_opt_key: load_opt_val})
+                m_opts.append({'name':load_opt_key,  'value':load_opt_val})
         # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,
