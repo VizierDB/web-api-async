@@ -35,9 +35,9 @@ def ANNOTATIONS(annotations):
     -------
     dict()
     """
-    values = list(annotations.values())
+    values = annotations.values()
     print(str(values))
-    return [{'key': key, 'value': values[int(key)]} for key in values]
+    return [{'key': key, 'value': values[key]} for key in values]
 
 
 def HATEOAS(links):

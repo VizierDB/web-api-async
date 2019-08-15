@@ -133,7 +133,7 @@ class VizierApi(object):
         # Initialize the service descriptor. The service descriptor contains
         # the list of packages and commands that are supported by the engine
         package_listing = list()
-        for pckg in list(self.engine.packages.values()):
+        for pckg in self.engine.packages.values():
             pckg_obj = {'id': pckg.identifier, 'name': pckg.name}
             if not pckg.description is None:
                 pckg_obj['description'] = pckg.description

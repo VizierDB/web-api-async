@@ -376,7 +376,7 @@ class MimirDatastore(DefaultDatastore):
             row_counter = int(rs['data'][0][0]) + 1
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
-            columns=map(base.sanitize_column_name, columns),
+            columns=list(map(base.sanitize_column_name, columns)),
             table_name=table_name,
             row_counter=row_counter,
             annotations=annotations

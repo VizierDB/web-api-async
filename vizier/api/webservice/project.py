@@ -57,7 +57,12 @@ class VizierProjectApi(object):
         dict
         """
         # Create a new project and return the serialized descriptor
+        print("createProj----------------\n")
         project = self.projects.create_project(properties=properties)
+        print("props----------------\n")
+        print(str(properties))
+        print("\nproj----------------\n")
+        print(str(project))
         return serialpr.PROJECT_DESCRIPTOR(project=project, urls=self.urls)
 
     def delete_project(self, project_id):
