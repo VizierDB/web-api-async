@@ -235,21 +235,14 @@ class MimirProcessor(TaskProcessor):
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=columns,
-                row_idxs=dataset.row_idxs,
-                row_ids=dataset.row_ids,
-                annotations=dataset.annotations,
-                update_rows=True
+                annotations=dataset.annotations
             )
             ds_name = store_as_dataset
         else:
             ds = context.datastore.register_dataset(
                 table_name=lens_name,
                 columns=dataset.columns,
-                row_idxs=dataset.row_idxs,
-                row_ids=dataset.row_ids,
-                row_counter=dataset.row_counter,
-                annotations=dataset.annotations,
-                update_rows=update_rows
+                annotations=dataset.annotations
             )
         # Add dataset schema and returned annotations to output
         print_dataset_schema(outputs, ds_name, ds.columns)

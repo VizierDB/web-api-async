@@ -23,7 +23,7 @@
 from vizier.datastore.dataset import DATATYPE_DATE, DATATYPE_DATETIME, DATATYPE_INT, DATATYPE_REAL, DATATYPE_VARCHAR
 from datetime import date, datetime
 
-ROW_ID = 'RID'
+ROW_ID = 'ROWID()'
 BAD_COL_NAMES = {
     "ABORT":"`ABORT`", 
     "ACTION":"`ACTION`", 
@@ -185,23 +185,10 @@ def get_select_query(table_name, columns=None):
     """
     if not columns is None:
         col_list = ','.join([col.name_in_rdb for col in columns])
-        return 'SELECT ' + ROW_ID + ',' + col_list + ' FROM ' + table_name
+        return 'SELECT ' + col_list + ' FROM ' + table_name
     else:
         return 'SELECT ' + ROW_ID + ' FROM ' + table_name
-
-def convertrowid(s, idx):
-        try:
-            return int(s)
-        except ValueError:
-            pass
-        try:
-            return int(s.replace("'", ""))
-        except ValueError:
-            pass
-        try:
-            return int(s.split('|')[0])
-        except:
-            return idx
+    
 
 def mimir_value_to_python(encoded, column):
     if column.data_type == DATATYPE_DATE and type(encoded) is dict:

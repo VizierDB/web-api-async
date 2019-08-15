@@ -99,10 +99,7 @@ class SQLTaskProcessor(TaskProcessor):
             mimirSchema = mimir.getSchema(sql)
 
             columns = list()
-            colSql = 'ROWID() AS ' + ROW_ID
-
-            if mimirSchema[0]['name'] == ROW_ID:
-                mimirSchema = mimirSchema[1:]
+            colSql = ''
 
             for col in mimirSchema:
                 col_id = len(columns)
@@ -111,19 +108,20 @@ class SQLTaskProcessor(TaskProcessor):
                     identifier=col_id,
                     name_in_dataset=name_in_dataset
                 )
-                colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_dataset
+                if colSql == '':
+                    colSql = name_in_dataset + ' AS ' + name_in_dataset
+                else:
+                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_dataset
                 columns.append(col)
 
             sql = 'SELECT ' + colSql + ' FROM {{input}};'
             view_name = mimir.createView(view_name, sql)
 
-            #sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
-            #rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
-            #row_count = int(rs_count['data'][0][0])
+            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
+            rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
+            row_count = int(rs_count['data'][0][0])
 
-            sql = 'SELECT 1 AS NOP FROM ' + view_name + ';' #+ ' LIMIT ' + str(config.DEFAULT_MAX_ROW_LIMIT) + ';'
-            rs = mimir.vistrailsQueryMimirJson(sql, False, False)
-
+            
             provenance = None
             if ds_name is None or ds_name == '':
                 outputs.stdout.append(
@@ -134,15 +132,10 @@ class SQLTaskProcessor(TaskProcessor):
                 outputs.stdout.append(TextOutput(str(len(rs['data'])) + ' row(s)'))
                 provenance = ModuleProvenance()
             else:
-                row_ids = rs['prov']
-                row_count = len(row_ids)
-                row_idxs = range(row_count)
-                
+            
                 ds = context.datastore.register_dataset(
                         table_name=view_name,
                         columns=columns,
-                        row_idxs=row_idxs,
-                        row_ids=row_ids,
                         row_counter=row_count
                     )
                 print_dataset_schema(outputs, ds_name, ds.columns)
