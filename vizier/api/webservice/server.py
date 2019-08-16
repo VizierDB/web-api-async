@@ -82,7 +82,6 @@ def list_projects():
     """Get a list of descriptors for all projects that are currently being
     managed by the API.
     """
-    print('list projs---------------------')
     return jsonify(api.projects.list_projects())
 
 

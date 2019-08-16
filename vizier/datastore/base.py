@@ -402,7 +402,7 @@ def encode_values(values):
     for val in values:
         if isinstance(val, str):
             try:
-                result.append(val.encode('utf-8'))
+                result.append(val)#val.encode('utf-8'))
             except UnicodeDecodeError as ex:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))

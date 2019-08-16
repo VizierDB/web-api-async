@@ -73,8 +73,6 @@ class CommonProjectCache(ProjectCache):
         viztrail = self.viztrails.create_viztrail(properties=properties)
         datastore = self.datastores.get_datastore(viztrail.identifier)
         filestore = self.filestores.get_filestore(viztrail.identifier)
-        print('create_project----------------\n')
-        print(str(viztrail.properties))
         project = ProjectHandle(
             viztrail=viztrail,
             datastore=datastore,
