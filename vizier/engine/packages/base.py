@@ -686,7 +686,7 @@ class CommandDeclaration(object):
         list(string)
         """
         result = list()
-        for para in self.parameters.values():
+        for para in list(self.parameters.values()):
             if not para[LABEL_REQUIRED]:
                 continue
             if not parent is None and LABEL_PARENT in para:

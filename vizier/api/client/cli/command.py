@@ -81,7 +81,7 @@ class Command(object):
                 i = 2
             divider.append('-' * (col_len + i))
         # Print fomrated rows
-        print format % tuple(rows[0])
-        print '|'.join(divider)
+        print(format % tuple(rows[0]))
+        print('|'.join(divider))
         for row in rows[1:]:
-            print format % tuple(row)
+            print(format % tuple(row))

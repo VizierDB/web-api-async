@@ -22,33 +22,33 @@ class TestDatasetDescriptor(unittest.TestCase):
             ]
         )
         # Get column by identifier
-        self.assertEquals(ds.column_by_id(0).name, 'ABC')
-        self.assertEquals(ds.column_by_id(1).name, 'A')
-        self.assertEquals(ds.column_by_id(2).name, 'ABC')
-        self.assertEquals(ds.column_by_id(3).name, 'DEF')
-        self.assertEquals(ds.column_by_id(4).name, 'xyz')
+        self.assertEqual(ds.column_by_id(0).name, 'ABC')
+        self.assertEqual(ds.column_by_id(1).name, 'A')
+        self.assertEqual(ds.column_by_id(2).name, 'ABC')
+        self.assertEqual(ds.column_by_id(3).name, 'DEF')
+        self.assertEqual(ds.column_by_id(4).name, 'xyz')
         with self.assertRaises(ValueError):
             ds.column_by_id(6)
         with self.assertRaises(ValueError):
             ds.column_by_id(-1)
         # Get column by name
-        self.assertEquals(ds.column_by_name('ABC').identifier, 0)
-        self.assertEquals(ds.column_by_name('A').identifier, 1)
-        self.assertEquals(ds.column_by_name('abc', ignore_case=True).identifier, 0)
-        self.assertEquals(ds.column_by_name('XYZ', ignore_case=True).identifier, 4)
+        self.assertEqual(ds.column_by_name('ABC').identifier, 0)
+        self.assertEqual(ds.column_by_name('A').identifier, 1)
+        self.assertEqual(ds.column_by_name('abc', ignore_case=True).identifier, 0)
+        self.assertEqual(ds.column_by_name('XYZ', ignore_case=True).identifier, 4)
         self.assertIsNone(ds.column_by_name('4'))
         # Get column index
-        self.assertEquals(ds.column_index(0), 0)
-        self.assertEquals(ds.column_index(1), 1)
-        self.assertEquals(ds.column_index('DEF'), 3)
-        self.assertEquals(ds.column_index('XYZ'), 4)
-        self.assertEquals(ds.column_index('A'), 1)
-        self.assertEquals(ds.column_index('B'), 1)
-        self.assertEquals(ds.column_index('C'), 2)
-        self.assertEquals(ds.column_index('D'), 3)
-        self.assertEquals(ds.column_index('E'), 4)
+        self.assertEqual(ds.column_index(0), 0)
+        self.assertEqual(ds.column_index(1), 1)
+        self.assertEqual(ds.column_index('DEF'), 3)
+        self.assertEqual(ds.column_index('XYZ'), 4)
+        self.assertEqual(ds.column_index('A'), 1)
+        self.assertEqual(ds.column_index('B'), 1)
+        self.assertEqual(ds.column_index('C'), 2)
+        self.assertEqual(ds.column_index('D'), 3)
+        self.assertEqual(ds.column_index('E'), 4)
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.get_index(i), i)
+            self.assertEqual(ds.get_index(i), i)
         with self.assertRaises(ValueError):
             ds.column_index('ABC')
         with self.assertRaises(ValueError):
@@ -65,25 +65,25 @@ class TestDatasetDescriptor(unittest.TestCase):
                 DatasetColumn(identifier=1, name='xyz'),
             ]
         )
-        self.assertEquals(ds.column_by_id(0).name, 'DEF')
-        self.assertEquals(ds.column_by_id(1).name, 'xyz')
-        self.assertEquals(ds.column_by_id(2).name, 'A')
-        self.assertEquals(ds.column_by_id(3).name, 'ABC')
-        self.assertEquals(ds.column_by_id(4).name, 'ABC')
-        self.assertEquals(ds.column_index(0), 0)
-        self.assertEquals(ds.column_index(1), 1)
-        self.assertEquals(ds.column_index('DEF'), 3)
-        self.assertEquals(ds.column_index('XYZ'), 4)
-        self.assertEquals(ds.column_index('A'), 1)
-        self.assertEquals(ds.column_index('B'), 1)
-        self.assertEquals(ds.column_index('C'), 2)
-        self.assertEquals(ds.column_index('D'), 3)
-        self.assertEquals(ds.column_index('E'), 4)
-        self.assertEquals(ds.get_index(0), 3)
-        self.assertEquals(ds.get_index(1), 4)
-        self.assertEquals(ds.get_index(2), 1)
-        self.assertEquals(ds.get_index(3), 2)
-        self.assertEquals(ds.get_index(4), 0)
+        self.assertEqual(ds.column_by_id(0).name, 'DEF')
+        self.assertEqual(ds.column_by_id(1).name, 'xyz')
+        self.assertEqual(ds.column_by_id(2).name, 'A')
+        self.assertEqual(ds.column_by_id(3).name, 'ABC')
+        self.assertEqual(ds.column_by_id(4).name, 'ABC')
+        self.assertEqual(ds.column_index(0), 0)
+        self.assertEqual(ds.column_index(1), 1)
+        self.assertEqual(ds.column_index('DEF'), 3)
+        self.assertEqual(ds.column_index('XYZ'), 4)
+        self.assertEqual(ds.column_index('A'), 1)
+        self.assertEqual(ds.column_index('B'), 1)
+        self.assertEqual(ds.column_index('C'), 2)
+        self.assertEqual(ds.column_index('D'), 3)
+        self.assertEqual(ds.column_index('E'), 4)
+        self.assertEqual(ds.get_index(0), 3)
+        self.assertEqual(ds.get_index(1), 4)
+        self.assertEqual(ds.get_index(2), 1)
+        self.assertEqual(ds.get_index(3), 2)
+        self.assertEqual(ds.get_index(4), 0)
 
     def test_unique_name(self):
         """Test method that computes unique column names."""
@@ -97,10 +97,10 @@ class TestDatasetDescriptor(unittest.TestCase):
                 DatasetColumn(identifier=4, name='xyz'),
             ]
         )
-        self.assertEquals(ds.get_unique_name('Age'), 'Age')
-        self.assertEquals(ds.get_unique_name('XYZ'), 'XYZ_1')
-        self.assertEquals(ds.get_unique_name('xyz'), 'xyz_1')
-        self.assertEquals(ds.get_unique_name('ABC'), 'ABC_2')
+        self.assertEqual(ds.get_unique_name('Age'), 'Age')
+        self.assertEqual(ds.get_unique_name('XYZ'), 'XYZ_1')
+        self.assertEqual(ds.get_unique_name('xyz'), 'xyz_1')
+        self.assertEqual(ds.get_unique_name('ABC'), 'ABC_2')
 
 
 if __name__ == '__main__':

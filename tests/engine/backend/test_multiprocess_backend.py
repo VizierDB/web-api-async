@@ -129,10 +129,10 @@ class TestMultiprocessBackend(unittest.TestCase):
             context=context
         )
         time.sleep(2)
-        self.assertEquals(controller.task_id, '000')
-        self.assertEquals(controller.state, 'ERROR')
-        self.assertEquals(len(controller.outputs.stdout), 0)
-        self.assertNotEquals(len(controller.outputs.stderr), 0)
+        self.assertEqual(controller.task_id, '000')
+        self.assertEqual(controller.state, 'ERROR')
+        self.assertEqual(len(controller.outputs.stdout), 0)
+        self.assertNotEqual(len(controller.outputs.stderr), 0)
 
     def test_execute(self):
         """Test executing a sequence of supported commands."""
@@ -152,9 +152,9 @@ class TestMultiprocessBackend(unittest.TestCase):
             context=context
         )
         time.sleep(3)
-        self.assertEquals(controller.task_id, '000')
-        self.assertEquals(controller.state, 'SUCCESS')
-        self.assertEquals(controller.outputs.stdout[0].value, '4')
+        self.assertEqual(controller.task_id, '000')
+        self.assertEqual(controller.state, 'SUCCESS')
+        self.assertEqual(controller.outputs.stdout[0].value, '4')
 
 
 if __name__ == '__main__':

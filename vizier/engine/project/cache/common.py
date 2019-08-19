@@ -143,4 +143,4 @@ class CommonProjectCache(ProjectCache):
         -------
         list(vizier.engine.project.base.ProjectHandle)
         """
-        return self.projects.values()
+        return list(self.projects.values())

@@ -41,12 +41,12 @@ class TestMimirDatasetAnnotations(unittest.TestCase):
         )
         ds = self.db.get_dataset(dh.identifier)
         rows = ds.fetch_rows()
-        print ds.row_ids
+        print(ds.row_ids)
         for row in rows:
-            print str(row.identifier) + '\t' + str(row.values)
+            print(str(row.identifier) + '\t' + str(row.values))
         for row_id in ds.row_ids:
             for anno in ds.get_annotations(column_id=1, row_id=row_id):
-                print str(row_id) + '\t' + anno.key + '=' + str(anno.value)
+                print(str(row_id) + '\t' + anno.key + '=' + str(anno.value))
 
 
 if __name__ == '__main__':

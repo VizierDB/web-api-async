@@ -105,7 +105,7 @@ class ModuleArguments(object):
         -------
         string
         """
-        for para in command.parameters.values():
+        for para in list(command.parameters.values()):
             if para[pckg.LABEL_DATATYPE] == pckg.DT_DATASET_ID:
                 arg = para[pckg.LABEL_ID]
                 if self.has(arg):
@@ -311,7 +311,7 @@ class ModuleArguments(object):
                 if not isinstance(arg_value, int):
                     raise ValueError('expected int for \'' + str(arg_id) + '\'')
             elif datatype in pckg.STRING_TYPES:
-                if not isinstance(arg_value, basestring):
+                if not isinstance(arg_value, str):
                     raise ValueError('expected string for \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_FILE_ID:
                 # Expects a dictinary that contains at least a fileId or the

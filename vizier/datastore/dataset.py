@@ -465,7 +465,7 @@ def get_column_index(columns, column_id):
         if column_id >= 0 and column_id < len(columns):
             return column_id
         raise ValueError('invalid column index \'' + str(column_id) + '\'')
-    elif isinstance(column_id, basestring):
+    elif isinstance(column_id, str):
         # Get index for column that has a name that matches column_id. If
         # multiple matches are detected column_id will be interpreted as a
         # column label

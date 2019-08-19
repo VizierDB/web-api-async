@@ -421,7 +421,7 @@ def get_module_charts(workflow, module_id):
         # result is empty by definition.
         if m.identifier == module_id:
             if not m.datasets is None:
-                for c_handle in charts.values():
+                for c_handle in list(charts.values()):
                     if c_handle.dataset_name in m.datasets:
                         result.append(c_handle)
             break

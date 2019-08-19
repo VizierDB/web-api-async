@@ -191,7 +191,7 @@ def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
     # Add pagination references
     links = obj[labels.LINKS]
     # Max. number of records shown
-    if not limit is None and limit >= 0:
+    if not limit is None and int(limit) >= 0:
         max_rows_per_request = int(limit)
     elif defaults.row_limit >= 0:
         max_rows_per_request = defaults.row_limit
@@ -292,6 +292,7 @@ def DATASET_ROW(row):
     -------
     dict
     """
+  
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,

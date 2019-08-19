@@ -139,14 +139,14 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
                 val = int(val)
             except ValueError as ex:
                 raise ValueError('expected integer value for \'' + env_variable + '\'')
-        elif attribute_type == LIST and isinstance(val, basestring):
+        elif attribute_type == LIST and isinstance(val, str):
             int_list = list()
             try:
                 for token in val.split(','):
                     if '-' in token:
                         start = int(token[:token.find('-')].strip())
                         end = int(token[token.find('-')+1:].strip())
-                        int_list.extend(range(int(start), int(end)))
+                        int_list.extend(list(range(int(start), int(end))))
                     else:
                         int_list.append(int(token))
             except ValueError as ex:

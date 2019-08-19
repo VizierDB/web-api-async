@@ -89,7 +89,7 @@ class VizierDatasetViewApi(object):
             return None
         # Find the specified chart
         chart = None
-        for c in charts.values():
+        for c in list(charts.values()):
             if c.identifier == chart_id:
                 chart = c
                 break

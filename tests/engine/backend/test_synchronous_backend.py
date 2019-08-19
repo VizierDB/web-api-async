@@ -181,7 +181,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         self.assertTrue(result.is_success)
         state = result.provenance.get_database_state(prev_state=state)
         self.assertTrue(SECOND_DATASET_NAME in state)
-        self.assertEquals(context[DATASET_NAME], task_context(state)[DATASET_NAME])
+        self.assertEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
         context = task_context(state)
         cmd = vizual.update_cell(
             dataset_name=SECOND_DATASET_NAME,
@@ -200,7 +200,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
         )
         self.assertTrue(result.is_success)
         state = result.provenance.get_database_state(prev_state=state)
-        self.assertEquals(context[DATASET_NAME], task_context(state)[DATASET_NAME])
+        self.assertEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
         self.assertNotEqual(context[SECOND_DATASET_NAME], task_context(state)[SECOND_DATASET_NAME])
 
     def test_execute_unsupported_command(self):

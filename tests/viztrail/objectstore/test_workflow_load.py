@@ -67,7 +67,7 @@ class TestOSWorkflow(unittest.TestCase):
                 action=ACTION_INSERT,
                 command=command
             )
-            self.assertEquals(len(branch.get_history()), (i + 1))
+            self.assertEqual(len(branch.get_history()), (i + 1))
         # This is a hack to simulate loading workflows with active modules
         # Change state of last two modules in branch head to an active state
         m = branch.get_head().modules[-2]
@@ -134,14 +134,14 @@ class TestOSWorkflow(unittest.TestCase):
             )
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
-        self.assertEquals(len(workflow.modules), 5)
+        self.assertEqual(len(workflow.modules), 5)
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEquals(len(module.datasets), i + 1)
+            self.assertEqual(len(module.datasets), i + 1)
             for j in range(i):
                 key = 'DS' + str(j)
                 self.assertTrue(key in module.datasets)
-                self.assertEquals(len(module.datasets[key].columns), j)
+                self.assertEqual(len(module.datasets[key].columns), j)
 
     def test_load_with_dataset_delete(self):
         """Test loading workflows where each module creates a new dataset and
@@ -190,13 +190,13 @@ class TestOSWorkflow(unittest.TestCase):
             )
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
-        self.assertEquals(len(workflow.modules), 5)
+        self.assertEqual(len(workflow.modules), 5)
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEquals(len(module.datasets), 1)
+            self.assertEqual(len(module.datasets), 1)
             key = 'DS' + str(i)
             self.assertTrue(key in module.datasets)
-            self.assertEquals(len(module.datasets[key].columns), i)
+            self.assertEqual(len(module.datasets[key].columns), i)
 
     def test_load_with_dataset_replace(self):
         """Test loading workflows where each module modifies a single dataset.
@@ -243,12 +243,12 @@ class TestOSWorkflow(unittest.TestCase):
             )
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
-        self.assertEquals(len(workflow.modules), 5)
+        self.assertEqual(len(workflow.modules), 5)
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEquals(len(module.datasets), 1)
+            self.assertEqual(len(module.datasets), 1)
             self.assertTrue('DS' in module.datasets)
-            self.assertEquals(len(module.datasets['DS'].columns), i)
+            self.assertEqual(len(module.datasets['DS'].columns), i)
 
     def test_load_with_missing_modules(self):
         """Test loading workflows with active modules."""
@@ -284,7 +284,7 @@ class TestOSWorkflow(unittest.TestCase):
                 action=ACTION_INSERT,
                 command=command
             )
-            self.assertEquals(len(branch.get_history()), (i + 1))
+            self.assertEqual(len(branch.get_history()), (i + 1))
         # Delete the file for the third module to simulate an error condition in
         # which a file wasn't written properly
         os.remove(branch.head.modules[2].module_path)

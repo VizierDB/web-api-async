@@ -30,12 +30,12 @@ class TestModuleProvenance(unittest.TestCase):
         self.assertFalse(prov.requires_exec(datasets))
         state = prov.get_database_state(prev_state=datasets)
         # The resulting start should contain 'A'->123, 'B'->666, and 'D'->999
-        self.assertEquals(len(state), 3)
+        self.assertEqual(len(state), 3)
         for name in ['A', 'B', 'D']:
             self.assertTrue(name in state)
-        self.assertEquals(state['A'].identifier, '123')
-        self.assertEquals(state['B'].identifier, '666')
-        self.assertEquals(state['D'].identifier, '999')
+        self.assertEqual(state['A'].identifier, '123')
+        self.assertEqual(state['B'].identifier, '666')
+        self.assertEqual(state['D'].identifier, '999')
 
     def test_requires_exec(self):
         """Test .requires_exec() method for the module provenance object."""

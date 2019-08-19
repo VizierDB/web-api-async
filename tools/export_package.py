@@ -38,10 +38,10 @@ from vizier.engine.packages.vizual.base import export_package as export_vizual
 if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) < 1 or len(args) > 3:
-        print """Usage:
+        print("""Usage:
   <package-name> [ MIMIR | PLOT | PYTHON | SCALA | SQL | VIZUAL ]
   <file-name>
-  {<format> [YAML | JSON]}"""
+  {<format> [YAML | JSON]}""")
         sys.exit(-1)
     name = args[0]
     filename = args[1]
@@ -64,5 +64,5 @@ if __name__ == '__main__':
     elif name.upper() == 'VIZUAL':
         export_vizual(filename, format=format)
     else:
-        print 'Unknown package name: ' + str(name)
+        print('Unknown package name: ' + str(name))
         sys.exit(-1)

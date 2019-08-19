@@ -40,7 +40,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_DOMAIN),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'DOMAIN FOR Street IN ds')
+        self.assertEqual(cmd, 'DOMAIN FOR Street IN ds')
         with self.assertRaises(ValueError):
             md.ModuleCommand(
                 mimir.PACKAGE_MIMIR,
@@ -75,7 +75,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_GEOCODE),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'GEOCODE ds COLUMNS STREET=Street CITY=\'Some Name\' USING GOOGLE')
+        self.assertEqual(cmd, 'GEOCODE ds COLUMNS STREET=Street CITY=\'Some Name\' USING GOOGLE')
 
     def test_mimir_key_repair(self):
         """Test validation of Mimir key repair lens."""
@@ -88,7 +88,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_KEY_REPAIR),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'KEY REPAIR FOR \'Some Name\' IN ds')
+        self.assertEqual(cmd, 'KEY REPAIR FOR \'Some Name\' IN ds')
         with self.assertRaises(ValueError):
             mimir_key_repair(
                 dataset_name='ds',
@@ -108,7 +108,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_MISSING_KEY),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'MISSING KEYS FOR Street IN ds')
+        self.assertEqual(cmd, 'MISSING KEYS FOR Street IN ds')
 
     def test_mimir_missing_value(self):
         """Test validation of Mimir missing value lens."""
@@ -121,7 +121,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'MISSING VALUES FOR Street IN ds')
+        self.assertEqual(cmd, 'MISSING VALUES FOR Street IN ds')
         cmd = mimir_missing_value(
             dataset_name='ds',
             columns=[
@@ -134,7 +134,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'MISSING VALUES FOR Street WITH CONSTRAINT \'> 40\', \'Some Name\' IN ds')
+        self.assertEqual(cmd, 'MISSING VALUES FOR Street WITH CONSTRAINT \'> 40\', \'Some Name\' IN ds')
 
     def test_mimir_picker(self):
         """Test validation of Mimir picker lens."""
@@ -147,7 +147,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_PICKER),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'PICK FROM Street, \'Some Name\' IN ds')
+        self.assertEqual(cmd, 'PICK FROM Street, \'Some Name\' IN ds')
         cmd = mimir_picker(
             dataset_name='ds',
             schema=[{'pickFrom': 1,'pickAs': 'The Street'}, {'pickFrom': 2}],
@@ -158,7 +158,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_PICKER),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'PICK FROM Street, \'Some Name\' AS \'My Street\' IN ds')
+        self.assertEqual(cmd, 'PICK FROM Street, \'Some Name\' AS \'My Street\' IN ds')
 
     def test_mimir_schema_matching(self):
         """Test validation of Mimir schema matching lens."""
@@ -172,7 +172,7 @@ class TestValidateMimir(unittest.TestCase):
             command=PACKAGE.get(mimir.MIMIR_SCHEMA_MATCHING),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'SCHEMA MATCHING ds (COL_A int, COL_2 string) AS \'My DS\'')
+        self.assertEqual(cmd, 'SCHEMA MATCHING ds (COL_A int, COL_2 string) AS \'My DS\'')
 
 
 if __name__ == '__main__':

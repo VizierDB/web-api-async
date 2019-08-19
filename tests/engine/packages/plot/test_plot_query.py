@@ -55,9 +55,9 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(0, range_start=25, range_end=30)
         view.add_series(3, range_start=25, range_end=30)
         data = ChartQuery().exec_query(dataset=ds, view=view)
-        self.assertEquals(len(data), 6)
+        self.assertEqual(len(data), 6)
         for row in data:
-            self.assertEquals(len(row), 3)
+            self.assertEqual(len(row), 3)
         self.assertTrue(isinstance(data[0][0], int))
         self.assertTrue(isinstance(data[0][1], float))
         # Remove interval end for one series. This should return all rows
@@ -67,12 +67,12 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(0, range_start=25)
         view.add_series(3, range_start=25, range_end=30)
         data = ChartQuery().exec_query(dataset=ds, view=view)
-        self.assertEquals(len(data), 29)
+        self.assertEqual(len(data), 29)
         self.assertIsNone(data[28][0])
         self.assertIsNotNone(data[28][1])
         self.assertIsNone(data[28][2])
         for row in data:
-            self.assertEquals(len(row), 3)
+            self.assertEqual(len(row), 3)
         # Remove interval start for another series. The first series will
         # contain 31 values, the second 29, and the third 6
         view = ChartViewHandle(dataset_name='ABC', x_axis=2)
@@ -80,19 +80,19 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(0, range_start=25)
         view.add_series(3, range_start=25, range_end=30)
         data = ChartQuery().exec_query(dataset=ds, view=view)
-        self.assertEquals(len(data), 31)
-        self.assertEquals(self.count_non_null_values(data, 0), 31)
-        self.assertEquals(self.count_non_null_values(data, 1), 29)
-        self.assertEquals(self.count_non_null_values(data, 2), 6)
+        self.assertEqual(len(data), 31)
+        self.assertEqual(self.count_non_null_values(data, 0), 31)
+        self.assertEqual(self.count_non_null_values(data, 1), 29)
+        self.assertEqual(self.count_non_null_values(data, 2), 6)
         for row in data:
-            self.assertEquals(len(row), 3)
+            self.assertEqual(len(row), 3)
         # Without any range constraints the result should contain all 54 rows
         view = ChartViewHandle(dataset_name='ABC', x_axis=2)
         view.add_series(1, label='A')
         view.add_series(0, label='B')
         view.add_series(3)
         data = ChartQuery().exec_query(dataset=ds, view=view)
-        self.assertEquals(len(data), 54)
+        self.assertEqual(len(data), 54)
 
 
 if __name__ == '__main__':

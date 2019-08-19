@@ -64,9 +64,9 @@ class TestVizierEngineSynchron(unittest.TestCase):
         )
         self.assertTrue(module.is_success)
         self.assertTrue('people' in module.datasets)
-        self.assertEquals(len(module.datasets['people'].columns), 2)
-        self.assertEquals(module.datasets['people'].row_count, 2)
-        self.assertEquals(len( module.outputs.stdout), 4)
+        self.assertEqual(len(module.datasets['people'].columns), 2)
+        self.assertEqual(module.datasets['people'].row_count, 2)
+        self.assertEqual(len( module.outputs.stdout), 4)
         # MODULE 2
         # --------
         # UPDATE CELL
@@ -105,7 +105,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         self.engine = get_engine(AppConfig())
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
-        self.assertEquals(len(modules), 3)
+        self.assertEqual(len(modules), 3)
         for m in modules:
             self.assertTrue(m.is_success)
             self.assertIsNotNone(m.timestamp.created_at)
@@ -176,7 +176,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
                 validate=True
             )
         )
-        self.assertEquals(len(result), 2)
+        self.assertEqual(len(result), 2)
         # Wait for the operations to finish
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
@@ -207,7 +207,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         modules = project.get_default_branch().get_head().modules
-        self.assertEquals(len(modules), 4)
+        self.assertEqual(len(modules), 4)
         self.assertTrue(modules[0].is_error)
         for m in modules[1:]:
             self.assertTrue(m.is_canceled)
@@ -228,15 +228,15 @@ class TestVizierEngineSynchron(unittest.TestCase):
                 validate=True
             )
         )
-        self.assertEquals(len(result), 5)
+        self.assertEqual(len(result), 5)
         # Wait for the operations to finish
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         modules = project.get_default_branch().get_head().modules
-        self.assertEquals(len(modules), 5)
+        self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEquals(len(modules[-1].datasets['friends'].columns), 3)
+        self.assertEqual(len(modules[-1].datasets['friends'].columns), 3)
         # REPLACE MODULE 1
         # ----------------
         # Load people dataset instead employee
@@ -254,29 +254,29 @@ class TestVizierEngineSynchron(unittest.TestCase):
                 validate=True
             )
         )
-        self.assertEquals(len(result), 5)
+        self.assertEqual(len(result), 5)
         # Wait for the operations to finish
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         modules = project.get_default_branch().get_head().modules
-        self.assertEquals(len(modules), 5)
+        self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEquals(len(modules[-1].datasets['friends'].columns), 2)
+        self.assertEqual(len(modules[-1].datasets['friends'].columns), 2)
         ds = project.datastore.get_dataset(modules[-1].datasets['friends'].identifier)
-        self.assertEquals(ds.fetch_rows()[0].values[1], 43)
+        self.assertEqual(ds.fetch_rows()[0].values[1], 43)
         #
         # Reload engine and check the module states
         #
         self.engine = get_engine(AppConfig())
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
-        self.assertEquals(len(modules), 5)
+        self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEquals(len(modules[-1].datasets['friends'].columns), 2)
+        self.assertEqual(len(modules[-1].datasets['friends'].columns), 2)
         ds = project.datastore.get_dataset(modules[-1].datasets['friends'].identifier)
-        self.assertEquals(ds.fetch_rows()[0].values[1], 43)
+        self.assertEqual(ds.fetch_rows()[0].values[1], 43)
 
 
 if __name__ == '__main__':

@@ -106,7 +106,7 @@ class VizierContainerApi(object):
                 'name': self.engine.name,
                 'version': VERSION_INFO,
                 'backend': self.config.engine.backend.identifier,
-                'packages': self.engine.packages.keys()
+                'packages': list(self.engine.packages.keys())
             },
             labels.LINKS: serialize.HATEOAS({
                 'self': self.urls.service_descriptor(),

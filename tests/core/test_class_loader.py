@@ -31,8 +31,8 @@ class TestClassLoader(unittest.TestCase):
             )
         )
         dummy = loader.get_instance(names=['X', 'Y', 'Z'])
-        self.assertEquals(dummy.properties['A'], 1)
-        self.assertEquals(dummy.names, ['X', 'Y', 'Z'])
+        self.assertEqual(dummy.properties['A'], 1)
+        self.assertEqual(dummy.names, ['X', 'Y', 'Z'])
 
     def test_serialize_and_create(self):
         """Test creating a class loader instance from a dictionary."""
@@ -43,9 +43,9 @@ class TestClassLoader(unittest.TestCase):
                 properties={'A': 1}
             )
         )
-        self.assertEquals(loader.module_name, 'ABC')
-        self.assertEquals(loader.class_name, 'DEF')
-        self.assertEquals(loader.properties['A'], 1)
+        self.assertEqual(loader.module_name, 'ABC')
+        self.assertEqual(loader.class_name, 'DEF')
+        self.assertEqual(loader.properties['A'], 1)
         # No properties given
         loader = ClassLoader(
             values=ClassLoader.to_dict(
@@ -53,8 +53,8 @@ class TestClassLoader(unittest.TestCase):
                 class_name='DEF'
             )
         )
-        self.assertEquals(loader.module_name, 'ABC')
-        self.assertEquals(loader.class_name, 'DEF')
+        self.assertEqual(loader.module_name, 'ABC')
+        self.assertEqual(loader.class_name, 'DEF')
         self.assertIsNone(loader.properties)
         # Errors for invalid dictionaries
         values = ClassLoader.to_dict(

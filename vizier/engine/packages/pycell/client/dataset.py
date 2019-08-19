@@ -335,7 +335,7 @@ class DatasetClient(object):
                      "polar", "heat_rad", "heat_table", "punch", "bubble", "candle", "line", "radar", "rose"];
         
         if chart_type not in charttypes:
-            print("Please specify a valid chart type: one of: " + str(charttypes))
+            print(("Please specify a valid chart type: one of: " + str(charttypes)))
             return
         
         if not labels:

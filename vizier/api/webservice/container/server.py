@@ -23,7 +23,7 @@ http://cds-swg1.cims.nyu.edu/doc/vizier-db-container/.
 
 import csv
 import os
-import StringIO
+import io
 
 from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
@@ -334,7 +334,7 @@ def download_dataset(dataset_id):
     if dataset is None:
         raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
     # Read the dataset into a string buffer in memory
-    si = StringIO.StringIO()
+    si = io.StringIO()
     cw = csv.writer(si)
     cw.writerow([col.name for col in dataset.columns])
     with dataset.reader() as reader:

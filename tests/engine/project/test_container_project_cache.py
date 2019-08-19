@@ -59,13 +59,13 @@ class TestContainerCache(unittest.TestCase):
             container_file=filename,
             config=AppConfig()
         )
-        self.assertEquals(len(projects.list_projects()), 2)
-        self.assertEquals(projects.get_project(vt1.identifier).container_api, 'API1')
-        self.assertEquals(projects.get_project(vt2.identifier).container_api, 'API2')
-        self.assertEquals(projects.get_project(vt1.identifier).container_id, 'ID1')
-        self.assertEquals(projects.get_project(vt2.identifier).container_id, 'ID2')
-        self.assertEquals(projects.get_project(vt1.identifier).port, 80)
-        self.assertEquals(projects.get_project(vt2.identifier).port, 81)
+        self.assertEqual(len(projects.list_projects()), 2)
+        self.assertEqual(projects.get_project(vt1.identifier).container_api, 'API1')
+        self.assertEqual(projects.get_project(vt2.identifier).container_api, 'API2')
+        self.assertEqual(projects.get_project(vt1.identifier).container_id, 'ID1')
+        self.assertEqual(projects.get_project(vt2.identifier).container_id, 'ID2')
+        self.assertEqual(projects.get_project(vt1.identifier).port, 80)
+        self.assertEqual(projects.get_project(vt2.identifier).port, 81)
 
 
 if __name__ == '__main__':

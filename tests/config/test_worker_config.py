@@ -21,10 +21,10 @@ class TestWorkerConfig(unittest.TestCase):
     def test_default_config(self):
         """Test the default worker configuration settings."""
         config = WorkerConfig()
-        self.assertEquals(config.controller.url, env.DEFAULT_SETTINGS[env.VIZIERWORKER_CONTROLLER_URL])
-        self.assertEquals(config.env.identifier, env.DEFAULT_SETTINGS[env.VIZIERWORKER_ENV])
-        self.assertEquals(config.env.processor_path, env.DEFAULT_SETTINGS[env.VIZIERWORKER_PROCESSOR_PATH])
-        self.assertEquals(config.logs.worker, env.DEFAULT_SETTINGS[env.VIZIERWORKER_LOG_DIR])
+        self.assertEqual(config.controller.url, env.DEFAULT_SETTINGS[env.VIZIERWORKER_CONTROLLER_URL])
+        self.assertEqual(config.env.identifier, env.DEFAULT_SETTINGS[env.VIZIERWORKER_ENV])
+        self.assertEqual(config.env.processor_path, env.DEFAULT_SETTINGS[env.VIZIERWORKER_PROCESSOR_PATH])
+        self.assertEqual(config.logs.worker, env.DEFAULT_SETTINGS[env.VIZIERWORKER_LOG_DIR])
 
     def test_env_config(self):
         """Test worker config using environment variables."""
@@ -33,10 +33,10 @@ class TestWorkerConfig(unittest.TestCase):
         os.environ[env.VIZIERWORKER_PROCESSOR_PATH] = 'processors'
         os.environ[env.VIZIERWORKER_LOG_DIR] = 'logdir'
         config = WorkerConfig()
-        self.assertEquals(config.controller.url, 'http://webapi')
-        self.assertEquals(config.env.identifier, 'REMOTE')
-        self.assertEquals(config.env.processor_path, 'processors')
-        self.assertEquals(config.logs.worker, 'logdir')
+        self.assertEqual(config.controller.url, 'http://webapi')
+        self.assertEqual(config.env.identifier, 'REMOTE')
+        self.assertEqual(config.env.processor_path, 'processors')
+        self.assertEqual(config.logs.worker, 'logdir')
 
 
 if __name__ == '__main__':

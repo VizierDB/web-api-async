@@ -56,7 +56,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_DEL_COL),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'DELETE COLUMN \'Some Name\' FROM ds')
+        self.assertEqual(cmd, 'DELETE COLUMN \'Some Name\' FROM ds')
 
     def test_load_dataset(self):
         """Test validation of load dataset command."""
@@ -73,7 +73,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
+        self.assertEqual(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
         cmd = load_dataset(
             dataset_name='ds',
             file={pckg.FILE_URL: 'http://some.file.url'},
@@ -82,7 +82,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'LOAD DATASET ds FROM http://some.file.url')
+        self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
         cmd = load_dataset(
             dataset_name='ds',
             file={pckg.FILE_ID: fh.identifier, pckg.FILE_URL: 'http://some.file.url'},
@@ -91,7 +91,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'LOAD DATASET ds FROM http://some.file.url')
+        self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
         cmd = load_dataset(
             dataset_name='ds',
             file={pckg.FILE_ID: 'Some File'},
@@ -100,7 +100,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_LOAD),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'LOAD DATASET ds FROM \'Some File\'')
+        self.assertEqual(cmd, 'LOAD DATASET ds FROM \'Some File\'')
 
     def test_projection(self):
         """Test validation of projection command."""
@@ -112,7 +112,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_PROJECTION),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'FILTER COLUMNS Street, \'Some Name\' FROM ds')
+        self.assertEqual(cmd, 'FILTER COLUMNS Street, \'Some Name\' FROM ds')
 
     def test_sort_dataset(self):
         """Test validation of sort command."""
@@ -124,7 +124,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_SORT),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'SORT ds BY Street (A-Z), \'Some Name\' (Z-A)')
+        self.assertEqual(cmd, 'SORT ds BY Street (A-Z), \'Some Name\' (Z-A)')
 
     def test_update_cell(self):
         """Test validation of update cell command."""
@@ -138,7 +138,7 @@ class TestValidateVizual(unittest.TestCase):
             command=PACKAGE.get(vizual.VIZUAL_UPD_CELL),
             datasets=DATASETS
         )
-        self.assertEquals(cmd, 'UPDATE ds SET [\'Some Name\', 1] = \'Some Value\'')
+        self.assertEqual(cmd, 'UPDATE ds SET [\'Some Name\', 1] = \'Some Value\'')
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ import vizier.config.base as config
 OUTPUT_CHART = 'chart/view'
 OUTPUT_TEXT = 'text/plain'
 OUTPUT_HTML = 'text/html'
-
+OUTPUT_MARKDOWN = 'text/markdown'
 
 class ModuleOutputs(object):
     """Wrapper for module outputs. Contains the standard output and to standard
@@ -143,6 +143,19 @@ class HtmlOutput(OutputObject):
         super(HtmlOutput, self).__init__(type=OUTPUT_HTML, value=value)
 
 
+class MarkdownOutput(OutputObject):
+    """Output object where the value is a Markdown string."""
+    def __init__(self, value):
+        """Initialize the output string.
+
+        Parameters
+        ----------
+        value, string
+            Output string
+        """
+        super(MarkdownOutput, self).__init__(type=OUTPUT_MARKDOWN, value=value)
+
+
 class TextOutput(OutputObject):
     """Output object where the value is a string."""
     def __init__(self, value):
@@ -194,7 +207,7 @@ def CHART_VIEW_DATA(view, rows):
     }
     # Create a list of series indexes. Then remove the series that contains the
     # x-axis labels (if given). Keep x-axis data in a separate list
-    series = range(len(view.data))
+    series = list(range(len(view.data)))
     if not view.x_axis is None:
         obj['xAxis'] = {'data': [row[view.x_axis] for row in rows]}
         del series[view.x_axis]

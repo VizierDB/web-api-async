@@ -52,15 +52,15 @@ class TestFileSystemFilestore(unittest.TestCase):
         db = FileSystemFilestore(SERVER_DIR)
         fh1 = db.upload_file(CSV_FILE)
         fh2 = db.get_file(fh1.identifier)
-        self.assertEquals(fh1.identifier, fh2.identifier)
-        self.assertEquals(fh1.filepath, fh2.filepath)
-        self.assertEquals(fh1.mimetype, fh2.mimetype)
+        self.assertEqual(fh1.identifier, fh2.identifier)
+        self.assertEqual(fh1.filepath, fh2.filepath)
+        self.assertEqual(fh1.mimetype, fh2.mimetype)
         # Ensure that the file parses as a CSV file
         with fh1.open() as csvfile:
             rows = 0
             for row in csv.reader(csvfile, delimiter=fh1.delimiter):
                 rows += 1
-        self.assertEquals(rows, 3)
+        self.assertEqual(rows, 3)
 
     def test_list_file(self):
         """Test list files method."""
@@ -70,46 +70,46 @@ class TestFileSystemFilestore(unittest.TestCase):
         db.upload_file(TSV_FILE)
         db.upload_file(GZIP_TSV_FILE)
         files = db.list_files()
-        self.assertEquals(len(files), 4)
+        self.assertEqual(len(files), 4)
         db.upload_file(CSV_FILE)
         db.upload_file(GZIP_CSV_FILE)
         db.upload_file(TSV_FILE)
         db.upload_file(GZIP_TSV_FILE)
         files = db.list_files()
-        self.assertEquals(len(files), 8)
+        self.assertEqual(len(files), 8)
 
     def test_upload_file(self):
         """Test file upload."""
         db = FileSystemFilestore(SERVER_DIR)
         fh = db.upload_file(CSV_FILE)
-        self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
-        self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
+        self.assertEqual(fh.file_name, os.path.basename(CSV_FILE))
+        self.assertEqual(fh.mimetype, fs.FORMAT_CSV)
+        self.assertEqual(fh.identifier, db.get_file(fh.identifier).identifier)
         self.assertTrue(os.path.isfile(os.path.join(SERVER_DIR, fh.identifier, METADATA_FILENAME)))
         self.assertTrue(os.path.isfile(fh.filepath))
         self.assertTrue(fh.is_tabular)
         # Re-load the repository
         db = FileSystemFilestore(SERVER_DIR)
         fh = db.get_file(fh.identifier)
-        self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
-        self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
+        self.assertEqual(fh.file_name, os.path.basename(CSV_FILE))
+        self.assertEqual(fh.mimetype, fs.FORMAT_CSV)
+        self.assertEqual(fh.identifier, db.get_file(fh.identifier).identifier)
         # Add files with other valid suffixes
         fh = db.upload_file(CSV_FILE)
         self.assertFalse(fh.compressed)
-        self.assertEquals(fh.delimiter, ',')
+        self.assertEqual(fh.delimiter, ',')
         fh = db.upload_file(GZIP_CSV_FILE)
         self.assertTrue(fh.compressed)
-        self.assertEquals(fh.delimiter, ',')
+        self.assertEqual(fh.delimiter, ',')
         fh = db.upload_file(TSV_FILE)
         self.assertFalse(fh.compressed)
-        self.assertEquals(fh.delimiter, '\t')
+        self.assertEqual(fh.delimiter, '\t')
         fh = db.upload_file(GZIP_TSV_FILE)
         self.assertTrue(fh.compressed)
-        self.assertEquals(fh.delimiter, '\t')
+        self.assertEqual(fh.delimiter, '\t')
         # Re-load the repository
         db = FileSystemFilestore(SERVER_DIR)
-        self.assertEquals(len(db.list_files()), 5)
+        self.assertEqual(len(db.list_files()), 5)
         fh = db.upload_file(TEXT_FILE)
         self.assertFalse(fh.is_tabular)
 
@@ -118,10 +118,10 @@ class TestFileSystemFilestore(unittest.TestCase):
         db = FileSystemFilestore(SERVER_DIR)
         file = FileStorage(filename=CSV_FILE)
         fh = db.upload_stream(file=file, file_name=os.path.basename(CSV_FILE))
-        self.assertEquals(fh.file_name, os.path.basename(CSV_FILE))
-        self.assertEquals(fh.mimetype, fs.FORMAT_CSV)
+        self.assertEqual(fh.file_name, os.path.basename(CSV_FILE))
+        self.assertEqual(fh.mimetype, fs.FORMAT_CSV)
         self.assertTrue(os.path.isfile(fh.filepath))
-        self.assertEquals(fh.identifier, db.get_file(fh.identifier).identifier)
+        self.assertEqual(fh.identifier, db.get_file(fh.identifier).identifier)
 
 if __name__ == '__main__':
     unittest.main()

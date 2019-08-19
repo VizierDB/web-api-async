@@ -91,7 +91,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         col_id = ds.column_by_name('AGE').identifier
         result = self.api.delete_column(ds.identifier, col_id, self.datastore)
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         # Retrieve modified dataset and ensure that it cobtains the following
         #
         # Name, Salary
@@ -101,27 +101,27 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         # Schema is Name, Salary
-        self.assertEquals(len(ds.columns), 2)
-        self.assertEquals(ds.columns[0].name.upper(), 'NAME')
-        self.assertEquals(ds.columns[1].name.upper(), 'SALARY')
+        self.assertEqual(len(ds.columns), 2)
+        self.assertEqual(ds.columns[0].name.upper(), 'NAME')
+        self.assertEqual(ds.columns[1].name.upper(), 'SALARY')
         # Make sure column identifier haven't changed
         del col_ids[1]
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Make sure that all rows only have two columns
         row = ds_rows[0]
-        self.assertEquals(len(row.values), 2)
-        self.assertEquals(len(row.values), 2)
-        self.assertEquals(row.values[0], 'Alice')
-        self.assertEquals(row.values[1], '35K')
+        self.assertEqual(len(row.values), 2)
+        self.assertEqual(len(row.values), 2)
+        self.assertEqual(row.values[0], 'Alice')
+        self.assertEqual(row.values[1], '35K')
         row = ds_rows[1]
-        self.assertEquals(len(row.values), 2)
-        self.assertEquals(len(row.values), 2)
-        self.assertEquals(row.values[0], 'Bob')
-        self.assertEquals(row.values[1], '30K')
+        self.assertEqual(len(row.values), 2)
+        self.assertEqual(len(row.values), 2)
+        self.assertEqual(row.values[0], 'Bob')
+        self.assertEqual(row.values[1], '30K')
         # Ensure that row identifier haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEqual(ds_rows[i].identifier, row_ids[i])
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.delete_column('unknown:uri', 0, self.datastore)
@@ -146,7 +146,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         result = self.api.delete_row(ds.identifier, 1, self.datastore)
         del row_ids[1]
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         # Retrieve modified dataset and ensure that it contains the following
         # data:
         #
@@ -157,17 +157,17 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds_rows = ds.fetch_rows()
         # Schema is Name, Salary
         col_names = ['Name', 'Age', 'Salary']
-        self.assertEquals(len(ds.columns), len(col_names))
+        self.assertEqual(len(ds.columns), len(col_names))
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].name.upper(), col_names[i].upper())
+            self.assertEqual(ds.columns[i].name.upper(), col_names[i].upper())
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # There should only be one row
-        self.assertEquals(len(ds_rows), 1)
+        self.assertEqual(len(ds_rows), 1)
         # Ensure that row identifier haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEqual(ds_rows[i].identifier, row_ids[i])
         # Ensure exception is thrown if dataset is unknown
         with self.assertRaises(ValueError):
             self.api.delete_row('unknown:uri', 0, self.datastore)
@@ -186,14 +186,14 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         result = self.api.filter_columns(ds.identifier, [2, 0], ['BD', None], self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
-        self.assertEquals(len(ds.columns), 2)
-        self.assertEquals(ds.columns[0].identifier, 2)
-        self.assertEquals(ds.columns[0].name.upper(), 'BD')
-        self.assertEquals(ds.columns[1].identifier, 0)
-        self.assertEquals(ds.columns[1].name.upper(), 'NAME')
+        self.assertEqual(len(ds.columns), 2)
+        self.assertEqual(ds.columns[0].identifier, 2)
+        self.assertEqual(ds.columns[0].name.upper(), 'BD')
+        self.assertEqual(ds.columns[1].identifier, 0)
+        self.assertEqual(ds.columns[1].name.upper(), 'NAME')
         rows = ds.fetch_rows()
-        self.assertEquals(rows[0].values, ['35K', 'Alice'])
-        self.assertEquals(rows[1].values, ['30K', 'Bob'])
+        self.assertEqual(rows[0].values, ['35K', 'Alice'])
+        self.assertEqual(rows[1].values, ['30K', 'Bob'])
         with self.assertRaises(ValueError):
             self.api.filter_columns(ds.identifier, [0, 1], ['BD', None], self.datastore)
 
@@ -214,33 +214,33 @@ class TestDefaultVizualApi(unittest.TestCase):
         col_ids.insert(1, ds.max_column_id() + 1)
         result = self.api.insert_column(ds.identifier, 1, 'Height', self.datastore)
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         # Retrieve dataset and ensure that it has the following schema:
         # Name, Height, Age, Salary
         ds = self.datastore.get_dataset(result.dataset.identifier)
         col_names = ['Name' ,'Height', 'Age', 'Salary']
         # Ensure that there are four rows
-        self.assertEquals(len(ds.columns), len(col_names))
+        self.assertEqual(len(ds.columns), len(col_names))
         for i in range(len(col_names)):
             col = ds.columns[i]
-            self.assertEquals(col.identifier, col_ids[i])
-            self.assertEquals(col.name.upper(), col_names[i].upper())
+            self.assertEqual(col.identifier, col_ids[i])
+            self.assertEqual(col.name.upper(), col_names[i].upper())
         # Insert columns at last position
         col_ids.append(ds.max_column_id() + 1)
         col_names.append('Weight')
         result = self.api.insert_column(ds.identifier, 4, 'Weight', self.datastore)
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         # Retrieve dataset and ensure that it has the following schema:
         # Name, Height, Age, Salary, Weight
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         # Ensure that there are five rows
-        self.assertEquals(len(ds.columns), len(col_names))
+        self.assertEqual(len(ds.columns), len(col_names))
         for i in range(len(col_names)):
             col = ds.columns[i]
-            self.assertEquals(col.identifier, col_ids[i])
-            self.assertEquals(col.name.upper(), col_names[i].upper())
+            self.assertEqual(col.identifier, col_ids[i])
+            self.assertEqual(col.name.upper(), col_names[i].upper())
         # The cell values for new columns are None all other values are not None
         for row in ds_rows:
             for i in range(len(ds.columns)):
@@ -250,7 +250,7 @@ class TestDefaultVizualApi(unittest.TestCase):
                     self.assertTrue(row.values[i])
         # Ensure that row identifier haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEqual(ds_rows[i].identifier, row_ids[i])
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.insert_column('unknown:uri', 1, 'Height', self.datastore)
@@ -281,42 +281,42 @@ class TestDefaultVizualApi(unittest.TestCase):
         # original dataset
         result = self.api.insert_row(ds.identifier, 1, self.datastore)
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         # Retrieve modified dataset
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         # Ensure that there are three rows
-        self.assertEquals(len(ds_rows), 3)
+        self.assertEqual(len(ds_rows), 3)
         # The second row has empty values for each column
         row = ds_rows[1]
-        self.assertEquals(len(row.values), len(ds.columns))
+        self.assertEqual(len(row.values), len(ds.columns))
         for i in range(len(ds.columns)):
             self.assertIsNone(row.values[i])
         # Append row at end current dataset
         row_ids.append(ds.max_row_id() + 1)
         result = self.api.insert_row(ds.identifier, 3, self.datastore)
         # Resulting dataset should differ from previous one
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         # Ensure that there are three rows
-        self.assertEquals(len(ds_rows), 4)
+        self.assertEqual(len(ds_rows), 4)
         # The next to last row has non-empty values for each column
         row = ds_rows[2]
-        self.assertEquals(len(row.values), len(ds.columns))
+        self.assertEqual(len(row.values), len(ds.columns))
         for i in range(len(ds.columns)):
             self.assertIsNotNone(row.values[i])
         # The last row has empty values for each column
         row = ds_rows[3]
-        self.assertEquals(len(row.values), len(ds.columns))
+        self.assertEqual(len(row.values), len(ds.columns))
         for i in range(len(ds.columns)):
             self.assertIsNone(row.values[i])
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.insert_row('unknown:uri', 1, self.datastore)
@@ -338,13 +338,13 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds = result.dataset
         resources = result.resources
         ds_rows = ds.fetch_rows()
-        self.assertEquals(len(ds.columns), 3)
-        self.assertEquals(len(ds_rows), 2)
+        self.assertEqual(len(ds.columns), 3)
+        self.assertEqual(len(ds_rows), 2)
         for row in ds_rows:
             self.assertTrue(isinstance(row.values[1], int))
         self.assertIsNotNone(resources)
-        self.assertEquals(resources[RESOURCE_FILEID], fh.identifier)
-        self.assertEquals(resources[RESOURCE_DATASET], ds.identifier)
+        self.assertEqual(resources[RESOURCE_FILEID], fh.identifier)
+        self.assertEqual(resources[RESOURCE_DATASET], ds.identifier)
         # Delete file handle and run load_dataset again with returned resource
         # information. This should not raise an error since the file is not
         # accessed but the previous dataset reused.
@@ -355,7 +355,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             file_id=fh.identifier,
             resources=resources
         )
-        self.assertEquals(result.dataset.identifier, ds.identifier)
+        self.assertEqual(result.dataset.identifier, ds.identifier)
         # Doing the same without the resources should raise an exception
         with self.assertRaises(ValueError):
             self.api.load_dataset(
@@ -372,7 +372,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             )
         # Test loading file from external resource. Skip if DOWNLOAD_URL is None
         if DOWNLOAD_URL is None:
-            print 'Skipping download test'
+            print('Skipping download test')
             return
         result = self.api.load_dataset(
             datastore=self.datastore,
@@ -383,11 +383,11 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds = result.dataset
         resources = result.resources
         ds_rows = ds.fetch_rows()
-        self.assertEquals(len(ds.columns), 4)
-        self.assertEquals(len(ds_rows), 54)
+        self.assertEqual(len(ds.columns), 4)
+        self.assertEqual(len(ds_rows), 54)
         self.assertIsNotNone(resources)
-        self.assertEquals(resources[RESOURCE_URL], DOWNLOAD_URL)
-        self.assertEquals(resources[RESOURCE_DATASET], ds.identifier)
+        self.assertEqual(resources[RESOURCE_URL], DOWNLOAD_URL)
+        self.assertEqual(resources[RESOURCE_DATASET], ds.identifier)
         # Attempt to simulate re-running without downloading again. Set the
         # Uri to some fake Uri that would raise an exception if an attempt was
         # made to download
@@ -400,7 +400,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             resources=resources
         )
         prev_id = result.dataset.identifier
-        self.assertEquals(result.dataset.identifier, prev_id)
+        self.assertEqual(result.dataset.identifier, prev_id)
         # If we re-run with reload flag true a new dataset should be returned
         resources[RESOURCE_URL] = DOWNLOAD_URL
         result = self.api.load_dataset(
@@ -436,26 +436,26 @@ class TestDefaultVizualApi(unittest.TestCase):
             1,
             self.datastore
         )
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds.columns[0].name.upper(), 'Age'.upper())
-        self.assertEquals(ds.columns[1].name.upper(), 'Name'.upper())
-        self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Age'.upper())
+        self.assertEqual(ds.columns[1].name.upper(), 'Name'.upper())
+        self.assertEqual(ds.columns[2].name.upper(), 'Salary'.upper())
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 23)
-        self.assertEquals(row.values[1], 'Alice')
-        self.assertEquals(row.values[2], '35K')
+        self.assertEqual(row.values[0], 23)
+        self.assertEqual(row.values[1], 'Alice')
+        self.assertEqual(row.values[2], '35K')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 32)
-        self.assertEquals(row.values[1], 'Bob')
-        self.assertEquals(row.values[2], '30K')
+        self.assertEqual(row.values[0], 32)
+        self.assertEqual(row.values[1], 'Bob')
+        self.assertEqual(row.values[2], '30K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Swap last two columns
         c = col_ids[1]
         del col_ids[1]
@@ -468,23 +468,23 @@ class TestDefaultVizualApi(unittest.TestCase):
         )
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds.columns[0].name.upper(), 'Age'.upper())
-        self.assertEquals(ds.columns[1].name.upper(), 'Salary'.upper())
-        self.assertEquals(ds.columns[2].name.upper(), 'Name'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Age'.upper())
+        self.assertEqual(ds.columns[1].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[2].name.upper(), 'Name'.upper())
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 23)
-        self.assertEquals(row.values[1], '35K')
-        self.assertEquals(row.values[2], 'Alice')
+        self.assertEqual(row.values[0], 23)
+        self.assertEqual(row.values[1], '35K')
+        self.assertEqual(row.values[2], 'Alice')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 32)
-        self.assertEquals(row.values[1], '30K')
-        self.assertEquals(row.values[2], 'Bob')
+        self.assertEqual(row.values[0], 32)
+        self.assertEqual(row.values[1], '30K')
+        self.assertEqual(row.values[2], 'Bob')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # No changes if source and target position are the same
         result = self.api.move_column(
             ds.identifier,
@@ -492,7 +492,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             1,
             self.datastore
         )
-        self.assertEquals(ds.identifier, result.dataset.identifier)
+        self.assertEqual(ds.identifier, result.dataset.identifier)
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.move_column('unknown:uri', 0, 1, self.datastore)
@@ -531,70 +531,70 @@ class TestDefaultVizualApi(unittest.TestCase):
         # Swap first two rows
         row_ids = [row for row in reversed(row_ids)]
         result = self.api.move_row(ds.identifier, 0, 1, self.datastore)
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds.columns[0].name.upper(), 'Name'.upper())
-        self.assertEquals(ds.columns[1].name.upper(), 'Age'.upper())
-        self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Name'.upper())
+        self.assertEqual(ds.columns[1].name.upper(), 'Age'.upper())
+        self.assertEqual(ds.columns[2].name.upper(), 'Salary'.upper())
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 'Bob')
-        self.assertEquals(row.values[1], 32)
-        self.assertEquals(row.values[2], '30K')
+        self.assertEqual(row.values[0], 'Bob')
+        self.assertEqual(row.values[1], 32)
+        self.assertEqual(row.values[2], '30K')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 'Alice')
-        self.assertEquals(row.values[1], 23)
-        self.assertEquals(row.values[2], '35K')
+        self.assertEqual(row.values[0], 'Alice')
+        self.assertEqual(row.values[1], 23)
+        self.assertEqual(row.values[2], '35K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(ds_rows[i].identifier, row_ids[i])
+            self.assertEqual(ds_rows[i].identifier, row_ids[i])
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Swap last two rows
         row_ids = [row for row in reversed(row_ids)]
         result = self.api.move_row(ds.identifier, 1, 0, self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds.columns[0].name.upper(), 'Name'.upper())
-        self.assertEquals(ds.columns[1].name.upper(), 'Age'.upper())
-        self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Name'.upper())
+        self.assertEqual(ds.columns[1].name.upper(), 'Age'.upper())
+        self.assertEqual(ds.columns[2].name.upper(), 'Salary'.upper())
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 'Alice')
-        self.assertEquals(row.values[1], 23)
-        self.assertEquals(row.values[2], '35K')
+        self.assertEqual(row.values[0], 'Alice')
+        self.assertEqual(row.values[1], 23)
+        self.assertEqual(row.values[2], '35K')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 'Bob')
-        self.assertEquals(row.values[1], 32)
-        self.assertEquals(row.values[2], '30K')
+        self.assertEqual(row.values[0], 'Bob')
+        self.assertEqual(row.values[1], 32)
+        self.assertEqual(row.values[2], '30K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Move first row to the end
         result = self.api.move_row(ds.identifier, 0, 2, self.datastore)
         row_ids = [row for row in reversed(row_ids)]
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 'Bob')
-        self.assertEquals(row.values[1], 32)
-        self.assertEquals(row.values[2], '30K')
+        self.assertEqual(row.values[0], 'Bob')
+        self.assertEqual(row.values[1], 32)
+        self.assertEqual(row.values[2], '30K')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 'Alice')
-        self.assertEquals(row.values[1], 23)
-        self.assertEquals(row.values[2], '35K')
+        self.assertEqual(row.values[0], 'Alice')
+        self.assertEqual(row.values[1], 23)
+        self.assertEqual(row.values[2], '35K')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # No changes if source and target position are the same
         result = self.api.move_row(ds.identifier, 1, 1, self.datastore)
-        self.assertEquals(ds.identifier, result.dataset.identifier)
+        self.assertEqual(ds.identifier, result.dataset.identifier)
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.move_row('unknown:uri', 0, 1, self.datastore)
@@ -627,11 +627,11 @@ class TestDefaultVizualApi(unittest.TestCase):
             'Firstname',
             self.datastore
         )
-        self.assertNotEquals(result.dataset.identifier, ds.identifier)
+        self.assertNotEqual(result.dataset.identifier, ds.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
-        self.assertEquals(ds.columns[0].name.upper(), 'Firstname'.upper())
-        self.assertEquals(ds.columns[1].name.upper(), 'Age'.upper())
-        self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Firstname'.upper())
+        self.assertEqual(ds.columns[1].name.upper(), 'Age'.upper())
+        self.assertEqual(ds.columns[2].name.upper(), 'Salary'.upper())
         result = self.api.rename_column(
             ds.identifier,
             ds.column_by_name('Age').identifier,
@@ -640,15 +640,15 @@ class TestDefaultVizualApi(unittest.TestCase):
         )
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(ds.columns[0].name.upper(), 'Firstname'.upper())
-        self.assertEquals(ds.columns[1].name, 'BDate')
-        self.assertEquals(ds.columns[2].name.upper(), 'Salary'.upper())
+        self.assertEqual(ds.columns[0].name.upper(), 'Firstname'.upper())
+        self.assertEqual(ds.columns[1].name, 'BDate')
+        self.assertEqual(ds.columns[2].name.upper(), 'Salary'.upper())
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # No changes if the old and new column name are the same (with exception
         # to upper and lower cases).
         result = self.api.rename_column(
@@ -657,7 +657,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             'BDate',
             self.datastore
         )
-        self.assertEquals(ds.identifier, result.dataset.identifier)
+        self.assertEqual(ds.identifier, result.dataset.identifier)
         # Ensure exception is thrown if dataset identifier is unknown
         with self.assertRaises(ValueError):
             self.api.rename_column('unknown:uri', 0, 'Firstname', self.datastore)
@@ -695,14 +695,14 @@ class TestDefaultVizualApi(unittest.TestCase):
         ds = self.datastore.get_dataset(ds.identifier)
         ds_rows = ds.fetch_rows()
         names = ['Name', 'Height', 'Salary']
-        self.assertEquals(len(ds.columns), len(names))
+        self.assertEqual(len(ds.columns), len(names))
         for i in range(len(names)):
             col = ds.columns[i]
-            self.assertEquals(col.name.upper(), names[i].upper())
-        self.assertEquals([col.identifier for col in ds.columns], [0, 3, 2])
-        self.assertEquals(len(ds_rows), 1)
-        self.assertEquals(ds_rows[0].values, ['Carla', '160', '56K'])
-        self.assertEquals(int(ds_rows[0].identifier), 4)
+            self.assertEqual(col.name.upper(), names[i].upper())
+        self.assertEqual([col.identifier for col in ds.columns], [0, 3, 2])
+        self.assertEqual(len(ds_rows), 1)
+        self.assertEqual(ds_rows[0].values, ['Carla', '160', '56K'])
+        self.assertEqual(int(ds_rows[0].identifier), 4)
 
     def sort_dataset(self):
         """Test sorting a dataset."""
@@ -723,7 +723,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             if name in names:
                 result.append(name)
         for i in range(len(names)):
-            self.assertEquals(names[i], result[i])
+            self.assertEqual(names[i], result[i])
         result = self.api.sort_dataset(ds.identifier, [2, 1, 0], [True, False, True], self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         rows = ds.fetch_rows()
@@ -734,7 +734,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             if name in names:
                 result.append(name)
         for i in range(len(names)):
-            self.assertEquals(names[i], result[i])
+            self.assertEqual(names[i], result[i])
         # Raises error for invalid column identifier
         with self.assertRaises(ValueError):
             self.api.sort_dataset(ds.identifier, [2, 10, 0], [True, False, True], self.datastore)
@@ -757,7 +757,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         # has the new value in cell [0, 0]
         row_id = row_ids[0]
         result = self.api.update_cell(ds.identifier, 0, int(row_id), 'MyValue', self.datastore)
-        self.assertNotEquals(ds.identifier, result.dataset.identifier)
+        self.assertNotEqual(ds.identifier, result.dataset.identifier)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
         row = None
@@ -765,7 +765,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             if r.identifier == row_id:
                 row = r
                 break
-        self.assertEquals(row.values[0], 'MyValue')
+        self.assertEqual(row.values[0], 'MyValue')
         result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, int(row_id), 'AValue', self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)
         ds_rows = ds.fetch_rows()
@@ -774,14 +774,14 @@ class TestDefaultVizualApi(unittest.TestCase):
             if r.identifier == row_id:
                 row = r
                 break
-        self.assertEquals(row.values[0], 'AValue')
-        self.assertEquals(row.values[ds.column_index('Name')], 'AValue')
+        self.assertEqual(row.values[0], 'AValue')
+        self.assertEqual(row.values[ds.column_index('Name')], 'AValue')
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEquals(int(ds_rows[i].identifier), int(row_ids[i]))
+            self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
-            self.assertEquals(ds.columns[i].identifier, col_ids[i])
+            self.assertEqual(ds.columns[i].identifier, col_ids[i])
         # Set value to None
         result = self.api.update_cell(ds.identifier, ds.column_by_name('Name').identifier, int(row_id), None, self.datastore)
         ds = self.datastore.get_dataset(result.dataset.identifier)

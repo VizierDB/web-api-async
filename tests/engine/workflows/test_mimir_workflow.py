@@ -111,12 +111,12 @@ class TestMimirBackendWorkflows(unittest.TestCase):
             self.assertTrue(DATASET_PEOPLE in m.datasets)
         ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_PEOPLE].identifier)
         rows = ds.fetch_rows()
-        self.assertEquals(rows[0].values, ['Alice', 24])
-        self.assertEquals(rows[1].values, ['Bob', 32])
+        self.assertEqual(rows[0].values, ['Alice', 24])
+        self.assertEqual(rows[1].values, ['Bob', 32])
         ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_FRIENDS].identifier)
         rows = ds.fetch_rows()
-        self.assertEquals(rows[0].values, ['Yonder', 23])
-        self.assertEquals(rows[1].values, ['Zoe', 34])
+        self.assertEqual(rows[0].values, ['Yonder', 23])
+        self.assertEqual(rows[1].values, ['Zoe', 34])
 
 
 if __name__ == '__main__':

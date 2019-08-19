@@ -49,7 +49,7 @@ class ViztrailsCommands(Command):
             module_id=module_id,
             properties={PROPERTY_NAME: name}
         )
-        print 'Branch ' + name + ' created (' + branch.identifier + ')'
+        print('Branch ' + name + ' created (' + branch.identifier + ')')
         return True
 
     def create_project(self, name):
@@ -57,7 +57,7 @@ class ViztrailsCommands(Command):
         project = self.api.create_project(
             properties={PROPERTY_NAME: name}
         )
-        print 'Project ' + name + ' created (' + project.identifier + ')'
+        print('Project ' + name + ' created (' + project.identifier + ')')
         return True
 
     def delete_branch(self, branch_id):
@@ -67,9 +67,9 @@ class ViztrailsCommands(Command):
             branch_id=branch_id
         )
         if result:
-            print 'Branch deleted'
+            print('Branch deleted')
         else:
-            print 'Unknown branch ' + branch_id
+            print('Unknown branch ' + branch_id)
         return True
 
     def delete_project(self, project_id):
@@ -80,9 +80,9 @@ class ViztrailsCommands(Command):
             if not default_project is None:
                 if default_project == project_id:
                     self.api.defaults.delete(KEY_DEFAULT_PROJECT)
-            print 'Project deleted'
+            print('Project deleted')
         else:
-            print 'Unknown project ' + project_id
+            print('Unknown project ' + project_id)
         return True
 
     def eval(self, tokens):
@@ -145,19 +145,19 @@ class ViztrailsCommands(Command):
 
     def help(self):
         """Print help statement."""
-        print '\nProjects'
-        print '  create branch <name>'
-        print '  create branch <name> from module <module-id>'
-        print '  create branch <name> from workflow <workflow-id> module <module-id>'
-        print '  create branch <name>'
-        print '  create project <name>'
-        print '  delete branch <branch-id>'
-        print '  delete project <project-id>'
-        print '  list branches'
-        print '  list projects'
-        print '  rename branch <name>'
-        print '  rename project <name>'
-        print '  show [history | notebooks]'
+        print('\nProjects')
+        print('  create branch <name>')
+        print('  create branch <name> from module <module-id>')
+        print('  create branch <name> from workflow <workflow-id> module <module-id>')
+        print('  create branch <name>')
+        print('  create project <name>')
+        print('  delete branch <branch-id>')
+        print('  delete project <project-id>')
+        print('  list branches')
+        print('  list projects')
+        print('  rename branch <name>')
+        print('  rename project <name>')
+        print('  show [history | notebooks]')
 
     def list_branches(self):
         """Print listing of branches for default project in tabular format."""
@@ -171,9 +171,9 @@ class ViztrailsCommands(Command):
                 ts(branch.created_at),
                 ts(branch.last_modified_at)
             ])
-        print
+        print()
         self.output(rows)
-        print '\n' + str(len(branches)) + ' branch(es)\n'
+        print('\n' + str(len(branches)) + ' branch(es)\n')
         return True
 
     def list_projects(self):
@@ -188,9 +188,9 @@ class ViztrailsCommands(Command):
                 ts(project.created_at),
                 ts(project.last_modified_at)
             ])
-        print
+        print()
         self.output(rows)
-        print '\n' + str(len(projects)) + ' project(s)\n'
+        print('\n' + str(len(projects)) + ' project(s)\n')
         return True
 
     def list_workflows(self):
@@ -210,9 +210,9 @@ class ViztrailsCommands(Command):
                 workflow.command,
                 ts(workflow.created_at)
             ])
-        print
+        print()
         self.output(rows)
-        print '\n' + str(len(branch.workflows)) + ' workflow(s)\n'
+        print('\n' + str(len(branch.workflows)) + ' workflow(s)\n')
         return True
 
     def rename_branch(self, name):
@@ -222,7 +222,7 @@ class ViztrailsCommands(Command):
             branch_id=self.api.get_default_branch(),
             properties={PROPERTY_NAME: name}
         )
-        print 'Branch renamed to ' + name
+        print('Branch renamed to ' + name)
         return True
 
     def rename_project(self, name):
@@ -231,5 +231,5 @@ class ViztrailsCommands(Command):
             project_id=self.api.get_default_project(),
             properties={PROPERTY_NAME: name}
         )
-        print 'Project renamed to ' + name
+        print('Project renamed to ' + name)
         return True

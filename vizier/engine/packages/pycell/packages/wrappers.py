@@ -10,7 +10,7 @@ import json
 class GoogleMapClusterWrapper():
     
     def do_output(self, latlngjson, centerlat, centerlon, zoom, width, height):
-        print("""
+        print(("""
         <div style="width:"""+str(width)+"""; height:"""+str(int(height)-30)+"""">
             <style>
               /* Always set the map height explicitly to define the size of the div
@@ -96,7 +96,7 @@ class GoogleMapClusterWrapper():
                 }
             }'>
           </div>
-        """)
+        """))
 
 class LeafletClusterWrapper():
 

@@ -72,21 +72,21 @@ class TestOSWorkflowAppend(unittest.TestCase):
             action=ACTION_DELETE,
             command=head_modules[-1].command
         )
-        self.assertEquals(len(wf.modules), 9)
-        self.assertEquals(wf.descriptor.identifier, '0000000A')
-        self.assertEquals(wf.descriptor.action, ACTION_DELETE)
-        self.assertEquals(wf.descriptor.package_id, PACKAGE_PYTHON)
-        self.assertEquals(wf.descriptor.command_id, PYTHON_CODE)
+        self.assertEqual(len(wf.modules), 9)
+        self.assertEqual(wf.descriptor.identifier, '0000000A')
+        self.assertEqual(wf.descriptor.action, ACTION_DELETE)
+        self.assertEqual(wf.descriptor.package_id, PACKAGE_PYTHON)
+        self.assertEqual(wf.descriptor.command_id, PYTHON_CODE)
         vt = OSViztrailHandle.load_viztrail(base_path)
         branch = vt.get_default_branch()
         history = branch.get_history()
-        self.assertEquals(len(history), 11)
+        self.assertEqual(len(history), 11)
         wf = branch.get_head()
-        self.assertEquals(len(wf.modules), 9)
-        self.assertEquals(wf.descriptor.identifier, '0000000A')
-        self.assertEquals(wf.descriptor.action, ACTION_DELETE)
-        self.assertEquals(wf.descriptor.package_id, PACKAGE_PYTHON)
-        self.assertEquals(wf.descriptor.command_id, PYTHON_CODE)
+        self.assertEqual(len(wf.modules), 9)
+        self.assertEqual(wf.descriptor.identifier, '0000000A')
+        self.assertEqual(wf.descriptor.action, ACTION_DELETE)
+        self.assertEqual(wf.descriptor.package_id, PACKAGE_PYTHON)
+        self.assertEqual(wf.descriptor.command_id, PYTHON_CODE)
 
     def test_multi_append(self):
         """Test appending modules to viztrail branch."""
@@ -122,18 +122,18 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 action=ACTION_INSERT,
                 command=command
             )
-            self.assertEquals(len(branch.get_history()), (i + 1))
+            self.assertEqual(len(branch.get_history()), (i + 1))
         vt = OSViztrailHandle.load_viztrail(base_path)
         branch = vt.get_default_branch()
         history = branch.get_history()
-        self.assertEquals(len(history), 10)
+        self.assertEqual(len(history), 10)
         for i in range(10):
             wf = branch.get_workflow(history[i].identifier)
-            self.assertEquals(len(wf.modules), (i + 1))
+            self.assertEqual(len(wf.modules), (i + 1))
             for m in range(i + 1):
                 module = wf.modules[m]
-                self.assertEquals(module.external_form, 'print ' + str(m) + '+' + str(m))
-                self.assertEquals(module.outputs.stdout[-1].value, str(m+m))
+                self.assertEqual(module.external_form, 'print ' + str(m) + '+' + str(m))
+                self.assertEqual(module.outputs.stdout[-1].value, str(m+m))
 
     def test_pending_append(self):
         """Test appending a workflow with pending modules to a branch."""
@@ -182,25 +182,25 @@ class TestOSWorkflowAppend(unittest.TestCase):
             self.assertTrue(m.identifier in before_ids)
         for m in wf.modules[5:]:
             self.assertFalse(m.identifier in before_ids)
-        self.assertEquals(len(wf.modules), 10)
-        self.assertEquals(wf.descriptor.identifier, '0000000A')
-        self.assertEquals(wf.descriptor.action, ACTION_DELETE)
-        self.assertEquals(wf.descriptor.package_id, PACKAGE_PYTHON)
-        self.assertEquals(wf.descriptor.command_id, PYTHON_CODE)
+        self.assertEqual(len(wf.modules), 10)
+        self.assertEqual(wf.descriptor.identifier, '0000000A')
+        self.assertEqual(wf.descriptor.action, ACTION_DELETE)
+        self.assertEqual(wf.descriptor.package_id, PACKAGE_PYTHON)
+        self.assertEqual(wf.descriptor.command_id, PYTHON_CODE)
         vt = OSViztrailHandle.load_viztrail(base_path)
         branch = vt.get_default_branch()
         history = branch.get_history()
-        self.assertEquals(len(history), 11)
+        self.assertEqual(len(history), 11)
         wf = branch.get_head()
         for m in wf.modules[:5]:
             self.assertTrue(m.identifier in before_ids)
         for m in wf.modules[5:]:
             self.assertFalse(m.identifier in before_ids)
-        self.assertEquals(len(wf.modules), 10)
-        self.assertEquals(wf.descriptor.identifier, '0000000A')
-        self.assertEquals(wf.descriptor.action, ACTION_DELETE)
-        self.assertEquals(wf.descriptor.package_id, PACKAGE_PYTHON)
-        self.assertEquals(wf.descriptor.command_id, PYTHON_CODE)
+        self.assertEqual(len(wf.modules), 10)
+        self.assertEqual(wf.descriptor.identifier, '0000000A')
+        self.assertEqual(wf.descriptor.action, ACTION_DELETE)
+        self.assertEqual(wf.descriptor.package_id, PACKAGE_PYTHON)
+        self.assertEqual(wf.descriptor.command_id, PYTHON_CODE)
 
     def test_single_append(self):
         """Test appending a single module to an empty viztrail branch."""
@@ -237,8 +237,8 @@ class TestOSWorkflowAppend(unittest.TestCase):
         # Load the viztrail and get the module at the branch head
         vt = OSViztrailHandle.load_viztrail(base_path)
         module = vt.get_default_branch().get_head().modules[-1]
-        self.assertEquals(module.external_form, 'print 2+2')
-        self.assertEquals(module.outputs.stdout[-1].value, '4')
+        self.assertEqual(module.external_form, 'print 2+2')
+        self.assertEqual(module.outputs.stdout[-1].value, '4')
 
 
 if __name__ == '__main__':

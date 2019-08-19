@@ -15,7 +15,7 @@ def custom_command(command_subclass):
     orig_run = command_subclass.run
     
     def modified_run(self):
-        print(str(command_subclass))
+        print((str(command_subclass)))
         orig_run(self)
         
     command_subclass.run = modified_run
@@ -45,7 +45,7 @@ def package_files(directory):
                 paths[path].append( os.path.join(path, filename))
             else:
                 paths[path] = [os.path.join(path, filename)]
-    return [(k.replace('../', ''), v) for k, v in paths.items()] 
+    return [(k.replace('../', ''), v) for k, v in list(paths.items())] 
 
 packages_files = package_files('resources/packages/')
 processors_files = package_files('resources/processors/')

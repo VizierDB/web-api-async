@@ -186,4 +186,4 @@ class OSViztrailRepository(ViztrailRepository):
         -------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        return self.viztrails.values()
+        return list(self.viztrails.values())

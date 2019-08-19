@@ -71,7 +71,7 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         rows = ds.fetch_rows()
-        self.assertNotEquals(rows[2].values[ds.column_index('Age')], '')
+        self.assertNotEqual(rows[2].values[ds.column_index('Age')], '')
         # Introduce an error. Make sure command formating is correct
         command = cmd.mimir_domain('MY DS', 'MY COL')
         with self.assertRaises(ValueError):
@@ -112,7 +112,7 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        self.assertEquals(len(columns), 6)
+        self.assertEqual(len(columns), 6)
         self.assertTrue('LATITUDE' in columns)
         self.assertTrue('LONGITUDE' in columns)
         result = self.processor.compute(
@@ -127,10 +127,10 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        self.assertEquals(len(columns), 8)
+        self.assertEqual(len(columns), 8)
         self.assertTrue('LATITUDE_1' in columns)
         self.assertTrue('LONGITUDE_1' in columns)
-        self.assertEquals(len(ds.columns), 8)
+        self.assertEqual(len(ds.columns), 8)
 
     def test_key_repair_lens(self):
         """Test KEY REPAIR lens."""
@@ -151,8 +151,8 @@ class TestMimirProcessor(unittest.TestCase):
         )
         self.assertTrue(result.is_success)
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
-        self.assertEquals(len(ds.columns), 4)
-        self.assertEquals(ds.row_count, 3)
+        self.assertEqual(len(ds.columns), 4)
+        self.assertEqual(ds.row_count, 3)
         names = set()
         empids = set()
         rowids = set()
@@ -203,7 +203,7 @@ class TestMimirProcessor(unittest.TestCase):
         rows = ds.fetch_rows()
         for row in rows:
             self.assertIsNotNone(row.values[1])
-        self.assertNotEquals(rows[2].values[ds.column_index('Age')], '')
+        self.assertNotEqual(rows[2].values[ds.column_index('Age')], '')
         # MISSING VALUE Lens with value constraint
         command = cmd.mimir_missing_value(
             DATASET_NAME,
@@ -250,9 +250,9 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
-        self.assertEquals(len(ds.columns), 3)
+        self.assertEqual(len(ds.columns), 3)
         rows = ds.fetch_rows()
-        self.assertEquals(len(rows), 24)
+        self.assertEqual(len(rows), 24)
         command = cmd.mimir_missing_key(
             DATASET_NAME,
             ds.column_by_name('Salary').identifier
@@ -269,9 +269,9 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
-        self.assertEquals(len(ds.columns), 3)
+        self.assertEqual(len(ds.columns), 3)
         rows = ds.fetch_rows()
-        self.assertEquals(len(rows), 55)
+        self.assertEqual(len(rows), 55)
 
     def test_picker_lens(self):
         """Test PICKER lens."""
@@ -296,8 +296,8 @@ class TestMimirProcessor(unittest.TestCase):
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        print columns
-        self.assertEquals(len(ds.columns), 5)
+        print(columns)
+        self.assertEqual(len(ds.columns), 5)
         self.assertTrue('PICK_ONE_AGE_SALARY' in columns)
         # Pick another column, this time with custom name
         command=cmd.mimir_picker(DATASET_NAME, [
@@ -319,7 +319,7 @@ class TestMimirProcessor(unittest.TestCase):
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
         columns = [c.name for c in ds.columns]
-        self.assertEquals(len(ds.columns), 6)
+        self.assertEqual(len(ds.columns), 6)
         self.assertTrue('PICK_ONE_AGE_SALARY' in columns)
         self.assertTrue('MY_COLUMN' in columns)
         # Pick from a picked column
@@ -368,8 +368,8 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         # Get dataset
         ds = self.datastore.get_dataset(result.provenance.write['new_' + DATASET_NAME].identifier)
-        self.assertEquals(len(ds.columns), 2)
-        self.assertEquals(ds.row_count, 2)
+        self.assertEqual(len(ds.columns), 2)
+        self.assertEqual(ds.row_count, 2)
 
     def test_type_inference_lens(self):
         """Test TYPE INFERENCE lens."""
@@ -391,12 +391,12 @@ class TestMimirProcessor(unittest.TestCase):
         self.assertTrue(result.is_success)
         # Get dataset
         ds2 = self.datastore.get_dataset(result.provenance.write[DATASET_NAME].identifier)
-        self.assertEquals(len(ds2.columns), 3)
-        self.assertEquals(ds2.row_count, 7)
+        self.assertEqual(len(ds2.columns), 3)
+        self.assertEqual(ds2.row_count, 7)
         ds1_rows = ds.fetch_rows()
         ds2_rows = ds2.fetch_rows()
         for i in range(ds2.row_count):
-            self.assertEquals(ds1_rows[i].values, ds2_rows[i].values)
+            self.assertEqual(ds1_rows[i].values, ds2_rows[i].values)
 
 
 if __name__ == '__main__':

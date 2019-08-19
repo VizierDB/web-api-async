@@ -400,9 +400,9 @@ def encode_values(values):
     """
     result = list()
     for val in values:
-        if isinstance(val, basestring):
+        if isinstance(val, str):
             try:
-                result.append(val.encode('utf-8'))
+                result.append(val)#val.encode('utf-8'))
             except UnicodeDecodeError as ex:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))
@@ -442,7 +442,7 @@ def get_column_index(columns, column_id):
         if column_id >= 0 and column_id < len(columns):
             return column_id
         raise ValueError('invalid column index \'' + str(column_id) + '\'')
-    elif isinstance(column_id, basestring):
+    elif isinstance(column_id, str):
         # Get index for column that has a name that matches column_id. If
         # multiple matches are detected column_id will be interpreted as a
         # column label

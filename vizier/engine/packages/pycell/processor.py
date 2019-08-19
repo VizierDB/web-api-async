@@ -94,7 +94,7 @@ class PyCellTaskProcessor(TaskProcessor):
         # Run the Python code
         try:
             python_cell_preload(variables)
-            exec source in variables, variables
+            exec(source, variables, variables)
         except Exception as ex:
             exception = ex
         finally:
@@ -117,21 +117,21 @@ class PyCellTaskProcessor(TaskProcessor):
             # not attempt anything tricky.
             read = dict()
             for name in client.read:
-                if not isinstance(name, basestring):
+                if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
                 if name in context.datasets:
                     read[name] = context.datasets[name]
-                    if not isinstance(read[name], basestring):
+                    if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in mapping dictionary')
                 else:
                     read[name] = None
             write = dict()
             for name in client.write:
-                if not isinstance(name, basestring):
+                if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
                 ds_id = client.datasets[name]
                 if not ds_id is None:
-                    if not isinstance(ds_id, basestring):
+                    if not isinstance(ds_id, str):
                         raise RuntimeError('invalid value in mapping dictionary')
                     elif ds_id in client.descriptors:
                         write[name] = client.descriptors[ds_id]

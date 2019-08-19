@@ -22,7 +22,7 @@ def print_annotations(elements):
         if not anno.row_id is None:
             line += str(anno.row_id)
         line += ']: ' + anno.key + ' = ' + str(anno.value)
-        print line
+        print(line)
 
 
 store = DatastoreClient(
@@ -40,13 +40,13 @@ ds = store.create_dataset(
     annotations=DatasetMetadata(rows=[DatasetAnnotation(row_id=1, key='user:comment', value='Needs cleaning')])
 )
 
-print ds
-print [col.identifier for col in ds.columns]
-print [col.name for col in ds.columns]
+print(ds)
+print([col.identifier for col in ds.columns])
+print([col.name for col in ds.columns])
 
 dh = store.get_dataset(ds.identifier)
 for row in dh.fetch_rows():
-    print [row.identifier] + row.values
+    print([row.identifier] + row.values)
 
 annotations = dh.get_annotations()
 print_annotations(annotations)

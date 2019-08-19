@@ -50,13 +50,13 @@ def vizier_bokeh_show(obj, state, notebook_handle):
     content = re.sub(r"\"", r"&#34;", content) 
 
     # Allocate a div for the plot to be rendered into
-    print('<div id="{}"></div>'.format(plot_object_id))
+    print(('<div id="{}"></div>'.format(plot_object_id)))
 
     # Hack around the lack of support for script-tags in cell results: 
     # load an image that doesn't exist, and add an onError script that 
     # actually embeds the image.  Note the substitution of single-quotes
     # in the sanitization step above.
-    print('<img src onError="Bokeh.embed.embed_item('+content+');"/>')
+    print(('<img src onError="Bokeh.embed.embed_item('+content+');"/>'))
 
 def vizier_bokeh_app(app, state, notebook_url, **kwargs):
     """Hook called by Bokeh when an app is started."""

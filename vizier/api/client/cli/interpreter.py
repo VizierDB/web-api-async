@@ -69,7 +69,7 @@ class CommandInterpreter(object):
         for cmd in self.commands:
             if cmd.eval(tokens):
                 return
-        print 'Unknown command ' + ' '.join(tokens)
+        print('Unknown command ' + ' '.join(tokens))
         #except Exception as ex:
         #    print str(ex)
 

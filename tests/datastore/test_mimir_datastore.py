@@ -66,13 +66,13 @@ class TestMimirDatastore(unittest.TestCase):
         self.setup_fileserver()
         ds = self.db.load_dataset(self.fileserver.upload_file(CSV_FILE))
         # Ensure that the project data has three columns and two rows
-        self.assertEquals(ds.column_by_id(0).name.upper(), 'NAME')
-        self.assertEquals(ds.column_by_id(1).name.upper(), 'AGE')
-        self.assertEquals(ds.column_by_id(2).name.upper(), 'SALARY')
+        self.assertEqual(ds.column_by_id(0).name.upper(), 'NAME')
+        self.assertEqual(ds.column_by_id(1).name.upper(), 'AGE')
+        self.assertEqual(ds.column_by_id(2).name.upper(), 'SALARY')
         with self.assertRaises(ValueError):
             ds.column_by_id(5)
         ds.columns.append(DatasetColumn(identifier=5, name='NEWNAME'))
-        self.assertEquals(ds.column_by_id(5).name.upper(), 'NEWNAME')
+        self.assertEqual(ds.column_by_id(5).name.upper(), 'NEWNAME')
         with self.assertRaises(ValueError):
             ds.column_by_id(4)
 
@@ -81,9 +81,9 @@ class TestMimirDatastore(unittest.TestCase):
         self.setup_fileserver()
         ds = self.db.load_dataset(self.fileserver.upload_file(CSV_FILE))
         # Ensure that the project data has three columns and two rows
-        self.assertEquals(len(ds.columns), 3)
-        self.assertEquals(len(ds.fetch_rows()), 2)
-        self.assertEquals(ds.row_count, 2)
+        self.assertEqual(len(ds.columns), 3)
+        self.assertEqual(len(ds.fetch_rows()), 2)
+        self.assertEqual(ds.row_count, 2)
 
     def dataset_read(self):
         """Test reading a dataset."""
@@ -91,25 +91,25 @@ class TestMimirDatastore(unittest.TestCase):
         dh = self.db.load_dataset(self.fileserver.upload_file(CSV_FILE))
         ds = self.db.get_dataset(dh.identifier)
         ds_rows = ds.fetch_rows()
-        self.assertEquals(dh.identifier, ds.identifier)
-        self.assertEquals(len(dh.columns), len(ds.columns))
-        self.assertEquals(len(dh.fetch_rows()), len(ds_rows))
-        self.assertEquals(len(dh.fetch_rows()), len(ds_rows))
-        self.assertEquals(dh.row_count, len(ds_rows))
+        self.assertEqual(dh.identifier, ds.identifier)
+        self.assertEqual(len(dh.columns), len(ds.columns))
+        self.assertEqual(len(dh.fetch_rows()), len(ds_rows))
+        self.assertEqual(len(dh.fetch_rows()), len(ds_rows))
+        self.assertEqual(dh.row_count, len(ds_rows))
         # Name,Age,Salary
         # Alice,23,35K
         # Bob,32,30K
-        self.assertEquals(ds.column_index('Name'), 0)
-        self.assertEquals(ds.column_index('Age'), 1)
-        self.assertEquals(ds.column_index('Salary'), 2)
+        self.assertEqual(ds.column_index('Name'), 0)
+        self.assertEqual(ds.column_index('Age'), 1)
+        self.assertEqual(ds.column_index('Salary'), 2)
         row = ds_rows[0]
-        self.assertEquals(row.values[0], 'Alice')
-        self.assertEquals(int(row.values[1]), 23)
-        self.assertEquals(row.values[2], '35K')
+        self.assertEqual(row.values[0], 'Alice')
+        self.assertEqual(int(row.values[1]), 23)
+        self.assertEqual(row.values[2], '35K')
         row = ds_rows[1]
-        self.assertEquals(row.values[0], 'Bob')
-        self.assertEquals(int(row.values[1]), 32)
-        self.assertEquals(row.values[2], '30K')
+        self.assertEqual(row.values[0], 'Bob')
+        self.assertEqual(int(row.values[1]), 32)
+        self.assertEqual(row.values[2], '30K')
 
 
 if __name__ == '__main__':

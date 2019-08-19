@@ -197,7 +197,7 @@ def parse_command(tokens, notebook, datasets=dict()):
             for spec in tokens[5:]:
                 s_tokens = spec.split(':')
                 if len(s_tokens) != 3:
-                    print 'invalid data series ' + str(s_tokens)
+                    print('invalid data series ' + str(s_tokens))
                     return None
                 s = {
                     'column': ds.get_column(s_tokens[0]).identifier,
@@ -271,19 +271,19 @@ def parse_command(tokens, notebook, datasets=dict()):
 
 def print_commands():
     """Print command syntax listing for supported commands."""
-    print '  chart <name> on <dataset> with <column:label:start-end> ...'
-    print '  delete column <name> from <dataset>'
-    print '  delete row <row-index> from <dataset>'
-    print '  drop dataset <dataset>'
-    print '  filter <column-1>{::<new-name>} ... from <dataset>'
-    print '  insert column <name> into <dataset> at position <column-index>'
-    print '  insert row into <dataset> at position <row-index>'
-    print '  load <name> from file <file>'
-    print '  load <name> from url <url>'
-    print '  move column <name> in <dataset> to position <column-index>'
-    print '  move row <row-index> in <dataset> to position <target-index>'
-    print '  python [<script> | <file>]'
-    print '  rename column <name> in <dataset> to <new-name>'
-    print '  rename dataset <dataset> to <new-name>'
-    print '  sort <dataset> by <column-1>{::[DESC|ASC]} ...'
-    print '  update <dataset-name> <column-name> <row-index>{ <value>}'
+    print('  chart <name> on <dataset> with <column:label:start-end> ...')
+    print('  delete column <name> from <dataset>')
+    print('  delete row <row-index> from <dataset>')
+    print('  drop dataset <dataset>')
+    print('  filter <column-1>{::<new-name>} ... from <dataset>')
+    print('  insert column <name> into <dataset> at position <column-index>')
+    print('  insert row into <dataset> at position <row-index>')
+    print('  load <name> from file <file>')
+    print('  load <name> from url <url>')
+    print('  move column <name> in <dataset> to position <column-index>')
+    print('  move row <row-index> in <dataset> to position <target-index>')
+    print('  python [<script> | <file>]')
+    print('  rename column <name> in <dataset> to <new-name>')
+    print('  rename dataset <dataset> to <new-name>')
+    print('  sort <dataset> by <column-1>{::[DESC|ASC]} ...')
+    print('  update <dataset-name> <column-name> <row-index>{ <value>}')
