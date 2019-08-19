@@ -1,0 +1,30 @@
+{
+    "markdown": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "source"
+                    }
+                ], 
+                "id": "code", 
+                "name": "Markdown Code", 
+                "parameter": [
+                    {
+                        "datatype": "code", 
+                        "hidden": false, 
+                        "id": "source", 
+                        "index": 0, 
+                        "language": "markdown", 
+                        "name": "Markdown Code", 
+                        "required": true
+                    }
+                ]
+            }
+        ], 
+        "id": "markdown"
+    }
+}
