@@ -124,31 +124,25 @@ class SQLTaskProcessor(TaskProcessor):
             
             provenance = None
             if ds_name is None or ds_name == '':
-                outputs.stdout.append(
-                    TextOutput("\n".join(
-                        ", ".join('' if e is None else str(e) for e in row) for row in rs['data'])
-                    )
-                )
-                outputs.stdout.append(TextOutput(str(len(rs['data'])) + ' row(s)'))
-                provenance = ModuleProvenance()
-            else:
+                ds_name = "TEMPORARY_RESULT"
+
             
-                ds = context.datastore.register_dataset(
-                        table_name=view_name,
-                        columns=columns,
-                        row_counter=row_count
+            ds = context.datastore.register_dataset(
+                table_name=view_name,
+                columns=columns,
+                row_counter=row_count
+            )
+            print_dataset_schema(outputs, ds_name, ds.columns)
+            outputs.stdout.append(TextOutput(str(row_count) + ' row(s)'))
+            provenance = ModuleProvenance(
+                write={
+                    ds_name: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
                     )
-                print_dataset_schema(outputs, ds_name, ds.columns)
-                outputs.stdout.append(TextOutput(str(row_count) + ' row(s)'))
-                provenance = ModuleProvenance(
-                    write={
-                        ds_name: DatasetDescriptor(
-                            identifier=ds.identifier,
-                            columns=ds.columns,
-                            row_count=ds.row_count
-                        )
-                    }
-                )
+                }
+            )
         except Exception as ex:
             provenance = ModuleProvenance()
             outputs.error(ex)
