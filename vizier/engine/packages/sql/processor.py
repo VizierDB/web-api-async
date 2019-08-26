@@ -117,7 +117,7 @@ class SQLTaskProcessor(TaskProcessor):
             sql = 'SELECT ' + colSql + ' FROM {{input}};'
             view_name = mimir.createView(view_name, sql)
 
-            sql = 'SELECT COUNT(*) AS RECCNT FROM ' + view_name + ';'
+            sql = 'SELECT COUNT(1) AS RECCNT FROM ' + view_name + ';'
             rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
             row_count = int(rs_count['data'][0][0])
 

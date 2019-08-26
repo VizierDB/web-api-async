@@ -56,7 +56,7 @@ data_files = packages_files + processors_files + webui_files + mimir_jar
 
 setup(
     name='vizier-webapi',
-    version='0.5.9',
+    version='0.6.0',
     description='UI, Web API, and Backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
@@ -68,6 +68,7 @@ setup(
         'celery',
         'docker',
         'jsonschema',
+        'matplotlib',
         'pyyaml',
         'requests',
         'bokeh',

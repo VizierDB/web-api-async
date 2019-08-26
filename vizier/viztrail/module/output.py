@@ -69,7 +69,10 @@ class ModuleOutputs(object):
         template = "{0}:{1!r}"
         message = template.format(type(ex).__name__, ex.args)
         if str(os.environ.get('VIZIERSERVER_DEBUG', False)) == "True":
-            message = message + ': ' + traceback.format_exc(sys.exc_info())
+            try:
+                message = message + ":\n " + str(traceback.format_exc())
+            except Exception as e:
+                message = message + ":\n\n " + template.format(type(e).__name__, e.args)
         self.stderr.append(TextOutput(message))
         return self
 
