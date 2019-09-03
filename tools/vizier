@@ -8,6 +8,35 @@ USER_DATA_DIR="${USER_DATA_DIR:-$CWD/}"
 APP_DATA_DIR=$RUNNER_DIR/../
 STATIC_UI_FILES_DIR=${APP_DATA_DIR}web-ui/build/
 
+MIMIR_DEV="false"
+UI_DEV="false"
+if [ $# -eq 1 ]
+  then
+    if [ "$1" == "devmimir" ]
+      then
+        echo "mimir dev mode!"
+        MIMIR_DEV="true"
+    fi
+    if [ "$1" == "devui" ]
+      then
+        echo "ui dev mode!"
+        UI_DEV="true"
+    fi
+fi
+if [ $# -eq 2  ]
+  then
+    if [ "$2" == "devmimir" ]
+      then
+        echo "mimir dev mode!"
+        MIMIR_DEV="true"
+    fi
+    if [ "$2" == "devui" ]
+      then
+        echo "ui dev mode!"
+        UI_DEV="true"
+    fi 
+fi
+
 #General
 # Web service name
 VIZIERSERVER_NAME="${VIZIERSERVER_NAME:-vizier}" 
@@ -123,7 +152,18 @@ fi
 
 trap "kill 0" EXIT
 
-${APP_DATA_DIR}mimir/mimir-api &
+if [ "$MIMIR_DEV" == "true" ]
+  then
+    cd ../mimir; sbt runMimirVizier &
+    cd ../web-api-async
+  else
+    ${APP_DATA_DIR}mimir/mimir-api &
+fi
+if [ "$UI_DEV" == "true" ]
+  then
+    cd ../web-ui; yarn start &
+    cd ../web-api-async
+fi
 python -m flask run --with-threads &
 #$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
 

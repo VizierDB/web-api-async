@@ -220,6 +220,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     values=[
                         pckg.enum_value(value='csv', text='CSV', is_default=True),
                         pckg.enum_value(value='json', text='JSON'),
+                        pckg.enum_value(value='mimir.exec.spark.datasource.pdf', text='PDF'),
                         pckg.enum_value(value='com.github.potix2.spark.google.spreadsheets', text='Google Sheet'),
                         pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
                         pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),

@@ -361,6 +361,11 @@
                             }, 
                             {
                                 "isDefault": false, 
+                                "text": "PDF", 
+                                "value": "mimir.exec.spark.datasource.pdf"
+                            }, 
+                            {
+                                "isDefault": false, 
                                 "text": "XML", 
                                 "value": "com.databricks.spark.xml"
                             }, 
