@@ -143,6 +143,7 @@ class MultiProcessBackend(VizierBackend):
                 task.task_id,
                 command,
                 TaskContext(
+                    project_id=task.project_id,
                     datastore=project.datastore,
                     filestore=project.filestore,
                     datasets=context,

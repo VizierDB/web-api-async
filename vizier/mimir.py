@@ -48,6 +48,7 @@ def readResponse(resp):
             message = str(json_object['errorType']) + ": " + str(json_object['errorMessage'])
             if str(os.environ.get('VIZIERSERVER_DEBUG', False)) == "True":
                 message = message + "\n" + str(json_object['stackTrace'])
+                #message = message + "\n" + str(resp)
             raise MimirError(message)
     except KeyError: 
         pass
@@ -96,6 +97,16 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
       req_json["humanReadableName"] = human_readable_name
     resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
     return resp['name']
+    
+def unloadDataSource(dataset_name, abspath, format='csv', backend_options = []):
+    req_json ={
+      "input":dataset_name,
+      "file":abspath,
+      "format": format,
+      "backendOption": backend_options
+    }
+    resp = readResponse(requests.post(_mimir_url + 'dataSource/unload', json=req_json))
+    return resp['outputFiles']
     
 def repairReason(reasons, reasonIdx):
     return ''

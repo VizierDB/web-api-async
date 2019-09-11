@@ -456,6 +456,122 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
+                        "value": "UNLOAD"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "TO"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "unloadFormat"
+                    }
+                ], 
+                "id": "unload", 
+                "name": "Unload Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadFormat", 
+                        "index": 1, 
+                        "name": "Unload Format", 
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "CSV", 
+                                "value": "csv"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JSON", 
+                                "value": "json"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "XML", 
+                                "value": "com.databricks.spark.xml"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Excel", 
+                                "value": "com.crealytics.spark.excel"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JDBC Source", 
+                                "value": "jdbc"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Text", 
+                                "value": "text"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Parquet", 
+                                "value": "parquet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "ORC", 
+                                "value": "orc"
+                            }
+                        ]
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "unloadOptions", 
+                        "index": 2, 
+                        "name": "Unload Options", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadOptionKey", 
+                        "index": 3, 
+                        "name": "Option Key", 
+                        "parent": "unloadOptions", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadOptionValue", 
+                        "index": 4, 
+                        "name": "Option Value", 
+                        "parent": "unloadOptions", 
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
                         "value": "MOVE"
                     }, 
                     {

@@ -43,11 +43,13 @@ class TaskContext(object):
     filestore: vizier.filestore.Filestore
         Filestore for the project that executes the task
     """
-    def __init__(self, datastore, filestore, datasets=None, resources=None):
+    def __init__(self, project_id, datastore, filestore, datasets=None, resources=None):
         """Initialize the components of the task context.
 
         Parameters
         ----------
+        project_id: string
+            project_id of the task
         datastore: vizier.datastore.base.Datastore
             Datastore for the project that execute the task
         filestore: vizier.filestore.Filestore
@@ -59,6 +61,7 @@ class TaskContext(object):
             Optional information about resources that were generated during a
             previous execution of the command
         """
+        self.project_id = project_id
         self.datastore = datastore
         self.filestore = filestore
         self.datasets = datasets if not datasets is None else dict()

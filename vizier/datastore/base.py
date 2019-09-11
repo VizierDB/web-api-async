@@ -130,6 +130,23 @@ class Datastore(object):
         vizier.datastore.base.DatasetHandle
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def unload_dataset(self, f_handle):
+        """Create a new dataset from a given file.
+
+        Raises ValueError if the given file could not be loaded as a dataset.
+
+        Parameters
+        ----------
+        f_handle : vizier.filestore.base.FileHandle
+            handle for an uploaded file on the associated file server.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetHandle
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def update_annotation(

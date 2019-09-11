@@ -20,15 +20,18 @@ from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
+import vizier.engine.packages.vizual.api.base as apibase
+from vizier.config.app import AppConfig
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
 
+config = AppConfig()
 
 class VizualTaskProcessor(TaskProcessor):
     """Implmentation of the task processor for the vizual package. The processor
@@ -98,6 +101,11 @@ class VizualTaskProcessor(TaskProcessor):
             )
         elif command_id == cmd.VIZUAL_LOAD:
             return self.compute_load_dataset(
+                args=arguments,
+                context=context
+            )
+        elif command_id == cmd.VIZUAL_UNLOAD:
+            return self.compute_unload_dataset(
                 args=arguments,
                 context=context
             )
@@ -443,6 +451,65 @@ class VizualTaskProcessor(TaskProcessor):
             stdout=result.dataset.print_schema(ds_name),
             database_state=context.datasets,
             resources=result.resources
+        )
+        
+    def compute_unload_dataset(self, args, context):
+        """Execute unload dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get the new dataset name. Raise exception if a dataset with the
+        # specified name already exsists.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+       
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+        # Get components of the load source. Raise exception if the source
+        # descriptor is invalid.
+        unload_format = args.get_value(cmd.PARA_UNLOAD_FORMAT)
+        options = args.get_value(cmd.PARA_UNLOAD_OPTIONS, raise_error=False)
+        m_opts = []
+        
+        if not options is None:
+            for option in options:
+                unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
+                unload_opt_val = option.get_value(cmd.PARA_UNLOAD_OPTION_VALUE)
+                m_opts.append({'name':unload_opt_key,  'value':unload_opt_val})
+        # Execute load command.
+        dataset = context.get_dataset(ds_name)
+        result = self.api.unload_dataset(
+            dataset=dataset,
+            datastore=context.datastore,
+            filestore=context.filestore,
+            unload_format=unload_format,
+            options=m_opts,
+            resources=context.resources
+        )
+        # Delete the uploaded file (of load was from file). A reference to the
+        # created dataset is in the resources and will be used if the module is
+        # re-executed.
+        #file_id = result.resources[apibase.RESOURCE_FILEID]
+        #if not file_id is None:
+        #    context.filestore.delete_file(file_id)
+        # Create result object
+        outputhtml = HtmlOutput(''.join(["<div><a href=\""+ config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
+        return ExecResult(
+            outputs=ModuleOutputs( 
+                stdout=[outputhtml]
+            ),
+            provenance=ModuleProvenance(
+                read=dict(),
+                write=dict()
+            )
         )
 
     def compute_move_column(self, args, context):

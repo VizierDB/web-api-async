@@ -31,6 +31,7 @@ VIZUAL_DROP_DS = 'dropDataset'
 VIZUAL_INS_COL = 'insertColumn'
 VIZUAL_INS_ROW = 'insertRow'
 VIZUAL_LOAD = 'load'
+VIZUAL_UNLOAD = 'unload'
 VIZUAL_MOV_COL = 'moveColumn'
 VIZUAL_MOV_ROW = 'moveRow'
 VIZUAL_PROJECTION = 'projection'
@@ -49,6 +50,10 @@ PARA_LOAD_OPTIONS = 'loadOptions'
 PARA_LOAD_OPTION_KEY = 'loadOptionKey'
 PARA_LOAD_OPTION_VALUE = 'loadOptionValue'
 PARA_LOAD_DSE = 'loadDataSourceErrors'
+PARA_UNLOAD_FORMAT = 'unloadFormat'
+PARA_UNLOAD_OPTIONS = 'unloadOptions'
+PARA_UNLOAD_OPTION_KEY = 'unloadOptionKey'
+PARA_UNLOAD_OPTION_VALUE = 'unloadOptionValue'
 PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'
@@ -285,6 +290,60 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.variable_format(pckg.PARA_NAME),
                 pckg.constant_format('FROM'),
                 pckg.variable_format(PARA_FILE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_UNLOAD,
+            name='Unload Dataset',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    PARA_UNLOAD_FORMAT,
+                    name='Unload Format',
+                    data_type=pckg.DT_STRING,
+                    values=[
+                        pckg.enum_value(value='csv', text='CSV', is_default=True),
+                        pckg.enum_value(value='json', text='JSON'),
+                        pckg.enum_value(value='com.github.potix2.spark.google.spreadsheets', text='Google Sheet'),
+                        pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
+                        pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
+                        pckg.enum_value(value='jdbc', text='JDBC Source'),
+                        pckg.enum_value(value='text', text='Text'),
+                        pckg.enum_value(value='parquet', text='Parquet'),
+                        pckg.enum_value(value='orc', text='ORC')
+                    ],
+                    index=1,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    PARA_UNLOAD_OPTIONS,
+                    name='Unload Options',
+                    data_type=pckg.DT_LIST,
+                    index=2,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_UNLOAD_OPTION_KEY,
+                    name='Option Key',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    parent=PARA_UNLOAD_OPTIONS,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_UNLOAD_OPTION_VALUE,
+                    name='Option Value',
+                    data_type=pckg.DT_STRING,
+                    index=4,
+                    parent=PARA_UNLOAD_OPTIONS,
+                    required=False
+                )
+            ],
+            format=[
+                pckg.constant_format('UNLOAD'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('TO'),
+                pckg.variable_format(PARA_UNLOAD_FORMAT)
             ]
         ),
         pckg.command_declaration(

@@ -73,6 +73,7 @@ def execute(task_id, project_id, command_doc, context, resources):
             task_id=task_id,
             command=command,
             context=TaskContext(
+                project_id=project_id,
                 datastore=worker_env.datastores.get_datastore(project_id),
                 filestore=worker_env.filestores.get_filestore(project_id),
                 datasets=context,

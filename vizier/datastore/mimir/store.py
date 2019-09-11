@@ -28,6 +28,8 @@ from io import StringIO
 
 from vizier.core.util import dump_json, load_json
 from vizier.core.util import get_unique_identifier, min_max
+from vizier.core.timestamp import  get_current_time
+from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
@@ -35,8 +37,9 @@ from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandl
 import vizier.mimir as mimir
 import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
-
-
+from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
+import shutil
+            
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
 
@@ -326,6 +329,53 @@ class MimirDatastore(DefaultDatastore):
             columns=columns,
             row_counter=row_count
         )
+
+
+    def unload_dataset(self, filepath, dataset_name, format='csv', options=[], filename=""):
+        """Export a dataset from a given name.
+        Raises ValueError if the given dataset could not be exported.
+        Parameters
+        ----------
+        dataset_name: string
+            Name of the dataset to unload
+            
+        format: string
+            Format for output (csv, json, ect.)
+            
+        options: dict
+            Options for data unload
+            
+        filename: string
+            The output filename - may be empty if outputting to a database
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        name = os.path.basename(filepath).lower()
+        basepath = filepath.replace(name,"")
+        
+        # Create a new unique identifier for the file.
+        
+        abspath = os.path.abspath((r'%s' % filepath ) )
+        exported_files = mimir.unloadDataSource(dataset_name, abspath, format, options)
+        file_handles = []
+        for output_file in exported_files:
+            name = os.path.basename(output_file).lower()
+            identifier = get_unique_identifier()
+            file_dir = os.path.join(basepath,identifier )
+            if not os.path.isdir(file_dir):
+                os.makedirs(file_dir)
+            fs_output_file = os.path.join(file_dir, DATA_FILENAME)
+            shutil.move(os.path.join(filepath, output_file),fs_output_file)
+            f_handle = FileHandle(
+                    identifier,
+                    output_file,
+                    name
+                )
+            file_handles.append(f_handle )
+            write_metadata_file(file_dir,f_handle)
+        return file_handles
+        
 
     def register_dataset(
         self, table_name, columns, row_counter=None, annotations=None

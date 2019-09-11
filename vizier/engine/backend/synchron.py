@@ -105,6 +105,7 @@ class SynchronousTaskEngine(TaskExecEngine):
                         command_id=command.command_id,
                         arguments=command.arguments,
                         context=TaskContext(
+                            project_id=task.project_id,
                             datastore=project.datastore,
                             filestore=project.filestore,
                             datasets=context,

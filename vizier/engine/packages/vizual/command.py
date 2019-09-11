@@ -212,6 +212,45 @@ def load_dataset(
     )
 
 
+def unload_dataset(
+    dataset_name, unload_format='csv',
+    options=None, validate=False
+):
+    """Create instance of load dataset command.
+
+    Parameters
+    ----------
+    dataset_name: string
+        Name for the new dataset
+    unload_format: string, optional
+        Format identifier
+    options: list, optional
+        Additional options for Mimirs load command
+    validate: bool, optional
+        Validate the created command specification (if true)
+
+    Returns
+    -------
+    vizier.engine.module.ModuleCommand
+    """
+    arguments = [
+        md.ARG(id=pckg.PARA_DATASET, value=dataset_name)
+    ]
+    if not unload_format is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_UNLOAD_FORMAT, value=unload_format)
+        )
+    if not options is None:
+        arguments.append(
+            md.ARG(id=vizual.PARA_UNLOAD_OPTIONS, value=options)
+        )
+    return md.ModuleCommand(
+        vizual.PACKAGE_VIZUAL,
+        vizual.VIZUAL_UNLOAD,
+        arguments=arguments,
+        packages=PACKAGE(validate=validate)
+    )
+
 def move_column(dataset_name, column, position, validate=False):
     """Create instance of move column command.
 
