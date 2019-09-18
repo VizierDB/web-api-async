@@ -161,6 +161,12 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
     resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
     return resp
 
+def countRows(view_name):
+    sql = 'SELECT COUNT(1) FROM ' + view_name + ';'
+    rs_count = vistrailsQueryMimirJson(sql, False, False)
+    row_count = int(rs_count['data'][0][0])
+    return row_count
+
 def evalScala(source):
     req_json = {
       "source": source

@@ -118,9 +118,7 @@ class MimirDatastore(DefaultDatastore):
         sql = 'SELECT '+ colSql +' FROM {{input}};'
         view_name = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
-        sql = 'SELECT COUNT(1) AS RECCNT FROM ' + view_name + ';'
-        rs_count = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_count = int(rs_count['data'][0][0])
+        row_count = mimir.countRows(view_name)
         
         # Insert the new dataset metadata information into the datastore
         return self.register_dataset(
@@ -318,11 +316,7 @@ class MimirDatastore(DefaultDatastore):
         # Thus, sorting not necessarily returns the smallest integer value
         # first.
         #
-        sql = 'SELECT COUNT(1) AS RECCNT FROM ' + view_name + ';'
-        rs = mimir.vistrailsQueryMimirJson(sql, False, False)
-        #sql = 'SELECT ' + base.ROW_ID + ' FROM ' + view_name + ' ORDER BY CAST(' + base.ROW_ID + ' AS INTEGER) LIMIT 1;'
-        #rsfr = mimir.vistrailsQueryMimirJson(sql, False, False)
-        row_count = int(rs['data'][0][0])
+        row_count = mimir.countRows(view_name)
         
         return self.register_dataset(
             table_name=view_name,
@@ -421,9 +415,7 @@ class MimirDatastore(DefaultDatastore):
             col.data_type = col_types[col.name_in_rdb]
         # Set row counter to max. row id + 1 if None
         if row_counter is None:
-            sql = 'SELECT COUNT(1) AS RECCNT FROM ' + table_name
-            rs = mimir.vistrailsQueryMimirJson(sql, False, False)
-            row_counter = int(rs['data'][0][0]) + 1
+            row_counter = mimir.countRows(table_name)
         dataset = MimirDatasetHandle(
             identifier=get_unique_identifier(),
             columns=list(map(base.sanitize_column_name, columns)),
