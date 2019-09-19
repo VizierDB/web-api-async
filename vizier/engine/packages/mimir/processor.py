@@ -315,6 +315,10 @@ def print_lens_annotations(outputs, annotations):
         Annotations from first 200 rows of queried lens
     """
     if not annotations is None:
+        try:
+            annotations = int(float(annotations))
+        except:
+            annotations = 0
         if annotations > 0:
             outputs.stdout.append(TextOutput('Repairs in first 200 rows:'))
             outputs.stdout.append(TextOutput(str(annotations)))

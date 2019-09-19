@@ -132,7 +132,7 @@ def export_project(project_id):
     vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
     datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
-    si = io.StringIO()
+    si = io.BytesIO()
     with tarfile.open(fileobj=si, mode="w:gz") as tar:
         tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
         tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
@@ -860,7 +860,7 @@ def upload_file(project_id):
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
     else:
-        raise srv.InvalidRequest('no file or url specified in request')
+        raise srv.InvalidRequest('no file or url specified in request' + str(request.files))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 

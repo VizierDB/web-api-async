@@ -176,7 +176,7 @@ class LeafletClusterWrapper():
         """
         
         iframe_html = '<iframe src="data:text/html;base64,{html}" width="{width}" height="{height}"></iframe>'\
-         .format(html = base64.b64encode(html),
+         .format(html = base64.b64encode(html.encode()).decode(),
                     width = width,
                     height= int(height),
                    )
@@ -349,7 +349,7 @@ class D3ChartWrapper():
             </html>""" 
             
         iframe_html = '<iframe src="data:text/html;base64,{html}" width="{width}" height="{height}"></iframe>'\
-         .format(html = base64.b64encode(html),
+         .format(html = base64.b64encode(html.encode()).decode(),
                     width = '100%',
                     height= int(height)+60,
                    )

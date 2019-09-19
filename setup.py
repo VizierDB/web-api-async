@@ -72,6 +72,7 @@ setup(
         'pyyaml',
         'requests',
         'bokeh',
+        'shapely',
         'unicodecsv>=0.14.1'
     ],
     include_package_data=True,

@@ -442,8 +442,8 @@ class VizualTaskProcessor(TaskProcessor):
         # Delete the uploaded file (of load was from file). A reference to the
         # created dataset is in the resources and will be used if the module is
         # re-executed.
-        if not file_id is None:
-            context.filestore.delete_file(file_id)
+        #if not file_id is None:
+        #    context.filestore.delete_file(file_id)
         # Create result object
         return self.create_exec_result(
             dataset_name=ds_name,
