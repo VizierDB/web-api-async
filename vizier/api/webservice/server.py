@@ -860,7 +860,7 @@ def upload_file(project_id):
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
     else:
-        raise srv.InvalidRequest('no file or url specified in request' + str(request.files))
+        raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
 
