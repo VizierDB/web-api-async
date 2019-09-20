@@ -1,0 +1,30 @@
+{
+    "r": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "source"
+                    }
+                ], 
+                "id": "code", 
+                "name": "R Script", 
+                "parameter": [
+                    {
+                        "datatype": "code", 
+                        "hidden": false, 
+                        "id": "source", 
+                        "index": 0, 
+                        "language": "r", 
+                        "name": "R Code", 
+                        "required": true
+                    }
+                ]
+            }
+        ], 
+        "id": "r"
+    }
+}

@@ -1,0 +1,5 @@
+packages:
+    - r
+engine:
+    className: 'RTaskProcessor'
+    moduleName: 'vizier.engine.packages.r.processor'

@@ -169,9 +169,18 @@ def countRows(view_name):
 
 def evalScala(source):
     req_json = {
+      "language": "scala",
       "source": source
     }
     resp = readResponse(requests.post(_mimir_url + 'eval/scala', json=req_json))
+    return resp
+
+def evalR(source):
+    req_json = {
+      "language": "R",
+      "source": source
+    }
+    resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
 def getSchema(query):
