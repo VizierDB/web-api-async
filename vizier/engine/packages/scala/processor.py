@@ -76,9 +76,16 @@ class ScalaTaskProcessor(TaskProcessor):
         sys.stdout = OutputStream(tag='out', stream=stream)
         sys.stderr = OutputStream(tag='err', stream=stream)
         outputs = ModuleOutputs()
+        mimir_table_names = dict()
+        for ds_name_o in context.datasets:
+            dataset_id = context.datasets[ds_name_o]
+            dataset = context.datastore.get_dataset(dataset_id)
+            if dataset is None:
+                raise ValueError('unknown dataset \'' + ds_name_o + '\'')
+            mimir_table_names[ds_name_o] = dataset.table_name
         # Run the scala code
         try:
-            evalresp = mimir.evalScala(source)
+            evalresp = mimir.evalScala(mimir_table_names, source)
             ostd = evalresp['stdout']
             oerr = evalresp['stderr']
             if not ostd == '':

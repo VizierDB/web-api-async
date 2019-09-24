@@ -167,16 +167,18 @@ def countRows(view_name):
     row_count = int(rs_count['data'][0][0])
     return row_count
 
-def evalScala(source):
+def evalScala(inputs, source):
     req_json = {
+      "input": inputs,
       "language": "scala",
       "source": source
     }
     resp = readResponse(requests.post(_mimir_url + 'eval/scala', json=req_json))
     return resp
 
-def evalR(source):
+def evalR(inputs, source):
     req_json = {
+      "input": inputs,
       "language": "R",
       "source": source
     }
