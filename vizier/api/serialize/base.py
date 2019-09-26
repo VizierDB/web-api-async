@@ -36,7 +36,6 @@ def ANNOTATIONS(annotations):
     dict()
     """
     values = annotations.values()
-    print(str(values))
     return [{'key': key, 'value': values[key]} for key in values]
 
 
