@@ -49,7 +49,7 @@ class VizierDBClient(object):
         self.write = set()
         self.delete = None
 
-    def create_dataset(self, name, dataset):
+    def create_dataset(self, name, dataset, backend_options = []):
         """Create a new dataset with given name.
 
         Raises ValueError if a dataset with given name already exist.
@@ -102,7 +102,8 @@ class VizierDBClient(object):
             columns=columns,
             rows=rows,
             annotations=dataset.annotations,
-            human_readable_name=name.upper()
+            human_readable_name=name.upper(),
+            backend_options=backend_options
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
