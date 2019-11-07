@@ -217,7 +217,7 @@ def WORKFLOW_HANDLE_LINKS(urls, project_id, branch_id, workflow_id=None, links=N
         project_id=project_id,
         branch_id=branch_id
     )
-    links[ref.WORKFLOW_PROJECT] = urls.get_project(project_id),
+    links[ref.WORKFLOW_PROJECT] = urls.get_project(project_id)
     links[ref.FILE_UPLOAD] = urls.upload_file(project_id)
     # Only include self reference if workflow identifier is given
     if not workflow_id is None:

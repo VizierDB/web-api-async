@@ -27,6 +27,7 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 import os
+import io
 
 from vizier.api.webservice.branch import VizierBranchApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
@@ -167,7 +168,21 @@ class VizierApi(object):
             })
         }
 
+class DotDict(dict):
+    def __getattr__(self,val):
+        return self[val]
+    
+    def setattr(self, attr_name, val):
+        self[attr_name] = val
 
+    def save(self, dst):
+        #from shutil import copyfileobj
+        #copyfileobj(io.BytesIO(str(self.data)),open(str(dst).encode(),'wb'))    
+        print('---------------------------------------------file writing to ' + dst)
+        file1 = open(str(dst),'w')
+        file1.write(str(self.data))
+        file1.close()
+        
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
