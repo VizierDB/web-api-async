@@ -78,6 +78,8 @@ class PlotProcessor(TaskProcessor):
         # Get user-provided name for the new chart and verify that it is a
         # valid name
         chart_name = args.get_value(pckg.PARA_NAME, default_value=ds_name+' Plot') 
+        if chart_name == '':
+            chart_name = ds_name+' Plot'
         if not is_valid_name(chart_name):
             raise ValueError('invalid chart name \'' + str(chart_name) + '\'')
         chart_args = args.get_value(cmd.PARA_CHART)
