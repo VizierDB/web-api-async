@@ -54,7 +54,7 @@ def readResponse(resp):
         pass
     return json_object
 
-def createLens(dataset, params, type, make_input_certain, materialize, human_readable_name = None):
+def createLens(dataset, params, type, materialize, human_readable_name = None):
     req_json = {
       "input": dataset,
       "params": params,

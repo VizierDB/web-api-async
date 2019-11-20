@@ -124,8 +124,7 @@ class MimirProcessor(TaskProcessor):
                 dataset.table_name,
                 params,
                 command_id,
-                arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
-                False
+                arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True)
             )
             (mimir_table_name, lens_annotations) = (
                 mimir_lens_response.lensName(),
@@ -204,8 +203,7 @@ class MimirProcessor(TaskProcessor):
                 mimir_table_name,
                 params,
                 command_id.upper(),
-                arguments.get_value(cmd.PARA_MAKE_CERTAIN, default_value=True),
-                False,
+                arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
                 human_readable_name = ds_name.upper()
             )
             (lens_name, lens_annotations) = (

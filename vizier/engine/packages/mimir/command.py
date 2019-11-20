@@ -21,7 +21,7 @@ import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as mimir
 
 
-def mimir_domain(dataset_name, column, make_input_certain=False, validate=False):
+def mimir_domain(dataset_name, column, materialize_input=False, validate=False):
     """Create instance of missing value lens command.
 
     Parameters
@@ -30,8 +30,8 @@ def mimir_domain(dataset_name, column, make_input_certain=False, validate=False)
         Name of the dataset
     column: string or int
         Name or index for column
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -45,7 +45,7 @@ def mimir_domain(dataset_name, column, make_input_certain=False, validate=False)
         arguments =[
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
             md.ARG(id=pckg.PARA_COLUMN, value=column),
-            md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)
     )
@@ -53,7 +53,7 @@ def mimir_domain(dataset_name, column, make_input_certain=False, validate=False)
 
 def mimir_geocode(
     dataset_name, geocoder, house_nr=None, street=None, city=None, state=None,
-    make_input_certain=False, validate=False
+    materialize_input=False, validate=False
 ):
     """Create instance of mimir missing value lens command.
 
@@ -63,8 +63,8 @@ def mimir_geocode(
         Name of the dataset
     column: string or int
         Name or index for column
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -75,7 +75,7 @@ def mimir_geocode(
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
         md.ARG(id=mimir.PARA_GEOCODER, value=geocoder),
-        md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+        md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
     ]
     # Add optional arguments if given
     if not house_nr is None:
@@ -94,7 +94,7 @@ def mimir_geocode(
     )
 
 
-def mimir_key_repair(dataset_name, column, make_input_certain=False, validate=False):
+def mimir_key_repair(dataset_name, column, materialize_input=False, validate=False):
     """Create instance of mimir key repair lens command.
 
     Parameters
@@ -103,8 +103,8 @@ def mimir_key_repair(dataset_name, column, make_input_certain=False, validate=Fa
         Name of the dataset
     column: string or int
         Name or index for column
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -118,13 +118,13 @@ def mimir_key_repair(dataset_name, column, make_input_certain=False, validate=Fa
         arguments =[
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
             md.ARG(id=pckg.PARA_COLUMN, value=column),
-            md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)
     )
 
 
-def mimir_missing_key(dataset_name, column, make_input_certain=False, validate=False):
+def mimir_missing_key(dataset_name, column, materialize_input=False, validate=False):
     """Create instance of mimir missing key lens command.
 
     Parameters
@@ -135,8 +135,8 @@ def mimir_missing_key(dataset_name, column, make_input_certain=False, validate=F
         Name or index for column
     missing_only: boolean, optional
         Optional MISSING_ONLY parameter
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -150,13 +150,13 @@ def mimir_missing_key(dataset_name, column, make_input_certain=False, validate=F
         arguments =[
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
             md.ARG(id=pckg.PARA_COLUMN, value=column),
-            md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)
     )
 
 
-def mimir_missing_value(dataset_name, columns, make_input_certain=False, validate=False):
+def mimir_missing_value(dataset_name, columns, materialize_input=False, validate=False):
     """Create instance of mimir missing value lens command.
 
     Parameters
@@ -168,8 +168,8 @@ def mimir_missing_value(dataset_name, columns, make_input_certain=False, validat
         'constraint'
     constraint: string, optional
         Optional value constraint
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -186,7 +186,7 @@ def mimir_missing_value(dataset_name, columns, make_input_certain=False, validat
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
         md.ARG(id=mimir.PARA_COLUMNS, value=column_list),
-        md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+        md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
     ]
     return md.ModuleCommand(
         mimir.PACKAGE_MIMIR,
@@ -197,7 +197,7 @@ def mimir_missing_value(dataset_name, columns, make_input_certain=False, validat
 
 
 def mimir_picker(
-    dataset_name,  schema, pick_as=None, make_input_certain=False, validate=False
+    dataset_name,  schema, pick_as=None, materialize_input=False, validate=False
 ):
     """Create instance of mimir picker lens command.
 
@@ -210,8 +210,8 @@ def mimir_picker(
         elements
     pick_as: string, optional
         Optional output column name
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -225,7 +225,7 @@ def mimir_picker(
     arguments =[
         md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
         md.ARG(id=mimir.PARA_SCHEMA, value=elements),
-        md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+        md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
     ]
     if not pick_as is None:
         arguments.append(md.ARG(id=mimir.PARA_PICKAS, value=pick_as))
@@ -238,7 +238,7 @@ def mimir_picker(
 
 
 def mimir_schema_matching(
-    dataset_name, schema, result_name, make_input_certain=False, validate=False
+    dataset_name, schema, result_name, materialize_input=False, validate=False
 ):
     """Create instance of mimir schema matching lens command.
 
@@ -248,8 +248,8 @@ def mimir_schema_matching(
         Name of the dataset
     schema: list(dict)
         List of objects containing 'column' and 'type' elements
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -270,14 +270,14 @@ def mimir_schema_matching(
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
             md.ARG(id=mimir.PARA_SCHEMA, value=elements),
             md.ARG(id=mimir.PARA_RESULT_DATASET, value=result_name),
-            md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)
     )
 
 
 def mimir_type_inference(
-    dataset_name, percent_conform, make_input_certain=False, validate=False
+    dataset_name, percent_conform, materialize_input=False, validate=False
 ):
     """Create instance of mimir type inference lens command.
 
@@ -287,8 +287,8 @@ def mimir_type_inference(
         Name of the dataset
     percent_conform: float
         Percent that conforms
-    make_input_certain: bool, optional
-        Flag indicating whether input should be made certain
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
     validate: bool, optional
         Validate the created command specification (if true)
 
@@ -302,7 +302,7 @@ def mimir_type_inference(
         arguments =[
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
             md.ARG(id=mimir.PARA_PERCENT_CONFORM, value=percent_conform),
-            md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=make_input_certain)
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)
     )

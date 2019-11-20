@@ -34,7 +34,7 @@ class TestValidateMimir(unittest.TestCase):
         cmd = mimir_domain(
             dataset_name='ds',
             column=1,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_DOMAIN),
@@ -47,7 +47,7 @@ class TestValidateMimir(unittest.TestCase):
                 mimir.MIMIR_DOMAIN,
                 arguments =[
                     md.ARG(id=pckg.PARA_COLUMN, value=1),
-                    md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=False)
+                    md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=False)
                 ],
                 packages={mimir.PACKAGE_MIMIR: PACKAGE}
             )
@@ -57,7 +57,7 @@ class TestValidateMimir(unittest.TestCase):
                 mimir.MIMIR_DOMAIN,
                 arguments =[
             md.ARG(id=pckg.PARA_DATASET, value='DS'),
-                    md.ARG(id=mimir.PARA_MAKE_CERTAIN, value=False)
+                    md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=False)
                 ],
                 packages={mimir.PACKAGE_MIMIR: PACKAGE}
             )
@@ -69,7 +69,7 @@ class TestValidateMimir(unittest.TestCase):
             geocoder='GOOGLE',
             street=1,
             city=2,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_GEOCODE),
@@ -82,7 +82,7 @@ class TestValidateMimir(unittest.TestCase):
         cmd = mimir_key_repair(
             dataset_name='ds',
             column=2,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_KEY_REPAIR),
@@ -93,7 +93,7 @@ class TestValidateMimir(unittest.TestCase):
             mimir_key_repair(
                 dataset_name='ds',
                 column=2.34,
-                make_input_certain=True,
+                materialize_input=False,
                 validate=True
             )
 
@@ -102,7 +102,7 @@ class TestValidateMimir(unittest.TestCase):
         cmd = mimir_missing_key(
             dataset_name='ds',
             column=1,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_MISSING_KEY),
@@ -115,7 +115,7 @@ class TestValidateMimir(unittest.TestCase):
         cmd = mimir_missing_value(
             dataset_name='ds',
             columns=[{'column': 1}],
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
@@ -128,7 +128,7 @@ class TestValidateMimir(unittest.TestCase):
                 {'column': 1, 'constraint': '> 40'},
                 {'column': 2}
             ],
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_MISSING_VALUE),
@@ -141,7 +141,7 @@ class TestValidateMimir(unittest.TestCase):
         cmd = mimir_picker(
             dataset_name='ds',
             schema=[{'pickFrom': 1,'pickAs': 'The Street'}, {'pickFrom': 2}],
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_PICKER),
@@ -152,7 +152,7 @@ class TestValidateMimir(unittest.TestCase):
             dataset_name='ds',
             schema=[{'pickFrom': 1,'pickAs': 'The Street'}, {'pickFrom': 2}],
             pick_as='My Street',
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_PICKER),
@@ -166,7 +166,7 @@ class TestValidateMimir(unittest.TestCase):
             dataset_name='ds',
             schema=[{'column': 'COL_A', 'type': 'int'}, {'column': 'COL_2', 'type': 'string'}],
             result_name='My DS',
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         ).to_external_form(
             command=PACKAGE.get(mimir.MIMIR_SCHEMA_MATCHING),

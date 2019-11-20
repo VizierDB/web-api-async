@@ -42,7 +42,7 @@ PARA_COLUMNS = 'columns'
 PARA_COLUMNS_CONSTRAINT = 'constraint'
 PARA_GEOCODER = 'geocoder'
 PARA_HOUSE_NUMBER = 'strnumber'
-PARA_MAKE_CERTAIN = 'makeInputCertain'
+PARA_MATERIALIZE_INPUT = 'materializeInput'
 PARA_PERCENT_CONFORM = 'percentConform'
 PARA_PICKAS = 'pickAs'
 PARA_PICKFROM = 'pickFrom'
@@ -55,19 +55,20 @@ PARA_MODEL_NAME = 'modelName'
 
 
 """Mimir lens specification schema."""
-def para_make_input_certain(index):
-    """Return dictionary for 'makeInputCertain' parameter of Mimir lenses.
+def para_materialize_input(index):
+    """Return dictionary for 'materializeInput' parameter of Mimir lenses.
 
     Returns
     -------
     dict
     """
     return pckg.parameter_declaration(
-        identifier=PARA_MAKE_CERTAIN,
-        name='Make Input Certain',
+        identifier=PARA_MATERIALIZE_INPUT,
+        name='Materialize Input',
         data_type=pckg.DT_BOOL,
         index=index,
-        required=False
+        required=False,
+        hidden=True
     )
 
 
@@ -80,7 +81,7 @@ MIMIR_LENSES = pckg.package_declaration(
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
-                para_make_input_certain(2)
+                para_materialize_input(2)
             ],
             format=[
                 pckg.constant_format('DOMAIN'),
@@ -133,7 +134,7 @@ MIMIR_LENSES = pckg.package_declaration(
                         pckg.enum_value(value='OSM')
                     ]
                 ),
-                para_make_input_certain(6)
+                para_materialize_input(6)
             ],
             format=[
                 pckg.constant_format('GEOCODE'),
@@ -153,7 +154,7 @@ MIMIR_LENSES = pckg.package_declaration(
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
-                para_make_input_certain(2)
+                para_materialize_input(2)
             ],
             format=[
                 pckg.constant_format('KEY'),
@@ -190,7 +191,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     parent=PARA_COLUMNS,
                     required=False
                 ),
-                para_make_input_certain(4)
+                para_materialize_input(4)
             ],
             format=[
                 pckg.constant_format('MISSING'),
@@ -213,7 +214,7 @@ MIMIR_LENSES = pckg.package_declaration(
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
-                para_make_input_certain(2)
+                para_materialize_input(2)
             ],
             format=[
                 pckg.constant_format('MISSING'),
@@ -249,7 +250,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     index=3,
                     required=False
                 ),
-                para_make_input_certain(4)
+                para_materialize_input(4)
             ],
             format=[
                 pckg.constant_format('PICK'),
@@ -298,7 +299,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     data_type=pckg.DT_STRING,
                     index=4
                 ),
-                para_make_input_certain(5)
+                para_materialize_input(5)
             ],
             format=[
                 pckg.constant_format('SCHEMA'),
@@ -328,7 +329,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     data_type=pckg.DT_DECIMAL,
                     index=1
                 ),
-                para_make_input_certain(2)
+                para_materialize_input(2)
             ],
             format=[
                 pckg.constant_format('TYPE'),

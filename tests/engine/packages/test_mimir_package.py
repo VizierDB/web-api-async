@@ -16,7 +16,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_domain(
             dataset_name='ABC',
             column=1,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -26,7 +26,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_geocode(
             dataset_name='ABC',
             geocoder='OMG',
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
         # Test maximal options
@@ -37,7 +37,7 @@ class TestMimirCommandValidation(unittest.TestCase):
             street=2,
             city=3,
             state=4,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -46,7 +46,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_key_repair(
             dataset_name='ABC',
             column=1,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -55,7 +55,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_missing_key(
             dataset_name='ABC',
             column=1,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -65,7 +65,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_missing_value(
             dataset_name='ABC',
             columns=[{'column': 1}],
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
         # Test with constraint
@@ -75,7 +75,7 @@ class TestMimirCommandValidation(unittest.TestCase):
                 {'column': 1},
                 {'column': 2, 'constraint': '>40'}
             ],
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -90,7 +90,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_picker(
             dataset_name='ABC',
             schema=schema,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
         # Test with pick as option
@@ -98,7 +98,7 @@ class TestMimirCommandValidation(unittest.TestCase):
             dataset_name='ABC',
             schema=schema,
             pick_as='MyCol',
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -112,7 +112,7 @@ class TestMimirCommandValidation(unittest.TestCase):
             dataset_name='ABC',
             schema=schema,
             result_name='XYZ',
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 
@@ -121,7 +121,7 @@ class TestMimirCommandValidation(unittest.TestCase):
         mimir.mimir_type_inference(
             dataset_name='ABC',
             percent_conform=0.5,
-            make_input_certain=True,
+            materialize_input=False,
             validate=True
         )
 

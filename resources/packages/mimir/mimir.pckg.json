@@ -55,10 +55,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 2, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -189,10 +189,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 6, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -257,10 +257,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 2, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -358,10 +358,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 4, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -426,10 +426,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 2, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -520,10 +520,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 4, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -652,10 +652,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 5, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]
@@ -732,10 +732,10 @@
                     }, 
                     {
                         "datatype": "bool", 
-                        "hidden": false, 
-                        "id": "makeInputCertain", 
+                        "hidden": true,
+                        "id": "materializeInput", 
                         "index": 2, 
-                        "name": "Make Input Certain", 
+                        "name": "Materialize Input", 
                         "required": false
                     }
                 ]

@@ -178,10 +178,8 @@ class DotDict(dict):
     def save(self, dst):
         #from shutil import copyfileobj
         #copyfileobj(io.BytesIO(str(self.data)),open(str(dst).encode(),'wb'))    
-        print('---------------------------------------------file writing to ' + dst)
-        file1 = open(str(dst),'w')
-        file1.write(str(self.data))
-        file1.close()
+        with open(str(dst), "w") as fw, open(str(self.file),"r") as fr: 
+            fw.writelines(l for l in fr)
         
 # ------------------------------------------------------------------------------
 # Helper Methods
