@@ -19,7 +19,7 @@ in the Mimir lenses package.
 """
 
 from vizier.core.util import is_valid_name
-from vizier.datastore.dataset import DATATYPE_REAL
+from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
 from vizier.datastore.mimir.base import ROW_ID
 from vizier.datastore.mimir.store import create_missing_key_view
@@ -27,6 +27,7 @@ from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
+import vizier.engine.packages.vizual.api.base as base
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as cmd
 import vizier.mimir as mimir
@@ -245,12 +246,21 @@ class MimirProcessor(TaskProcessor):
         # Add dataset schema and returned annotations to output
         print_dataset_schema(outputs, ds_name, ds.columns)
         print_lens_annotations(outputs, lens_annotations)
+        dsd = DatasetDescriptor(
+                identifier=ds.identifier,
+                columns=ds.columns,
+                row_count=ds.row_count
+            )
+        result_resources = dict()
+        result_resources[base.RESOURCE_DATASET] = ds.identifier
+                
         # Return task result
         return ExecResult(
             outputs=outputs,
             provenance=ModuleProvenance(
                 read={input_ds_name: dataset.identifier},
-                write={ds_name: ds}
+                write={ds_name: dsd},
+                resources=result_resources
             )
         )
 

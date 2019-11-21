@@ -137,6 +137,8 @@ class MultiProcessBackend(VizierBackend):
         # Get the project context from the cache
         project = self.projects.get_project(task.project_id)
         # Execute task using execute command function
+        import time
+        time.sleep( 1 )
         pool.apply_async(
             exec_command,
             args=(
