@@ -275,12 +275,17 @@ class MimirDatasetHandle(DatasetHandle):
             # all dataset cells we should add those annotations here. By now
             # this command will only return user-defined annotations for the
             # dataset.
-            annotations = DatasetMetadata()
+            annotations = []
             sql = 'SELECT * '
             sql += 'FROM ' + self.table_name + ' '
             annoList = mimir.explainEverythingJson(sql)
             for anno in annoList:
-                annotations.add(ANNO_UNCERTAIN, anno)
+                annotations.append(
+                    DatasetAnnotation(
+                        key=ANNO_UNCERTAIN,
+                        value=anno
+                    )
+                )
             #return [item for sublist in map(lambda (i,x): self.annotations.for_column(i).values(), enumerate(self.columns)) for item in sublist]
             #return self.annotations.values
             return annotations
@@ -297,22 +302,10 @@ class MimirDatasetHandle(DatasetHandle):
             sql = 'SELECT * '
             sql += 'FROM ' + self.table_name + ' '
             buffer = mimir.explainCell(sql, column.name_in_rdb, str(row_id))
-            has_reasons = buffer.size() > 0
+            has_reasons = len(buffer) > 0
             if has_reasons:
-                for value in buffer.mkString("-*-*-").split("-*-*-"):
-                    # Remove references to lenses
-                    while 'LENS_' in value:
-                        start_pos = value.find('LENS_')
-                        end_pos = value.find('.', start_pos)
-                        if end_pos > start_pos:
-                            value = value[:start_pos] + value[end_pos + 1:]
-                        else:
-                            value = value[:start_pos]
-                    # Replace references to column name
-                    value = value.replace(column.name_in_rdb, column.name)
-                    # Remove content in double square brackets
-                    if '{{' in value:
-                        value = value[:value.find('{{')].strip()
+                for value in buffer:
+                    value = value['english']
                     if value != '':
                         annotations.append(
                             DatasetAnnotation(

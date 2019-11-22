@@ -30,7 +30,7 @@ class DatasetMetadata(object):
     """Collection of annotations for a dataset object. For each of the three
     resource types a list of annotations is maintained.
     """
-    def __init__(self, columns=None, rows=None, cells=None):
+    def __init__(self, columns=None, rows=None, cells=None, annotations=None):
         """Initialize the metadata lists for the three different types of
         dataset resources that can be annotated.
 
@@ -43,7 +43,7 @@ class DatasetMetadata(object):
         cells: list(vizier.datastpre.annotation.base.CellAnnotation), optional
             Annotations for dataset cells
         """
-        self.annotations = list()
+        self.annotations = annotations if not annotations is None else list()
         self.columns = columns if not columns is None else list()
         self.rows = rows if not rows is None else list()
         self.cells = cells if not cells is None else list()
@@ -293,9 +293,12 @@ class DatasetMetadata(object):
         cells = list()
         columns = list()
         rows = list()
+        annotations = list()
         for anno in values:
-            if anno.column_id is None and anno.row_id is None:
+            if anno.column_id is None and anno.row_id is None and anno.value is None:
                 raise ValueError('invalid dataset annotaiton')
+            elif anno.column_id is None and anno.row_id is None:
+                annotations.append(anno)
             elif anno.row_id is None:
                 columns.append(anno)
             elif anno.column_id is None:
@@ -305,7 +308,8 @@ class DatasetMetadata(object):
         return DatasetMetadata(
             cells=cells,
             columns=columns,
-            rows=rows
+            rows=rows,
+            annotations=annotations 
         )
 
     def remove(self, key=None, value=None, column_id=None, row_id=None):

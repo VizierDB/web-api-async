@@ -19,6 +19,7 @@ the datastores that are associated with vizier projects.
 """
 
 from vizier.core.util import is_scalar
+from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.serialize.dataset as serialize
 
@@ -118,11 +119,13 @@ class VizierDatastoreApi(object):
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
-        annos = project.datastore.get_annotations(
-            identifier=dataset_id,
-            column_id=column_id,
-            row_id=row_id
-        )
+        annos = DatasetMetadata.from_list(
+                    project.datastore.get_annotations(
+                        identifier=dataset_id,
+                        column_id=column_id,
+                        row_id=row_id
+                    )
+                )
         return serialize.DATASET_ANNOTATIONS(
             project=project,
             dataset=dataset,
