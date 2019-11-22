@@ -470,4 +470,4 @@ def read_object_from_file(filename):
         if filename.endswith('.json'):
             return json.loads(f.read())
         else:
-            return yaml.load(f.read())
+            return yaml.load(f.read(), Loader=yaml.FullLoader)

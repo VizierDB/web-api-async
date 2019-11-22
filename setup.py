@@ -69,11 +69,14 @@ setup(
         'docker',
         'jsonschema',
         'matplotlib',
-        'pyyaml',
+        'pyyaml>=5.1.0',
         'requests',
+        'unicodecsv>=0.14.1',
+        'numpy',
+        'pandas',
+        'geopandas',
         'bokeh',
-        'shapely',
-        'unicodecsv>=0.14.1'
+        'shapely'
     ],
     include_package_data=True,
     data_files=data_files,
