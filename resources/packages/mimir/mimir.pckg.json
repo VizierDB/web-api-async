@@ -813,6 +813,7 @@
 			  ]
 			}
         ], 
-        "id": "mimir"
+        "id": "mimir",
+        "category": "data_m"
     }
 }

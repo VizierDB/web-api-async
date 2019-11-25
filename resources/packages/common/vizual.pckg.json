@@ -366,6 +366,11 @@
                             }, 
                             {
                                 "isDefault": false, 
+                                "text": "Google Sheet", 
+                                "value": "com.github.potix2.spark.google.spreadsheets"
+                            }, 
+                            {
+                                "isDefault": false, 
                                 "text": "XML", 
                                 "value": "com.databricks.spark.xml"
                             }, 
@@ -505,6 +510,11 @@
                                 "isDefault": false, 
                                 "text": "JSON", 
                                 "value": "json"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Google Sheet", 
+                                "value": "com.github.potix2.spark.google.spreadsheets"
                             }, 
                             {
                                 "isDefault": false, 
@@ -1129,6 +1139,7 @@
                 ]
             }
         ], 
-        "id": "vizual"
+        "id": "vizual",
+        "category": "data_v"
     }
 }

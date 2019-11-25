@@ -45,6 +45,7 @@ LABEL_ID = 'id'
 LABEL_LANGUAGE = 'language'
 LABEL_LEFTSPACE = 'lspace'
 LABEL_NAME = 'name'
+LABEL_CATEGORY = 'category'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
 LABEL_PREFIX = 'prefix'
@@ -184,6 +185,7 @@ FILE_USERNAME = 'userName'
 FILE_PASSWORD = 'password'
 FILE_RELOAD = 'reload'
 
+CATEGORY_DEFAULT = 'default'
 
 def package_declaration(identifier, commands, name=None, description=None):
     """Create a dictionary containing a package declaration.
@@ -591,6 +593,10 @@ class PackageIndex(object):
             self.name = package[LABEL_NAME]
         else:
             self.name = self.identifier
+        if LABEL_CATEGORY in package:
+            self.category = package[LABEL_CATEGORY]
+        else:
+            self.category = CATEGORY_DEFAULT
         if LABEL_DESCRIPTION in package:
             self.description = package[LABEL_DESCRIPTION]
         else:

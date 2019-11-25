@@ -25,6 +25,7 @@
                 ]
             }
         ], 
-        "id": "python"
+        "id": "python",
+        "category": "code"
     }
 }

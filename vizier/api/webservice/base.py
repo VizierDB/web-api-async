@@ -135,7 +135,7 @@ class VizierApi(object):
         # the list of packages and commands that are supported by the engine
         package_listing = list()
         for pckg in self.engine.packages.values():
-            pckg_obj = {'id': pckg.identifier, 'name': pckg.name}
+            pckg_obj = {'id': pckg.identifier, 'name': pckg.name, 'category': pckg.category}
             if not pckg.description is None:
                 pckg_obj['description'] = pckg.description
             pckg_commands = list()
