@@ -367,7 +367,7 @@
                             {
                                 "isDefault": false, 
                                 "text": "Google Sheet", 
-                                "value": "com.github.potix2.spark.google.spreadsheets"
+                                "value": "mimir.exec.spark.datasource.google.spreadsheet"
                             }, 
                             {
                                 "isDefault": false, 
@@ -514,7 +514,7 @@
                             {
                                 "isDefault": false, 
                                 "text": "Google Sheet", 
-                                "value": "com.github.potix2.spark.google.spreadsheets"
+                                "value": "mimir.exec.spark.datasource.google.spreadsheet"
                             }, 
                             {
                                 "isDefault": false, 
