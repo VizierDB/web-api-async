@@ -107,8 +107,8 @@ export CELERY_BROKER_URL
 
 #CELERY Worker Configuration
 # Identifier for environment in which the worker operates (supported values are DEV, MIMIR, and REMOTE) (DEFAULT: DEV)
-VIZIERWORKER_export="${VIZIERWORKER_export:-MIMIR}"
-export VIZIERWORKER_export
+VIZIERWORKER_ENV="${VIZIERWORKER_ENV:-MIMIR}"
+export VIZIERWORKER_ENV
 # Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors/common:./resources/processors/dev)
 VIZIERWORKER_PROCESSOR_PATH="${VIZIERWORKER_PROCESSOR_PATH:-${APP_RESOURCES_DIR}resources/processors/common:${APP_RESOURCES_DIR}resources/processors/mimir}"
 export VIZIERWORKER_PROCESSOR_PATH

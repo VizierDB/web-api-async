@@ -505,9 +505,7 @@ class VizierEngine(WorkflowController):
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
-            # Raise ValueError if the head workflow is active
-            if head.is_active:
-                raise ValueError('cannot insert into active workflow')
+            
             # Get the index of the module at which the new module is inserted
             module_index = None
             modules = head.modules
@@ -517,6 +515,7 @@ class VizierEngine(WorkflowController):
                     break
             if module_index is None:
                 return None
+            
             # Get handle for the inserted module
             if module_index > 0:
                 datasets = modules[module_index - 1].datasets
@@ -524,9 +523,13 @@ class VizierEngine(WorkflowController):
                 datasets = dict()
             # Create handle for the inserted module. The state of the module
             # depends on the state of the backend.
+            if head.is_active:
+                state = mstate.MODULE_PENDING
+            else:
+                state = self.backend.next_task_state()
             inserted_module = ModuleHandle(
                 command=command,
-                state=self.backend.next_task_state(),
+                state=state,
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
                     datasets=datasets
@@ -550,12 +553,13 @@ class VizierEngine(WorkflowController):
                 command=inserted_module.command,
                 pending_modules=pending_modules
             )
-            self.execute_module(
-                project_id=project_id,
-                branch_id=branch_id,
-                module=workflow.modules[module_index],
-                datasets=datasets
-            )
+            if not head.is_active:
+                self.execute_module(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    module=workflow.modules[module_index],
+                    datasets=datasets
+                )
             return workflow.modules[module_index:]
 
     def replace_workflow_module(self, project_id, branch_id, module_id, command):
