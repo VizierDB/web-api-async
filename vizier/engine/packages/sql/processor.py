@@ -24,8 +24,9 @@ from vizier.datastore.mimir.base import ROW_ID
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
 from vizier.engine.packages.mimir.processor import print_dataset_schema
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.api.webservice import server
 
 import vizier.config.base as config
 import vizier.engine.packages.sql.base as cmd
@@ -129,8 +130,13 @@ class SQLTaskProcessor(TaskProcessor):
                 columns=columns,
                 row_counter=row_count
             )
-            print_dataset_schema(outputs, ds_name, ds.columns)
-            outputs.stdout.append(TextOutput(str(row_count) + ' row(s)'))
+            ds_output = server.api.datasets.get_dataset(
+                project_id=context.project_id,
+                dataset_id=ds.identifier,
+                offset=0,
+                limit=10
+            )
+            outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={
                     ds_name: DatasetDescriptor(

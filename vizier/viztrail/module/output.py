@@ -28,6 +28,7 @@ OUTPUT_CHART = 'chart/view'
 OUTPUT_TEXT = 'text/plain'
 OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
+OUTPUT_DATASET = 'dataset/view'
 
 class ModuleOutputs(object):
     """Wrapper for module outputs. Contains the standard output and to standard
@@ -110,6 +111,19 @@ class OutputObject(object):
         bool
         """
         return self.type == OUTPUT_TEXT
+
+
+class DatasetOutput(OutputObject):
+    """Output object where the value is a dataset handle."""
+    def __init__(self, value):
+        """Initialize the output dataset.
+
+        Parameters
+        ----------
+        value, DatasetHandle
+            Output dataset
+        """
+        super(DatasetOutput, self).__init__(type=OUTPUT_DATASET, value=value)
 
 
 class ChartOutput(OutputObject):

@@ -20,12 +20,13 @@ from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
+from vizier.api.webservice import server
 from vizier.config.app import AppConfig
 
 """Property defining the API class if instantiated from dictionary."""
@@ -444,13 +445,24 @@ class VizualTaskProcessor(TaskProcessor):
         # re-executed.
         #if not file_id is None:
         #    context.filestore.delete_file(file_id)
-        # Create result object
-        return self.create_exec_result(
-            dataset_name=ds_name,
-            output_dataset=result.dataset,
-            stdout=result.dataset.print_schema(ds_name),
-            database_state=context.datasets,
-            resources=result.resources
+        ds = DatasetDescriptor(
+            identifier=result.dataset.identifier,
+            columns=result.dataset.columns,
+            row_count=result.dataset.row_count
+        )
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=ds.identifier,
+            offset=0,
+            limit=10
+        )
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: None},
+                write={ds_name: ds},
+                resources=result.resources
+            )
         )
         
     def compute_unload_dataset(self, args, context):
