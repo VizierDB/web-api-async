@@ -204,7 +204,7 @@ class MimirDatasetHandle(DatasetHandle):
     """
     def __init__(
         self, identifier, columns, table_name,
-        row_counter, annotations=None
+        row_counter, annotations=None, name=None
     ):
         """Initialize the descriptor.
 
@@ -226,7 +226,8 @@ class MimirDatasetHandle(DatasetHandle):
             identifier=identifier,
             columns=columns,
             row_count=row_counter,
-            annotations=annotations
+            annotations=annotations,
+            name=name
         )
         self.table_name = table_name
         self.row_counter = row_counter

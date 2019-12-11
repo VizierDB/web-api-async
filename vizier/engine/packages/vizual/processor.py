@@ -456,6 +456,7 @@ class VizualTaskProcessor(TaskProcessor):
             offset=0,
             limit=10
         )
+        ds_output['name'] = ds_name 
         return ExecResult(
             outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
             provenance=ModuleProvenance(

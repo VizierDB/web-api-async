@@ -136,6 +136,7 @@ class SQLTaskProcessor(TaskProcessor):
                 offset=0,
                 limit=10
             )
+            ds_output['name'] = ds_name
             outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={

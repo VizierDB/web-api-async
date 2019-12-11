@@ -125,6 +125,8 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     }
     if not name is None:
         obj[labels.NAME] = name
+    elif not dataset.name is None:
+        obj[labels.NAME] = dataset.name
     # Add self reference if the project and url factory are given
     if not project is None and not urls is None:
         project_id = project.identifier

@@ -100,7 +100,7 @@ class DatasetDescriptor(object):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None):
+    def __init__(self, identifier, columns=None, row_count=None, name=None):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -115,6 +115,7 @@ class DatasetDescriptor(object):
         self.identifier = identifier
         self.columns = columns if not columns is None else list()
         self.row_count = row_count if not row_count is None else 0
+        self.name = name
 
     def column_by_id(self, identifier):
         """Get the column with the given identifier.
@@ -287,7 +288,7 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, annotations=None):
+    def __init__(self, identifier, columns=None, row_count=None, annotations=None, name=None):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -308,7 +309,8 @@ class DatasetHandle(DatasetDescriptor):
         super(DatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_count
+            row_count=row_count,
+            name=name
         )
         self.annotations = annotations if not annotations is None else DatasetMetadata()
 
