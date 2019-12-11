@@ -54,7 +54,7 @@ DEFAULT_SETTINGS = {
     VIZIERWORKER_LOG_DIR: os.path.join(base.ENV_DIRECTORY, 'logs', 'worker'),
     VIZIERWORKER_CONTROLLER_URL: 'http://localhost:5000/vizier-db/api/v1',
     VIZIERWORKER_ENV: base.MIMIR_ENGINE,
-    VIZIERWORKER_PROCESSOR_PATH: './resources/processors/common:./resources/processors/dev'
+    VIZIERWORKER_PROCESSOR_PATH: './resources/processors/common:./resources/processors/mimir'
 }
 
 
