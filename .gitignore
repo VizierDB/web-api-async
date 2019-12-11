@@ -52,5 +52,6 @@ tests/env/
 derby.log
 .vizierdb/
 vizier-data/
+vizier-data*/
 vizier/env
 resources/config/dev-config.yaml
