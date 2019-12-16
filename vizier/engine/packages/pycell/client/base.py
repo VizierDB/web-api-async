@@ -299,15 +299,23 @@ class VizierDBClient(object):
                 col.identifier = column_counter
                 column_counter += 1
         # Ensure that all rows have positive identifier
-        for row in rows:
-            if row.identifier < 0:
-                row.identifier = row_counter
-                row_counter += 1
+        #for row in rows:
+        #    if row.identifier < 0:
+        #        row.identifier = row_counter
+        #        row_counter += 1
         # Write dataset to datastore and add new dataset to context
+        read_dep = []
+        for dept_name in self.read:
+            if not isinstance(dept_name, str):
+                raise RuntimeError('invalid read name')
+            dept_id = self.get_dataset_identifier(dept_name)
+            dept_dataset = self.datastore.get_dataset(dept_id)
+            read_dep.append(dept_dataset.table_name)
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations
+            annotations=dataset.annotations,
+            dependencies=read_dep
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds

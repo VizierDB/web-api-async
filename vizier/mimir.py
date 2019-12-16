@@ -85,13 +85,14 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = []):
+def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = []):
     req_json ={
       "file": file,
       "format": format,
       "inferTypes": infer_types,
       "detectHeaders": detect_headers,
-      "backendOption": backend_options
+      "backendOption": backend_options,
+      "dependencies": dependencies
     }
     if human_readable_name != None:
       req_json["humanReadableName"] = human_readable_name

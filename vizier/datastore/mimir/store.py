@@ -67,7 +67,7 @@ class MimirDatastore(DefaultDatastore):
         """
         super(MimirDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, human_readable_name = None, annotations=None,backend_options = []):
+    def create_dataset(self, columns, rows, human_readable_name = None, annotations=None,backend_options = [], dependencies = []):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -113,7 +113,7 @@ class MimirDatastore(DefaultDatastore):
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
         # Load CSV file using Mimirs loadCSV method.
-        table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options)
+        table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options, dependencies = dependencies)
         os.remove(tmp_file)
         sql = 'SELECT '+ colSql +' FROM {{input}};'
         view_name = mimir.createView(table_name, sql)
