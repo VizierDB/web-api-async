@@ -189,6 +189,44 @@ class MimirDatastore(DefaultDatastore):
         # any existing uncertainty annotations for the cell.
         return self.get_dataset(identifier).get_annotations(column_id,row_id)
     
+    
+    def update_annotation(
+        self, identifier, key, old_value=None, new_value=None, column_id=None,
+        row_id=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        column_id: int, optional
+            Unique column identifier
+        row_id: int, optional
+            Unique row identifier
+        key: string, optional
+            Annotation key
+        old_value: string, optional
+            Previous annotation value whan updating an existing annotation.
+        new_value: string, optional
+            Updated annotation value
+
+        Returns
+        -------
+        bool
+        """
+        ds = self.get_dataset(identifier)
+        ds_name = ds.name
+        column = ds.column_by_id(column_id).name_in_rdb
+        params = ['COMMENT('+column+', \''+new_value+'\', \''+str(row_id)+'\')','RESULT_COLUMNS('+str(column)+')']
+        #url = 'http://localhost:5000/vizier-db/api/v1/projects/'+project_id+'/branches/'+branch_id+'/head'
+        #data = {"packageId":"mimir","commandId":"comment","arguments":[{"id":"dataset","value":"mv"},{"id":"comments","value":[[{"id":"expression","value":column},{"id":"comment","value":new_value},{"id":"rowid","value":row_id}]]},{"id":"resultColumns","value":[[{"id":"column","value":column}]]},{"id":"materializeInput","value":False}]}
+        #resp = requests.post(url,json=data)
+       
+        
+    
     def download_dataset(
         self, url, username=None, password=None, filestore=None, detect_headers=True, 
         infer_types=True, load_format='csv', options=[], human_readable_name=None

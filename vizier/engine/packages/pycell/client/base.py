@@ -304,6 +304,11 @@ class VizierDBClient(object):
         #        row.identifier = row_counter
         #        row_counter += 1
         # Write dataset to datastore and add new dataset to context
+        
+        #gather up the read dependencies so that we can pass them to mimir 
+        # so that we can at least track coarse grained provenance.
+        # TODO: we are asumming mimir dataset and datastore 
+        #       here and need to generalize this
         read_dep = []
         for dept_name in self.read:
             if not isinstance(dept_name, str):

@@ -24,8 +24,9 @@ from vizier.datastore.mimir.dataset import MimirDatasetColumn
 from vizier.datastore.mimir.base import ROW_ID
 from vizier.datastore.mimir.store import create_missing_key_view
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.api.webservice import server
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.engine.packages.base as pckg
@@ -190,6 +191,22 @@ class MimirProcessor(TaskProcessor):
             params = []
             if not dseModel is None:
                 params = [str(dseModel)]
+        elif command_id == cmd.MIMIR_COMMENT:
+            params = []
+            for comment in arguments.get_value(cmd.PARA_COMMENTS):
+                c_expr = comment.get_value(cmd.PARA_EXPRESSION)
+                c_cmnt = comment.get_value(cmd.PARA_COMMENT)
+                c_rowid = comment.get_value(cmd.PARA_ROWID)
+                if c_rowid is None:
+                    params.append('COMMENT('+ c_expr + ', \'' + c_cmnt + '\') ')
+                else:
+                    params.append('COMMENT('+ c_expr + ', \'' + c_cmnt + '\', \'' + c_rowid + '\') ')
+            result_cols = []
+            for col in arguments.get_value(cmd.PARA_RESULT_COLUMNS):
+                c_name = col.get_value(pckg.PARA_COLUMN)
+                result_cols.append(c_name)
+            if len(result_cols) > 0:
+                params.append('RESULT_COLUMNS('+','.join(result_cols)+')')   
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
@@ -244,7 +261,17 @@ class MimirProcessor(TaskProcessor):
                 annotations=dataset.annotations
             )
         # Add dataset schema and returned annotations to output
-        print_dataset_schema(outputs, ds_name, ds.columns)
+        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE, cmd.MIMIR_SHAPE_DETECTOR]:
+            print_dataset_schema(outputs, ds_name, ds.columns)
+        else:
+            ds_output = server.api.datasets.get_dataset(
+                project_id=context.project_id,
+                dataset_id=ds.identifier,
+                offset=0,
+                limit=10
+            )
+            outputs.stdout.append(DatasetOutput(ds_output))
+        
         print_lens_annotations(outputs, lens_annotations)
         dsd = DatasetDescriptor(
                 identifier=ds.identifier,

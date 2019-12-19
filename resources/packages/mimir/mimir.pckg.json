@@ -811,7 +811,141 @@
 			      "required": false
 			    }
 			  ]
-			}
+			},
+			{
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "COMMENT"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": false, 
+                        "type": "const", 
+                        "value": "("
+                    }, 
+                    {
+                        "format": [
+                            {
+                                "lspace": true, 
+                                "rspace": true, 
+                                "type": "var", 
+                                "value": "expression"
+                            }, 
+                            {
+                                "lspace": true, 
+                                "rspace": true, 
+                                "type": "var", 
+                                "value": "comment"
+                            }
+                        ], 
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "comments"
+                    }, 
+                    {
+                        "format": [
+                            {
+                                "lspace": true, 
+                                "rspace": true, 
+                                "type": "var", 
+                                "value": "column"
+                            }
+                        ], 
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "resultColumns"
+                    }, 
+                    {
+                        "lspace": false, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": ")"
+                    }
+                ], 
+                "id": "comment", 
+                "name": "Comment Lens", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "comments", 
+                        "index": 1, 
+                        "name": "Comments", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "expression", 
+                        "index": 2, 
+                        "name": "Column or Expression", 
+                        "parent": "comments", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "comment", 
+                        "index": 3, 
+                        "name": "Comment", 
+                        "parent": "comments", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "rowid", 
+                        "hidden": false, 
+                        "id": "rowid", 
+                        "index": 4, 
+                        "name": "Row Identifier", 
+                        "parent": "comments", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "resultColumns", 
+                        "index": 5, 
+                        "name": "Result Columns", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "column", 
+                        "index": 6, 
+                        "name": "Result Column", 
+                        "parent": "resultColumns", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": true,
+                        "id": "materializeInput", 
+                        "index": 7, 
+                        "name": "Materialize Input", 
+                        "required": false
+                    }
+                ]
+            }
         ], 
         "id": "mimir",
         "category": "data_m"

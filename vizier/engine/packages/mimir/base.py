@@ -34,6 +34,7 @@ MIMIR_PICKER ='picker'
 MIMIR_SCHEMA_MATCHING ='schema_matching'
 MIMIR_TYPE_INFERENCE ='type_inference'
 MIMIR_SHAPE_DETECTOR ='shape_watcher'
+MIMIR_COMMENT ='comment'
 
 # Command arguments
 PARA_CITY = 'city'
@@ -52,7 +53,11 @@ PARA_STATE = 'state'
 PARA_STREET = 'strname'
 PARA_TYPE = 'type'
 PARA_MODEL_NAME = 'modelName'
-
+PARA_COMMENTS = 'comments'
+PARA_RESULT_COLUMNS = 'resultColumns'
+PARA_EXPRESSION = 'expression'
+PARA_COMMENT = 'comment'
+PARA_ROWID = 'rowid'
 
 """Mimir lens specification schema."""
 def para_materialize_input(index):
@@ -366,6 +371,74 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.constant_format('model_name'),
                 pckg.constant_format('='),
                 pckg.variable_format(PARA_MODEL_NAME)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=MIMIR_COMMENT,
+            name='Comment Lens',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_COMMENTS,
+                    name='Comment',
+                    data_type=pckg.DT_LIST,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_EXPRESSION,
+                    name='Column or Expression',
+                    data_type=pckg.DT_STRING,
+                    index=2,
+                    parent=PARA_COMMENTS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_COMMENT,
+                    name='Comment',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    parent=PARA_COMMENTS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_ROWID,
+                    name='Row Identifier',
+                    data_type=pckg.DT_ROW_ID,
+                    index=4,
+                    required=False,
+                    parent=PARA_COMMENTS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_RESULT_COLUMNS,
+                    name='Result Columns',
+                    data_type=pckg.DT_LIST,
+                    index=5
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_COLUMN,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=6,
+                    parent=PARA_RESULT_COLUMNS
+                ),
+                para_materialize_input(5)
+            ],
+            format=[
+                pckg.constant_format('COMMENT'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('(', rspace=False),
+                pckg.group_format(
+                    PARA_COMMENTS,
+                    format=[
+                        pckg.variable_format(PARA_EXPRESSION),
+                        pckg.variable_format(PARA_COMMENT)
+                    ]
+                ),
+                pckg.group_format(
+                    PARA_RESULT_COLUMNS,
+                    format=[
+                        pckg.variable_format(pckg.PARA_COLUMN)
+                    ]
+                ),
+                pckg.constant_format(')', lspace=False)
             ]
         )
     ]

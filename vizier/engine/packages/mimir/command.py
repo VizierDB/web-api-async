@@ -335,6 +335,51 @@ def mimir_shape_detector(
         packages=PACKAGE(validate=validate)
     )
 
+    def mimir_comment(
+        dataset_name, comments, result_columns, materialize_input=False, validate=False
+    ):
+    """Create instance of mimir comment lens command.
+
+    Parameters
+    ----------
+    dataset_name: string
+        Name of the dataset
+    comments: list(dict)
+        List of objects containing 'expression' and 'comment' elements
+    comments: list(dict)
+        List of objects containing 'column' elements for output
+    materialize_input: bool, optional
+        Flag indicating whether input should be materialized
+    validate: bool, optional
+        Validate the created command specification (if true)
+
+    Returns
+    -------
+    vizier.viztrail.module.ModuleCommand
+    """
+    comments = list()
+    result_cols = list()
+    
+    for comment in comments:
+        items = list()
+        items.append(md.ARG(id=mimir.PARA_EXPRESSION, value=comment['expression']))
+        items.append(md.ARG(id=mimir.PARA_COMMENT, value=comment['comment']))
+        items.append(md.ARG(id=mimir.PARA_ROWID, value=comment['rowid']))
+        comments.append(items)
+    for col in result_columns:
+        col_arg = [md.ARG(id=pckg.PARA_COLUMN, value=col['column'])]
+        result_cols.append(col_arg)
+    return md.ModuleCommand(
+        mimir.PACKAGE_MIMIR,
+        mimir.MIMIR_COMMENT,
+        arguments =[
+            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
+            md.ARG(id=mimir.PARA_COMMENTS, value=elements),
+            md.ARG(id=mimir.PARA_RESULT_COLUMNS, value=result_name),
+            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
+        ],
+        packages=PACKAGE(validate=validate)
+    )
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
