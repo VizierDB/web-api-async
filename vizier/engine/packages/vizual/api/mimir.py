@@ -25,6 +25,7 @@ from vizier.datastore.base import get_index_for_column
 from vizier.datastore.mimir.base import ROW_ID
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MIMIR_ROWID_COL
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
+from vizier.datastore.mimir.base import sanitize_column_name
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.mimir as mimir
@@ -551,17 +552,46 @@ class MimirVizualApi(VizualApi):
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Get the specified column that is to be renamed and set the column name
         # to the new name
+        columns = list()
         schema = list(dataset.columns)
-        col = schema[get_index_for_column(dataset, column_id)]
+        colIndex = get_index_for_column(dataset, column_id)
+        col = schema[colIndex]
         # No need to do anything if the name hasn't changed
         if col.name.lower() != name.lower():
+            
+            sql = 'SELECT * FROM ' + dataset.table_name
+            mimirSchema = mimir.getSchema(sql)
+            # Create list of dataset columns
+            colSql = ''
+            idx = 0
+            for col in mimirSchema:
+                col_id = len(columns)
+                name_in_dataset = sanitize_column_name(col['name'].upper())
+                name_in_rdb = sanitize_column_name(col['name'].upper())
+                col = MimirDatasetColumn(
+                    identifier=col_id,
+                    name_in_dataset=name_in_dataset,
+                    name_in_rdb=name_in_rdb
+                )
+                if idx == 0:
+                    colSql = name_in_dataset + ' AS ' + name_in_rdb
+                elif idx == colIndex:
+                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name
+                    col.name = name
+                    col.name_in_rdb = name
+                else:
+                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
+                columns.append(col)
+                idx = idx + 1
+            # Create view for loaded dataset
+            sql = 'SELECT '+ colSql +' FROM {{input}};'
+            view_name = mimir.createView(dataset.table_name, sql)
             # There are no changes to the underlying database. We only need to
             # change the column information in the dataset schema.
-            col.name = name
             # Store updated dataset to get new identifier
             ds = datastore.register_dataset(
-                table_name=dataset.table_name,
-                columns=schema,
+                table_name=view_name,
+                columns=columns,
                 row_counter=dataset.row_counter,
                 annotations=dataset.annotations
             )
