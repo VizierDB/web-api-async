@@ -92,15 +92,31 @@ class PyCellTaskProcessor(TaskProcessor):
         # Keep track of exception that is thrown by the code
         exception = None
         # Run the Python code
+
+        lines = source.split('\n')
+        #lines.append(lines[-1])
+        last_get_type = "print(type("+lines[-1]+"))"
+        last = lines[-1]
+        source = '\n'.join(lines[:-1]) # all but last line
+
         try:
             python_cell_preload(variables)
             exec(source, variables, variables)
+            exec(last_get_type, variables, variables)
+            if(stream[-1][1][0] == "<class 'pandas.core.frame.DataFrame'>"):
+                exec('print('+last+'.style.highlight_null().render())', variables, variables)
+                #del outputs[-2]
+            elif(stream[-1][1][0] == "<class 'matplotlib.container.BarContainer'>"):
+                exec('import io\nf= io.BytesIO()\n'+last+'\nplt.savefig(f, format="svg")\nprint(f.getvalue().decode("utf-8"))', variables, variables)
+            else:
+                exec(last, variables, variables)
         except Exception as ex:
             exception = ex
         finally:
             # Make sure to reverse redirection of output streams
             sys.stdout = out
             sys.stderr = err
+
         # Set module outputs
         outputs = ModuleOutputs()
         is_success = (exception is None)
