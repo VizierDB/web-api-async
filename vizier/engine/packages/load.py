@@ -34,7 +34,7 @@ def load_packages(path):
     dict(vizier.engine.package.base.PackageIndex)
     """
     packages = dict()
-    for dir_name in path.split(':')[::-1]:
+    for dir_name in path.split(';') if os.name == 'nt' else path.split(':')[::-1]: 
         for filename in os.listdir(dir_name):
             filename = os.path.join(dir_name, filename)
             if os.path.isfile(filename):

@@ -128,7 +128,7 @@ def load_processors(path):
     dict(vizier.engine.packages.task.processor.TaskProcessor)
     """
     processors = dict()
-    for dir_name in path.split(':')[::-1]:
+    for dir_name in path.split(':')[::-1] if os.name != 'nt' else path.split(';'):
         for filename in os.listdir(dir_name):
             filename = os.path.join(dir_name, filename)
             if os.path.isfile(filename):
