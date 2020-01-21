@@ -1,0 +1,41 @@
+{
+    "sampling": {
+        "command": [
+            {
+                "format" : [
+                ], 
+                "id": "basic_sample", 
+                "name": "Basic Sample", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "rate", 
+                        "index": 1, 
+                        "name": "Sampling Rate (0.0-1.0)", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "output", 
+                        "index": 2, 
+                        "name": "Output Dataset", 
+                        "required": false
+                    }
+                    
+                ]
+            }
+        ], 
+        "id": "sampling",
+        "category": "code"
+    }
+}
