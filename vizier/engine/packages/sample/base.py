@@ -31,6 +31,7 @@ SAMPLING_MODE_STRATIFIED_ON = 'stratified_on'
 # Command identifier (unique within the package)
 BASIC_SAMPLE = "basic_sample"
 MANUAL_STRATIFIED_SAMPLE = "manual_stratified_sample"
+AUTOMATIC_STRATIFIED_SAMPLE = "automatic_stratified_sample"
 
 # SQL command parameters
 PARA_INPUT_DATASET = 'input_dataset'

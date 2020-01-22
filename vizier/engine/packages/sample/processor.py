@@ -26,6 +26,7 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.datastore.dataset import DatasetDescriptor
 import vizier.engine.packages.sample.base as cmd
 import vizier.mimir as mimir
+import math
 
 
 class SamplingProcessor(TaskProcessor):
@@ -80,16 +81,20 @@ class SamplingProcessor(TaskProcessor):
                 "mode" : cmd.SAMPLING_MODE_UNIFORM_PROBABILITY,
                 "probability" : sampling_rate
             }
-        elif command_id == cmd.MANUAL_STRATIFIED_SAMPLE:
+        elif command_id == cmd.MANUAL_STRATIFIED_SAMPLE or command_id == cmd.AUTOMATIC_STRATIFIED_SAMPLE:
             column = arguments.get_value(cmd.PARA_STRATIFICATION_COLUMN)
-            strata = [
-                {
-                    "value" : stratum.get_value(cmd.PARA_STRATUM_VALUE),
-                    "probability" : stratum.get_value(cmd.PARA_SAMPLING_RATE)
-                } 
-                for stratum in arguments.get_value(cmd.PARA_STRATA)
-            ]
             column_defn = input_dataset.columns[column]
+            if command_id == cmd.MANUAL_STRATIFIED_SAMPLE:
+                strata = [
+                    {
+                        "value" : stratum.get_value(cmd.PARA_STRATUM_VALUE),
+                        "probability" : stratum.get_value(cmd.PARA_SAMPLING_RATE)
+                    } 
+                    for stratum in arguments.get_value(cmd.PARA_STRATA)
+                ]
+            else:
+                probability = arguments.get_value(cmd.PARA_SAMPLING_RATE)
+                strata = self.get_automatic_strata(input_dataset, column_defn, probability)
             sample_mode = {
                 "mode" : cmd.SAMPLING_MODE_STRATIFIED_ON,
                 "column" : column_defn.name,
@@ -142,3 +147,37 @@ class SamplingProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
+
+    def get_automatic_strata(self, dataset, column, probability):
+        counts = mimir.vistrailsQueryMimirJson(
+            query = "SELECT `{}`, COUNT(*) FROM `{}` GROUP BY `{}`".format(
+                    column.name, 
+                    dataset.table_name,
+                    column.name
+                ),
+            include_uncertainty = False,
+            include_reasons = False,
+        )
+        data = counts["data"]
+        total = sum([ stratum[1] for stratum in data ])
+        sample_bin_goal = total * probability / len(data)
+        imbalanced_strata = [
+            stratum
+            for stratum in data
+            if stratum[1] < sample_bin_goal
+        ]
+        if len(imbalanced_strata) > 0:
+            minimum_safe_rate = min(float(stratum[1]) / total for stratum in data)
+            raise Exception("Sampling rate too high (maximum safe rate = {}).  Too few records for the following values: {}".format(
+                minimum_safe_rate,
+                ", ".join(stratum[0] for stratum in imbalanced_strata)    
+            ))
+
+        stratum_bins = [
+            {
+                "value" : stratum[0],
+                "probability" : float(sample_bin_goal) / float(stratum[1])
+            }
+            for stratum in data
+        ]
+        return stratum_bins
