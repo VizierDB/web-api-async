@@ -59,26 +59,6 @@ class SamplingProcessor(TaskProcessor):
         vizier.engine.task.processor.ExecResult
         """
 
-
-        if command_id == cmd.BASIC_SAMPLE:
-            return self.basic_sample(arguments, context)
-
-    def basic_sample(self, arguments, context):
-        """Generate a dataset sample in the specified context.
-
-        Parameters
-        ----------
-        args: vizier.viztrail.command.ModuleArguments
-            User-provided command arguments
-        context: vizier.engine.task.base.TaskContext
-            Context in which a task is being executed
-
-        Returns
-        -------
-        vizier.engine.task.processor.ExecResult
-        """
-
-
         input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
         input_dataset = context.get_dataset(input_ds_name)
         if input_dataset is None:
@@ -89,21 +69,39 @@ class SamplingProcessor(TaskProcessor):
             output_ds_name = input_ds_name + "_SAMPLE"
         output_ds_name = output_ds_name.lower()
 
-        sampling_rate = float(arguments.get_value(cmd.PARA_SAMPLING_RATE))
-        if sampling_rate > 1.0 or sampling_rate < 0.0:
-            raise Exception("Sampling rate must be between 0.0 and 1.0")
+        ## Load the sampling configuration
+        sample_mode = None
 
-        print("input_ds_name: {}".format(input_ds_name))
-        print("input_dataset.table_name: {}".format(input_dataset.table_name))
-        print("output_ds_name: {}".format(output_ds_name))
-        print("sampling_rate: {}".format(sampling_rate))
-        
-        sample_view_id = mimir.createSample(
-            input_dataset.table_name,
-            {
-                "mode" : "uniform_probability",
+        if command_id == cmd.BASIC_SAMPLE:
+            sampling_rate = float(arguments.get_value(cmd.PARA_SAMPLING_RATE))
+            if sampling_rate > 1.0 or sampling_rate < 0.0:
+                raise Exception("Sampling rate must be between 0.0 and 1.0")
+            sample_mode = {
+                "mode" : cmd.SAMPLING_MODE_UNIFORM_PROBABILITY,
                 "probability" : sampling_rate
             }
+        elif command_id == cmd.MANUAL_STRATIFIED_SAMPLE:
+            column = arguments.get_value(cmd.PARA_STRATIFICATION_COLUMN)
+            strata = [
+                {
+                    "value" : stratum.get_value(cmd.PARA_STRATUM_VALUE),
+                    "probability" : stratum.get_value(cmd.PARA_SAMPLING_RATE)
+                } 
+                for stratum in arguments.get_value(cmd.PARA_STRATA)
+            ]
+            column_defn = input_dataset.columns[column]
+            sample_mode = {
+                "mode" : cmd.SAMPLING_MODE_STRATIFIED_ON,
+                "column" : column_defn.name,
+                "type" : column_defn.data_type,
+                "strata" : strata
+            }
+        else:
+            raise Exception("Unknown sampling command: {}".format(command_id))
+
+        sample_view_id = mimir.createSample(
+            input_dataset.table_name,
+            sample_mode
         )
         row_count = mimir.countRows(sample_view_id)
         

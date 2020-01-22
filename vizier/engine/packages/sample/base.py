@@ -24,10 +24,19 @@ import vizier.engine.packages.base as pckg
 # Package name
 PACKAGE_SAMPLE = 'sample'
 
+# Sampling modes (must correspond w/ Mimir's mimir.algebra.sampling._)
+SAMPLING_MODE_UNIFORM_PROBABILITY = 'uniform_probability'
+SAMPLING_MODE_STRATIFIED_ON = 'stratified_on'
+
 # Command identifier (unique within the package)
 BASIC_SAMPLE = "basic_sample"
+MANUAL_STRATIFIED_SAMPLE = "manual_stratified_sample"
 
 # SQL command parameters
 PARA_INPUT_DATASET = 'input_dataset'
 PARA_OUTPUT_DATASET = 'output_dataset'
 PARA_SAMPLING_RATE = 'sample_rate'
+PARA_STRATIFICATION_COLUMN = 'stratification_column'
+PARA_STRATA = 'strata'
+PARA_STRATUM_VALUE = 'stratum_value'
+
