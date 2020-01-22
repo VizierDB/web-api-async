@@ -2,4 +2,4 @@ packages:
     - sampling
 engine:
     className: 'SamplingProcessor'
-    moduleName: 'vizier.engine.packages.mimir.sampling'
+    moduleName: 'vizier.engine.packages.sample.processor'
