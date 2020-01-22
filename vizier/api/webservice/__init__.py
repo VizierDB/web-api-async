@@ -22,7 +22,7 @@ Vizier front end and for any other (remote) clients.
 import logging
 import os
 
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, redirect
 from flask_cors import CORS
 from logging.handlers import RotatingFileHandler
 
@@ -123,5 +123,14 @@ def create_app():
         # Initialize the Mimir gateway if using Mimir engine
         if config.engine.identifier == const.MIMIR_ENGINE:
             import vizier.mimir as mimir
+
+    root_redirect_path = "{}/web-ui/vizier-db".format(server.bp.url_prefix)
+    print("ROUTE: {}".format(server.bp.url_prefix))
+    @app.route("/")
+    def handle_root():
+        """Redirect users to the web UI
+        """
+        return redirect(root_redirect_path)
+
 
     return app
