@@ -125,7 +125,6 @@ def create_app():
             import vizier.mimir as mimir
 
     root_redirect_path = "{}/web-ui/vizier-db".format(server.bp.url_prefix)
-    print("ROUTE: {}".format(server.bp.url_prefix))
     @app.route("/")
     def handle_root():
         """Redirect users to the web UI
