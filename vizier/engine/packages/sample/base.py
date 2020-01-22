@@ -30,4 +30,4 @@ BASIC_SAMPLE = "basic_sample"
 # SQL command parameters
 PARA_INPUT_DATASET = 'input_dataset'
 PARA_OUTPUT_DATASET = 'output_dataset'
-PARA_SAMPLING_RATE = 'rate'
+PARA_SAMPLING_RATE = 'sample_rate'

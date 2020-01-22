@@ -192,6 +192,34 @@ def getSchema(query):
     }
     resp = readResponse(requests.post(_mimir_url + 'schema', json=req_json))
     return resp['schema']
+
+def createSample(inputds, mode_config, seed = None):
+  """
+    Create a sample of dataset input according to the sampling mode
+    configuration given in modejs.  See Mimir's mimir.algebra.sampling
+    for more details.
+
+    Parameters
+    ----------
+    inputds: string
+        The internal name of the dataset to generate samples for
+    mode_config: dictionary (see Mimir's mimir.algebra.sampling)
+        The sampling process to use
+    seed: long (optional)
+        The seed value to use
+
+    Returns
+    -------
+    string (the internal name of the generated view)
+  """
+  req_json = { 
+    "source" : inputds,
+    "samplingMode" : mode_config,
+    "seed" : seed
+  }
+  resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
+  return resp['viewName']
+
   
 def getAvailableLansTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']
