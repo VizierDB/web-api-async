@@ -17,6 +17,7 @@ if [ $# -eq 1 ]
       then
         echo "mimir dev mode!"
         MIMIR_DEV="true"
+        APP_RESOURCES_DIR=./
     fi
     if [ "$1" == "devui" ]
       then
@@ -30,6 +31,7 @@ if [ $# -eq 2  ]
       then
         echo "mimir dev mode!"
         MIMIR_DEV="true"
+        APP_RESOURCES_DIR=./
     fi
     if [ "$2" == "devui" ]
       then
