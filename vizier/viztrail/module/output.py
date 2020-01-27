@@ -37,7 +37,7 @@ def debug_is_on():
     return str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True"
 
 def format_stack_trace(ex):
-    trace = traceback.extract_tb(ex.__traceback__)
+    trace = traceback.extract_tb(ex.__traceback__, limit = 30)
     print("{}".format(trace))
     trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
     trace = list([
