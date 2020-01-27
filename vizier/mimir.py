@@ -27,29 +27,24 @@ _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
 class MimirError(Exception):
     def __init___(self,dErrorArguments):
-        Exception.__init__(self,"mimir exception with arguments {0}".format(dErrorArguments))
-        self.dErrorArguments = dErrorArguments
+        Exception.__init__(self,dErrorArguments)
 
 def readResponse(resp):
     json_object = None
     try:
         resp.raise_for_status()
     except HTTPError as http_e:
-        raise MimirError(http_e)
+        raise MimirError({ 'errorMessage': http_e })
     except Exception as e: 
-        raise MimirError(e)
+        raise MimirError({ 'errorMessage': e })
     else:
         try:
             json_object = resp.json()
         except Exception as e: 
-            raise MimirError(e)
+            raise MimirError({ 'errorMessage': e })
     try:
         if not json_object['errorType'] is None and not json_object['errorMessage'] is None:
-            message = str(json_object['errorType']) + ": " + str(json_object['errorMessage'])
-            if str(os.environ.get('VIZIERSERVER_DEBUG', False)) == "True":
-                message = message + "\n" + str(json_object['stackTrace'])
-                #message = message + "\n" + str(resp)
-            raise MimirError(message)
+            raise MimirError(json_object)
     except KeyError: 
         pass
     return json_object
