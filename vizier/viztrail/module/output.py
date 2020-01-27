@@ -41,12 +41,12 @@ def format_stack_trace(ex):
     print("{}".format(trace))
     trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
     trace = list([
-        "{} ({}line {}){}".format(
+        "{} {} line {}{}".format(
             # Function Name
-            "[Python Cell]" if element[2] == "<module>" else element[2], 
+            "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)", 
 
             # File
-            "" if element[0] == "<string>" else element[0]+" ", 
+            "on" if element[0] == "<string>" else "in "+element[0]+", ", 
 
             # Line #
             element[1],
@@ -56,6 +56,7 @@ def format_stack_trace(ex):
         )
         for element in trace
     ])
+    trace.reverse()
     trace = (
         ["  ... caused by "+trace[0]]+
         ["  ... called by "+line for line in trace[1:]]
