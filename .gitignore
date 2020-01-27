@@ -58,3 +58,4 @@ resources/config/dev-config.yaml
 /vizier/ds
 /vizier/fs
 /vizier/vt
+/run.sh
