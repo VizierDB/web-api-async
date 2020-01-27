@@ -167,6 +167,10 @@ if [ "$UI_DEV" == "true" ]
     cd ../web-ui; yarn start &
     cd ../web-api-async
 fi
+
+echo "Checking for necessary database upgrades"
+python tools/upgrade.py
+
 python -m flask run --with-threads &
 #$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
 
