@@ -224,7 +224,7 @@ class MimirVizualApi(VizualApi):
                 # Note: By no (April 2018) this requires Mimir to run with the
                 # XNULL option. Otherwise, in some scenarios setting the all
                 # values in the new column to NULL may cause an exception.
-                col_list.append('NULL ' + col.name_in_rdb)
+                col_list.append(" CAST('' AS int) AS " + col.name_in_rdb) 
             else:
                 col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
