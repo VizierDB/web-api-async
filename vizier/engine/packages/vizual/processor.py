@@ -686,7 +686,7 @@ class VizualTaskProcessor(TaskProcessor):
         # Get dataset name, column specification, and new column name.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
         column_id = args.get_value(pckg.PARA_COLUMN)
-        column_name = args.get_value(pckg.PARA_NAME)
+        column_name = args.get_value(pckg.PARA_NAME).upper()
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute rename column command.
