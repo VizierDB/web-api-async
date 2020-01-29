@@ -38,8 +38,9 @@ def debug_is_on():
 
 def format_stack_trace(ex):
     trace = traceback.extract_tb(ex.__traceback__, limit = 30)
-    print("{}".format(trace))
-    trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
+    # print("{}".format(trace))
+    if not debug_is_on():
+        trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
     trace = list([
         "{} {} line {}{}".format(
             # Function Name
@@ -117,9 +118,8 @@ class ModuleOutputs(object):
                 if debug_is_on():
                     message = message + "\nDEBUG IS ON"
                     if "stackTrace" in err_data:
-                        message = "{}\n{}".format(message, err_data["stackTrace"])
-                    else:
-                        message = "{}\n{}".format(message, ex) 
+                        message = "{}\n{}\n--------".format(message, err_data["stackTrace"])
+                    message = "{}\n{}".format(message, format_stack_trace(ex)) 
             elif type(ex) is ConnectionError:
                 message = "Couldn't connect to Mimir (Vizier's dataflow layer).  Make sure it's running."
             elif type(ex) is SyntaxError:
