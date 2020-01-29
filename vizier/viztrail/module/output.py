@@ -56,10 +56,13 @@ def format_stack_trace(ex):
         )
         for element in trace
     ])
-    trace = (
-        ["  ... caused by "+trace[0]]+
-        ["  ... called by "+line for line in trace[1:]]
-    )
+    if len(trace) > 0:
+        trace = (
+            ["  ... caused by "+trace[0]]+
+            ["  ... called by "+line for line in trace[1:]]
+        )
+    else:
+        return "INTERNAL ERROR\n{}".format(ex)
     return "{}".format("\n".join(trace))
 
 
@@ -137,6 +140,9 @@ class ModuleOutputs(object):
                     message = message + ":\n " + str(traceback.format_exc())
         except Exception as e:
             message = template.format(type(e).__name__, e.args)
+            if debug_is_on():
+                message += "\n"+format_stack_trace(e)
+
         self.stderr.append(TextOutput(message))
         return self
 
