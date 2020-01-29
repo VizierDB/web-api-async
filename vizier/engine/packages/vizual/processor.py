@@ -28,6 +28,8 @@ import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
 from vizier.api.webservice import server
 from vizier.config.app import AppConfig
+import vizier.mimir as mimir
+from vizier.datastore.mimir.dataset import MimirDatasetColumn
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -102,6 +104,11 @@ class VizualTaskProcessor(TaskProcessor):
             )
         elif command_id == cmd.VIZUAL_LOAD:
             return self.compute_load_dataset(
+                args=arguments,
+                context=context
+            )
+        elif command_id == cmd.VIZUAL_EMPTY_DS:
+            return self.compute_empty_dataset(
                 args=arguments,
                 context=context
             )
@@ -465,6 +472,71 @@ class VizualTaskProcessor(TaskProcessor):
                 resources=result.resources
             )
         )
+
+    def compute_empty_dataset(self, args, context):
+        """Execute empty dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        outputs = ModuleOutputs()
+        default_columns = [ ("''", "unnamed_column") ]
+        ds_name = args.get_value(pckg.PARA_NAME).lower()
+        if ds_name in context.datasets:
+            raise ValueError('dataset \'' + ds_name + '\' exists')
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+        try:
+            source = "SELECT {};".format(", ".join(
+                            default_val + " AS " + col_name
+                            for default_val, col_name in default_columns
+                        ))
+            view_name = mimir.createView(
+                dict(),
+                source
+            )
+
+            columns = [
+                MimirDatasetColumn(
+                    identifier=col_id,
+                    name_in_dataset=col_defn[1]
+                )
+                for col_defn, col_id in zip(default_columns, range(len(default_columns)))
+            ]
+
+            ds = context.datastore.register_dataset(
+                table_name=view_name,
+                columns=columns,
+                row_counter=1
+            )
+            provenance = ModuleProvenance(
+                write={
+                    ds_name: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                    )
+                }
+            )
+            outputs.stdout.append(TextOutput("Empty dataset '{}' created".format(ds_name)))
+        except Exception as ex:
+            provenance = ModuleProvenance()
+            outputs.error(ex)
+        return ExecResult(
+            is_success=(len(outputs.stderr) == 0),
+            outputs=outputs,
+            provenance=provenance
+        )
+
+
         
     def compute_unload_dataset(self, args, context):
         """Execute unload dataset command.

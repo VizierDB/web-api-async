@@ -9,6 +9,9 @@ The following steps describe how to obtain a local installation of the Web API o
 
 The also exist the option to run the Vizier Web API using Docker. Refer to the [Use Docker and the Vizier Web API](https://github.com/VizierDB/web-api-async/tree/master/doc/docker.md) document for details on how to run Vizier using Docker.
 
+### Upgrading from an older version
+
+Run `python3 tools/upgrade.py`
 
 ### Python Environment
 
