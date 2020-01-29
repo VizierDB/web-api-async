@@ -173,6 +173,46 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
+                        "value": "CREATE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "EMPTY"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "DATASET"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "name"
+                    }
+                ], 
+                "id": "empty", 
+                "name": "Empty Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "name", 
+                        "index": 0, 
+                        "name": "Dataset Name", 
+                        "required": true
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
                         "value": "UNLOAD"
                     }, 
                     {
