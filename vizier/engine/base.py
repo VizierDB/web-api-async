@@ -792,6 +792,11 @@ class VizierEngine(WorkflowController):
                 outputs=outputs,
                 provenance=provenance
             )
+            print("Module {} finished at {} / Context: {}".format(
+                module.external_form, 
+                finished_at,
+                context
+            ))
             for next_module in workflow.modules[module_index+1:]:
                 if not next_module.is_pending:
                     # This case can only happen if we allow parallel execution

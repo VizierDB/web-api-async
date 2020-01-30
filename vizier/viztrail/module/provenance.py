@@ -22,6 +22,11 @@ In addition to information about accessed and manipulated datasets the
 provenance object allows to carry state from previous executions for a module.
 """
 
+def debug(message):
+    # print("PROVENANCE: {}".format(message))
+    pass
+
+
 
 class ModuleProvenance(object):
     """The module provenance object maintains information about the datasets
@@ -140,30 +145,38 @@ class ModuleProvenance(object):
         # Always execute if any of the provenance information for the module is
         # unknown (i.e., None)
         if self.read is None or self.write is None:
+            debug("DEPENDENT / UNKNOWN ({}, {})".format(self.read, self.write))
             return True
         # Always execute if the module unsuccessfully attempted to write a
         # dataset or if it creates or changes a dataset that is not
         # in the read dependencies but that exists in the current state
         for name in self.write:
             if self.write[name] is None:
+                debug("DEPENDENT / WRITE FAILED")
                 return True
             elif name in datasets and not name in self.read:
+                debug("DEPENDENT / OVERWRITE")
                 return True
         # Check if all read dependencies are present and have not been modified
         for name in self.read:
             if not name in datasets:
+                debug("DEPENDENT / READ MISSING")
                 return True
             elif self.read[name] is None:
+                debug("DEPENDENT / READ FAILED")
                 return True
             elif self.read[name] != datasets[name].identifier:
+                debug("DEPENDENT / READ DIFFERENT")
                 return True
         # If any dataset is being deleted that does not exist in the current
         # state we re-execute (because this may lead to an unwanted error state)
         if not self.delete is None:
             for name in self.delete:
                 if not name in datasets:
+                    debug("DEPENDENT / DELETED")
                     return True
         # The database state is the same as for the previous execution of the
         # module (with respect to the input dependencies). Thus, the module
         # does not need to be re-executed.
+        debug("INDEPENDENT")
         return False

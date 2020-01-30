@@ -92,7 +92,7 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name = mimir.createView(
+            view_name, dependencies = mimir.createView(
                 mimir_table_names,
                 source
             )
@@ -100,7 +100,6 @@ class SQLTaskProcessor(TaskProcessor):
             mimirSchema = mimir.getSchema(sql)
 
             columns = list()
-            colSql = ''
 
             for col in mimirSchema:
                 col_id = len(columns)
@@ -109,14 +108,7 @@ class SQLTaskProcessor(TaskProcessor):
                     identifier=col_id,
                     name_in_dataset=name_in_dataset
                 )
-                if colSql == '':
-                    colSql = name_in_dataset + ' AS ' + name_in_dataset
-                else:
-                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_dataset
                 columns.append(col)
-
-            sql = 'SELECT ' + colSql + ' FROM {{input}};'
-            view_name = mimir.createView(view_name, sql)
 
             row_count = mimir.countRows(view_name)
             
@@ -137,6 +129,13 @@ class SQLTaskProcessor(TaskProcessor):
                 limit=10
             )
             ds_output['name'] = ds_name
+
+            dependencies = dict(
+                (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
+                for dep_name in dependencies
+            )
+            # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
+
             outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={
@@ -145,7 +144,8 @@ class SQLTaskProcessor(TaskProcessor):
                         columns=ds.columns,
                         row_count=ds.row_count
                     )
-                }
+                },
+                read=dependencies
             )
         except Exception as ex:
             provenance = ModuleProvenance()

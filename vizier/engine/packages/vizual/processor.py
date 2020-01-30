@@ -499,7 +499,7 @@ class VizualTaskProcessor(TaskProcessor):
                             default_val + " AS " + col_name
                             for default_val, col_name in default_columns
                         ))
-            view_name = mimir.createView(
+            view_name, dependencies = mimir.createView(
                 dict(),
                 source
             )
