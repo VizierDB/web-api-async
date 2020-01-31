@@ -22,9 +22,11 @@ In addition to information about accessed and manipulated datasets the
 provenance object allows to carry state from previous executions for a module.
 """
 
+import os
+
 def debug(message):
-    # print("PROVENANCE: {}".format(message))
-    pass
+    if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
+        print("PROVENANCE: {}".format(message))
 
 
 
@@ -154,7 +156,7 @@ class ModuleProvenance(object):
             if self.write[name] is None:
                 debug("DEPENDENT / WRITE FAILED")
                 return True
-            elif name in datasets and not name in self.read:
+            elif name in datasets:
                 debug("DEPENDENT / OVERWRITE")
                 return True
         # Check if all read dependencies are present and have not been modified
@@ -163,7 +165,7 @@ class ModuleProvenance(object):
                 debug("DEPENDENT / READ MISSING")
                 return True
             elif self.read[name] is None:
-                debug("DEPENDENT / READ FAILED")
+                debug("DEPENDENT / READ UNKNOWN")
                 return True
             elif self.read[name] != datasets[name].identifier:
                 debug("DEPENDENT / READ DIFFERENT")

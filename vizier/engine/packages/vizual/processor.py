@@ -467,7 +467,7 @@ class VizualTaskProcessor(TaskProcessor):
         return ExecResult(
             outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
             provenance=ModuleProvenance(
-                read={ds_name: None},
+                read=dict(), # need to explicitly declare a lack of dependencies
                 write={ds_name: ds},
                 resources=result.resources
             )
@@ -524,7 +524,8 @@ class VizualTaskProcessor(TaskProcessor):
                         columns=ds.columns,
                         row_count=ds.row_count
                     )
-                }
+                },
+                read=dict() # Need to explicitly declare a lack of dependencies.
             )
             outputs.stdout.append(TextOutput("Empty dataset '{}' created".format(ds_name)))
         except Exception as ex:
@@ -592,7 +593,9 @@ class VizualTaskProcessor(TaskProcessor):
                 stdout=[outputhtml]
             ),
             provenance=ModuleProvenance(
-                read=dict(),
+                read= { 
+                    ds_name: context.datasets.get(ds_name.lower(), None)
+                },
                 write=dict()
             )
         )
