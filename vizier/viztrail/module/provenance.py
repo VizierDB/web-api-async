@@ -67,10 +67,14 @@ class ModuleProvenance(object):
         ----------
         read: dict(string:string), optional
             Dictionary of datasets that the module used as input. The key is the
-            dataset name and the value the dataset identifier.
+            dataset name and the value the dataset identifier.  None as the value
+            indicates that the prior version of the specified dataset is unknown
+            (i.e., will force re-execution always).
         write: dict(string:vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of datasets that the module modified. The key is the
-            dataset name and the value the dataset identifier.
+            dataset name and the value the dataset identifier.  None as the value
+            indicates a failed attempt at writing (i.e., will force re-execution
+            always)
         delete: list(string) or set(string), optional
             List of names for datasets that have been deleted by a module
         resources: dict(string: scalar), optional
