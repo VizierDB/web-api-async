@@ -93,23 +93,25 @@ class PyCellTaskProcessor(TaskProcessor):
         exception = None
         # Run the Python code
 
-        lines = source.split('\n')
-        #lines.append(lines[-1])
-        last_get_type = "print(type("+lines[-1]+"))"
-        last = lines[-1]
-        source = '\n'.join(lines[:-1]) # all but last line
 
         try:
             python_cell_preload(variables)
-            exec(source, variables, variables)
-            exec(last_get_type, variables, variables)
-            if(stream[-1][1][0] == "<class 'pandas.core.frame.DataFrame'>"):
-                exec('print('+last+'.style.highlight_null().render())', variables, variables)
-                #del outputs[-2]
-            elif(stream[-1][1][0] == "<class 'matplotlib.container.BarContainer'>"):
-                exec('import io\nf= io.BytesIO()\n'+last+'\nplt.savefig(f, format="svg")\nprint(f.getvalue().decode("utf-8"))', variables, variables)
+            lines = [line for line in source.split('\n') if line.lstrip()[0] != '#'] # last executable line
+            last = lines[-1]
+            if(last[0] == ' ' or last[0] == '\t' or 'print(' in  last): # if tabbed in or last line is already print don't override
+                exec(source, variables, variables)
             else:
-                exec(last, variables, variables)
+                last_get_type = "print("+lines[-1]+".__class__)"
+                all_but_last = '\n'.join(lines[:-1]) # all but last line
+                exec(all_but_last, variables, variables)
+                exec(last_get_type, variables, variables)
+                if(stream[-1][1][0] == "<class 'pandas.core.frame.DataFrame'>"):
+                    exec('print('+last+'.style.highlight_null().render())', variables, variables)
+                    #del outputs[-2]
+                elif("<class 'matplotlib." in stream[-1][1][0]):
+                    exec('import io\nf= io.BytesIO()\n'+last+'\nplt.savefig(f, format="svg")\nprint(f.getvalue().decode("utf-8"))', variables, variables)
+                else:
+                    exec(last, variables, variables)
         except Exception as ex:
             exception = ex
         finally:
