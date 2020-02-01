@@ -98,7 +98,7 @@ class PyCellTaskProcessor(TaskProcessor):
             python_cell_preload(variables)
             lines = [line for line in source.split('\n') if line.lstrip()[0] != '#'] # last executable line
             last = lines[-1]
-            if(last[0] == ' ' or last[0] == '\t' or 'print(' in  last): # if tabbed in or last line is already print don't override
+            if(source.split('\n')[0].lower() != '#!magicoutput' or last[0] == ' ' or last[0] == '\t' or 'print(' in  last): # if tabbed in or last line is already print don't override
                 exec(source, variables, variables)
             else:
                 last_get_type = "print("+lines[-1]+".__class__)"
