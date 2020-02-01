@@ -1,0 +1,5 @@
+packages:
+    - pipeline
+engine:
+    className: 'PipelineProcessor'
+    moduleName: 'vizier.engine.packages.pipeline.processor'

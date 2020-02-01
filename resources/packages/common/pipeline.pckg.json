@@ -1,0 +1,160 @@
+{
+    "pipeline": {
+        "command": [
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "sample_rate"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "of"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "input_dataset"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "for Training"
+                    }
+                ], 
+                "id": "select_training", 
+                "name": "Select Training Set", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "sample_rate", 
+                        "index": 1, 
+                        "name": "Fraction of dataset (0.0-1.0)", 
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "sample_rate"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "of"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "input_dataset"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "for Testing"
+                    }
+                ], 
+                "id": "select_testing", 
+                "name": "Select Testing Set", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "sample_rate", 
+                        "index": 1, 
+                        "name": "Fraction of dataset (0.0-1.0)", 
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "ML"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Model"
+                    }
+                ], 
+                "id": "select_model", 
+                "name": "Select Machine Learning Model", 
+                "parameter": [
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "model", 
+                        "index": 1, 
+                        "name": "ML Model", 
+                        "values": [
+                            {
+                                "text": "NBC",
+                                "value": "Naive Bayes Classifier"
+                            },
+                            {
+                                "text": "RFC",
+                                "value": "Random Forest Classifier"
+                            }
+                        ],
+                        "required": true
+                    }
+                ]
+            }
+        ], 
+        "id": "pipeline",
+        "category": "code"
+    }
+}
