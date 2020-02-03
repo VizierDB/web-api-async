@@ -38,6 +38,7 @@ import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
 import pkg_resources
+import json
 
 # -----------------------------------------------------------------------------
 #
@@ -162,7 +163,7 @@ def import_project():
             vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
             filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
             datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
-            si = io.StringIO()
+            si = io.BytesIO()
             file.save(dst=si)
             si.seek(0)
             project_id = ""
@@ -171,6 +172,12 @@ def import_project():
                     if tarinfo.name.startswith("ds/"):
                         project_id = tarinfo.name.split('/')[1]
                         break
+
+                vtfpath = base_dir+os.path.sep+"vt"+os.path.sep+"viztrails"
+                with open(vtfpath, "r") as vtf:
+                    vt_index_js = json.load(vtf)
+                if project_id in vt_index_js:
+                    raise srv.InvalidRequest("This project already exists.")
             
                 def ds_files(members):
                     for tarinfo in members:
@@ -191,19 +198,18 @@ def import_project():
                 tar.extractall(path=base_dir,members=ds_files(tar))
                 tar.extractall(path=base_dir,members=fs_files(tar))
                 tar.extractall(path=base_dir,members=vt_files(tar))
-            vtfpath = base_dir+os.path.sep+"vt"+os.path.sep+"viztrails"
-            vtf = open(vtfpath, "r")
-            contents = "".join(vtf.readlines())
-            vtf.close()
-            vtf = open(vtfpath, "w")
-            vtf.write(contents.replace(']',', "'+project_id+'"]'))
-            vtf.close()
-            reload_api()
+
+            with open(vtfpath, "w") as vtf:
+                json.dump(vt_index_js + [project_id], vtf)
+
+            global api
+            api = VizierApi(config, init=True)
             pj = api.projects.get_project(project_id)
             if not pj is None:
                 return jsonify(pj)
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
+            print(ex)
     else:
         raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project format')
