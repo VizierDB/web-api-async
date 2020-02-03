@@ -198,8 +198,7 @@ def import_project():
             vtf = open(vtfpath, "w")
             vtf.write(contents.replace(']',', "'+project_id+'"]'))
             vtf.close()
-            global api
-            api = VizierApi(config, init=True)
+            reload_api()
             pj = api.projects.get_project(project_id)
             if not pj is None:
                 return jsonify(pj)
@@ -208,6 +207,11 @@ def import_project():
     else:
         raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project format')
+
+@bp.route('/reload', methods=['POST'])
+def reload_api():
+    global api
+    api = VizierApi(config, init=True)
 
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):
