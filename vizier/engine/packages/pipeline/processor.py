@@ -41,6 +41,34 @@ class PipelineProcessor(TaskProcessor):
         Initialize the vizual API instance
         """
 
+    def save_context(self, context, notebook_context, key, value):
+
+        rows = notebook_context.fetch_rows()
+        is_key_present = False
+        for i, row in enumerate(rows):
+            if row.values[0] == key:
+                is_key_present = True
+                row[i] = DatasetRow(
+                    identifier = notebook_context.max_row_id(),
+                    values = [key, value]
+                )
+                break
+        if not is_key_present:
+            rows.insert(
+                len(rows),
+                DatasetRow(
+                    identifier = notebook_context.max_row_id(),
+                    values = [key, value]
+                )
+            )
+        ds = context.datastore.create_dataset(
+            columns = notebook_context.columns,
+            rows = rows,
+            annotations = notebook_context.annotations
+        )
+        return ds
+
+
     def compute(self, command_id, arguments, context):
 
         outputs = ModuleOutputs()
@@ -109,41 +137,54 @@ class PipelineProcessor(TaskProcessor):
                 }
             )
         elif command_id == cmd.SELECT_MODEL:
-            # NOTE: THIS DOES NOT ACTUALLY DO ANYTHING AS OF NOW
-            classifier = arguments.get_value(cmd.PARA_MODEL)
-            outputs.stdout.append(TextOutput("{} selected for classification.".format(classifier)))
-            
-            """ save the model in a context database
-            columns = [
-                DatasetColumn(
-                    identifier = 1,
-                    name = "k",
-                    data_type = "varchar"
-                ),
-                DatasetColumn(
-                    identifier = 2,
-                    name = "v",
-                    data_type = "varchar"
-                )
-            ]
 
-            rows = [
-                DatasetRow(identifier=1, values=["model", classifier])
-            ]
-            ds = context.datastore.create_dataset(
-                columns = columns,
-                rows = rows
-            )
-            outputs.stdout.append("{} selected for classification.".format(classifier))
+            classifier = arguments.get_value(cmd.PARA_MODEL)
+
+            outputs.stdout.append(TextOutput("{} selected for classification.".format(classifier)))
+
+            ds = self.save_context(context, notebook_context, "model", classifier)
+
             provenance = ModuleProvenance(
             write={
-                output_ds_name: DatasetDescriptor(
+                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
                     identifier=ds.identifier,
                     columns=ds.columns,
                     row_count=ds.row_count
-                )
-            }
-        )"""
+                    )
+                }
+            )
+        elif command_id == cmd.SELECT_PREDICTION_COLUMNS:
+
+            input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
+            columns = arguments.get_value(cmd.PARA_COLUMNS)
+            ds = self.save_context(context, notebook_context, "columns", [column.arguments["columns_column"] for column in columns])
+
+            provenance = ModuleProvenance(
+            write={
+                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
+                    identifier=ds.identifier,
+                    columns=ds.columns,
+                    row_count=ds.row_count
+                    )
+                }
+            )
+        
+        elif command_id == cmd.SELECT_LABEL_COLUMN:
+
+            input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
+            label_column = arguments.get_value(cmd.PARA_LABEL_COLUMN)
+            ds = self.save_context(context, notebook_context, "label", label_column)
+
+            provenance = ModuleProvenance(
+            write={
+                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
+                    identifier=ds.identifier,
+                    columns=ds.columns,
+                    row_count=ds.row_count
+                    )
+                }
+            )
+            
         else:
             raise Exception("Unknown pipeline command: {}".format(command_id))
 

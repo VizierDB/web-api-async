@@ -19,10 +19,15 @@ import vizier.engine.packages.base as pckg
 PARA_INPUT_DATASET = "input_dataset"
 PARA_SAMPLING_RATE = "sample_rate"
 PARA_MODEL = "model"
+PARA_COLUMNS = "columns"
+PARA_LABEL_COLUMN = "label_column"
 
 SAMPLING_MODE_UNIFORM_PROBABILITY = 'uniform_probability'
 
 SELECT_TRAINING = "select_training"
 SELECT_TESTING = "select_testing"
 SELECT_MODEL = "select_model"
+SELECT_PREDICTION_COLUMNS = "select_prediction_columns"
+SELECT_LABEL_COLUMN = "select_label_column"
 
+CONTEXT_DATABASE_NAME = "context"

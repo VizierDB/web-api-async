@@ -141,14 +141,111 @@
                         "name": "ML Model", 
                         "values": [
                             {
-                                "text": "NBC",
+                                "text": "Naive Bayes Classifier",
                                 "value": "Naive Bayes Classifier"
                             },
                             {
-                                "text": "RFC",
+                                "text": "Random Forest Classifier",
                                 "value": "Random Forest Classifier"
+                            },
+                            {
+                                "text": "K-Neighbors Classifier",
+                                "value": "K-Neighbors Classifier"
                             }
                         ],
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Prediction"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Columns"
+                    }
+                ], 
+                "id": "select_prediction_columns", 
+                "name": "Select Prediction Columns", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "columns", 
+                        "index": 1, 
+                        "name": "Columns", 
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "columns_column", 
+                        "index": 2, 
+                        "name": "Column", 
+                        "parent": "columns", 
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Label"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Column"
+                    }
+                ], 
+                "id": "select_label_column", 
+                "name": "Select Label Column", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "label_column", 
+                        "index": 1, 
+                        "name": "Column", 
                         "required": true
                     }
                 ]
