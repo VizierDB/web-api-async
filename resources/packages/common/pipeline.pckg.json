@@ -141,16 +141,20 @@
                         "name": "ML Model", 
                         "values": [
                             {
-                                "text": "Naive Bayes Classifier",
-                                "value": "Naive Bayes Classifier"
+                                "text": "Linear Classifier",
+                                "value": "Linear Classifier"
                             },
                             {
                                 "text": "Random Forest Classifier",
                                 "value": "Random Forest Classifier"
                             },
                             {
-                                "text": "K-Neighbors Classifier",
-                                "value": "K-Neighbors Classifier"
+                                "text": "Neural Network",
+                                "value": "Neural Network"
+                            },
+                            {
+                                "text": "Decision Tree Classifier",
+                                "value": "Decision Tree Classifier"
                             }
                         ],
                         "required": true
@@ -247,6 +251,62 @@
                         "index": 1, 
                         "name": "Column", 
                         "required": true
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Select"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Accuracy"
+                    }, 
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Metric"
+                    }
+                ], 
+                "id": "select_metric", 
+                "name": "Select Accuracy Metric", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "metrics", 
+                        "index": 1, 
+                        "name": "Accuracy Metrics", 
+                        "required": true,
+                        "values": [
+                            {
+                                "text": "Accuracy Score",
+                                "value": "Accuracy Score"                                
+                            },
+                            {
+                                "text": "f-score",
+                                "value": "f-score"
+                            },
+                            {
+                                "text": "Area under ROC Curve",
+                                "value": "Area under ROC Curve"
+                            }
+                        ]
                     }
                 ]
             }

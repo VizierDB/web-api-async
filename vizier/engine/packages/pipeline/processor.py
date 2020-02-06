@@ -49,18 +49,18 @@ class PipelineProcessor(TaskProcessor):
             if row.values[0] == key:
                 is_key_present = True
                 row[i] = DatasetRow(
-                    identifier = notebook_context.max_row_id(),
+                    identifier = notebook_context.max_row_id()+1,
                     values = [key, value]
                 )
                 break
         if not is_key_present:
-            rows.insert(
-                len(rows),
+            rows.append(
                 DatasetRow(
-                    identifier = notebook_context.max_row_id(),
+                    identifier = notebook_context.max_row_id()+1,
                     values = [key, value]
                 )
             )
+        print([row.values for row in rows], flush = True)
         ds = context.datastore.create_dataset(
             columns = notebook_context.columns,
             rows = rows,
@@ -74,7 +74,7 @@ class PipelineProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         provenance = ModuleProvenance()
         output_ds_name = ""
-        notebook_context = context.get_dataset('context')
+        notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
@@ -145,45 +145,65 @@ class PipelineProcessor(TaskProcessor):
             ds = self.save_context(context, notebook_context, "model", classifier)
 
             provenance = ModuleProvenance(
-            write={
-                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                    identifier=ds.identifier,
-                    columns=ds.columns,
-                    row_count=ds.row_count
-                    )
-                }
+                write = {
+                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                        )
+                    }
             )
         elif command_id == cmd.SELECT_PREDICTION_COLUMNS:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
+            input_dataset = context.get_dataset(input_ds_name)
+
             columns = arguments.get_value(cmd.PARA_COLUMNS)
-            ds = self.save_context(context, notebook_context, "columns", [column.arguments["columns_column"] for column in columns])
+            outputs.stdout.append(TextOutput("Input columns selected for prediction. "))
+
+            #ds = self.save_context(context, notebook_context, "columns", [column.arguments["columns_column"] for column in columns])
+            ds = self.save_context(context, notebook_context, "columns", 1)
+            #ds = self.save_context(context, notebook_context, "columns", [column for column in columns])
 
             provenance = ModuleProvenance(
-            write={
-                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                    identifier=ds.identifier,
-                    columns=ds.columns,
-                    row_count=ds.row_count
-                    )
-                }
+                read = {
+                    input_ds_name: input_dataset.identifier
+                },
+                write={
+                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                        )
+                    }
             )
         
         elif command_id == cmd.SELECT_LABEL_COLUMN:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
+            input_dataset = context.get_dataset(input_ds_name)
             label_column = arguments.get_value(cmd.PARA_LABEL_COLUMN)
+
             ds = self.save_context(context, notebook_context, "label", label_column)
 
+            outputs.stdout.append(TextOutput("Column {} selected as the label column. ".format(label_column)))
+
             provenance = ModuleProvenance(
-            write={
-                cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                    identifier=ds.identifier,
-                    columns=ds.columns,
-                    row_count=ds.row_count
-                    )
-                }
+                read = {
+                    input_ds_name: input_dataset.identifier
+                },
+                write={
+                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                        )
+                    }
             )
+
+        elif command_id == cmd.SELECT_ACCURACY_METRIC:
+            saved_context = [row.values for row in notebook_context.fetch_rows()]
+            print(saved_context)
             
         else:
             raise Exception("Unknown pipeline command: {}".format(command_id))
