@@ -173,7 +173,7 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
-                        "value": "Prediction"
+                        "value": "Input"
                     }, 
                     {
                         "lspace": true,
@@ -183,7 +183,7 @@
                     }
                 ], 
                 "id": "select_prediction_columns", 
-                "name": "Select Prediction Columns", 
+                "name": "Select Input Columns", 
                 "parameter": [
                     {
                         "datatype": "dataset", 
