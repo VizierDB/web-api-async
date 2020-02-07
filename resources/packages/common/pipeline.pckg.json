@@ -224,7 +224,7 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
-                        "value": "Label"
+                        "value": "Target"
                     }, 
                     {
                         "lspace": true,
@@ -234,7 +234,7 @@
                     }
                 ], 
                 "id": "select_label_column", 
-                "name": "Select Label Column", 
+                "name": "Select Target Column", 
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -273,7 +273,26 @@
                         "rspace": true,
                         "type": "const",
                         "value": "Metric"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "and"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Evaluate"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "Model"
                     }
+
                 ], 
                 "id": "select_metric", 
                 "name": "Select Accuracy Metric", 
@@ -297,14 +316,6 @@
                             {
                                 "text": "Accuracy Score",
                                 "value": "Accuracy Score"                                
-                            },
-                            {
-                                "text": "f-score",
-                                "value": "f-score"
-                            },
-                            {
-                                "text": "Area under ROC Curve",
-                                "value": "Area under ROC Curve"
                             }
                         ]
                     }
