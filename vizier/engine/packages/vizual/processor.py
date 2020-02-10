@@ -112,6 +112,11 @@ class VizualTaskProcessor(TaskProcessor):
                 args=arguments,
                 context=context
             )
+        elif command_id == cmd.VIZUAL_CLONE_DS:
+            return self.compute_clone_dataset(
+                args=arguments,
+                context=context
+            )
         elif command_id == cmd.VIZUAL_UNLOAD:
             return self.compute_unload_dataset(
                 args=arguments,
@@ -488,34 +493,15 @@ class VizualTaskProcessor(TaskProcessor):
         vizier.engine.task.processor.ExecResult
         """
         outputs = ModuleOutputs()
-        default_columns = [ ("''", "unnamed_column") ]
         ds_name = args.get_value(pckg.PARA_NAME).lower()
         if ds_name in context.datasets:
             raise ValueError('dataset \'' + ds_name + '\' exists')
         if not is_valid_name(ds_name):
             raise ValueError('invalid dataset name \'' + ds_name + '\'')
         try:
-            source = "SELECT {};".format(", ".join(
-                            default_val + " AS " + col_name
-                            for default_val, col_name in default_columns
-                        ))
-            view_name, dependencies = mimir.createView(
-                dict(),
-                source
-            )
-
-            columns = [
-                MimirDatasetColumn(
-                    identifier=col_id,
-                    name_in_dataset=col_defn[1]
-                )
-                for col_defn, col_id in zip(default_columns, range(len(default_columns)))
-            ]
-
-            ds = context.datastore.register_dataset(
-                table_name=view_name,
-                columns=columns,
-                row_counter=1
+            ds = self.api.empty_dataset(
+                datastore = context.datastore,
+                filestore = context.filestore
             )
             provenance = ModuleProvenance(
                 write={
@@ -537,6 +523,42 @@ class VizualTaskProcessor(TaskProcessor):
             provenance=provenance
         )
 
+    def compute_clone_dataset(self, args, context):
+        """Execute empty dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        input_name = args.get_value(pckg.PARA_DATASET).lower()
+        output_name = args.get_value(pckg.PARA_NAME).lower()
+        if not is_valid_name(output_name):
+            raise ValueError('invalid dataset name \'' + output_name + '\'')
+        
+        input_ds = context.get_dataset(input_name)
+        if input_ds is None:
+            raise ValueError('invalid dataset \'' + input_name + '\'')
+
+        print("{}: {}".format(input_ds.identifier, input_ds))
+
+        provenance = ModuleProvenance(
+                write={output_name: input_ds},
+                read ={input_name: input_ds.identifier}
+            )
+        outputs = ModuleOutputs()
+        outputs.stdout.append(TextOutput("Cloned `{}` as `{}`".format(input_name, output_name)))
+        return ExecResult(
+            is_success=True,
+            outputs=outputs,
+            provenance=provenance
+        )
 
         
     def compute_unload_dataset(self, args, context):
