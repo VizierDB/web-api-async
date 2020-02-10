@@ -25,7 +25,8 @@ from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.api.webservice import server
 from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.datastore.dataset import DatasetDescriptor, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DATATYPE_VARCHAR, DatasetDescriptor, DatasetColumn, DatasetRow
+from vizier.datastore.mimir.dataset import MimirDatasetColumn
 import vizier.engine.packages.pipeline.base as cmd
 import vizier.mimir as mimir
 from sklearn.linear_model import SGDClassifier
@@ -98,13 +99,35 @@ class PipelineProcessor(TaskProcessor):
         )
         return ds
 
+    def get_notebook_context(self, context):
+        notebook_context = None
+        if cmd.CONTEXT_DATABASE_NAME in context.datasets:
+            notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
+        else:
+           notebook_context = context.datastore.create_dataset(
+                columns = [
+                    MimirDatasetColumn(
+                        identifier=0,
+                        name_in_dataset='ctx_key',
+                        data_type=DATATYPE_VARCHAR
+                    ),
+                    MimirDatasetColumn(
+                        identifier=1,
+                        name_in_dataset='ctx_value',
+                        data_type=DATATYPE_VARCHAR
+                    )
+                    ],
+                rows = [],
+                human_readable_name = cmd.CONTEXT_DATABASE_NAME
+            )
+        return notebook_context
 
     def compute(self, command_id, arguments, context):
 
         outputs = ModuleOutputs()
         provenance = ModuleProvenance()
         output_ds_name = ""
-        notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
+        notebook_context = self.get_notebook_context(context)
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
