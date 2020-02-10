@@ -72,6 +72,7 @@ setup(
         'pyyaml>=5.1.0',
         'requests',
         'unicodecsv>=0.14.1',
+        'sklearn',
         'numpy',
         'pandas',
         'geopandas',

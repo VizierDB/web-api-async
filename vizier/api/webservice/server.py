@@ -214,6 +214,11 @@ def import_project():
         raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project format')
 
+@bp.route('/reload', methods=['POST'])
+def reload_api():
+    global api
+    api = VizierApi(config, init=True)
+
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):
     """Retrieve information for project with given identifier."""
