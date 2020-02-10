@@ -436,6 +436,7 @@ class VizualTaskProcessor(TaskProcessor):
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
                 m_opts.append({'name':load_opt_key,  'value':load_opt_val})
+        m_opts.append({'name':'projectId',  'value':context.project_id})
         # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,

@@ -154,8 +154,20 @@ class PipelineProcessor(TaskProcessor):
 
             sample_mode = get_sample_mode(cmd.SAMPLING_MODE_UNIFORM_PROBABILITY, float(arguments.get_value(cmd.PARA_SAMPLING_RATE)))
 
+            mimir_table_names = dict()
+            for ds_name_o in context.datasets:
+                dataset_id = context.datasets[ds_name_o]
+                dataset = context.datastore.get_dataset(dataset_id)
+                if dataset is None:
+                    raise ValueError('unknown dataset \'' + ds_name_o + '\'')
+                mimir_table_names[ds_name_o] = dataset.table_name
+                
+            view_name, dependencies = mimir.createView(
+                mimir_table_names,
+                'SELECT * FROM ' + str(input_ds_name)
+            )
             sample_view_id = mimir.createSample(
-                input_dataset.table_name,
+                view_name,
                 sample_mode
             )
 
@@ -178,11 +190,13 @@ class PipelineProcessor(TaskProcessor):
             ds_output['name'] = output_ds_name
             outputs.stdout.append(DatasetOutput(ds_output))
 
+            dependencies = dict(
+                (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
+                for dep_name in dependencies
+            )
             ## Record Reads and writes
             provenance = ModuleProvenance(
-                read={
-                    input_ds_name: input_dataset.identifier
-                },
+                read=dependencies,
                 write={
                     output_ds_name: DatasetDescriptor(
                         identifier=ds.identifier,
