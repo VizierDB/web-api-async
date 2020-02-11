@@ -426,7 +426,7 @@ class MimirVizualApi(VizualApi):
             for col_defn, col_id in zip(initial_columns, range(len(initial_columns)))
         ]
 
-        ds = context.datastore.register_dataset(
+        ds = datastore.register_dataset(
             table_name=view_name,
             columns=columns,
             row_counter=1
