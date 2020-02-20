@@ -158,6 +158,60 @@
                             }
                         ],
                         "required": true
+                    },
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loss_function", 
+                        "index": 1, 
+                        "name": "Loss Function", 
+                        "required": true,
+                        "values": [
+                            {
+                                "text": "Linear Classifier: Hinge",
+                                "value": "Linear Classifier: Hinge"                                
+                            },
+                            {
+                                "text": "Linear Classifier: Log Loss",
+                                "value": "Linear Classifier: Log Loss"                                
+                            },
+                            {
+                                "text": "Linear Classifier: Perceptron",
+                                "value": "Linear Classifier: Perceptron"                                
+                            },
+                            {
+                                "text": "Linear Classifier: Squared Loss",
+                                "value": "Linear Classifier: Squared Loss"                                
+                            },
+                            {
+                                "text": "Random Forest Classifier: Gini Impurity",
+                                "value": "Random Forest Classifier: Gini Impurity"
+                            },
+                            {
+                                "text": "Random Forest Classifier: Entropy",
+                                "value": "Random Forest Classifier: Entropy"
+                            },
+                            {
+                                "text": "Neural Network: Stochastic Gradient Descent",
+                                "value": "Neural Network: Stochastic Gradient Descent"
+                            },
+                            {
+                                "text": "Neural Network: L-BFGS",
+                                "value": "Neural Network: L-BFGS"
+                            },
+                            {
+                                "text": "Neural Network: Adam",
+                                "value": "Neural Network: Adam"
+                            },
+                            {
+                                "text": "Decision Tree Classifier: Gini Impurity",
+                                "value": "Decision Tree Classifier: Gini Impurity"
+                            },
+                            {
+                                "text": "Decision Tree Classifier: Entropy",
+                                "value": "Decision Tree Classifier: Entropy"
+                            }
+                        ]
                     }
                 ]
             },

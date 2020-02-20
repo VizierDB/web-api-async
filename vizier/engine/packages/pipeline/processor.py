@@ -28,17 +28,10 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.datastore.dataset import DatasetDescriptor, DatasetColumn, DatasetRow
 import vizier.engine.packages.pipeline.base as cmd
 import vizier.mimir as mimir
-from sklearn.linear_model import SGDClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 import numpy as np
-
-# Rename
-LinearClassifier = SGDClassifier
 
 
 class PipelineProcessor(TaskProcessor):
@@ -170,11 +163,17 @@ class PipelineProcessor(TaskProcessor):
             )
         elif command_id == cmd.SELECT_MODEL:
 
+            def parse_loss_function(loss_function_argument):
+                classifier, loss_function = loss_function_argument.split(": ")
+                return loss_function
+
             classifier = arguments.get_value(cmd.PARA_MODEL)
+            loss_function_argument = arguments.get_value(cmd.PARA_LOSS_FUNCTION)
+            loss_function = parse_loss_function(loss_function_argument)
 
-            outputs.stdout.append(TextOutput("{} selected for classification.".format(classifier)))
+            outputs.stdout.append(TextOutput("{} selected for classification. Loss function selected: {}".format(classifier, loss_function)))
 
-            ds = self.save_context(context, notebook_context, ["model_" + classifier], [0])
+            ds = self.save_context(context, notebook_context, ["model_" + classifier, "loss_" + loss_function], [0, 0])
 
             provenance = ModuleProvenance(
                 write = {
@@ -240,37 +239,44 @@ class PipelineProcessor(TaskProcessor):
             testing_sample = context.get_dataset(input_ds_name + cmd.TESTING_SUFFIX)
 
             def parse_context(saved_context):
-                model, input_columns, output_column = '', [], ''
+                model, loss_function, input_columns, output_column = '', '', [], ''
                 for k, v in saved_context:
                     if not k:
                         continue
                     elif "model_" in k:
                         model = k.split("model_")[1]
+                    elif "loss_" in k:
+                        loss_function = k.split("loss_")[1]
                     elif "column_" in k:
                         colnum = k.split("column_")[1]
                         input_columns.append(int(colnum))
                     elif "label" in k:
                         output_column = v
-                return model, input_columns, output_column
+                return model, loss_function, input_columns, output_column
 
             saved_context = [row.values for row in notebook_context.fetch_rows()]
-            model, input_columns, output_column = parse_context(saved_context)
+            model, loss_function, input_columns, output_column = parse_context(saved_context)
 
             input_columns = [input_dataset.column_by_id(column).name.lower() for column in input_columns]
             output_column = input_dataset.column_by_id(output_column).name.lower()
 
-            if model == "Linear Classifier":
-                model = LinearClassifier()
-            elif model == "Random Forest Classifier":
-                model = RandomForestClassifier()
-            elif model == "Neural Network":
-                model = MLPClassifier()
-            elif model == "Decision Tree Classifier":
-                model = DecisionTreeClassifier()
-            else:
-                # This should never be reached since it isn't possible to select anything
-                # else through the widget
-                pass
+            try:
+                # Convert the user friendly loss function name to the one used in sklearn
+                loss_function = cmd.loss_function_mapping[loss_function]
+
+                # Construct the model using the loss function
+                if model == "Neural Network":
+                    model = cmd.model_mapping[model](solver = loss_function)
+                elif model == "Random Forest Classifier" or model == "Decision Tree Classifier":
+                    model = cmd.model_mapping[model](criterion = loss_function)
+                else:
+                    model = cmd.model_mapping[model](loss = loss_function)
+
+            except KeyError:
+                print("This should never be reached, model/loss function not found")
+
+            except ValueError:
+                outputs.stdout.append("Incorrect loss function chosen. ")
 
             training_values = []
             testing_values = []
@@ -287,25 +293,12 @@ class PipelineProcessor(TaskProcessor):
                 
                 le = LabelEncoder()
                 
-                df = df[df['is_recid'] != -1]
-                df = df[df['decile_score_1'] != -1]
-                df = df[df['decile_score_2'] != -1]
-                df['recidivism_within_2_years'] = df['is_recid']
-                
-                # Categorize variables
-                
-                le.fit(df['race'])
-                df['race'] = le.transform(df['race'])
-                
-                le.fit(df['age_cat'])
-                df['age_cat'] = le.transform(df['age_cat'])
-                
-                le.fit(df['v_score_text'])
-                df['v_score_text'] = le.transform(df['v_score_text'])
-                
-                df['score_text'] = np.where(df['score_text'] == 'Low', 0, 1)
-                
-                df["sex"] = np.where(df["sex"] == "Male", 0, 1)
+                for column in columns:
+                    num_unique_columns = df[column].nunique()
+                    if num_unique_columns < cmd.CATEGORICAL_THRESHOLD:
+                        # Categorize variables
+                        le.fit(df[column])
+                        df[column] = le.transform(df[column])
                 
                 labels = df[label_column].to_numpy()
                 

@@ -19,6 +19,7 @@ import vizier.engine.packages.base as pckg
 PARA_INPUT_DATASET = "input_dataset"
 PARA_SAMPLING_RATE = "sample_rate"
 PARA_MODEL = "model"
+PARA_LOSS_FUNCTION = "loss_function"
 PARA_COLUMNS = "columns"
 PARA_LABEL_COLUMN = "label_column"
 
@@ -34,3 +35,31 @@ CONTEXT_DATABASE_NAME = "context"
 
 TRAINING_SUFFIX = "_training"
 TESTING_SUFFIX = "_testing"
+
+CATEGORICAL_THRESHOLD = 50
+
+from sklearn.linear_model import SGDClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+LinearClassifier = SGDClassifier
+
+model_mapping = {
+    "Linear Classifier": LinearClassifier,
+    "Random Forest Classifier": RandomForestClassifier,
+    "Neural Network": MLPClassifier,
+    "Decision Tree Classifier": DecisionTreeClassifier
+}
+
+loss_function_mapping = {
+    "Hinge": "hinge",
+    "Log Loss": "log",
+    "Perceptron": "perceptron",
+    "Squared Loss": "squared_loss",
+    "Gini Impurity": "gini",
+    "Entropy": "entropy",
+    "Stochastic Gradient Descent": "sgd",
+    "L-BFGS": "lbfgs",
+    "Adam": "adam"
+}
