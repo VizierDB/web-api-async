@@ -272,11 +272,11 @@ class PipelineProcessor(TaskProcessor):
                 else:
                     model = cmd.model_mapping[model](loss = loss_function)
 
-            except KeyError:
-                print("This should never be reached, model/loss function not found")
+            except (KeyError, ValueError):
+                outputs.stdout.append(TextOutput("Incorrect model/loss function combination chosen. "))
 
-            except ValueError:
-                outputs.stdout.append("Incorrect loss function chosen. ")
+            finally:
+                model = None
 
             training_values = []
             testing_values = []
@@ -330,6 +330,9 @@ class PipelineProcessor(TaskProcessor):
                 
             except ValueError as e:
                 outputs.stdout.append(TextOutput("ERROR: Please choose numerical or categorical columns only"))
+
+            except AttributeError as e:
+                pass
 
         else:
             raise Exception("Unknown pipeline command: {}".format(command_id))
