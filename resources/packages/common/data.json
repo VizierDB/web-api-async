@@ -213,6 +213,60 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
+                        "value": "CLONE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "DATASET"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "name"
+                    }
+                ], 
+                "id": "clone", 
+                "name": "Clone Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "name", 
+                        "index": 0, 
+                        "name": "Name of Copy", 
+                        "required": true
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
                         "value": "UNLOAD"
                     }, 
                     {
@@ -330,6 +384,6 @@
             }
         ], 
         "id": "data",
-        "category": "code"
+        "category": "data_m"
     }
 }

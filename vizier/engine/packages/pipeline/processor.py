@@ -25,7 +25,8 @@ from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.api.webservice import server
 from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.datastore.dataset import DatasetDescriptor, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DATATYPE_VARCHAR, DatasetDescriptor, DatasetColumn, DatasetRow
+from vizier.datastore.mimir.dataset import MimirDatasetColumn
 import vizier.engine.packages.pipeline.base as cmd
 import vizier.mimir as mimir
 from sklearn.metrics import accuracy_score
@@ -87,6 +88,29 @@ class PipelineProcessor(TaskProcessor):
         )
 
         return ds
+        
+    def get_notebook_context(self, context):
+        notebook_context = None
+        if cmd.CONTEXT_DATABASE_NAME in context.datasets:
+            notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
+        else:
+           notebook_context = context.datastore.create_dataset(
+                columns = [
+                    MimirDatasetColumn(
+                        identifier=0,
+                        name_in_dataset='ctx_key',
+                        data_type=DATATYPE_VARCHAR
+                    ),
+                    MimirDatasetColumn(
+                        identifier=1,
+                        name_in_dataset='ctx_value',
+                        data_type=DATATYPE_VARCHAR
+                    )
+                    ],
+                rows = [],
+                human_readable_name = cmd.CONTEXT_DATABASE_NAME
+            )
+        return notebook_context
 
     def compute(self, command_id, arguments, context):
 
@@ -96,33 +120,8 @@ class PipelineProcessor(TaskProcessor):
             write={}
         )
         output_ds_name = ""
-
-        if command_id == cmd.CREATE_CONTEXT:
-
-            if cmd.CONTEXT_DATABASE_NAME not in context.datasets:
-                # create the context dataset
-                dummy_row = DatasetRow()
-                dummy_row.values = ["", ""]
-                ds = context.datastore.create_dataset(
-                    columns=[DatasetColumn(name="k"), DatasetColumn(name="v")],
-                    rows=[dummy_row]
-                )
-                provenance.write[cmd.CONTEXT_DATABASE_NAME] = ds
-
-                return ExecResult(
-                    outputs=outputs,
-                    provenance=provenance
-                )
-
-        if cmd.CONTEXT_DATABASE_NAME not in context.datasets:
-            outputs.stdout.append(TextOutput(
-                "Please add a Create Context cell before creating this cell."))
-            return ExecResult(
-                outputs=outputs,
-                provenance=provenance
-            )
-
-        notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
+        
+        notebook_context = self.get_notebook_context(context)
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
@@ -152,8 +151,20 @@ class PipelineProcessor(TaskProcessor):
             sample_mode = get_sample_mode(cmd.SAMPLING_MODE_UNIFORM_PROBABILITY, float(
                 arguments.get_value(cmd.PARA_SAMPLING_RATE)))
 
+            mimir_table_names = dict()
+            for ds_name_o in context.datasets:
+                dataset_id = context.datasets[ds_name_o]
+                dataset = context.datastore.get_dataset(dataset_id)
+                if dataset is None:
+                    raise ValueError('unknown dataset \'' + ds_name_o + '\'')
+                mimir_table_names[ds_name_o] = dataset.table_name
+                
+            view_name, dependencies = mimir.createView(
+                mimir_table_names,
+                'SELECT * FROM ' + str(input_ds_name)
+            )
             sample_view_id = mimir.createSample(
-                input_dataset.table_name,
+                view_name,
                 sample_mode
             )
 
