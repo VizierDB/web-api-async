@@ -36,15 +36,11 @@ import numpy as np
 
 class PipelineProcessor(TaskProcessor):
     """
-    Implmentation of the task processor for the pipeline package. The 
-    processor uses an instance of the vizual API to allow running on 
-    different types of datastores (e.g., the default datastore or the 
-    Mimir datastore).
+    Implementation of the task processor for the pipeline package.
     """
+
     def __init__(self):
-        """
-        Initialize the vizual API instance
-        """
+        pass
 
     def save_context(self, context, notebook_context, keys, values):
         """
@@ -64,15 +60,15 @@ class PipelineProcessor(TaskProcessor):
                 if row.values[0] == key:
                     is_key_present = True
                     row[i] = DatasetRow(
-                        identifier = notebook_context.max_row_id()+1,
-                        values = [key, value]
+                        identifier=notebook_context.max_row_id()+1,
+                        values=[key, value]
                     )
                     break
             if not is_key_present:
                 rows.append(
                     DatasetRow(
-                        identifier = notebook_context.max_row_id()+1,
-                        values = [key, value]
+                        identifier=notebook_context.max_row_id()+1,
+                        values=[key, value]
                     )
                 )
 
@@ -83,25 +79,55 @@ class PipelineProcessor(TaskProcessor):
             if key not in seen:
                 save_pair(rows, key, value)
             seen.add(key)
-        
-        ds = context.datastore.create_dataset(
-            columns = notebook_context.columns,
-            rows = rows,
-            annotations = notebook_context.annotations
-        )
-        return ds
 
+        ds = context.datastore.create_dataset(
+            columns=notebook_context.columns,
+            rows=rows,
+            annotations=notebook_context.annotations
+        )
+
+        return ds
 
     def compute(self, command_id, arguments, context):
 
         outputs = ModuleOutputs()
-        provenance = ModuleProvenance()
+        provenance = ModuleProvenance(
+            read={},
+            write={}
+        )
         output_ds_name = ""
+
+        if command_id == cmd.CREATE_CONTEXT:
+
+            if cmd.CONTEXT_DATABASE_NAME not in context.datasets:
+                # create the context dataset
+                dummy_row = DatasetRow()
+                dummy_row.values = ["", ""]
+                ds = context.datastore.create_dataset(
+                    columns=[DatasetColumn(name="k"), DatasetColumn(name="v")],
+                    rows=[dummy_row]
+                )
+                provenance.write[cmd.CONTEXT_DATABASE_NAME] = ds
+
+                return ExecResult(
+                    outputs=outputs,
+                    provenance=provenance
+                )
+
+        if cmd.CONTEXT_DATABASE_NAME not in context.datasets:
+            outputs.stdout.append(TextOutput(
+                "Please add a Create Context cell before creating this cell."))
+            return ExecResult(
+                outputs=outputs,
+                provenance=provenance
+            )
+
         notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
+
             input_dataset = context.get_dataset(input_ds_name)
             sample_mode = None
 
@@ -110,10 +136,11 @@ class PipelineProcessor(TaskProcessor):
 
             def get_sample_mode(mode, sampling_rate):
                 if sampling_rate > 1.0 or sampling_rate < 0.0:
-                    raise Exception("Sampling rate must be between 0.0 and 1.0")
+                    raise Exception(
+                        "Sampling rate must be between 0.0 and 1.0")
                 return {
-                    "mode" : mode,
-                    "probability" : sampling_rate
+                    "mode": mode,
+                    "probability": sampling_rate
                 }
 
             if command_id == cmd.SELECT_TRAINING:
@@ -122,7 +149,8 @@ class PipelineProcessor(TaskProcessor):
             elif command_id == cmd.SELECT_TESTING:
                 output_ds_name = (input_ds_name + cmd.TESTING_SUFFIX).lower()
 
-            sample_mode = get_sample_mode(cmd.SAMPLING_MODE_UNIFORM_PROBABILITY, float(arguments.get_value(cmd.PARA_SAMPLING_RATE)))
+            sample_mode = get_sample_mode(cmd.SAMPLING_MODE_UNIFORM_PROBABILITY, float(
+                arguments.get_value(cmd.PARA_SAMPLING_RATE)))
 
             sample_view_id = mimir.createSample(
                 input_dataset.table_name,
@@ -130,8 +158,8 @@ class PipelineProcessor(TaskProcessor):
             )
 
             row_count = mimir.countRows(sample_view_id)
-            
-            ## Register the view with Vizier
+
+            # Register the view with Vizier
             ds = context.datastore.register_dataset(
                 table_name=sample_view_id,
                 columns=input_dataset.columns,
@@ -148,86 +176,81 @@ class PipelineProcessor(TaskProcessor):
             ds_output['name'] = output_ds_name
             outputs.stdout.append(DatasetOutput(ds_output))
 
-            ## Record Reads and writes
-            provenance = ModuleProvenance(
-                read={
-                    input_ds_name: input_dataset.identifier
-                },
-                write={
-                    output_ds_name: DatasetDescriptor(
-                        identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
-                    )
-                }
+            # Record Reads and writes
+            provenance.read[input_ds_name] = input_dataset.identifier
+
+            provenance.write[output_ds_name] = DatasetDescriptor(
+                identifier=ds.identifier,
+                columns=ds.columns,
+                row_count=ds.row_count
             )
+
         elif command_id == cmd.SELECT_MODEL:
 
             def parse_loss_function(loss_function_argument):
-                classifier, loss_function = loss_function_argument.split(": ")
+                _, loss_function = loss_function_argument.split(": ")
                 return loss_function
 
             classifier = arguments.get_value(cmd.PARA_MODEL)
-            loss_function_argument = arguments.get_value(cmd.PARA_LOSS_FUNCTION)
+            loss_function_argument = arguments.get_value(
+                cmd.PARA_LOSS_FUNCTION)
             loss_function = parse_loss_function(loss_function_argument)
 
-            outputs.stdout.append(TextOutput("{} selected for classification. Loss function selected: {}".format(classifier, loss_function)))
+            outputs.stdout.append(TextOutput(
+                "{} selected for classification. Loss function selected: {}".format(classifier, loss_function)))
 
-            ds = self.save_context(context, notebook_context, ["model_" + classifier, "loss_" + loss_function], [0, 0])
+            # TODO: change as soon as Vizier supports strings/integers
+            # The context is currently saved using prefixes to denote the key followed by
+            # the value separated by an underscore :'(
 
-            provenance = ModuleProvenance(
-                write = {
-                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                        identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
-                        )
-                    }
+            ds = self.save_context(context, notebook_context, [
+                                   "model_" + classifier, "loss_" + loss_function], [0, 0])
+
+            provenance.write[cmd.CONTEXT_DATABASE_NAME] = DatasetDescriptor(
+                identifier=ds.identifier,
+                columns=ds.columns,
+                row_count=ds.row_count
             )
+
         elif command_id == cmd.SELECT_PREDICTION_COLUMNS:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
             input_dataset = context.get_dataset(input_ds_name)
 
             columns = arguments.get_value(cmd.PARA_COLUMNS)
-            outputs.stdout.append(TextOutput("Input columns selected for prediction. "))
-            
-            ds = self.save_context(context, notebook_context, ["column_" + str(column.arguments['columns_column']) for column in columns], [0 for column in columns])
-            
-            provenance = ModuleProvenance(
-                read = {
-                    input_ds_name: input_dataset.identifier
-                },
-                write={
-                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                        identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
-                        )
-                    }
+            outputs.stdout.append(TextOutput(
+                "Input columns selected for prediction. "))
+
+            # since saving lists was a problem and keys need to be unique,
+            # input columns are saved as multiple keys with the prefix 'column_'
+            # TODO: fix as soon as lists/strings are supported :'(
+            ds = self.save_context(context, notebook_context, [
+                                   "column_" + str(column.arguments['columns_column']) for column in columns], [0 for column in columns])
+
+            provenance.read[input_ds_name] = input_dataset.identifier
+            provenance.write[cmd.CONTEXT_DATABASE_NAME] = DatasetDescriptor(
+                identifier=ds.identifier,
+                columns=ds.columns,
+                row_count=ds.row_count
             )
-        
+
         elif command_id == cmd.SELECT_LABEL_COLUMN:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
             input_dataset = context.get_dataset(input_ds_name)
             label_column = arguments.get_value(cmd.PARA_LABEL_COLUMN)
 
-            outputs.stdout.append(TextOutput("Column {} selected as the label column. ".format(label_column)))
+            outputs.stdout.append(TextOutput(
+                "Column {} selected as the label column. ".format(label_column)))
 
-            ds = self.save_context(context, notebook_context, ["label"], [label_column])
+            ds = self.save_context(context, notebook_context, [
+                                   "label"], [label_column])
 
-            provenance = ModuleProvenance(
-                read = {
-                    input_ds_name: input_dataset.identifier
-                },
-                write={
-                    cmd.CONTEXT_DATABASE_NAME: DatasetDescriptor(
-                        identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
-                        )
-                    }
+            provenance.read[input_ds_name] = input_dataset.identifier
+            provenance.write[cmd.CONTEXT_DATABASE_NAME] = DatasetDescriptor(
+                identifier=ds.identifier,
+                columns=ds.columns,
+                row_count=ds.row_count
             )
 
         elif command_id == cmd.SELECT_ACCURACY_METRIC:
@@ -235,8 +258,10 @@ class PipelineProcessor(TaskProcessor):
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
             input_dataset = context.get_dataset(input_ds_name)
 
-            training_sample = context.get_dataset(input_ds_name + cmd.TRAINING_SUFFIX)
-            testing_sample = context.get_dataset(input_ds_name + cmd.TESTING_SUFFIX)
+            training_sample = context.get_dataset(
+                input_ds_name + cmd.TRAINING_SUFFIX)
+            testing_sample = context.get_dataset(
+                input_ds_name + cmd.TESTING_SUFFIX)
 
             def parse_context(saved_context):
                 model, loss_function, input_columns, output_column = '', '', [], ''
@@ -254,11 +279,15 @@ class PipelineProcessor(TaskProcessor):
                         output_column = v
                 return model, loss_function, input_columns, output_column
 
-            saved_context = [row.values for row in notebook_context.fetch_rows()]
-            model, loss_function, input_columns, output_column = parse_context(saved_context)
+            saved_context = [
+                row.values for row in notebook_context.fetch_rows()]
+            model, loss_function, input_columns, output_column = parse_context(
+                saved_context)
 
-            input_columns = [input_dataset.column_by_id(column).name.lower() for column in input_columns]
-            output_column = input_dataset.column_by_id(output_column).name.lower()
+            input_columns = [input_dataset.column_by_id(
+                column).name.lower() for column in input_columns]
+            output_column = input_dataset.column_by_id(
+                output_column).name.lower()
 
             try:
                 # Convert the user friendly loss function name to the one used in sklearn
@@ -266,17 +295,15 @@ class PipelineProcessor(TaskProcessor):
 
                 # Construct the model using the loss function
                 if model == "Neural Network":
-                    model = cmd.model_mapping[model](solver = loss_function)
+                    model = cmd.model_mapping[model](solver=loss_function)
                 elif model == "Random Forest Classifier" or model == "Decision Tree Classifier":
-                    model = cmd.model_mapping[model](criterion = loss_function)
+                    model = cmd.model_mapping[model](criterion=loss_function)
                 else:
-                    model = cmd.model_mapping[model](loss = loss_function)
+                    model = cmd.model_mapping[model](loss=loss_function)
 
-            except (KeyError, ValueError):
-                outputs.stdout.append(TextOutput("Incorrect model/loss function combination chosen. "))
-
-            finally:
-                model = None
+            except:
+                outputs.stdout.append(TextOutput(
+                    "Incorrect model/loss function combination chosen. "))
 
             training_values = []
             testing_values = []
@@ -290,49 +317,59 @@ class PipelineProcessor(TaskProcessor):
                 testing_values.append(row.values)
 
             def process(df, columns, label_column):
-                
+
                 le = LabelEncoder()
-                
+
                 for column in columns:
                     num_unique_columns = df[column].nunique()
                     if num_unique_columns < cmd.CATEGORICAL_THRESHOLD:
                         # Categorize variables
                         le.fit(df[column])
                         df[column] = le.transform(df[column])
-                
+
                 labels = df[label_column].to_numpy()
-                
+
                 # Remove all columns except the ones selected
                 df = df[columns]
-                
+
                 df = df.to_numpy()
-                
+
                 return df, labels
 
-            df_training = pd.DataFrame(np.array(training_values), columns = [col.name.lower() for col in training_sample.columns])
-            df_training, training_labels = process(df_training, input_columns, output_column)
+            df_training = pd.DataFrame(np.array(training_values), columns=[
+                                       col.name.lower() for col in training_sample.columns])
+            df_training, training_labels = process(
+                df_training, input_columns, output_column)
 
-            df_testing = pd.DataFrame(np.array(testing_values), columns = [col.name.lower() for col in testing_sample.columns])
-            df_testing, testing_labels = process(df_testing, input_columns, output_column)
+            df_testing = pd.DataFrame(np.array(testing_values), columns=[
+                                      col.name.lower() for col in testing_sample.columns])
+            df_testing, testing_labels = process(
+                df_testing, input_columns, output_column)
 
             try:
-                
+
                 # Train the model using the label column selected on the training dataset without the label column
                 model.fit(df_training, training_labels)
-                
+
                 # Predict labels using the testing dataset without the label column
                 predictions = model.predict(df_testing)
-                
+
                 # Use the number of mismatched labels as a measure of the accuracy for the classification task
                 score = accuracy_score(testing_labels, predictions)
-                
-                outputs.stdout.append(TextOutput("Accuracy score: {}%".format(str(round(score*100, 2)))))
-                
-            except ValueError as e:
-                outputs.stdout.append(TextOutput("ERROR: Please choose numerical or categorical columns only"))
 
-            except AttributeError as e:
-                pass
+                outputs.stdout.append(TextOutput(
+                    "Accuracy score: {}%".format(str(round(score*100, 2)))))
+
+            except ValueError as e:
+                outputs.stdout.append(TextOutput(
+                    "ERROR: Please choose numerical or categorical columns only"))
+
+            finally:
+                provenance.read[input_ds_name] = input_dataset.identifier
+                provenance.read[input_ds_name +
+                                cmd.TRAINING_SUFFIX] = training_sample.identifier
+                provenance.read[input_ds_name +
+                                cmd.TESTING_SUFFIX] = testing_sample.identifier
 
         else:
             raise Exception("Unknown pipeline command: {}".format(command_id))

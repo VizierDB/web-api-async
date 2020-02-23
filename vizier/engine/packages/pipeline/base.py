@@ -31,6 +31,7 @@ SELECT_MODEL = "select_model"
 SELECT_PREDICTION_COLUMNS = "select_prediction_columns"
 SELECT_LABEL_COLUMN = "select_label_column"
 SELECT_ACCURACY_METRIC = "select_metric"
+CREATE_CONTEXT = "create_context"
 CONTEXT_DATABASE_NAME = "context"
 
 TRAINING_SUFFIX = "_training"
