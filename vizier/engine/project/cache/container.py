@@ -191,6 +191,7 @@ class ContainerProjectCache(ProjectCache):
                 contnr.VIZIERCONTAINER_CONTROLLER_URL: self.config.app_base_url
             },
             network='host',
+            ports={int(port):int(port)},
             detach=True
         )
         project = ContainerProjectHandle(

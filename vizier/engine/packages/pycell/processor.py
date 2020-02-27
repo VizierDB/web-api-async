@@ -17,6 +17,8 @@
 """Implementation of the task processor for the Python cell package."""
 
 import sys
+import requests
+import os
 
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
@@ -32,6 +34,8 @@ import vizier.engine.packages.pycell.base as cmd
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
 
+SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', False)
+SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
 
 class PyCellTaskProcessor(TaskProcessor):
     """Implementation of the task processor for the Python cell package."""
@@ -91,10 +95,22 @@ class PyCellTaskProcessor(TaskProcessor):
         sys.stderr = OutputStream(tag='err', stream=stream)
         # Keep track of exception that is thrown by the code
         exception = None
+        resdata = None
         # Run the Python code
         try:
             python_cell_preload(variables)
-            exec(source, variables, variables)
+            if SANDBOX_PYTHON_EXECUTION:
+                json_data = {'source':source, 
+                             'datasets':context.datasets, 
+                             'datastore':context.datastore.__class__.__name__, 
+                             'basepath':context.datastore.base_path}
+                res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
+                resdata = res.json()
+                client = DotDict()
+                for key, value in resdata['provenance'].items():
+                    client.setattr(key,value)
+            else:
+                exec(source, variables, variables)
         except Exception as ex:
             exception = ex
         finally:
@@ -104,13 +120,21 @@ class PyCellTaskProcessor(TaskProcessor):
         # Set module outputs
         outputs = ModuleOutputs()
         is_success = (exception is None)
-        for tag, text in stream:
-            text = ''.join(text).strip()
-            if tag == 'out':
+        if SANDBOX_PYTHON_EXECUTION:
+            for text in resdata['stdout']:
                 outputs.stdout.append(HtmlOutput(text))
-            else:
+            for text in resdata['stderr']:
                 outputs.stderr.append(TextOutput(text))
-                is_success = False
+                is_success = False        
+        else:
+            for tag, text in stream:
+                text = ''.join(text).strip()
+                if tag == 'out':
+                    outputs.stdout.append(HtmlOutput(text))
+                else:
+                    outputs.stderr.append(TextOutput(text))
+                    is_success = False
+        
         if is_success:
             # Create provenance information. Ensure that all dictionaries
             # contain elements of expected types, i.e, ensure that the user did
@@ -153,3 +177,10 @@ class PyCellTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
+        
+class DotDict(dict):
+    def __getattr__(self,val):
+        return self[val]
+    
+    def setattr(self, attr_name, val):
+        self[attr_name] = val
