@@ -376,6 +376,7 @@ class PipelineProcessor(TaskProcessor):
                     "ERROR: Please choose numerical or categorical columns only"))
 
             finally:
+                provenance.read[cmd.CONTEXT_DATABASE_NAME] = self.get_notebook_context(context).identifier
                 provenance.read[input_ds_name] = input_dataset.identifier
                 provenance.read[input_ds_name +
                                 cmd.TRAINING_SUFFIX] = training_sample.identifier
