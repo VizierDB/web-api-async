@@ -137,6 +137,7 @@ class SQLTaskProcessor(TaskProcessor):
             # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
 
             outputs.stdout.append(DatasetOutput(ds_output))
+            print_dataset_schema(outputs, ds_name, ds.columns)
             provenance = ModuleProvenance(
                 write={
                     ds_name: DatasetDescriptor(

@@ -271,6 +271,7 @@ class MimirProcessor(TaskProcessor):
                 limit=10
             )
             outputs.stdout.append(DatasetOutput(ds_output))
+            print_dataset_schema(outputs, ds_name, ds.columns)
         
         print_lens_annotations(outputs, lens_annotations)
         dsd = DatasetDescriptor(

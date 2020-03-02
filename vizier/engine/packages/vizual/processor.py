@@ -30,6 +30,7 @@ from vizier.api.webservice import server
 from vizier.config.app import AppConfig
 import vizier.mimir as mimir
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
+from vizier.engine.packages.mimir.processor import print_dataset_schema
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -469,8 +470,10 @@ class VizualTaskProcessor(TaskProcessor):
             limit=10
         )
         ds_output['name'] = ds_name 
+        outputs = ModuleOutputs(stdout=[DatasetOutput(ds_output)])
+        print_dataset_schema(outputs, ds_name, ds.columns)
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            outputs=outputs,
             provenance=ModuleProvenance(
                 read=dict(), # need to explicitly declare a lack of dependencies
                 write={ds_name: ds},
