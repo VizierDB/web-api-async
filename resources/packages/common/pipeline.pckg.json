@@ -314,26 +314,6 @@
                         "lspace": true, 
                         "rspace": true, 
                         "type": "const", 
-                        "value": "Create"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "Context"
-                    }
-                ], 
-                "id": "create_context", 
-                "name": "Create Context", 
-                "parameter": [
-                ]
-            },
-            {
-                "format" : [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
                         "value": "Select"
                     }, 
                     {
@@ -369,7 +349,7 @@
 
                 ], 
                 "id": "select_metric", 
-                "name": "Select Accuracy Metric", 
+                "name": "Select Accuracy Metric and Evaluate", 
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -390,6 +370,89 @@
                             {
                                 "text": "Accuracy Score",
                                 "value": "Accuracy Score"                                
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Create"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Context"
+                    }
+                ], 
+                "id": "create_context", 
+                "name": "Create Context", 
+                "parameter": [
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Compute"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "Confusion"
+                    }
+
+                ], 
+                "id": "compute_confusion", 
+                "name": "Compute Confusion", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "confusion_attribute", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    },
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "confusion_metric", 
+                        "index": 2, 
+                        "name": "Confusion Metric", 
+                        "required": true,
+                        "values": [
+                            {
+                                "text": "True Positive",
+                                "value": "True Positive"                                
+                            },
+                            {
+                                "text": "False Positive",
+                                "value": "False Positive"                                
+                            },
+                            {
+                                "text": "True Negative",
+                                "value": "True Negative"                                
+                            },
+                            {
+                                "text": "False Negative",
+                                "value": "False Negative"                                
                             }
                         ]
                     }

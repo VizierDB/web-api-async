@@ -22,6 +22,8 @@ PARA_MODEL = "model"
 PARA_LOSS_FUNCTION = "loss_function"
 PARA_COLUMNS = "columns"
 PARA_LABEL_COLUMN = "label_column"
+PARA_CONFUSION_METRIC = "confusion_metric"
+PARA_CONFUSION_ATTRIBUTE = "confusion_attribute"
 
 SAMPLING_MODE_UNIFORM_PROBABILITY = 'uniform_probability'
 
@@ -30,6 +32,7 @@ SELECT_TESTING = "select_testing"
 SELECT_MODEL = "select_model"
 SELECT_PREDICTION_COLUMNS = "select_prediction_columns"
 SELECT_LABEL_COLUMN = "select_label_column"
+COMPUTE_CONFUSION = "compute_confusion"
 SELECT_ACCURACY_METRIC = "select_metric"
 CREATE_CONTEXT = "create_context"
 CONTEXT_DATABASE_NAME = "context"
@@ -38,6 +41,11 @@ TRAINING_SUFFIX = "_training"
 TESTING_SUFFIX = "_testing"
 
 CATEGORICAL_THRESHOLD = 50
+
+TP = "tp"
+FP = "fp"
+TN = "tn"
+FN = "fn"
 
 from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import RandomForestClassifier
