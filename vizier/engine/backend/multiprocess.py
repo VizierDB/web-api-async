@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from vizier.api.serialize import labels
 
 """Default multi-process backend to execute vizier workflow tasks. The default
 backend starts a separate process for each task that is being executed. This
@@ -148,8 +149,9 @@ class MultiProcessBackend(VizierBackend):
                     project_id=task.project_id,
                     datastore=project.datastore,
                     filestore=project.filestore,
-                    datasets=context,
-                    resources=resources
+                    datasets=context[labels.CONTEXT_DATASETS],
+                    resources=resources,
+                    dataobjects=context[labels.CONTEXT_DATAOBJECTS]
                 ),
                 processor,
             ),

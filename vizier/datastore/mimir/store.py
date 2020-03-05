@@ -31,6 +31,8 @@ from vizier.core.util import get_unique_identifier, min_max
 from vizier.core.timestamp import  get_current_time
 from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.object.dataobject import DataObjectMetadata
+from vizier.datastore.object.base import DataObject
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
@@ -42,7 +44,7 @@ import shutil
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
-
+DATA_OBJECT_FILE = 'dataobjects.json'
 
 class MimirDatastore(DefaultDatastore):
     """Vizier data store implementation using Mimir.
@@ -142,6 +144,21 @@ class MimirDatastore(DefaultDatastore):
         string
         """
         return os.path.join(self.get_dataset_dir(identifier), DATASET_FILE)
+    
+    def get_data_object_file(self, identifier):
+        """Get the absolute path of the file that maintains the dataset metadata
+        such as the order of row id's and column information.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
     def get_dataset(self, identifier):
         """Read a full dataset from the data store. Returns None if no dataset
@@ -189,6 +206,44 @@ class MimirDatastore(DefaultDatastore):
         # any existing uncertainty annotations for the cell.
         return self.get_dataset(identifier).get_annotations(column_id,row_id)
     
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
+
+        Parameters
+        ----------
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
+            
+        Returns
+        -------
+        vizier.datastore.object.dataset.DataObjectMetadata
+        """
+        data_obj_identifier = identifier if not identifier is None else get_unique_identifier()
+        data_object_file = self.get_data_object_file(data_obj_identifier)
+        if not os.path.isfile(data_object_file):
+            return DataObjectMetadata()
+        objects = DataObjectMetadata.from_file(
+            data_object_file
+        )
+        if identifier is None and obj_type is None and key is None:
+            return objects
+        elif identifier is not None and obj_type is None and key is None:
+            return DataObjectMetadata(objects=objects.for_id(identifier))
+        elif identifier is None and obj_type is not None and key is None:
+            return DataObjectMetadata(objects=objects.for_type(obj_type))
+        elif identifier is None and obj_type is None and key is not None:
+            return DataObjectMetadata(objects=objects.for_key(key))
+        else:
+            raise ValueError("specify only one of: identifier, obj_type or key")
     
     def update_annotation(
         self, identifier, key, old_value=None, new_value=None, column_id=None,
@@ -225,7 +280,84 @@ class MimirDatastore(DefaultDatastore):
         #data = {"packageId":"mimir","commandId":"comment","arguments":[{"id":"dataset","value":"mv"},{"id":"comments","value":[[{"id":"expression","value":column},{"id":"comment","value":new_value},{"id":"rowid","value":row_id}]]},{"id":"resultColumns","value":[[{"id":"column","value":column}]]},{"id":"materializeInput","value":False}]}
         #resp = requests.post(url,json=data)
        
+    def update_object(
+        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique object identifier
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        bool
+        """
+        # Raise ValueError if column id and row id are both None
+        if identifier is None or key is None or obj_type is None:
+            raise ValueError('invalid resource identifier')
+        # Return None if the dataset is unknown
         
+        dataobj_dir = self.get_dataobject_dir(identifier)
+        data_object_filename = self.get_data_object_file(identifier)
+        data_objects = None
+        if not os.path.isdir(dataobj_dir):
+            #it's a new object so create it
+            os.makedirs(dataobj_dir)
+            data_objects = DataObjectMetadata()
+        else:
+            # Read objects from file, Evaluate update statement and write result
+            # back to file.
+            data_objects = DataObjectMetadata.from_file(data_object_filename)
+        # Get object annotations
+        elements = data_objects.objects
+        # Identify the type of operation: INSERT, DELETE or UPDATE
+        if old_value is None and not new_value is None:
+            elements.append(
+                DataObject(
+                    key=key,
+                    value=new_value,
+                    identifier=identifier,
+                    obj_type=obj_type
+                )
+            )
+        elif not old_value is None and new_value is None:
+            del_index = None
+            for i in range(len(elements)):
+                a = elements[i]
+                if a.identifier == identifier and a.value == old_value:
+                    del_index = i
+                    break
+            if del_index is None:
+                return False
+            del elements[del_index]
+        elif not old_value is None and not new_value is None:
+            obj = None
+            for a in elements:
+                if a.identifier == identifier and a.value == old_value:
+                    obj = a
+                    break
+            if obj is None:
+                return False
+            obj.value = new_value
+        else:
+            raise ValueError('invalid modification operation')
+        # Write modified annotations to file
+        data_objects.to_file(data_object_filename)
+        return True   
     
     def download_dataset(
         self, url, username=None, password=None, filestore=None, detect_headers=True, 

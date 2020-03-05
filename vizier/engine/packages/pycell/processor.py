@@ -27,6 +27,9 @@ from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from os.path import normpath, basename
+from os import path
+from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as cmd
@@ -77,14 +80,23 @@ class PyCellTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
+        objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
+        inj_src = ''
+        cell_src = args.get_value(cmd.PYTHON_SOURCE)
+        dataobjects = list()
+        for obj in objects.objects:
+            inj_src = obj.value + "\n\n"
+            dataobjects.append({obj.key:obj.identifier})
         # Get Python script from user arguments
-        source = args.get_value(cmd.PYTHON_SOURCE)
+        source = inj_src + cell_src
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
         client = VizierDBClient(
             datastore=context.datastore,
-            datasets=context.datasets
+            datasets=context.datasets,
+            source=cell_src,
+            dataobjects=dataobjects
         )
         variables = {VARS_DBCLIENT: client}
         # Redirect standard output and standard error streams
@@ -147,20 +159,30 @@ class PyCellTaskProcessor(TaskProcessor):
                     read[name] = context.datasets[name]
                     if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in mapping dictionary')
+                elif name in dataobjects:
+                    read[name] = dataobjects[name]
+                    if not isinstance(read[name], str):
+                        raise RuntimeError('invalid element in mapping dictionary')
                 else:
                     read[name] = None
             write = dict()
             for name in client.write:
                 if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
-                ds_id = client.datasets[name]
-                if not ds_id is None:
-                    if not isinstance(ds_id, str):
+                
+                if name in client.datasets:
+                    wr_id = client.datasets[name]
+                    if not isinstance(wr_id, str):
                         raise RuntimeError('invalid value in mapping dictionary')
-                    elif ds_id in client.descriptors:
-                        write[name] = client.descriptors[ds_id]
+                    elif wr_id in client.descriptors:
+                        write[name] = client.descriptors[wr_id]
                     else:
-                        write[name] = client.datastore.get_descriptor(ds_id)
+                        write[name] = client.datastore.get_descriptor(wr_id)
+                elif name in client.dataobjects:
+                    wr_id = client.dataobjects[name]
+                    if not isinstance(wr_id, str):
+                        raise RuntimeError('invalid value in mapping dictionary')
+                    write[name] = client.descriptors[wr_id]
                 else:
                     write[name] = None
             provenance = ModuleProvenance(

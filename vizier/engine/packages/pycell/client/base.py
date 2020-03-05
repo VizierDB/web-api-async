@@ -18,17 +18,31 @@
 a datastore from within a python script.
 """
 
-from vizier.core.util import is_valid_name
+from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
+from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
+from os.path import normpath, basename
+from os import path
+import os
+import re
+
+
+def export_module_decorator(original_func):
+        def wrapper(*args, **kwargs):
+            eval('vizierdb').read.add(original_func.__name__)
+            result = original_func(*args, **kwargs)
+            return result
+        return wrapper
 
 
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
     a unique name. The client is a wrapper around a given database state.
     """
-    def __init__(self, datastore, datasets):
+    def __init__(self, datastore, datasets, source, dataobjects):
         """Initialize the reference to the workflow context and the datastore.
 
         Parameters
@@ -41,6 +55,8 @@ class VizierDBClient(object):
         """
         self.datastore = datastore
         self.datasets = dict(datasets)
+        self.dataobjects = dict(dataobjects)
+        self.source = source
         # Keep track of the descriptors of datasets that the client successfully
         # modified
         self.descriptors = dict()
@@ -48,6 +64,54 @@ class VizierDBClient(object):
         self.read = set()
         self.write = set()
         self.delete = None
+
+    
+
+
+    def export_module(self, func):
+        src = "@export_module_decorator\n" + re.sub('vizierdb.export_module\([a-zA-Z0-9_-]+\)', '', self.source)
+        src_identifier = get_unique_identifier()
+        func_name = func.__name__
+        self.datastore.update_object(identifier=src_identifier,
+                                     key=func_name,
+                                     new_value=src,
+                                     obj_type=PYTHON_EXPORT_TYPE)
+        self.set_dataobject_identifier(func_name, src_identifier)
+        self.descriptors[src_identifier] = self.datastore.get_objects(identifier=src_identifier).objects[0]
+        
+    def get_dataobject_identifier(self, name):
+        """Returns the unique identifier for the dataset with the given name.
+
+        Raises ValueError if no dataset with the given name exists.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+
+        Returns
+        -------
+        string
+        """
+        # Datset names should be case insensitive
+        key = name
+        if not key in self.dataobjects:
+            raise ValueError('unknown dataobject \'' + name + '\'')
+        return self.dataobjects[key]
+    
+    def set_dataobject_identifier(self, name, identifier):
+        """Sets the identifier to which the given dataset name points.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+        identifier: string
+            Unique identifier for persistent dataset
+        """
+        # Convert name to lower case to ensure that names are case insensitive
+        self.dataobjects[name] = identifier
+        self.write.add(name)
 
     def create_dataset(self, name, dataset, backend_options = []):
         """Create a new dataset with given name.

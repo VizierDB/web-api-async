@@ -81,6 +81,30 @@ class Datastore(object):
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
+
+        Parameters
+        ----------
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
+            
+        Returns
+        -------
+        vizier.datastore.object.dataset.DataObjectMetadata
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def get_dataset(self, identifier):
@@ -181,6 +205,35 @@ class Datastore(object):
         bool
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def update_object(
+        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique object identifier
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        bool
+        """
+        raise NotImplementedError
 
 
 class DefaultDatastore(Datastore):
@@ -243,6 +296,30 @@ class DefaultDatastore(Datastore):
                 columns=[column_id],
                 rows=[row_id]
             )
+            
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
+
+        Parameters
+        ----------
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
+            
+        Returns
+        -------
+        vizier.datastore.object.dataset.DataObjectMetadata
+        """
+        raise NotImplementedError
+
 
     def get_dataset_dir(self, identifier):
         """Get the base directory for a dataset with given identifier. Having a
@@ -259,6 +336,22 @@ class DefaultDatastore(Datastore):
         string
         """
         return os.path.join(self.base_path, identifier)
+    
+    def get_dataobject_dir(self, identifier):
+        """Get the base directory for a dataobject with given identifier. Having a
+        separate method makes it easier to change the folder structure used to
+        store dataobjects.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return os.path.join(os.path.join(os.path.join(os.path.join(self.base_path, '..' ), '..'), 'do'), identifier)
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
@@ -371,6 +464,34 @@ class DefaultDatastore(Datastore):
         # Write modified annotations to file
         annotations.to_file(metadata_filename)
         return True
+    
+    def update_object(
+        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique object identifier
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        bool
+        """
+        raise NotImplementedError
 
 
 # ------------------------------------------------------------------------------
