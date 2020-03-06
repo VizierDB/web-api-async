@@ -29,15 +29,7 @@ from os import path
 import os
 import re
 
-
-def export_module_decorator(original_func):
-        def wrapper(*args, **kwargs):
-            eval('vizierdb').read.add(original_func.__name__)
-            result = original_func(*args, **kwargs)
-            return result
-        return wrapper
-
-
+    
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
     a unique name. The client is a wrapper around a given database state.
@@ -65,13 +57,21 @@ class VizierDBClient(object):
         self.write = set()
         self.delete = None
 
+    def export_module_decorator(self, original_func):
+        def wrapper(*args, **kwargs):
+            self.read.add(original_func.__name__)
+            result = original_func(*args, **kwargs)
+            return result
+        return wrapper
     
-
-
     def export_module(self, func):
-        src = "@export_module_decorator\n" + re.sub('vizierdb.export_module\([a-zA-Z0-9_-]+\)', '', self.source)
-        src_identifier = get_unique_identifier()
+        src = "@vizierdb.export_module_decorator\n" + re.sub('vizierdb.export_module\([a-zA-Z0-9_-]+\)', '', self.source)
         func_name = func.__name__
+        if func_name in self.dataobjects.keys():
+            src_identifier = self.dataobjects[func_name]
+        else:
+            src_identifier = get_unique_identifier()
+        
         self.datastore.update_object(identifier=src_identifier,
                                      key=func_name,
                                      new_value=src,

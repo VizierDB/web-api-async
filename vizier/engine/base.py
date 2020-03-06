@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from vizier.api.serialize import labels
+from vizier.datastore.object.base import DataObject
 
 """The vizier engine defines the interface that is used by the API for creating,
 deleting, and manipulating projects as well as for the orchestration of workflow
@@ -172,14 +173,18 @@ class VizierEngine(WorkflowController):
                 # Depending on the execution outcome create a handle for the
                 # executed module
                 if result.is_success:
+                    dsanddo = modules[-1].datasets if len(modules) > 0 else dict().copy()
+                    dsanddo.update(modules[-1].dataobjects if len(modules) > 0 else dict())
+                    context_all = result.provenance.get_database_state(dsanddo)
+                    context_ds = {key: value for (key, value) in context_all.items() if not isinstance(value, DataObject) }
+                    context_do = {key: value for (key, value) in context_all.items() if isinstance(value, DataObject) }
                     module = ModuleHandle(
                         state=mstate.MODULE_SUCCESS,
                         command=command,
                         external_form=external_form,
                         timestamp=ts,
-                        datasets=result.provenance.get_database_state(
-                            modules[-1].datasets if len(modules) > 0 else dict()
-                        ),
+                        datasets=context_ds,
+                        dataobjects=context_do,
                         outputs=result.outputs,
                         provenance=result.provenance
                     )
@@ -349,6 +354,7 @@ class VizierEngine(WorkflowController):
                         m = modules[module_index]
                         datasets = m.provenance.get_database_state(datasets)
                         m.datasets = datasets
+                        m.dataobjects = dataobjects
                         module_index += 1
                 if module_index < module_count:
                     # The module that module_index points to has to be executed.
@@ -379,6 +385,7 @@ class VizierEngine(WorkflowController):
                                 command=m.command,
                                 external_form=m.external_form,
                                 datasets=m.datasets,
+                                dataobjects=m.dataobjects,
                                 outputs=m.outputs,
                                 provenance=m.provenance
                             )
@@ -552,6 +559,7 @@ class VizierEngine(WorkflowController):
                         command=m.command,
                         external_form=m.external_form,
                         datasets=m.datasets,
+                        dataobjects=m.dataobjects,
                         outputs=m.outputs,
                         provenance=m.provenance
                     )
@@ -644,6 +652,7 @@ class VizierEngine(WorkflowController):
                         command=m.command,
                         external_form=m.external_form,
                         datasets=m.datasets,
+                        dataobjects=m.dataobjects,
                         outputs=m.outputs,
                         provenance=m.provenance
                     )
@@ -799,15 +808,18 @@ class VizierEngine(WorkflowController):
             # Adjust the module context
             datasets = workflow.modules[module_index - 1].datasets if module_index > 0 else dict()
             dataobjects = workflow.modules[module_index - 1].dataobjects if module_index > 0 else dict()
-            context_ds = provenance.get_database_state(datasets)
-            context_do = provenance.get_database_state(dataobjects)
-            context_all = context_ds.copy().update(context_do)
-        
+            dsanddo = datasets.copy()
+            dsanddo.update(dataobjects)
+            context_all = provenance.get_database_state(dsanddo)
+            context_ds = {key: value for (key, value) in context_all.items() if not isinstance(value, DataObject) }
+            context_do = {key: value for (key, value) in context_all.items() if isinstance(value, DataObject) }
+            
             module.set_success(
                 finished_at=finished_at,
                 datasets=context_ds,
                 outputs=outputs,
-                provenance=provenance
+                provenance=provenance,
+                dataobjects=context_do
             )
             print("Module {} finished at {} / Context: {}".format(
                 module.external_form, 
@@ -826,7 +838,8 @@ class VizierEngine(WorkflowController):
                         finished_at=finished_at,
                         datasets=context_ds,
                         outputs=next_module.outputs,
-                        provenance=next_module.provenance
+                        provenance=next_module.provenance,
+                        dataobjects=context_do
                     )
                 else:
                     command = next_module.command

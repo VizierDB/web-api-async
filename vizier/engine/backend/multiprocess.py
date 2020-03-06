@@ -139,7 +139,8 @@ class MultiProcessBackend(VizierBackend):
         project = self.projects.get_project(task.project_id)
         # Execute task using execute command function
         import time
-        time.sleep( 1 )
+        #TODO: figure out why sleeping here fixes a dependent cell re-execution not re-executing
+        time.sleep( 2 )
         pool.apply_async(
             exec_command,
             args=(

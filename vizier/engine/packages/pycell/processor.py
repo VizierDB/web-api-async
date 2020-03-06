@@ -81,14 +81,16 @@ class PyCellTaskProcessor(TaskProcessor):
         vizier.engine.task.processor.ExecResult
         """
         objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
+        dos = [object for objects in [objects.for_id(doid) for doid in [ value for key, value in context.dataobjects.items()]] for object in objects ]
         inj_src = ''
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
         dataobjects = list()
-        for obj in objects.objects:
+        for obj in dos:
             inj_src = obj.value + "\n\n"
-            dataobjects.append({obj.key:obj.identifier})
+            dataobjects.append([obj.key,obj.identifier])
         # Get Python script from user arguments
         source = inj_src + cell_src
+        
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
@@ -96,7 +98,7 @@ class PyCellTaskProcessor(TaskProcessor):
             datastore=context.datastore,
             datasets=context.datasets,
             source=cell_src,
-            dataobjects=dataobjects
+            dataobjects=context.dataobjects
         )
         variables = {VARS_DBCLIENT: client}
         # Redirect standard output and standard error streams

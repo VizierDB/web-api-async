@@ -227,21 +227,24 @@ class MimirDatastore(DefaultDatastore):
         -------
         vizier.datastore.object.dataset.DataObjectMetadata
         """
-        data_obj_identifier = identifier if not identifier is None else get_unique_identifier()
-        data_object_file = self.get_data_object_file(data_obj_identifier)
-        if not os.path.isfile(data_object_file):
-            return DataObjectMetadata()
-        objects = DataObjectMetadata.from_file(
-            data_object_file
-        )
+        if identifier is not None and obj_type is None and key is None:
+            data_object_file = self.get_data_object_file(identifier)
+            if not os.path.isfile(data_object_file):
+                return DataObjectMetadata()
+            else:
+                return DataObjectMetadata.from_file(
+                data_object_file
+            )
+        
+        dsdirs = filter(lambda x: os.path.isdir(x) and os.path.exists(os.path.join(x,DATA_OBJECT_FILE)), [os.path.join(self.base_path, o) for o in os.listdir(self.base_path)])
+        dsoids = [os.path.basename(os.path.normpath(o)) for o in dsdirs]
+        dsofiles = [os.path.join(os.path.join(self.base_path,dsoid), DATA_OBJECT_FILE) for dsoid in dsoids]
         if identifier is None and obj_type is None and key is None:
-            return objects
-        elif identifier is not None and obj_type is None and key is None:
-            return DataObjectMetadata(objects=objects.for_id(identifier))
+            return DataObjectMetadata(objects=[ object for objects in [DataObjectMetadata.from_file( dsofile ).objects for dsofile in dsofiles] for object in objects])
         elif identifier is None and obj_type is not None and key is None:
-            return DataObjectMetadata(objects=objects.for_type(obj_type))
+            return DataObjectMetadata(objects=[ object for objects in [DataObjectMetadata.from_file( dsofile ).for_type(obj_type) for dsofile in dsofiles] for object in objects])
         elif identifier is None and obj_type is None and key is not None:
-            return DataObjectMetadata(objects=objects.for_key(key))
+            return DataObjectMetadata(objects=[ object for objects in [DataObjectMetadata.from_file( dsofile ).for_key(key) for dsofile in dsofiles] for object in objects])
         else:
             raise ValueError("specify only one of: identifier, obj_type or key")
     

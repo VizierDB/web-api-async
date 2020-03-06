@@ -161,10 +161,13 @@ class ModuleHandle(ModuleState):
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
     timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
         Module timestamp
+    dataobjects: dict(vizier.datastore.object.base.DataObject)
+        Dictionary of resulting dataobjects. The user-specified name is the key.
     """
     def __init__(
         self, command, external_form, identifier=None, state=None,
-        timestamp=None, datasets=None, outputs=None, provenance=None
+        timestamp=None, datasets=None, outputs=None, provenance=None,
+        dataobjects=None
     ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
@@ -189,6 +192,8 @@ class ModuleHandle(ModuleState):
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
+        dataobjects: dict(vizier.datastore.object.base.DataObject)
+            Dictionary of resulting dataobjects. The user-specified name is the key.
         """
         super(ModuleHandle, self).__init__(
             state=state if not state is None else MODULE_PENDING
@@ -197,6 +202,7 @@ class ModuleHandle(ModuleState):
         self.command = command
         self.external_form = external_form
         self.datasets = datasets if not datasets is None else dict()
+        self.dataobjects = dataobjects if not dataobjects is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.provenance = provenance if not provenance is None else ModuleProvenance()
         self.timestamp = timestamp if not timestamp is None else ModuleTimestamp()

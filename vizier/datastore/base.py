@@ -351,7 +351,7 @@ class DefaultDatastore(Datastore):
         -------
         string
         """
-        return os.path.join(os.path.join(os.path.join(os.path.join(self.base_path, '..' ), '..'), 'do'), identifier)
+        return os.path.join(self.base_path, identifier)
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the

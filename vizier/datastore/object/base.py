@@ -22,6 +22,35 @@ from vizier.core.util import is_scalar
 
 PYTHON_EXPORT_TYPE = 'py-export'
 
+class DataObjectDescriptor(object):
+    """The descriptor maintains the dataobject  basic information
+    including the dataobject identifier and object type.
+
+    Attributes
+    ----------
+    key: string
+         key/name of object
+    identifier: string
+        Unique identifier
+    obj_type: string
+        object type
+    """
+    def __init__(self, key, identifier, obj_type):
+        """Initialize the dataset descriptor.
+
+        Parameters
+        ----------
+        key: string
+             key/name of object
+        identifier: string
+            Unique identifier
+        obj_type: string
+            object type
+        """
+        self.key = key
+        self.identifier = identifier
+        self.obj_type = obj_type
+
 class DataObject(object):
     """DataObject is the base to handle outputs other than dataset
     for now it is key value pairs.
@@ -29,13 +58,13 @@ class DataObject(object):
     Attributes
     ----------
     key: string
-        Annotation key
-    value: scalar
-        Annotation value
-    column_id: int, optional
-        Unique column identifier
-    row_id: int, optional
-        Unique row identifier
+         key/name of object
+    value: string
+        Object value
+    identifier: string
+        Unique identifier
+    obj_type: string
+        object type
     """
     def __init__(self, key, value, identifier, obj_type):
         """Initialize the object components. Raises ValueError if both
@@ -57,8 +86,6 @@ class DataObject(object):
         self.value = value
         self.identifier = identifier
         self.obj_type = obj_type
-        self.columns = list()
-        self.row_count = 0
 
     def to_dict(self):
         """Get default dictionary serialization for the annotation object.

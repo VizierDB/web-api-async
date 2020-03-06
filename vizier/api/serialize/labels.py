@@ -42,6 +42,9 @@ ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
 ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
 
+# Dataobjects
+OBJECT_TYPE="objType"
+
 # Annotations
 COLUMN_ID = 'columnId'
 ROW_ID = 'rowId'
