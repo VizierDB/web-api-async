@@ -29,7 +29,7 @@ from vizier.datastore.dataset import DATATYPE_VARCHAR, DatasetDescriptor, Datase
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
 import vizier.engine.packages.pipeline.base as cmd
 import vizier.mimir as mimir
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, multilabel_confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 import numpy as np
@@ -88,14 +88,14 @@ class PipelineProcessor(TaskProcessor):
         )
 
         return ds
-        
+
     def get_notebook_context(self, context):
         notebook_context = None
         if cmd.CONTEXT_DATABASE_NAME in context.datasets:
             notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
         else:
-           notebook_context = context.datastore.create_dataset(
-                columns = [
+            notebook_context = context.datastore.create_dataset(
+                columns=[
                     MimirDatasetColumn(
                         identifier=0,
                         name_in_dataset='ctx_key',
@@ -106,15 +106,13 @@ class PipelineProcessor(TaskProcessor):
                         name_in_dataset='ctx_value',
                         data_type=DATATYPE_VARCHAR
                     )
-                    ],
-                rows = [],
-                human_readable_name = cmd.CONTEXT_DATABASE_NAME
+                ],
+                rows=[],
+                human_readable_name=cmd.CONTEXT_DATABASE_NAME
             )
         return notebook_context
 
     def compute(self, command_id, arguments, context):
-
-        
 
         outputs = ModuleOutputs()
         provenance = ModuleProvenance(
@@ -122,8 +120,10 @@ class PipelineProcessor(TaskProcessor):
             write={}
         )
         output_ds_name = ""
-        
+
         notebook_context = self.get_notebook_context(context)
+
+        label_encoder_map = {}
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
@@ -160,7 +160,7 @@ class PipelineProcessor(TaskProcessor):
                 if dataset is None:
                     raise ValueError('unknown dataset \'' + ds_name_o + '\'')
                 mimir_table_names[ds_name_o] = dataset.table_name
-                
+
             view_name, dependencies = mimir.createView(
                 mimir_table_names,
                 'SELECT * FROM ' + str(input_ds_name)
@@ -270,11 +270,13 @@ class PipelineProcessor(TaskProcessor):
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET)
             input_dataset = context.get_dataset(input_ds_name)
             confusion_metric = arguments.get_value(cmd.PARA_CONFUSION_METRIC)
-            confusion_attribute = arguments.get_value(cmd.PARA_CONFUSION_ATTRIBUTE)
+            confusion_attribute = arguments.get_value(
+                cmd.PARA_CONFUSION_ATTRIBUTE)
             notebook_context = self.get_notebook_context(context)
 
             # Just converting human readable names to shorter strings for saving in the context
-            outputs.stdout.append(TextOutput("Confusion Metric selected: " + confusion_metric))
+            outputs.stdout.append(TextOutput(
+                "Confusion Metric selected: " + confusion_metric))
 
             if confusion_metric == "True Positive":
                 confusion_metric = cmd.TP
@@ -285,14 +287,14 @@ class PipelineProcessor(TaskProcessor):
             elif confusion_metric == "False Negative":
                 confusion_metric = cmd.FN
 
-            ds = self.save_context(context, notebook_context, ["confusion_metric_" + confusion_metric, "confusion_attribute_" + input_dataset.columns[int(confusion_attribute)].name], [0, 0])
+            ds = self.save_context(context, notebook_context, [
+                                   "confusion_metric_" + confusion_metric, "confusion_attribute_" + input_dataset.columns[int(confusion_attribute)].name], [0, 0])
 
             provenance.write[cmd.CONTEXT_DATABASE_NAME] = DatasetDescriptor(
                 identifier=ds.identifier,
                 columns=ds.columns,
                 row_count=ds.row_count
             )
-            
 
         elif command_id == cmd.SELECT_ACCURACY_METRIC:
 
@@ -303,6 +305,8 @@ class PipelineProcessor(TaskProcessor):
                 input_ds_name + cmd.TRAINING_SUFFIX)
             testing_sample = context.get_dataset(
                 input_ds_name + cmd.TESTING_SUFFIX)
+
+            testing_label_pair = {}
 
             def parse_context(saved_context):
                 model, loss_function, input_columns, output_column, confusion_metric, confusion_attribute = '', '', [], '', '', ''
@@ -321,8 +325,9 @@ class PipelineProcessor(TaskProcessor):
                     elif "confusion_metric_" in k:
                         confusion_metric = k.split("confusion_metric_")[1]
                     elif "confusion_attribute_" in k:
-                        confusion_attribute = k.split("confusion_attribute_")[1]
-                        
+                        confusion_attribute = k.split(
+                            "confusion_attribute_")[1]
+
                 return model, loss_function, input_columns, output_column, confusion_metric, confusion_attribute
 
             saved_context = [
@@ -363,27 +368,34 @@ class PipelineProcessor(TaskProcessor):
                 values = [value for index, value in enumerate(row.values)]
                 testing_values.append(row.values)
 
-            def process(df, columns, label_column):
+            def choose_columns(df, columns, label_column):
+                return df[columns], df[label_column]
+
+            def process(df, columns):
 
                 le = LabelEncoder()
 
                 for column in columns:
+
                     num_unique_columns = df[column].nunique()
                     if num_unique_columns < cmd.CATEGORICAL_THRESHOLD:
                         # Categorize variables
-                        le.fit(df[column])
-                        df[column] = le.transform(df[column])
+                        df[column] = le.fit_transform(df[column])
 
-                labels = df[label_column]
+                        if confusion_attribute.lower() == column:
+                            nonlocal label_encoder_map
+                            label_encoder_map = dict(
+                                zip(le.transform(le.classes_), le.classes_))
 
-                # Remove all columns except the ones selected
-                df = df[columns]
-
-                return df, labels
+                return df
 
             df_training = pd.DataFrame(np.array(training_values), columns=[
                                        col.name.lower() for col in training_sample.columns])
-            df_training, training_labels = process(
+
+            df_training = process(
+                df_training, input_columns + [output_column])
+
+            df_training, training_labels = choose_columns(
                 df_training, input_columns, output_column)
 
             df_training = df_training.to_numpy()
@@ -391,50 +403,69 @@ class PipelineProcessor(TaskProcessor):
 
             df_testing = pd.DataFrame(np.array(testing_values), columns=[
                                       col.name.lower() for col in testing_sample.columns])
-            
-            df_testing, testing_labels = process(
+            df_testing = process(
+                df_testing, input_columns + [output_column])
+            df_testing, testing_labels = choose_columns(
                 df_testing, input_columns, output_column)
 
-            # postponing the conversion of df_testing to numpy so it's easier to process for confusion metrics
-            testing_labels = testing_labels.to_numpy()
-            
             if confusion_metric and confusion_attribute:
-                #print(np.unique(df_testing[:, int(confusion_attribute)]))
-                
+
                 attributes = np.unique(df_testing[confusion_attribute.lower()])
-                #df_testing_by_attribute = [df_testing.loc[df_testing[confusion_attribute.lower()] == attribute] for attribute in attributes]
-                #print(df_testing_by_attribute[0]["id"])
-                
+
                 testing_label_pair = {
-                    attribute: (np.array([]), '') for attribute in attributes
+                    attribute: [np.array([]), []] for attribute in attributes
                 }
 
                 for index, row in df_testing.iterrows():
 
-                    attribute = confusion_attribute.lower()
-                    label = testing_labels[index]
+                    attribute = df_testing[confusion_attribute.lower(
+                    )].iloc[index]
 
-                    testing_label_pair[attribute][0] = np.vstack(testing_label_pair[attribute][0], np.array(row))
-                    testing_label_pair[attribute][1] = np.vstack(testing_label_pair[attribute][0], np.array(label))
-            
+                    testing_label_pair[attribute][0] = np.vstack((testing_label_pair[attribute][0], np.array(
+                        row))) if testing_label_pair[attribute][0].size > 0 else np.array(row)
+
+            testing_labels = testing_labels.to_numpy()
+
+            if confusion_metric and confusion_attribute:
+
+                for index, row in df_testing.iterrows():
+
+                    attribute = df_testing[confusion_attribute.lower(
+                    )].iloc[index]
+
+                    testing_label_pair[attribute][1].append(
+                        testing_labels[index])
+
             df_testing = df_testing.to_numpy()
-            
+
             try:
 
                 # Train the model using the label column selected on the training dataset without the label column
                 model.fit(df_training, training_labels)
-                
+
                 # Predict labels using the testing dataset without the label column
                 predictions = model.predict(df_testing)
+
+                confusion_scores = {}
 
                 if confusion_metric and confusion_attribute:
 
                     confusion_predictions = {
-                        attribute: model.predict(testing_label_pair[attribute][0]) for attribute in testing_label_pair.keys()
+                        label_encoder_map[attribute]: model.predict(testing_label_pair[attribute][0]) for attribute in testing_label_pair.keys()
                     }
 
-                    print(confusion_predictions)
+                    confusion_testing_labels = {
+                        label_encoder_map[attribute]: testing_label_pair[attribute][1] for attribute in attributes
+                    }
 
+                confusion_matrices = {
+                    label_encoder_map[attribute]: multilabel_confusion_matrix(confusion_testing_labels[label_encoder_map[attribute]], confusion_predictions[label_encoder_map[attribute]]) for attribute in attributes
+                }
+
+                for attribute in attributes:
+                    for matrix in confusion_matrices[label_encoder_map[attribute]]:
+                        print(matrix)
+                    print()
 
                 # Use the number of mismatched labels as a measure of the accuracy for the classification task
                 score = accuracy_score(testing_labels, predictions)
@@ -447,7 +478,8 @@ class PipelineProcessor(TaskProcessor):
                     "ERROR: Please choose numerical or categorical columns only"))
 
             finally:
-                provenance.read[cmd.CONTEXT_DATABASE_NAME] = self.get_notebook_context(context).identifier
+                provenance.read[cmd.CONTEXT_DATABASE_NAME] = self.get_notebook_context(
+                    context).identifier
                 provenance.read[input_ds_name] = input_dataset.identifier
                 provenance.read[input_ds_name +
                                 cmd.TRAINING_SUFFIX] = training_sample.identifier
