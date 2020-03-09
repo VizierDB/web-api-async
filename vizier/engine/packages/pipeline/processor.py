@@ -98,12 +98,12 @@ class PipelineProcessor(TaskProcessor):
                 columns=[
                     MimirDatasetColumn(
                         identifier=0,
-                        name_in_dataset='ctx_key',
+                        name_in_dataset='k',
                         data_type=DATATYPE_VARCHAR
                     ),
                     MimirDatasetColumn(
                         identifier=1,
-                        name_in_dataset='ctx_value',
+                        name_in_dataset='v',
                         data_type=DATATYPE_VARCHAR
                     )
                 ],
