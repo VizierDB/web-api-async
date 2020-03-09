@@ -2,143 +2,143 @@
     "pipeline": {
         "command": [
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "sample_rate"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "of"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "input_dataset"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
                         "value": "for Training"
                     }
-                ], 
-                "id": "select_training", 
-                "name": "Select Training Set", 
+                ],
+                "id": "select_training",
+                "name": "Select Training Set",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Input Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Input Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "decimal", 
-                        "hidden": false, 
-                        "id": "sample_rate", 
-                        "index": 1, 
-                        "name": "Fraction of dataset (0.0-1.0)", 
+                        "datatype": "decimal",
+                        "hidden": false,
+                        "id": "sample_rate",
+                        "index": 1,
+                        "name": "Fraction of dataset (0.0-1.0)",
                         "required": true
                     }
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "sample_rate"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "of"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "input_dataset"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
                         "value": "for Testing"
                     }
-                ], 
-                "id": "select_testing", 
-                "name": "Select Testing Set", 
+                ],
+                "id": "select_testing",
+                "name": "Select Testing Set",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Input Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Input Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "decimal", 
-                        "hidden": false, 
-                        "id": "sample_rate", 
-                        "index": 1, 
-                        "name": "Fraction of dataset (0.0-1.0)", 
+                        "datatype": "decimal",
+                        "hidden": false,
+                        "id": "sample_rate",
+                        "index": 1,
+                        "name": "Fraction of dataset (0.0-1.0)",
                         "required": true
                     }
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "ML"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
                         "value": "Model"
                     }
-                ], 
-                "id": "select_model", 
-                "name": "Select Machine Learning Model", 
+                ],
+                "id": "select_model",
+                "name": "Select Machine Learning Model",
                 "parameter": [
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "model", 
-                        "index": 1, 
-                        "name": "ML Model", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "model",
+                        "index": 1,
+                        "name": "ML Model",
                         "values": [
                             {
                                 "text": "Linear Classifier",
@@ -160,28 +160,28 @@
                         "required": true
                     },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "loss_function", 
-                        "index": 1, 
-                        "name": "Loss Function", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "loss_function",
+                        "index": 1,
+                        "name": "Loss Function",
                         "required": true,
                         "values": [
                             {
                                 "text": "Linear Classifier: Hinge",
-                                "value": "Linear Classifier: Hinge"                                
+                                "value": "Linear Classifier: Hinge"
                             },
                             {
                                 "text": "Linear Classifier: Log Loss",
-                                "value": "Linear Classifier: Log Loss"                                
+                                "value": "Linear Classifier: Log Loss"
                             },
                             {
                                 "text": "Linear Classifier: Perceptron",
-                                "value": "Linear Classifier: Perceptron"                                
+                                "value": "Linear Classifier: Perceptron"
                             },
                             {
                                 "text": "Linear Classifier: Squared Loss",
-                                "value": "Linear Classifier: Squared Loss"                                
+                                "value": "Linear Classifier: Squared Loss"
                             },
                             {
                                 "text": "Random Forest Classifier: Gini Impurity",
@@ -216,112 +216,112 @@
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Input"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
                         "value": "Columns"
                     }
-                ], 
-                "id": "select_prediction_columns", 
-                "name": "Select Input Columns", 
+                ],
+                "id": "select_prediction_columns",
+                "name": "Select Input Columns",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "columns", 
-                        "index": 1, 
-                        "name": "Columns", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
                     },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "columns_column", 
-                        "index": 2, 
-                        "name": "Column", 
-                        "parent": "columns", 
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "columns",
+                        "index": 1,
+                        "name": "Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "columns_column",
+                        "index": 2,
+                        "name": "Column",
+                        "parent": "columns",
                         "required": true
                     }
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Target"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
                         "value": "Column"
                     }
-                ], 
-                "id": "select_label_column", 
-                "name": "Select Target Column", 
+                ],
+                "id": "select_label_column",
+                "name": "Select Target Column",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "label_column", 
-                        "index": 1, 
-                        "name": "Column", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "label_column",
+                        "index": 1,
+                        "name": "Column",
                         "required": true
                     }
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Select"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Accuracy"
-                    }, 
+                    },
                     {
                         "lspace": true,
                         "rspace": true,
@@ -346,119 +346,90 @@
                         "type": "const",
                         "value": "Model"
                     }
-
-                ], 
-                "id": "select_metric", 
-                "name": "Select Accuracy Metric and Evaluate", 
+                ],
+                "id": "select_metric",
+                "name": "Select Accuracy Metric and Evaluate",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "metrics", 
-                        "index": 1, 
-                        "name": "Accuracy Metrics", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "metrics",
+                        "index": 1,
+                        "name": "Accuracy Metrics",
                         "required": true,
                         "values": [
                             {
                                 "text": "Accuracy Score",
-                                "value": "Accuracy Score"                                
+                                "value": "Accuracy Score"
                             }
                         ]
                     }
                 ]
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Create"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Context"
                     }
-                ], 
-                "id": "create_context", 
-                "name": "Create Context", 
-                "parameter": [
-                ]
+                ],
+                "id": "create_context",
+                "name": "Create Context",
+                "parameter": []
             },
             {
-                "format" : [
+                "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Compute"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "Confusion"
                     }
-
-                ], 
-                "id": "compute_confusion", 
-                "name": "Compute Confusion", 
+                ],
+                "id": "compute_confusion",
+                "name": "Compute Confusion",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "input_dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "confusion_attribute", 
-                        "index": 1, 
-                        "name": "Column", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "input_dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
                     },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "confusion_metric", 
-                        "index": 2, 
-                        "name": "Confusion Metric", 
-                        "required": true,
-                        "values": [
-                            {
-                                "text": "True Positive",
-                                "value": "True Positive"                                
-                            },
-                            {
-                                "text": "False Positive",
-                                "value": "False Positive"                                
-                            },
-                            {
-                                "text": "True Negative",
-                                "value": "True Negative"                                
-                            },
-                            {
-                                "text": "False Negative",
-                                "value": "False Negative"                                
-                            }
-                        ]
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "confusion_attribute",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
                     }
                 ]
             }
-        ], 
+        ],
         "id": "pipeline",
         "category": "code"
     }

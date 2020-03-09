@@ -125,6 +125,8 @@ class PipelineProcessor(TaskProcessor):
 
         label_encoder_map = {}
 
+        print(command_id, flush=True)
+
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
             input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
@@ -412,6 +414,9 @@ class PipelineProcessor(TaskProcessor):
 
                 attributes = np.unique(df_testing[confusion_attribute.lower()])
 
+                if len(attributes) > 2:
+                    raise Exception("Please choose a binary column")
+
                 testing_label_pair = {
                     attribute: [np.array([]), []] for attribute in attributes
                 }
@@ -458,20 +463,31 @@ class PipelineProcessor(TaskProcessor):
                         label_encoder_map[attribute]: testing_label_pair[attribute][1] for attribute in attributes
                     }
 
-                confusion_matrices = {
-                    label_encoder_map[attribute]: multilabel_confusion_matrix(confusion_testing_labels[label_encoder_map[attribute]], confusion_predictions[label_encoder_map[attribute]]) for attribute in attributes
+                confusion_scores = {
+                    label_encoder_map[attribute]: confusion_matrix(confusion_testing_labels[label_encoder_map[attribute]], confusion_predictions[label_encoder_map[attribute]]).ravel()[:4] for attribute in attributes
                 }
 
-                for attribute in attributes:
-                    for matrix in confusion_matrices[label_encoder_map[attribute]]:
-                        print(matrix)
-                    print()
+                def get_confusion_stats(original_stats):
+                    _sum = sum(original_stats)
+                    return [stat/_sum for stat in original_stats]
+
+                confusion_scores = {
+                    label_encoder_map[attribute]: get_confusion_stats(confusion_scores[label_encoder_map[attribute]]) for attribute in attributes
+                }
 
                 # Use the number of mismatched labels as a measure of the accuracy for the classification task
                 score = accuracy_score(testing_labels, predictions)
 
                 outputs.stdout.append(TextOutput(
-                    "Accuracy score: {}%".format(str(round(score*100, 2)))))
+                    "Accuracy score: {}%\n".format(str(round(score * 100, 2)))))
+                for attribute in attributes:
+                    stats = "Stats for {}:\n\n".format(
+                        label_encoder_map[attribute])
+                    for index, metric in enumerate(["True Negatives", "False Negatives", "True Positives", "False Positives"]):
+                        stats += (metric + ": " +
+                                  str(round(confusion_scores[label_encoder_map[attribute]][index]*100, 2)) + "%\n")
+                    stats += "\n"
+                    outputs.stdout.append(TextOutput(stats))
 
             except ValueError as e:
                 outputs.stdout.append(TextOutput(
