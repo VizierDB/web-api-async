@@ -414,8 +414,8 @@ class PipelineProcessor(TaskProcessor):
 
                 attributes = np.unique(df_testing[confusion_attribute.lower()])
 
-                if len(attributes) > 2:
-                    raise Exception("Please choose a binary column")
+                if len(np.unique(testing_labels.to_numpy())) > 2:
+                    raise Exception("Please choose a binary label column")
 
                 testing_label_pair = {
                     attribute: [np.array([]), []] for attribute in attributes
