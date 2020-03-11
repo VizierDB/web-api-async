@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from vizier.api.serialize import labels
-from vizier.datastore.object.base import DataObject
+from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 """The vizier engine defines the interface that is used by the API for creating,
 deleting, and manipulating projects as well as for the orchestration of workflow
@@ -176,8 +176,8 @@ class VizierEngine(WorkflowController):
                     dsanddo = modules[-1].datasets if len(modules) > 0 else dict().copy()
                     dsanddo.update(modules[-1].dataobjects if len(modules) > 0 else dict())
                     context_all = result.provenance.get_database_state(dsanddo)
-                    context_ds = {key: value for (key, value) in context_all.items() if not isinstance(value, DataObject) }
-                    context_do = {key: value for (key, value) in context_all.items() if isinstance(value, DataObject) }
+                    context_ds = {key: value for (key, value) in context_all.items() if not (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+                    context_do = {key: value for (key, value) in context_all.items() if ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
                     module = ModuleHandle(
                         state=mstate.MODULE_SUCCESS,
                         command=command,
@@ -811,8 +811,8 @@ class VizierEngine(WorkflowController):
             dsanddo = datasets.copy()
             dsanddo.update(dataobjects)
             context_all = provenance.get_database_state(dsanddo)
-            context_ds = {key: value for (key, value) in context_all.items() if not isinstance(value, DataObject) }
-            context_do = {key: value for (key, value) in context_all.items() if isinstance(value, DataObject) }
+            context_ds = {key: value for (key, value) in context_all.items() if not ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) )}
+            context_do = {key: value for (key, value) in context_all.items() if (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
             
             module.set_success(
                 finished_at=finished_at,

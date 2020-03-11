@@ -77,7 +77,8 @@ setup(
         'pandas',
         'geopandas',
         'bokeh',
-        'shapely'
+        'shapely',
+        'astor'
     ],
     include_package_data=True,
     data_files=data_files,

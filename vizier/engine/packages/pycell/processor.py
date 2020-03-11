@@ -80,15 +80,17 @@ class PyCellTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
+        #get
         objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
         dos = [object for objects in [objects.for_id(doid) for doid in [ value for key, value in context.dataobjects.items()]] for object in objects ]
         inj_src = ''
+        # Get Python script from user arguments.  It is the source for VizierDBClient
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
         dataobjects = list()
         for obj in dos:
             inj_src = obj.value + "\n\n"
             dataobjects.append([obj.key,obj.identifier])
-        # Get Python script from user arguments
+        # Assemble the source to run in the interpreter 
         source = inj_src + cell_src
         
         # Initialize the scope variables that are available to the executed

@@ -28,7 +28,8 @@ from os.path import normpath, basename
 from os import path
 import os
 import re
-
+import ast
+import astor
     
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
@@ -64,19 +65,29 @@ class VizierDBClient(object):
             return result
         return wrapper
     
-    def export_module(self, func):
-        src = "@vizierdb.export_module_decorator\n" + re.sub('vizierdb.export_module\([a-zA-Z0-9_-]+\)', '', self.source)
-        func_name = func.__name__
-        if func_name in self.dataobjects.keys():
-            src_identifier = self.dataobjects[func_name]
+    def wrap_variable(self, original_variable, name):
+        self.read.add(name)
+        return original_variable
+    
+    def export_module(self, exp):
+        if callable(exp):
+            exp_name = exp.__name__
+        else: 
+            exp_name = [ k for k,v in locals().items() if v == exp][0]
+        src_ast = ast.parse(self.source)
+        analyzer = Analyzer(exp_name)
+        analyzer.visit(src_ast)
+        src = analyzer.get_Source()
+        if exp_name in self.dataobjects.keys():
+            src_identifier = self.dataobjects[exp_name]
         else:
             src_identifier = get_unique_identifier()
         
         self.datastore.update_object(identifier=src_identifier,
-                                     key=func_name,
+                                     key=exp_name,
                                      new_value=src,
                                      obj_type=PYTHON_EXPORT_TYPE)
-        self.set_dataobject_identifier(func_name, src_identifier)
+        self.set_dataobject_identifier(exp_name, src_identifier)
         self.descriptors[src_identifier] = self.datastore.get_objects(identifier=src_identifier).objects[0]
         
     def get_dataobject_identifier(self, name):
@@ -389,3 +400,54 @@ class VizierDBClient(object):
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
+    
+class Analyzer(ast.NodeVisitor):
+    def __init__(self, name):
+        self.name = name
+        self.source = ''
+        # track context name and set of names marked as `global`
+        self.context = [('global', ())]
+
+    def visit_FunctionDef(self, node):
+        self.context.append(('function', set()))
+        ctx, g = self.context[-1]
+        self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
+        self.generic_visit(node)
+        self.context.pop()
+
+    # treat coroutines the same way
+    visit_AsyncFunctionDef = visit_FunctionDef
+
+    def visit_Assign(self, node):
+        self.context.append(('assignment', set()))
+        ctx, g = self.context[-1]
+        target = node.targets[0]
+        print(str(target.id))
+        if target.id == self.name:
+            self.source = '{} = vizierdb.wrap_variable({}, {})'.format( self.name, astor.to_source(node.value), self.name)
+            self.generic_visit(target)
+        self.context.pop()
+        
+    def visit_ClassDef(self, node):
+        self.context.append(('class', ()))
+        self.generic_visit(node)
+        self.context.pop()
+
+    def visit_Lambda(self, node):
+        # lambdas are just functions, albeit with no statements, so no assignments
+        self.context.append(('function', ()))
+        self.generic_visit(node)
+        self.context.pop()
+
+    def visit_Global(self, node):
+        assert self.context[-1][0] == 'function'
+        self.context[-1][1].update(node.names)
+
+    def visit_Name(self, node):
+        ctx, g = self.context[-1]
+        if node.id == self.name and (ctx == 'global' or node.id in g):
+            print('exported {} at line {}'.format(node.id, node.lineno, self.source))
+            
+    def get_Source(self):
+        return self.source
+    
