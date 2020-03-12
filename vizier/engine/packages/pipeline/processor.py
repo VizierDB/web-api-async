@@ -91,19 +91,21 @@ class PipelineProcessor(TaskProcessor):
 
     def get_notebook_context(self, context):
         notebook_context = None
+
         if cmd.CONTEXT_DATABASE_NAME in context.datasets:
             notebook_context = context.get_dataset(cmd.CONTEXT_DATABASE_NAME)
         else:
+
             notebook_context = context.datastore.create_dataset(
                 columns=[
                     MimirDatasetColumn(
                         identifier=0,
-                        name_in_dataset='k',
+                        name_in_dataset='ctx_key',
                         data_type=DATATYPE_VARCHAR
                     ),
                     MimirDatasetColumn(
                         identifier=1,
-                        name_in_dataset='v',
+                        name_in_dataset='ctx_value',
                         data_type=DATATYPE_VARCHAR
                     )
                 ],
@@ -124,8 +126,6 @@ class PipelineProcessor(TaskProcessor):
         notebook_context = self.get_notebook_context(context)
 
         label_encoder_map = {}
-
-        print(command_id, flush=True)
 
         if command_id == cmd.SELECT_TRAINING or command_id == cmd.SELECT_TESTING:
 
