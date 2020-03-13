@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from build.lib.vizier.datastore.object.base import DataObject
 
 """Implementation of the task processor for the Python cell package."""
 
@@ -125,6 +126,11 @@ class PyCellTaskProcessor(TaskProcessor):
                 client = DotDict()
                 for key, value in resdata['provenance'].items():
                     client.setattr(key,value)
+                client.setattr('descriptors',{})
+                client.setattr('datastore',context.datastore)
+                client.setattr('datasets',resdata['datasets'])
+                client.setattr('dataobjects',resdata['dataobjects'] )
+                
             else:
                 exec(source, variables, variables)
         except Exception as ex:
@@ -186,7 +192,10 @@ class PyCellTaskProcessor(TaskProcessor):
                     wr_id = client.dataobjects[name]
                     if not isinstance(wr_id, str):
                         raise RuntimeError('invalid value in mapping dictionary')
-                    write[name] = client.descriptors[wr_id]
+                    elif wr_id in client.descriptors:
+                        write[name] = client.descriptors[wr_id]
+                    else:
+                        write[name] = client.datastore.get_objects(identifier=wr_id).objects[0]
                 else:
                     write[name] = None
             provenance = ModuleProvenance(
