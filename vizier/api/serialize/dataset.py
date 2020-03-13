@@ -100,6 +100,39 @@ def DATASET_COLUMN(column):
     }
 
 
+def DATAOBJECT_DESCRIPTOR(dataobject, name=None, project=None, urls=None):
+    """Dictionary serialization for a dataobject descriptor.
+
+    Parameters
+    ----------
+    dataobject: vizier.datastore.object.base.DataObjectDescriptor
+        Dataset descriptor
+    name : string, optional
+        User-defined dataset name
+    project: vizier.engine.project.base.ProjectHandle, optional
+        Handle for project containing the dataset
+    urls: vizier.api.routes.base.UrlFactory, optional
+        Factory for resource urls
+
+    Returns
+    -------
+    dict
+    """
+    obj = {
+        labels.ID: dataobject.identifier,
+        labels.OBJECT_TYPE: dataobject.obj_type
+    }
+    if not name is None:
+        obj[labels.NAME] = name
+    elif not dataobject.key is None:
+        obj[labels.NAME] = dataobject.key
+    # Add self reference if the project and url factory are given
+    if not project is None and not urls is None:
+        project_id = project.identifier
+        dataobj_id = dataobject.identifier
+        obj[labels.LINKS] = {}
+    return obj
+
 def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     """Dictionary serialization for a dataset descriptor.
 

@@ -13,3 +13,4 @@ pandas
 geopandas
 bokeh
 shapely
+astor

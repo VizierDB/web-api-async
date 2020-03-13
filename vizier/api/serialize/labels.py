@@ -42,6 +42,9 @@ ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
 ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
 
+# Dataobjects
+OBJECT_TYPE="objType"
+
 # Annotations
 COLUMN_ID = 'columnId'
 ROW_ID = 'rowId'
@@ -72,4 +75,6 @@ COMMAND_PACKAGE = 'packageId'
 COMMAND_ID = 'commandId'
 COMMAND_ARGS = 'arguments'
 CONTEXT = 'context'
+CONTEXT_DATASETS = CONTEXT + 'Datasets'
+CONTEXT_DATAOBJECTS = CONTEXT + 'Dataobjects'
 RESOURCES = 'resources'

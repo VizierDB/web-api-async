@@ -88,9 +88,13 @@ class ContainerProjectHandle(ProjectHandle):
                 labels.COMMAND_ARGS: command.arguments.to_list()
             },
             labels.CONTEXT: [{
-                labels.ID: context[name],
+                labels.ID: context[labels.CONTEXT_DATASETS][name],
                 labels.NAME: name
-            } for name in context]
+            } for name in context[labels.CONTEXT_DATASETS]],
+            labels.CONTEXT_DATAOBJECTS: [{
+                labels.ID: context[labels.CONTEXT_DATAOBJECTS][name],
+                labels.NAME: name
+            } for name in context[labels.CONTEXT_DATAOBJECTS]]
         }
         if not resources is None:
             data[label.RESOURCES] = resources

@@ -23,6 +23,7 @@ provenance object allows to carry state from previous executions for a module.
 """
 
 import os
+from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 def debug(message):
     if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
@@ -186,3 +187,12 @@ class ModuleProvenance(object):
         # does not need to be re-executed.
         debug("INDEPENDENT")
         return False
+    
+    def split_context(self, context_all):
+        # datasets
+        context_ds = {key: value for (key, value) in context_all.items() 
+                      if not ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) )}
+        # dataobjects
+        context_do = {key: value for (key, value) in context_all.items() 
+                      if (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+        return context_ds, context_do
