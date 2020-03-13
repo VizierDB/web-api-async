@@ -117,6 +117,7 @@ class PyCellTaskProcessor(TaskProcessor):
             if SANDBOX_PYTHON_EXECUTION:
                 json_data = {'source':source, 
                              'datasets':context.datasets, 
+                             'dataobjects':context.dataobjects, 
                              'datastore':context.datastore.__class__.__name__, 
                              'basepath':context.datastore.base_path}
                 res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
