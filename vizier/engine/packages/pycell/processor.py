@@ -88,11 +88,10 @@ class PyCellTaskProcessor(TaskProcessor):
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
         dataobjects = list()
         for obj in dos:
-            inj_src = obj.value + "\n\n"
+            inj_src = inj_src + obj.value + "\n\n"
             dataobjects.append([obj.key,obj.identifier])
         # Assemble the source to run in the interpreter 
         source = inj_src + cell_src
-        
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore

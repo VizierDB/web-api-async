@@ -176,8 +176,7 @@ class VizierEngine(WorkflowController):
                     dsanddo = modules[-1].datasets if len(modules) > 0 else dict().copy()
                     dsanddo.update(modules[-1].dataobjects if len(modules) > 0 else dict())
                     context_all = result.provenance.get_database_state(dsanddo)
-                    context_ds = {key: value for (key, value) in context_all.items() if not (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
-                    context_do = {key: value for (key, value) in context_all.items() if ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+                    context_ds, context_do = result.provenance.split_context(context_all)
                     module = ModuleHandle(
                         state=mstate.MODULE_SUCCESS,
                         command=command,
@@ -811,8 +810,7 @@ class VizierEngine(WorkflowController):
             dsanddo = datasets.copy()
             dsanddo.update(dataobjects)
             context_all = provenance.get_database_state(dsanddo)
-            context_ds = {key: value for (key, value) in context_all.items() if not ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) )}
-            context_do = {key: value for (key, value) in context_all.items() if (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+            context_ds, context_do = provenance.split_context(context_all)
             
             module.set_success(
                 finished_at=finished_at,
@@ -833,7 +831,8 @@ class VizierEngine(WorkflowController):
                     # occur.
                     raise RuntimeError('invalid workflow state')
                 elif not next_module.provenance.requires_exec(context_all):
-                    context_ds = next_module.provenance.get_database_state(context_ds)
+                    context_all = next_module.provenance.get_database_state(context_all)
+                    context_ds, context_do = next_module.provenance.split_context(context_all)
                     next_module.set_success(
                         finished_at=finished_at,
                         datasets=context_ds,
@@ -875,7 +874,7 @@ class VizierEngine(WorkflowController):
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
-
+    
 def pop_task(tasks, task_id):
     """Remove task with given identifier and return the task handle. The result
     is None if no task with the given identifier exists.

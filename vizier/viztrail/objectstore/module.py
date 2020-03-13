@@ -356,8 +356,7 @@ class OSModuleHandle(ModuleHandle):
         # state is empty.
         if obj[KEY_STATE] == mstate.MODULE_SUCCESS and not prev_state is None:
             dsanddo = provenance.get_database_state(prev_state)
-            datasets = {key: value for (key, value) in dsanddo.items() if not (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
-            dataobjects = {key: value for (key, value) in dsanddo.items() if ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+            datasets, dataobjects = provenance.split_context(dsanddo)
         else:
             datasets = dict()
             dataobjects = dict()

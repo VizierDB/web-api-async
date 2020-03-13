@@ -148,13 +148,15 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         )
         for name in m.datasets:
             ds = m.datasets[name]
-            if not ds.identifier in datasets and not (isinstance(ds, DataObject) or isinstance(ds, DataObjectDescriptor)):
+            if not ds.identifier in datasets:
                 datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
                     dataset=ds,
                     project=project,
                     urls=urls
                 )
-            else:
+        for name in m.dataobjects:
+            ds = m.dataobjects[name]
+            if not ds.identifier in dataobjects:
                 dataobjects[ds.identifier] = serialds.DATAOBJECT_DESCRIPTOR(
                     dataobject=ds,
                     project=project,

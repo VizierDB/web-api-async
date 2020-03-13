@@ -30,6 +30,7 @@ import os
 import re
 import ast
 import astor
+import inspect
     
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
@@ -70,10 +71,16 @@ class VizierDBClient(object):
         return original_variable
     
     def export_module(self, exp):
-        if callable(exp):
+        if inspect.isclass(exp):
             exp_name = exp.__name__
-        else: 
-            exp_name = [ k for k,v in locals().items() if v == exp][0]
+        elif callable(exp):
+            exp_name = exp.__name__
+        else:
+            # If its a variable we grab the original name from the stack 
+            lcls = inspect.stack()[1][0].f_locals
+            for name in lcls:
+                if lcls[name] == exp:
+                    exp_name = name
         src_ast = ast.parse(self.source)
         analyzer = Analyzer(exp_name)
         analyzer.visit(src_ast)
@@ -410,9 +417,9 @@ class Analyzer(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.context.append(('function', set()))
-        ctx, g = self.context[-1]
-        self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
-        self.generic_visit(node)
+        if node.name == self.name:
+            self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
+            self.generic_visit(node)
         self.context.pop()
 
     # treat coroutines the same way
@@ -420,17 +427,17 @@ class Analyzer(ast.NodeVisitor):
 
     def visit_Assign(self, node):
         self.context.append(('assignment', set()))
-        ctx, g = self.context[-1]
         target = node.targets[0]
-        print(str(target.id))
         if target.id == self.name:
-            self.source = '{} = vizierdb.wrap_variable({}, {})'.format( self.name, astor.to_source(node.value), self.name)
+            self.source = "{} = vizierdb.wrap_variable({}, '{}')".format( self.name, astor.to_source(node.value), self.name)
             self.generic_visit(target)
         self.context.pop()
         
     def visit_ClassDef(self, node):
         self.context.append(('class', ()))
-        self.generic_visit(node)
+        if node.name == self.name:
+            self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
+            self.generic_visit(node)
         self.context.pop()
 
     def visit_Lambda(self, node):
