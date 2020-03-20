@@ -61,12 +61,17 @@ def createLens(dataset, params, type, materialize, human_readable_name = None):
     return resp
 
 def createView(dataset, query):
+    depts = None
+    if isinstance(dataset, dict):
+        depts = dataset
+    else:
+        depts = {dataset:dataset}
     req_json = {
-      "input": dataset,
+      "input": depts,
       "query": query
     }
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['viewName'], resp['dependencies'])
+    return (resp['viewName'], []) #resp['dependencies'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {
@@ -158,7 +163,7 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
     return resp
 
 def countRows(view_name):
-    sql = 'SELECT COUNT(1) FROM ' + view_name + ';'
+    sql = 'SELECT COUNT(1) FROM ' + view_name 
     rs_count = vistrailsQueryMimirJson(sql, False, False)
     row_count = int(rs_count['data'][0][0])
     return row_count

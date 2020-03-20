@@ -161,7 +161,7 @@ trap "kill 0" EXIT
 
 if [ "$MIMIR_DEV" == "true" ]
   then
-    cd ../mimir; sbt "runMimirVizier --dataDirectory $USER_DATA_DIR" &
+    cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
     cd ../web-api-async
   else
     ${APP_RESOURCES_DIR}mimir/mimir-api --dataDirectory $USER_DATA_DIR &

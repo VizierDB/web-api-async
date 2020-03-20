@@ -77,7 +77,7 @@ class SQLTaskProcessor(TaskProcessor):
         # variables
         source = args.get_value(cmd.PARA_SQL_SOURCE)
         if not source.endswith(';'):
-            source = source + ';'
+            source = source 
         ds_name = args.get_value(cmd.PARA_OUTPUT_DATASET, raise_error=False)
         # Get mapping of datasets in the context to their respective table
         # name in the Mimir backend

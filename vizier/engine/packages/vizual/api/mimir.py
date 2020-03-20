@@ -67,7 +67,7 @@ class MimirVizualApi(VizualApi):
         col_list = []
         for col in schema:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -107,7 +107,7 @@ class MimirVizualApi(VizualApi):
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
-        sql += ' WHERE ' + ROW_ID + ' <> ' + MIMIR_ROWID_COL.to_sql_value(roid) + ';'
+        sql += ' WHERE ' + ROW_ID + ' <> ' + MIMIR_ROWID_COL.to_sql_value(roid) 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -165,7 +165,7 @@ class MimirVizualApi(VizualApi):
             else:
                 schema.append(col)
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -227,7 +227,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append(" CAST('' AS int) AS " + col.name_in_rdb) 
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -633,7 +633,7 @@ class MimirVizualApi(VizualApi):
                 columns.append(col)
                 idx = idx + 1
             # Create view for loaded dataset
-            sql = 'SELECT '+ colSql +' FROM {{input}};'
+            sql = 'SELECT '+ colSql +' FROM '+dataset.table_name
             view_name, dependencies = mimir.createView(dataset.table_name, sql)
             # There are no changes to the underlying database. We only need to
             # change the column information in the dataset schema.
@@ -689,8 +689,8 @@ class MimirVizualApi(VizualApi):
             if reversed[i]:
                 stmt += ' DESC'
             order_by_clause.append(stmt)
-        sql = 'SELECT * FROM {{input}} ORDER BY '
-        sql += ','.join(order_by_clause) + ';'
+        sql = 'SELECT * FROM '+dataset.table_name+' ORDER BY '
+        sql += ','.join(order_by_clause) 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         
         # Register new dataset with only a modified list of row identifier
@@ -741,7 +741,7 @@ class MimirVizualApi(VizualApi):
                     val_stmt = col.to_sql_value(value)
                     col_sql = val_stmt + ' ELSE ' + col.name_in_rdb + ' END '
                 except ValueError:
-                    col_sql = '\'' + str(value) + '\' ELSE CAST({{input}}.' + col.name_in_rdb  + ' AS varchar) END '
+                    col_sql = '\'' + str(value) + '\' ELSE CAST('+dataset.table_name+'.' + col.name_in_rdb  + ' AS varchar) END '
                 rid_sql = MIMIR_ROWID_COL.to_sql_value(row_id)
                 stmt = 'CASE WHEN ' + ROW_ID + ' = ' + rid_sql + ' THEN '
                 stmt += col_sql
@@ -749,7 +749,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append(stmt)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name + ';'
+        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(

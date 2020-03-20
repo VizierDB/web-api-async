@@ -306,7 +306,7 @@ class MimirDatasetHandle(DatasetHandle):
             has_reasons = len(buffer) > 0
             if has_reasons:
                 for value in buffer:
-                    value = value['english']
+                    value = value['message']
                     if value != '':
                         annotations.append(
                             DatasetAnnotation(

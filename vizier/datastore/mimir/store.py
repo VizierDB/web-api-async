@@ -117,7 +117,7 @@ class MimirDatastore(DefaultDatastore):
         # Load CSV file using Mimirs loadCSV method.
         table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options, dependencies = dependencies)
         os.remove(tmp_file)
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
+        sql = 'SELECT '+ colSql +' FROM '+table_name
         view_name, dependencies = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
         row_count = mimir.countRows(view_name)
@@ -488,7 +488,7 @@ class MimirDatastore(DefaultDatastore):
                 colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
             columns.append(col)
         # Create view for loaded dataset
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
+        sql = 'SELECT '+ colSql +' FROM '+init_load_name
         view_name, dependencies = mimir.createView(init_load_name, sql)
         # TODO: this is a hack to speed up this step a bit.
         #  we get the first row id and the count and take a range;
@@ -584,7 +584,7 @@ class MimirDatastore(DefaultDatastore):
         # Depending on whether we need to update row ids we either query the
         # database or just get the schema. In either case mimir_schema will
         # contain a the returned Mimir schema information.
-        sql = base.get_select_query(table_name, columns=columns) + ';'
+        sql = base.get_select_query(table_name, columns=columns) 
         mimir_schema = mimir.getSchema(sql)
         
         # Create a mapping of column name (in database) to column type. This
@@ -664,6 +664,6 @@ def create_missing_key_view(dataset, lens_name, key_column):
     col_list = [stmt]
     for column in dataset.columns:
         col_list.append(column.name_in_rdb)
-    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name + ';'
+    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name 
     view_name, dependencies = mimir.createView(dataset.table_name, sql)
     return view_name, dataset.row_counter + len(case_conditions)
