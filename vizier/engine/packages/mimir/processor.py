@@ -117,22 +117,11 @@ class MimirProcessor(TaskProcessor):
             update_rows = True
         elif command_id == cmd.MIMIR_MISSING_KEY:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
-            params = [column.name_in_rdb]
+            params = column.name_in_rdb
             # Set MISSING ONLY to FALSE to ensure that all rows are returned
-            params += ['MISSING_ONLY(FALSE)']
+            #params += ['MISSING_ONLY(FALSE)']
             # Need to run this lens twice in order to generate row ids for
             # any potential new tuple
-            mimir_lens_response = mimir.createLens(
-                dataset.table_name,
-                params,
-                command_id,
-                arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True)
-            )
-            (mimir_table_name, lens_annotations) = (
-                mimir_lens_response.lensName(),
-                mimir_lens_response.annotations()
-            )
-            params = [ROW_ID, 'MISSING_ONLY(FALSE)']
             update_rows = True
         elif command_id == cmd.MIMIR_MISSING_VALUE:
             params = list()
@@ -145,9 +134,9 @@ class MimirProcessor(TaskProcessor):
                 )
                 if col_constraint == '':
                     col_constraint = None
-                if not col_constraint is None:
-                    param = param + ' ' + str(col_constraint).replace("'", "\'\'").replace("OR", ") OR (")
-                param = '\'(' + param + ')\''
+                #if not col_constraint is None:
+                #    param = param + ' ' + str(col_constraint).replace("'", "\'\'").replace("OR", ") OR (")
+                #param = '\'(' + param + ')\''
                 params.append(param)
         elif command_id == cmd.MIMIR_PICKER:
             pick_from = list()
@@ -192,21 +181,22 @@ class MimirProcessor(TaskProcessor):
             if not dseModel is None:
                 params = [str(dseModel)]
         elif command_id == cmd.MIMIR_COMMENT:
-            params = []
-            for comment in arguments.get_value(cmd.PARA_COMMENTS):
-                c_expr = comment.get_value(cmd.PARA_EXPRESSION)
-                c_cmnt = comment.get_value(cmd.PARA_COMMENT)
-                c_rowid = comment.get_value(cmd.PARA_ROWID)
-                if c_rowid is None:
-                    params.append('COMMENT('+ c_expr + ', \'' + c_cmnt + '\') ')
-                else:
-                    params.append('COMMENT('+ c_expr + ', \'' + c_cmnt + '\', \'' + c_rowid + '\') ')
+            commentsParams = []
             result_cols = []
             for col in arguments.get_value(cmd.PARA_RESULT_COLUMNS):
                 c_name = col.get_value(pckg.PARA_COLUMN)
                 result_cols.append(c_name)
-            if len(result_cols) > 0:
-                params.append('RESULT_COLUMNS('+','.join(result_cols)+')')   
+            for idx, comment in enumerate(arguments.get_value(cmd.PARA_COMMENTS)):
+                commentParam = {}
+                commentParam ['expr'] = comment.get_value(cmd.PARA_EXPRESSION)
+                commentParam['comment'] = comment.get_value(cmd.PARA_COMMENT)
+                commentParam ['rows'] = []
+                if not comment.get_value(cmd.PARA_ROWID) is None:
+                    commentParam['rows'].append(comment.get_value(cmd.PARA_ROWID))
+                
+                #TODO: handle result columns
+                commentsParams.append(commentParam)
+                params = {'comments' : commentsParams}
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
@@ -226,17 +216,17 @@ class MimirProcessor(TaskProcessor):
             )
             (lens_name, lens_annotations) = (
                 mimir_lens_response['lensName'],
-                mimir_lens_response['annotations']
+                None#mimir_lens_response['annotations']
             )
         # Create a view including missing row ids for the result of a
         # MISSING KEY lens
-        if command_id == cmd.MIMIR_MISSING_KEY:
-            lens_name, row_counter = create_missing_key_view(
-                dataset,
-                lens_name,
-                column
-            )
-            dataset.row_counter = row_counter
+        #if command_id == cmd.MIMIR_MISSING_KEY:
+        #    lens_name, row_counter = create_missing_key_view(
+        #        dataset,
+        #        lens_name,
+        #        column
+        #    )
+        #    dataset.row_counter = row_counter
         # Create datastore entry for lens.
         if not store_as_dataset is None:
             columns = list()
@@ -272,7 +262,7 @@ class MimirProcessor(TaskProcessor):
             )
             outputs.stdout.append(DatasetOutput(ds_output))
         
-        print_lens_annotations(outputs, lens_annotations)
+        #print_lens_annotations(outputs, lens_annotations)
         dsd = DatasetDescriptor(
                 identifier=ds.identifier,
                 columns=ds.columns,
