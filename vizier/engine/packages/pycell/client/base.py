@@ -18,17 +18,25 @@
 a datastore from within a python script.
 """
 
-from vizier.core.util import is_valid_name
+from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
+from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
-
-
+from os.path import normpath, basename
+from os import path
+import os
+import re
+import ast
+import astor
+import inspect
+    
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
     a unique name. The client is a wrapper around a given database state.
     """
-    def __init__(self, datastore, datasets):
+    def __init__(self, datastore, datasets, source, dataobjects):
         """Initialize the reference to the workflow context and the datastore.
 
         Parameters
@@ -41,6 +49,8 @@ class VizierDBClient(object):
         """
         self.datastore = datastore
         self.datasets = dict(datasets)
+        self.dataobjects = dict(dataobjects)
+        self.source = source
         # Keep track of the descriptors of datasets that the client successfully
         # modified
         self.descriptors = dict()
@@ -48,6 +58,78 @@ class VizierDBClient(object):
         self.read = set()
         self.write = set()
         self.delete = None
+
+    def export_module_decorator(self, original_func):
+        def wrapper(*args, **kwargs):
+            self.read.add(original_func.__name__)
+            result = original_func(*args, **kwargs)
+            return result
+        return wrapper
+    
+    def wrap_variable(self, original_variable, name):
+        self.read.add(name)
+        return original_variable
+    
+    def export_module(self, exp):
+        if inspect.isclass(exp):
+            exp_name = exp.__name__
+        elif callable(exp):
+            exp_name = exp.__name__
+        else:
+            # If its a variable we grab the original name from the stack 
+            lcls = inspect.stack()[1][0].f_locals
+            for name in lcls:
+                if lcls[name] == exp:
+                    exp_name = name
+        src_ast = ast.parse(self.source)
+        analyzer = Analyzer(exp_name)
+        analyzer.visit(src_ast)
+        src = analyzer.get_Source()
+        if exp_name in self.dataobjects.keys():
+            src_identifier = self.dataobjects[exp_name]
+        else:
+            src_identifier = get_unique_identifier()
+        
+        self.datastore.update_object(identifier=src_identifier,
+                                     key=exp_name,
+                                     new_value=src,
+                                     obj_type=PYTHON_EXPORT_TYPE)
+        self.set_dataobject_identifier(exp_name, src_identifier)
+        self.descriptors[src_identifier] = self.datastore.get_objects(identifier=src_identifier).objects[0]
+        
+    def get_dataobject_identifier(self, name):
+        """Returns the unique identifier for the dataset with the given name.
+
+        Raises ValueError if no dataset with the given name exists.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+
+        Returns
+        -------
+        string
+        """
+        # Datset names should be case insensitive
+        key = name
+        if not key in self.dataobjects:
+            raise ValueError('unknown dataobject \'' + name + '\'')
+        return self.dataobjects[key]
+    
+    def set_dataobject_identifier(self, name, identifier):
+        """Sets the identifier to which the given dataset name points.
+
+        Parameters
+        ----------
+        name: string
+            Dataset name
+        identifier: string
+            Unique identifier for persistent dataset
+        """
+        # Convert name to lower case to ensure that names are case insensitive
+        self.dataobjects[name] = identifier
+        self.write.add(name)
 
     def create_dataset(self, name, dataset, backend_options = []):
         """Create a new dataset with given name.
@@ -325,3 +407,54 @@ class VizierDBClient(object):
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
+    
+class Analyzer(ast.NodeVisitor):
+    def __init__(self, name):
+        self.name = name
+        self.source = ''
+        # track context name and set of names marked as `global`
+        self.context = [('global', ())]
+
+    def visit_FunctionDef(self, node):
+        self.context.append(('function', set()))
+        if node.name == self.name:
+            self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
+            self.generic_visit(node)
+        self.context.pop()
+
+    # treat coroutines the same way
+    visit_AsyncFunctionDef = visit_FunctionDef
+
+    def visit_Assign(self, node):
+        self.context.append(('assignment', set()))
+        target = node.targets[0]
+        if target.id == self.name:
+            self.source = "{} = vizierdb.wrap_variable({}, '{}')".format( self.name, astor.to_source(node.value), self.name)
+            self.generic_visit(target)
+        self.context.pop()
+        
+    def visit_ClassDef(self, node):
+        self.context.append(('class', ()))
+        if node.name == self.name:
+            self.source = "@vizierdb.export_module_decorator\n" + astor.to_source(node)
+            self.generic_visit(node)
+        self.context.pop()
+
+    def visit_Lambda(self, node):
+        # lambdas are just functions, albeit with no statements, so no assignments
+        self.context.append(('function', ()))
+        self.generic_visit(node)
+        self.context.pop()
+
+    def visit_Global(self, node):
+        assert self.context[-1][0] == 'function'
+        self.context[-1][1].update(node.names)
+
+    def visit_Name(self, node):
+        ctx, g = self.context[-1]
+        if node.id == self.name and (ctx == 'global' or node.id in g):
+            print('exported {} at line {}'.format(node.id, node.lineno, self.source))
+            
+    def get_Source(self):
+        return self.source
+    

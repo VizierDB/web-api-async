@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 """This module contains helper methods for the webservice that are used to
 serialize workflow resources.
@@ -122,6 +123,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     # Create lists of module handles and dataset handles
     modules = list()
     datasets = dict()
+    dataobjects = dict()
     charts = dict()
     for m in workflow.modules:
         if not m.provenance.charts is None:
@@ -152,6 +154,14 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                     project=project,
                     urls=urls
                 )
+        for name in m.dataobjects:
+            ds = m.dataobjects[name]
+            if not ds.identifier in dataobjects:
+                dataobjects[ds.identifier] = serialds.DATAOBJECT_DESCRIPTOR(
+                    dataobject=ds,
+                    project=project,
+                    urls=urls
+                )
     handle_links = None
     if workflow.is_active:
         handle_links = {
@@ -176,6 +186,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
         'state': workflow.get_state().state,
         'modules': modules,
         'datasets': list(datasets.values()),
+        'dataobjects': list(dataobjects.values()),
         'readOnly': read_only,
         labels.LINKS: links
     }
