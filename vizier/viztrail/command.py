@@ -210,11 +210,11 @@ class ModuleArguments(object):
                                 datasets=datasets
                             )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
-                            if pckg.FILE_URL in value:
+                            if pckg.FILE_URL in value and value[pckg.FILE_URL] != None:
                                 token = value[pckg.FILE_URL]
-                            elif pckg.FILE_NAME in value:
+                            elif pckg.FILE_NAME in value and value[pckg.FILE_NAME] != None:
                                 token = format_str(value[pckg.FILE_NAME])
-                            elif pckg.FILE_ID in value:
+                            elif pckg.FILE_ID in value and value[pckg.FILE_ID] != None:
                                 token = format_str(value[pckg.FILE_ID])
                             else:
                                 token = '?file?'
