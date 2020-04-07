@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from vizier.api.serialize import labels
 
 """Remote Celery worker to execute workflow commands."""
 
@@ -76,8 +77,9 @@ def execute(task_id, project_id, command_doc, context, resources):
                 project_id=project_id,
                 datastore=worker_env.datastores.get_datastore(project_id),
                 filestore=worker_env.filestores.get_filestore(project_id),
-                datasets=context,
-                resources=resources
+                datasets=context[labels.CONTEXT_DATASETS],
+                resources=resources,
+                dataobjects=context[labels.CONTEXT_DATAOBJECTS]
             ),
             processor=processor
         )

@@ -31,7 +31,7 @@ import vizier.api.serialize.deserialize as deserialize
 class ModuleResource(object):
     """A workflow module in a remote vizier instance."""
     def __init__(
-        self, identifier, state, external_form, outputs, datasets, charts, timestamp,
+        self, identifier, state, external_form, outputs, datasets, dataobjects, charts, timestamp,
         links
     ):
         """Initialize the branch attributes."""
@@ -40,6 +40,7 @@ class ModuleResource(object):
         self.external_form = external_form
         self.outputs = outputs
         self.datasets = datasets
+        self.dataobjects = dataobjects
         self.charts = charts
         self.timestamp= timestamp
         self.links = links
@@ -78,6 +79,10 @@ class ModuleResource(object):
         if 'datasets' in obj:
             for ds in obj['datasets']:
                 datasets[ds['name']] = ds['id']
+        dataobjects = dict()
+        if 'dataobjects' in obj:
+            for dobj in obj['dataobjects']:
+                dataobjects[dobj['name']] = dobj['id']
         charts = dict()
         if 'charts' in obj:
             for ch in obj['charts']:
@@ -89,6 +94,7 @@ class ModuleResource(object):
             external_form=obj['text'],
             outputs=outputs,
             datasets=datasets,
+            dataobjects=dataobjects,
             charts=charts,
             timestamp=timestamp,
             links=deserialize.HATEOAS(links=obj['links'])

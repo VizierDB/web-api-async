@@ -108,8 +108,9 @@ class SynchronousTaskEngine(TaskExecEngine):
                             project_id=task.project_id,
                             datastore=project.datastore,
                             filestore=project.filestore,
-                            datasets=context,
-                            resources=resources
+                            datasets=context[labels.CONTEXT_DATASETS],
+                            resources=resources,
+                            dataobjects=context[labels.CONTEXT_DATAOBJECTS]
                         )
                     )
                 except Exception as ex:
