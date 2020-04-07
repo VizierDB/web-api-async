@@ -136,7 +136,7 @@ class MimirDatasetReader(DatasetReader):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = base.mimir_value_to_python(row[col_index], col)
-                    annotation_flag_values[i] = row_annotation_flags[col_index]
+                    annotation_flag_values[i] = not row_annotation_flags[col_index]
                 self.rows.append(DatasetRow(row_id, values, annotation_flag_values))
             self.read_index = 0
             self.is_open = True

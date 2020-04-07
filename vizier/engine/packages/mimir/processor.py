@@ -87,11 +87,6 @@ class MimirProcessor(TaskProcessor):
             params = [column.name_in_rdb]
         elif command_id == cmd.MIMIR_GEOCODE:
             geocoder = arguments.get_value(cmd.PARA_GEOCODER)
-            params = ['GEOCODER(' + geocoder + ')']
-            add_column_parameter(params, 'HOUSE_NUMBER', dataset, arguments, cmd.PARA_HOUSE_NUMBER)
-            add_column_parameter(params, 'STREET', dataset, arguments, cmd.PARA_STREET)
-            add_column_parameter(params, 'CITY', dataset, arguments, cmd.PARA_CITY)
-            add_column_parameter(params, 'STATE', dataset, arguments, cmd.PARA_STATE)
             # Add columns for LATITUDE and LONGITUDE
             column_counter = dataset.max_column_id() + 1
             cname_lat = dataset.get_unique_name('LATITUDE')
@@ -110,7 +105,16 @@ class MimirProcessor(TaskProcessor):
                     data_type=DATATYPE_REAL
                 )
             )
-            params.append('RESULT_COLUMNS(' + cname_lat + ',' + cname_lon + ')')
+            params = {
+                'houseColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_HOUSE_NUMBER, raise_error=False)).name_in_rdb,
+                'streetColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STREET, raise_error=False)).name_in_rdb,
+                'cityColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_CITY, raise_error=False)).name_in_rdb,
+                'stateColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STATE, raise_error=False)).name_in_rdb,
+                'geocoder': geocoder#,
+                #'latitudeColumn': Option[String],
+                #'longitudeColumn': Option[String],
+                #'cacheCode': Option[String]
+            }
         elif command_id == cmd.MIMIR_KEY_REPAIR:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = [column.name_in_rdb]
