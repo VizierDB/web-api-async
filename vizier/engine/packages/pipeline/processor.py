@@ -410,6 +410,8 @@ class PipelineProcessor(TaskProcessor):
             df_testing, testing_labels = choose_columns(
                 df_testing, input_columns, output_column)
 
+            attributes = []
+
             if confusion_metric and confusion_attribute:
 
                 attributes = np.unique(df_testing[confusion_attribute.lower()])
