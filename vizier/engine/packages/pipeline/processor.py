@@ -46,9 +46,9 @@ class PipelineProcessor(TaskProcessor):
     def save_context(self, context, notebook_context, keys, values):
         """
         Save a list of keys and corresponding values in a database for carrying context across cells.
-        TODO: Lists and strings as values seem to throw vizier off, using keys to represent both keys 
+        TODO: Lists and strings as values seem to throw vizier off, using keys to represent both keys
         and values for now. This should be fixed as soon as lists and strings are supported, the current
-        handling is just ugly haha. 
+        handling is just ugly haha.
         """
 
         def save_pair(rows, key: str, value: int):
@@ -463,31 +463,34 @@ class PipelineProcessor(TaskProcessor):
                         label_encoder_map[attribute]: testing_label_pair[attribute][1] for attribute in attributes
                     }
 
-                confusion_scores = {
-                    label_encoder_map[attribute]: confusion_matrix(confusion_testing_labels[label_encoder_map[attribute]], confusion_predictions[label_encoder_map[attribute]]).ravel()[:4] for attribute in attributes
-                }
+                    confusion_scores = {
+                        label_encoder_map[attribute]: confusion_matrix(confusion_testing_labels[label_encoder_map[attribute]], confusion_predictions[label_encoder_map[attribute]]).ravel()[:4] for attribute in attributes
+                    }
 
-                def get_confusion_stats(original_stats):
-                    _sum = sum(original_stats)
-                    return [stat/_sum for stat in original_stats]
+                    def get_confusion_stats(original_stats):
+                        _sum = sum(original_stats)
+                        return [stat/_sum for stat in original_stats]
 
-                confusion_scores = {
-                    label_encoder_map[attribute]: get_confusion_stats(confusion_scores[label_encoder_map[attribute]]) for attribute in attributes
-                }
+                    confusion_scores = {
+                        label_encoder_map[attribute]: get_confusion_stats(confusion_scores[label_encoder_map[attribute]]) for attribute in attributes
+                    }
 
                 # Use the number of mismatched labels as a measure of the accuracy for the classification task
                 score = accuracy_score(testing_labels, predictions)
 
                 outputs.stdout.append(TextOutput(
                     "Accuracy score: {}%\n".format(str(round(score * 100, 2)))))
-                for attribute in attributes:
-                    stats = "Stats for {}:\n\n".format(
-                        label_encoder_map[attribute])
-                    for index, metric in enumerate(["True Negatives", "False Negatives", "True Positives", "False Positives"]):
-                        stats += (metric + ": " +
-                                  str(round(confusion_scores[label_encoder_map[attribute]][index]*100, 2)) + "%\n")
-                    stats += "\n"
-                    outputs.stdout.append(TextOutput(stats))
+
+                if confusion_metric and confusion_attribute:
+
+                    for attribute in attributes:
+                        stats = "Stats for {}:\n\n".format(
+                            label_encoder_map[attribute])
+                        for index, metric in enumerate(["True Negatives", "False Negatives", "True Positives", "False Positives"]):
+                            stats += (metric + ": " +
+                                      str(round(confusion_scores[label_encoder_map[attribute]][index]*100, 2)) + "%\n")
+                        stats += "\n"
+                        outputs.stdout.append(TextOutput(stats))
 
             except ValueError as e:
                 outputs.stdout.append(TextOutput(
