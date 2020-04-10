@@ -32,6 +32,24 @@
                         "rspace": true, 
                         "type": "var", 
                         "value": "file"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": false,
+                        "type": "const",
+                        "value": "(load format:"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": false,
+                        "type": "var",
+                        "value": "loadFormat"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": false,
+                        "type": "const",
+                        "value": ")"
                     }
                 ], 
                 "id": "load", 
@@ -41,7 +59,7 @@
                         "datatype": "string", 
                         "hidden": false, 
                         "id": "name", 
-                        "index": 0, 
+                        "index": 1,
                         "name": "Dataset Name", 
                         "required": true
                     }, 
@@ -49,7 +67,7 @@
                         "datatype": "fileid", 
                         "hidden": false, 
                         "id": "file", 
-                        "index": 1, 
+                        "index": 0,
                         "name": "Source File", 
                         "required": true
                     }, 
