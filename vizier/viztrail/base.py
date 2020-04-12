@@ -163,7 +163,7 @@ class ViztrailHandle(NamedObject):
         -------
         vizier.viztrail.branch.BranchHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_branch(self, branch_id):
@@ -179,7 +179,7 @@ class ViztrailHandle(NamedObject):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def get_default_branch(self):
         """Get the handle for the default branch of the viztrail.
@@ -272,4 +272,4 @@ class ViztrailHandle(NamedObject):
         -------
         vizier.viztrail.branch.BranchHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()

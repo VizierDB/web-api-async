@@ -31,7 +31,7 @@ paths:
                 200:
                     description: Service descriptor
                     schema:
-                        $ref: './schema.yaml#/ServiceDescriptor'
+                        $ref: '#/definitions/ServiceDescriptor'
     #
     # Projects
     #
@@ -48,7 +48,7 @@ paths:
                 200:
                     description: A list of project descriptors
                     schema:
-                        $ref: './schema.yaml#/ProjectListing'
+                        $ref: '#/definitions/ProjectListing'
         post:
             summary: Create project
             description: Create a new curation project
@@ -61,14 +61,14 @@ paths:
                   required: true
                   description: Project execution environment and list of user-defined properties
                   schema:
-                      $ref: './schema.yaml#/ProjectStatement'
+                      $ref: '#/definitions/ProjectStatement'
             produces:
               - application/json
             responses:
                 201:
                     description: Handle for new project
                     schema:
-                        $ref: "./schema.yaml#/ProjectDescriptor"
+                        $ref: "#/definitions/ProjectDescriptor"
                 400:
                     description: Invalid project properties
     /projects/{projectId}:
@@ -107,7 +107,7 @@ paths:
                 200:
                     description: Project metadata and references
                     schema:
-                        $ref: "./schema.yaml#/ProjectHandle"
+                        $ref: "#/definitions/ProjectHandle"
                 404:
                     description: Unknown project
         put:
@@ -127,14 +127,14 @@ paths:
                   required: true
                   description: List of user-defined properties
                   schema:
-                      $ref: './schema.yaml#/ObjectPropertyUpdateStmt'
+                      $ref: '#/definitions/ObjectPropertyUpdateStmt'
             produces:
               - application/json
             responses:
                 200:
                     description: Successful update
                     schema:
-                        $ref: './schema.yaml#/ProjectDescriptor'
+                        $ref: '#/definitions/ProjectDescriptor'
     #
     # Branches
     #
@@ -156,14 +156,14 @@ paths:
                   required: true
                   description: Reference to parent branch and module
                   schema:
-                      $ref: "./schema.yaml#/BranchStatement"
+                      $ref: "#/definitions/BranchStatement"
             produces:
                 - application/json
             responses:
                 200:
                     description: Descriptor for new workflow branch
                     schema:
-                        $ref: './schema.yaml#/BranchDescriptor'
+                        $ref: '#/definitions/BranchDescriptor'
                 400:
                     description: Invalid branch properties
                 404:
@@ -216,7 +216,7 @@ paths:
                 200:
                     description: Branch handle
                     schema:
-                        $ref: './schema.yaml#/BranchHandle'
+                        $ref: '#/definitions/BranchHandle'
                 404:
                     description: Unknown project or branch
         put:
@@ -241,14 +241,14 @@ paths:
                   required: true
                   description: List of user-defined properties
                   schema:
-                      $ref: './schema.yaml#/ObjectPropertyUpdateStmt'
+                      $ref: '#/definitions/ObjectPropertyUpdateStmt'
             produces:
               - application/json
             responses:
                 200:
                     description: Successful update
                     schema:
-                        $ref: "./schema.yaml#/BranchDescriptor"
+                        $ref: "#/definitions/BranchDescriptor"
     #
     # Workflows
     #
@@ -276,7 +276,7 @@ paths:
                 200:
                     description: Workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project, branch, or workflow
         post:
@@ -301,14 +301,14 @@ paths:
                   required: true
                   description: Definition of module
                   schema:
-                      $ref: './schema.yaml#/ModuleStatement'
+                      $ref: '#/definitions/ModuleStatement'
             produces:
                 - application/json
             responses:
                 200:
                     description: Handle for appended module
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 400:
                     description: Invalid module statement
                 404:
@@ -337,7 +337,7 @@ paths:
                 200:
                     description: Handle forthe resulting workflow
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project or branch
     /projects/{projectId}/branches/{branchId}/head/modules/{moduleId}:
@@ -369,7 +369,7 @@ paths:
                 200:
                     description: Modified workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project, branch, workflow, or module
         get:
@@ -400,7 +400,7 @@ paths:
                 200:
                     description: Workflow handle
                     schema:
-                        $ref: './schema.yaml#/ModuleHandle'
+                        $ref: '#/definitions/ModuleHandle'
                 404:
                     description: Unknown project, branch, or module
         post:
@@ -430,14 +430,14 @@ paths:
                   required: true
                   description: Definition of module
                   schema:
-                      $ref: './schema.yaml#/ModuleStatement'
+                      $ref: '#/definitions/ModuleStatement'
             produces:
                 - application/json
             responses:
                 200:
                     description: Modified workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 400:
                     description: Invalid module statement
                 404:
@@ -469,14 +469,14 @@ paths:
                   required: true
                   description: Definition of module
                   schema:
-                      $ref: './schema.yaml#/ModuleStatement'
+                      $ref: '#/definitions/ModuleStatement'
             produces:
                 - application/json
             responses:
                 200:
                     description: Modified workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 400:
                     description: Invalid module statement
                 404:
@@ -510,7 +510,7 @@ paths:
                 200:
                     description: Workflow handle
                     schema:
-                        $ref: './schema.yaml#/WorkflowHandle'
+                        $ref: '#/definitions/WorkflowHandle'
                 404:
                     description: Unknown project, branch, or workflow
     #
@@ -539,7 +539,7 @@ paths:
                   required: true
                   description: Definition of module
                   schema:
-                      $ref: './schema.yaml#/TaskModifier'
+                      $ref: '#/definitions/TaskModifier'
             produces:
                 - application/json
             responses:
@@ -577,14 +577,14 @@ paths:
                   description: Dataset schema, rows, and optional annotations
                   required: true
                   schema:
-                      $ref: './schema.yaml#/DatasetStatement'
+                      $ref: '#/definitions/DatasetStatement'
             produces:
                 - application/json
             responses:
                 200:
                     description: Dataset handle
                     schema:
-                        $ref: './schema.yaml#/DatasetDescriptor'
+                        $ref: '#/definitions/DatasetDescriptor'
                 400:
                     description: Invalid request
                 404:
@@ -623,7 +623,7 @@ paths:
                 200:
                     description: Dataset data
                     schema:
-                        $ref: './schema.yaml#/DatasetHandle'
+                        $ref: '#/definitions/DatasetHandle'
                 404:
                     description: Unknown project or dataset
     /projects/{projectId}/datasets/{datasetId}/annotations:
@@ -660,7 +660,7 @@ paths:
                 200:
                     description: Dataset data
                     schema:
-                        $ref: './schema.yaml#/DatasetAnnotations'
+                        $ref: '#/definitions/DatasetAnnotations'
                 404:
                     description: Unknown project or dataset
         post:
@@ -685,14 +685,14 @@ paths:
                   description: Update annotation statement
                   required: true
                   schema:
-                      $ref: './schema.yaml#/UpdateAnnotationStatement'
+                      $ref: '#/definitions/UpdateAnnotationStatement'
             produces:
                 - application/json
             responses:
                 200:
                     description: Dataset annotations
                     schema:
-                        $ref: './schema.yaml#/DatasetAnnotations'
+                        $ref: '#/definitions/DatasetAnnotations'
                 400:
                     description: Invalid request
                 404:
@@ -746,7 +746,7 @@ paths:
                 200:
                     description: Dataset data
                     schema:
-                        $ref: './schema.yaml#/DatasetDescriptor'
+                        $ref: '#/definitions/DatasetDescriptor'
                 404:
                     description: Unknown project or dataset
     #
@@ -791,7 +791,7 @@ paths:
                 200:
                     description: Dataset chart view content
                     schema:
-                        $ref: './schema.yaml#/DatasetChartView'
+                        $ref: '#/definitions/DatasetChartView'
                 404:
                     description: Unknown project, branch, workflow, module, or view
     #
@@ -823,7 +823,7 @@ paths:
                 201:
                     description: Upload successful
                     schema:
-                        $ref: "./schema.yaml#/FileHandle"
+                        $ref: "#/definitions/FileHandle"
                 400:
                     description: Invalid file or request
                 413:
@@ -854,3 +854,825 @@ paths:
                     description: File
                 404:
                     description: Unknown file
+definitions:
+    BranchDescriptor:
+        type: object
+        description: Fundamental branch information
+        required:
+            - id
+            - createdAt
+            - lastModifiedAt
+            - isDefault
+            - properties
+            - links
+        properties:
+            id:
+                type: string
+            createdAt:
+                type: string
+            lastModifiedAt:
+                type: string
+            isDefault:
+                type: boolean
+            properties:
+                type: array
+                items:
+                    $ref: "#/definitions/ObjectProperty"
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    BranchHandle:
+        type: object
+        description: Complete branch information
+        required:
+            - id
+            - createdAt
+            - lastModifiedAt
+            - workflows
+            - properties
+            - links
+        properties:
+            id:
+                type: string
+            createdAt:
+                type: string
+            lastModifiedAt:
+                type: string
+            workflows:
+                type: array
+                items:
+                    $ref: "#/definitions/WorkflowDescriptor"
+            properties:
+                type: array
+                items:
+                    $ref: "#/definitions/ObjectProperty"
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    BranchStatement:
+        type: object
+        description: Branch point and properties for new branch
+        required:
+            - properties
+        properties:
+            source:
+                type: object
+                required:
+                    - branchId
+                    - workflowId
+                    - moduleId
+                properties:
+                    branch:
+                        type: string
+                    workflowId:
+                        type: string
+                    moduleId:
+                        type: string
+            properties:
+                type: array
+                items:
+                    $ref: "#/definitions/ObjectProperty"
+    ChartDescriptor:
+        type: object
+        description: Descriptor for a chart view
+        required:
+            - name
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            links:
+                type: array
+                items:
+                    $ref: '#/definitions/Reference'
+    DatasetAnnotations:
+        type: object
+        description: Annotations for a dataset component
+        required:
+            - links
+        properties:
+            columns:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - columnId
+                        - key
+                        - value
+                    properties:
+                        columnId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            rows:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - rowId
+                        - key
+                        - value
+                    properties:
+                        rowId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            cells:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - columnId
+                        - rowId
+                        - key
+                        - value
+                    properties:
+                        columnId:
+                            type: integer
+                        rowId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetChartView:
+        type: object
+        description: Dataset chart view content
+        required:
+            - name
+            - data
+            - links
+        properties:
+            name:
+                type: string
+            data:
+                type: object
+                required:
+                    - series
+                    - xAxis
+                properties:
+                    series:
+                        type: array
+                        items:
+                            type: object
+                            required:
+                                - label
+                                - data
+                            properties:
+                                label:
+                                    type: string
+                                data:
+                                    type: array
+                                    items:
+                                        type: integer
+                    xAxis:
+                        type: object
+                        required:
+                            - data
+                        properties:
+                            data:
+                                type: array
+                                items:
+                                    type: integer
+                    chart:
+                        type: object
+                        required:
+                            - type
+                            - grouped
+                        properties:
+                            type:
+                                type: string
+                            grouped:
+                                type: boolean
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetColumn:
+        type: object
+        description: Column in a dataset
+        required:
+            - id
+            - name
+            - type
+        properties:
+            id:
+                type: integer
+            name:
+                type: string
+            type:
+                type: string
+    DatasetDescriptor:
+        type: object
+        description: Descriptor containing dataset metadata
+        required:
+            - id
+            - name
+            - columns
+            - rowCount
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            columns:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetColumn"
+            rowCount:
+                type: integer
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetHandle:
+        type: object
+        description: Columns and cell values in a dataset
+        required:
+            - id
+            - columns
+            - rows
+            - offset
+            - rowCount
+            - links
+        properties:
+            id:
+                type: string
+            columns:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetColumn"
+            rows:
+                type: array
+                items:
+                    $ref: "#/definitions/DatasetRow"
+            offset:
+                type: integer
+            rowcount:
+                type: integer
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    DatasetIdentifier:
+        type: object
+        description: Named dataset associated with workflow state
+        required:
+            - id
+            - name
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+    DatasetRow:
+        type: object
+        description: Row in a dataset
+        required:
+            - id
+            - values
+        properties:
+            id:
+                type: integer
+            values:
+                type: array
+                items:
+                    type: string
+    DatasetStatement:
+        type: object
+        description: Schema, rows, and annotations for new dataset
+        required:
+            - columns
+            - rows
+        properties:
+            columns:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetColumn'
+            rows:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetRow'
+            annotations:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - key
+                        - value
+                    properties:
+                        columnId:
+                            type: integer
+                        rowId:
+                            type: integer
+                        key:
+                            type: string
+                        value:
+                            type: string
+    FileHandle:
+        type: object
+        description: Metadata for uploaded file
+        required:
+            - id
+            - name
+            - links
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            mimetype:
+                type: string
+            encoding:
+                type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    ModuleHandle:
+        type: object
+        description: Module in VizUAL workflow
+        required:
+            - id
+            - state
+            - command
+            - text
+            - timestamps
+            - links
+        properties:
+            id:
+                type: string
+            state:
+                type: integer
+            command:
+                $ref: "#/definitions/ModuleStatement"
+            text:
+                type: string
+            timestamps:
+                type: object
+                required:
+                    - createdAt
+                properties:
+                    createdAt:
+                        type: string
+                    startedAt:
+                        type: string
+                    finishedAt:
+                        type: string
+            outputs:
+                $ref: '#/definitions/ModuleOutputs'
+            datasets:
+                type: array
+                items:
+                    $ref: '#/definitions/ResourceIdentifier'
+            charts:
+                type: array
+                items:
+                    $ref: '#/definitions/ChartDescriptor'
+            links:
+                type: array
+                items:
+                    $ref: '#/definitions/Reference'
+    ModuleOutputs:
+        type: object
+        required:
+            - stdout
+            - stderr
+        properties:
+            stdout:
+                type: array
+                items:
+                    $ref: '#/definitions/OutputObject'
+            stderr:
+                type: array
+                items:
+                    $ref: '#/definitions/OutputObject'
+    ModuleStatement:
+        type: object
+        description: Definition of a command to evaluate against a workflow state
+        required:
+            - packageId
+            - commandId
+            - arguments
+        properties:
+            packageId:
+                type: string
+            commandId:
+                type: string
+            arguments:
+                type: array
+    ObjectProperty:
+        type: object
+        description: Key-value pair for user-defined object properties
+        required:
+            - key
+            - value
+        properties:
+            key:
+                type: string
+            value:
+                type: string
+    ObjectPropertyUpdateStmt:
+        type: object
+        description: Update statement for a object properties.
+        required:
+            - properties
+        properties:
+            properties:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - key
+                    properties:
+                        key:
+                            type: string
+                        value:
+                            type: string
+    OutputObject:
+        type: object
+        description: Object in module output stream
+        required:
+            - type
+            - value
+        properties:
+            type:
+                type: string
+            value:
+                type: string
+    PackageDeclaration:
+        type: object
+        description: Declaration of commands for package of workflow modules
+        required:
+            - id
+            - name
+            - commands
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+            description:
+                type: string
+            commands:
+                type: array
+                items:
+                    type: object
+                    required:
+                        - id
+                        - name
+                        - arguments
+                    properties:
+                        id:
+                            type: string
+                        name:
+                            type: string
+                        description:
+                            type: string
+                        parameters:
+                            type: array
+                            items:
+                                type: object
+                                required:
+                                    - id
+                                    - name
+                                    - index
+                                    - datatype
+                                    - required
+                                properties:
+                                    id:
+                                        type: string
+                                    name:
+                                        type: string
+                                    datatype:
+                                        type: string
+                                    defaultValue:
+                                        type: string
+                                    index:
+                                        type: integer
+                                    hidden:
+                                        type: boolean
+                                    parent:
+                                        type: string
+                                    required:
+                                        type: boolean
+                                    values:
+                                        type: array
+                                        items:
+                                            type: object
+                                            required:
+                                                - value
+                                                - text
+                                                - isDefault
+                                            properties:
+                                                value:
+                                                    type: string
+                                                text:
+                                                    type: string
+                                                isDefault:
+                                                    type: boolean
+    ProjectDescriptor:
+        type: object
+        description: Fundamental project metadata and references
+        required:
+            - id
+            - createdAt
+            - lastModifiedAt
+            - defaultBranch
+            - properties
+            - links
+        properties:
+            id:
+                type: string
+            createdAt:
+                type: string
+            lastModifiedAt:
+                type: string
+            defaultBranch:
+                type: string
+            properties:
+                type: array
+                items:
+                    $ref: '#/definitions/ObjectProperty'
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    ProjectHandle:
+        type: object
+        description: Extended project metadata and references
+        required:
+            - id
+            - createdAt
+            - lastModifiedAt
+            - properties
+            - branches
+            - links
+        properties:
+            id:
+                type: string
+            createdAt:
+                type: string
+            lastModifiedAt:
+                type: string
+            properties:
+                type: array
+                items:
+                    $ref: "#/definitions/ObjectProperty"
+            branches:
+                type: array
+                items:
+                    $ref: '#/definitions/BranchDescriptor'
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    ProjectListing:
+        type: object
+        required:
+            - projects
+            - links
+        properties:
+            projects:
+                type: array
+                items:
+                    $ref: "#/definitions/ProjectDescriptor"
+            links:
+                type: array
+                items:
+                    $ref: '#/definitions/Reference'
+    ProjectStatement:
+        type: object
+        required:
+            - properties
+        properties:
+            properties:
+                type: array
+                items:
+                    $ref: '#/definitions/ObjectProperty'
+    Reference:
+        type: object
+        description: "HATEOAS reference object"
+        required:
+            - rel
+            - href
+        properties:
+            rel:
+                type: string
+            href:
+                type: string
+    ResourceIdentifier:
+        type: object
+        description: Named dataset associated with workflow state
+        required:
+            - id
+            - name
+        properties:
+            id:
+                type: string
+            name:
+                type: string
+    ServiceDescriptor:
+        type: object
+        description: Basic service properties
+        required:
+            - name
+            - startedAt
+            - version
+            - defaults
+            - environment
+            - links
+        properties:
+            name:
+                type: string
+            startedAt:
+                type: string
+            version:
+                type: string
+            defaults:
+                type: object
+                required:
+                    - maxFileSize
+                properties:
+                    maxFileSize:
+                        type: integer
+            environment:
+                type: object
+                required:
+                    - name
+                    - version
+                    - backend
+                    - packages
+                properties:
+                    name:
+                        type: string
+                    version:
+                        type: string
+                    backend:
+                        type: string
+                    packages:
+                        type: array
+                        items:
+                            $ref: '#/definitions/PackageDeclaration'
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    TaskModifier:
+        type: object
+        description: Change the state of a running task
+        required:
+            - state
+        properties:
+            state:
+                type: integer
+            startedAt:
+                type: string
+            finishedAt:
+                type: string
+            outputs:
+                $ref: '#/definitions/ModuleOutputs'
+            datasets:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetDescriptor'
+            provenance:
+                type: object
+                required:
+                    - read
+                    - write
+                properties:
+                    read:
+                        type: array
+                        items:
+                            $ref: '#/definitions/ResourceIdentifier'
+                    write:
+                        type: array
+                        items:
+                            $ref: '#/definitions/ResourceIdentifier'
+                    delete:
+                        type: array
+                        items:
+                            type: string
+                    resources:
+                        type: object
+    TaskStatement:
+        type: object
+        description: Execute request for a workflow module
+        required:
+            - id
+            - command
+            - context
+            - resources
+        properties:
+            id:
+                type: string
+            command:
+                $ref: "#/definitions/ModuleStatement"
+            context:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetIdentifier'
+            resources:
+                type: object
+    TaskRequestResult:
+        type: object
+        description: Result of a task execute or cancel request
+        required:
+            - result
+        properties:
+            result:
+                type: boolean
+    UpdateAnnotationStatement:
+        type: object
+        description: Update statement for resource annotation
+        required:
+            - key
+        properties:
+            columnId:
+                type: integer
+            rowId:
+                type: integer
+            key:
+                type: string
+            oldValue:
+                type: string
+            newValue:
+                type: string
+    WorkflowDescriptor:
+        type: object
+        description: Fundamental workflow metadata and references
+        required:
+            - id
+            - createdAt
+            - action
+            - packageId
+            - commandId
+            - links
+        properties:
+            id:
+                type: string
+            createdAt:
+                type: string
+            action:
+                type: string
+            packageId:
+                type: string
+            commandId:
+                type: string
+            links:
+                type: array
+                items:
+                    $ref: "#/definitions/Reference"
+    WorkflowHandle:
+        type: object
+        description: Comprehensive workflow version information
+        required:
+            - identifier
+            - createdAt
+            - action
+            - packageId
+            - commandId
+            - state
+            - modules
+            - datasets
+            - readOnly
+            - links
+        properties:
+            identifier:
+                type: string
+            createdAt:
+                type: string
+            action:
+                type: string
+            packageId:
+                type: string
+            state:
+                type: integer
+            modules:
+                type: array
+                items:
+                    $ref: '#/definitions/ModuleHandle'
+            datasets:
+                type: array
+                items:
+                    $ref: '#/definitions/DatasetDescriptor'
+            readOnly:
+                type: boolean
+            links:
+                type: array
+                items:
+                    $ref: '#/definitions/Reference'

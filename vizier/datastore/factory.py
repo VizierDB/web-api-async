@@ -19,10 +19,10 @@ own datastore. These datastore instances are created by a datastore factory when
 the project is instantiated.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 
-class DatastoreFactory(object):
+class DatastoreFactory(metaclass=ABCMeta):
     """Create and delete datastore instances that are associated with vizier
     projects. Each datastore is associated with a project that is identified
     by a unique identifier.
@@ -37,7 +37,7 @@ class DatastoreFactory(object):
         identifier: string
             Unique identifier for datastore
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_datastore(self, identifier):
@@ -52,4 +52,4 @@ class DatastoreFactory(object):
         -------
         vizier.datastore.base.Datastore
         """
-        raise NotImplementedError
+        raise NotImplementedError()

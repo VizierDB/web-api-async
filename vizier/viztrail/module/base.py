@@ -221,7 +221,7 @@ class ModuleHandle(ModuleState):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def set_error(self, finished_at=None, outputs=None):
@@ -237,7 +237,7 @@ class ModuleHandle(ModuleState):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def set_running(self, started_at=None, external_form=None):
@@ -251,7 +251,7 @@ class ModuleHandle(ModuleState):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def set_success(self, finished_at=None, datasets=None, outputs=None, provenance=None):
@@ -275,7 +275,7 @@ class ModuleHandle(ModuleState):
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def update_property(self, external_form):
@@ -286,4 +286,4 @@ class ModuleHandle(ModuleState):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        raise NotImplementedError
+        raise NotImplementedError()

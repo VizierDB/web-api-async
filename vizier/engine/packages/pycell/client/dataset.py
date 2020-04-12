@@ -17,9 +17,15 @@
 """Classes to manipulate vizier datasets from within the Python workflow cell.
 """
 
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
+import numpy as np
+import pandas as pd
+
+from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.datastore.annotation.dataset import DatasetMetadata
 from bokeh.models.sources import ColumnDataSource
+
+import vizier.datastore.dataset as ds
+
 
 class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
@@ -95,7 +101,7 @@ class DatasetClient(object):
         -------
         int
         """
-        return get_column_index(self.columns, column_id)
+        return ds.get_column_index(self.columns, column_id)
 
     def delete_column(self, name):
         """Delete column from the dataset.
@@ -278,19 +284,19 @@ class DatasetClient(object):
 
         Returns
         -------
-        bokeh.models.sources.ColumnDataSource  
+        bokeh.models.sources.ColumnDataSource
         """
 
         if columns == None:
             columns = self.columns
         return ColumnDataSource(dict([
             (
-                column.name, 
+                column.name,
                 [ row.get_value(column.identifier if column.identifier >= 0 else column.name) for row in self.rows ]
             )
             for column in self.columns
         ]))
-        
+
     def show_map(self, lat_col, lon_col, label_col=None, center_lat=None, center_lon=None, zoom=8, height="500", map_provider='OSM'):
         import numpy as np
         width="100%"
@@ -298,8 +304,8 @@ class DatasetClient(object):
         lats = []
         lons = []
         for row in self.rows:
-            lon, lat = float(row.get_value(lon_col)), float(row.get_value(lat_col))  
-            lats.append(lat) 
+            lon, lat = float(row.get_value(lon_col)), float(row.get_value(lat_col))
+            lats.append(lat)
             lons.append(lon)
             if map_provider == 'Google':
                 addrpts.append({"lat":str(lat), "lng":str(lon)})
@@ -311,39 +317,39 @@ class DatasetClient(object):
                             str(lon) + ', \'' + \
                             label + '\']'
                 addrpts.append(rowstr)
-                
+
         if center_lat is None:
             center_lat = np.mean(lats)
-            
+
         if center_lon is None:
             center_lon = np.mean(lons)
-        
+
         if map_provider == 'Google':
             import json
             from vizier.engine.packages.pycell.packages.wrappers import GoogleMapClusterWrapper
-            GoogleMapClusterWrapper().do_output(json.dumps(addrpts), center_lat, center_lon, zoom, width, height) 
-        elif map_provider == 'OSM':  
+            GoogleMapClusterWrapper().do_output(json.dumps(addrpts), center_lat, center_lon, zoom, width, height)
+        elif map_provider == 'OSM':
             from vizier.engine.packages.pycell.packages.wrappers import LeafletClusterWrapper
-            LeafletClusterWrapper().do_output(addrpts, center_lat, center_lon, zoom, width, height) 
+            LeafletClusterWrapper().do_output(addrpts, center_lat, center_lon, zoom, width, height)
         else:
             print("Unknown map provider: please specify: OSM or Google")
 
     def show_d3_plot(self, chart_type, keys=list(), labels=list(), labels_inner=list(), value_cols=list(), key_col='KEY', width=600, height=400, title='', subtitle='', legend_title='Legend', x_cols=list(), y_cols=list(), date_cols=list(), open_cols=list(), high_cols=list(), low_cols=list(), close_cols=list(), volume_cols=list(), key=None):
         from vizier.engine.packages.pycell.packages.wrappers import D3ChartWrapper
 
-        charttypes = ["table", "bar", "bar_stacked", "bar_horizontal", "bar_circular", "bar_cluster", "donut", 
+        charttypes = ["table", "bar", "bar_stacked", "bar_horizontal", "bar_circular", "bar_cluster", "donut",
                      "polar", "heat_rad", "heat_table", "punch", "bubble", "candle", "line", "radar", "rose"];
-        
+
         if chart_type not in charttypes:
             print(("Please specify a valid chart type: one of: " + str(charttypes)))
             return
-        
+
         if not labels:
             labels = keys
-        
+
         if not labels_inner:
             labels_inner = value_cols
-               
+
         data = []
         for key_idx, label in enumerate(labels):
             entry = {}
@@ -356,11 +362,11 @@ class DatasetClient(object):
                     if len(keys) == 0 or (len(keys) >= key_idx and row.get_value(key_col) == keys[key_idx]):
                         if value_cols and len(value_cols) >= idx:
                             inner_entry['value'] = row.get_value(value_cols[idx])
-                        if x_cols and len(x_cols) >= idx: 
+                        if x_cols and len(x_cols) >= idx:
                             inner_entry['x'] = row.get_value(x_cols[idx])
-                        if y_cols and len(y_cols) >= idx: 
+                        if y_cols and len(y_cols) >= idx:
                             inner_entry['y'] = row.get_value(y_cols[idx])
-                        if date_cols and len(date_cols) >= idx: 
+                        if date_cols and len(date_cols) >= idx:
                             inner_entry['date'] = row.get_value(date_cols[idx])
                         if open_cols and len(open_cols) >= idx:
                             inner_entry['open'] = row.get_value(open_cols[idx])
@@ -373,14 +379,14 @@ class DatasetClient(object):
                         if volume_cols and len(volume_cols) >= idx:
                             inner_entry['volume'] = row.get_value(volume_cols[idx])
                 entry['values'].append(inner_entry)
-            data.append(entry)  
-            
+            data.append(entry)
+
         if key is not None:
-            data=data[data.index(key)]    
-            
-        D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height), 
+            data=data[data.index(key)]
+
+        D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height),
             title=title, subtitle=subtitle, legendtitle=legend_title)
-        
+
 class MutableDatasetRow(DatasetRow):
     """Row in a Vizier DB dataset.
 
@@ -549,3 +555,88 @@ class ObjectMetadataSet(object):
         for anno in self.annotations:
             result.add(anno.key)
         return list(result)
+
+
+# -- Helper functions and classes ---------------------------------------------
+
+class Column(str):
+    """Columns in openclean data frames are subclasses of Python strings that
+    contain a unique column identifier. This implementation is based on:
+    https://bytes.com/topic/python/answers/32098-my-experiences-subclassing-string
+
+    The order of creation is that the __new__ method is called which returns
+    the object then __init__ is called.
+
+    NOTE: This code is copied from openclean.
+    """
+    def __new__(cls, colid, name, *args, **keywargs):
+        """Initialize the String object with the given column name. Ignore the
+        column identifier.
+
+        Parameters
+        ----------
+        colid: int
+            Unique column identifier
+        name: string
+            Column name
+        """
+        return str.__new__(cls, str(name))
+
+    def __init__(self, colid, name):
+        """Initialize the unique column identifier. The column name has already
+        been initialized by the __new__ method that is called prior to the
+        __init__ method.
+
+        Parameters
+        ----------
+        colid: int
+            Unique column identifier
+        name: string
+            Column name
+        """
+        self.colid = colid
+
+
+def coltype(dtype):
+    """Convert data type for pandas data frame columns to vizire data type.
+
+    Parameters
+    ----------
+    dtype: numpy.dtype
+        Data type of a data frame column.
+
+    Returns
+    -------
+    string
+    """
+    if dtype == np.int64:
+        return ds.DATATYPE_INT
+    elif dtype == np.float64:
+        return ds.DATATYPE_REAL
+    else:
+        return ds.DATATYPE_VARCHAR
+
+
+def dataframe(dataset):
+    """Temporary helper function to convert a Vizier data set into a pandas
+    data frame.
+
+    Parameters
+    ----------
+    dataset: vizier.datastore.base.DatasetHandle, optional
+        Handle to the dataset for which this is a client. If None this is a
+        new dataset.
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+    # Create list of row values and row identifiers.
+    data, rowids = list(), list()
+    for row in dataset.fetch_rows():
+        data.append(row.values)
+        rowids.append(row.identifier)
+    # Create instances of the columns class that extends the Python string with
+    # a reference to the Vizier column indentifier.
+    schema = [Column(colid=c.identifier, name=c.name) for c in dataset.columns]
+    return pd.DataFrame(data=data, index=rowids, columns=schema)

@@ -245,7 +245,7 @@ class DatasetDescriptor(object):
         -------
         int
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def print_schema(self, name):
         """Print dataset schema as a list of lines.
@@ -356,7 +356,7 @@ class DatasetHandle(DatasetDescriptor):
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def reader(self, offset=0, limit=-1):
@@ -375,7 +375,7 @@ class DatasetHandle(DatasetDescriptor):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DatasetRow(object):

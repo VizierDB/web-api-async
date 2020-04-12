@@ -19,7 +19,7 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 import os
 
@@ -31,10 +31,13 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 METADATA_FILE = 'annotations.json'
 
 
-class Datastore(object):
+class Datastore(metaclass=ABCMeta):
     """Abstract API to store and retireve datasets."""
     @abstractmethod
-    def create_dataset(self, columns, rows, annotations=None):
+    def create_dataset(
+        self, columns, rows, human_readable_name=None, annotations=None,
+        backend_options=[], dependencies=[]
+    ):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -51,14 +54,20 @@ class Datastore(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
+        human_readable_name: string
+            TODO: Add description.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
+        backend_options: list
+            TODO: Add description.
+        dependencies: string
+            TODO: Add description.
 
         Returns
         -------
         vizier.datastore.dataset.DatasetDescriptor
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_annotations(self, identifier, column_id=None, row_id=None):
@@ -80,8 +89,8 @@ class Datastore(object):
         -------
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
-        raise NotImplementedError
-    
+        raise NotImplementedError()
+
     @abstractmethod
     def get_objects(self, identifier=None, obj_type=None, key=None):
         """Get list of data objects for a resources of a given dataset. If only
@@ -99,12 +108,12 @@ class Datastore(object):
             object type
         key: string, optional
             object key
-            
+
         Returns
         -------
-        vizier.datastore.object.dataset.DataObjectMetadata
+        vizier.datastore.object.dataobject.DataObjectMetadata
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_dataset(self, identifier):
@@ -120,7 +129,7 @@ class Datastore(object):
         -------
         vizier.datastore.base.DatasetHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_descriptor(self, identifier):
@@ -136,41 +145,37 @@ class Datastore(object):
         -------
         vizier.datastore.base.DatasetDescriptor
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
-    def load_dataset(self, f_handle):
-        """Create a new dataset from a given file.
-
-        Raises ValueError if the given file could not be loaded as a dataset.
+    def load_dataset(
+        self, f_handle=None, url=None, detect_headers=True, infer_types=True,
+        load_format='csv', options=[], human_readable_name=None
+    ):
+        """Create a new dataset from a given file or Url.
 
         Parameters
         ----------
-        f_handle : vizier.filestore.base.FileHandle
+        f_handle : vizier.filestore.base.FileHandle, optional
             handle for an uploaded file on the associated file server.
+        url: string, optional, optional
+            Url for the file source
+        detect_headers: bool, optional
+            Detect column names in loaded file if True
+        infer_types: bool, optional
+            Infer column types for loaded dataset if True
+        load_format: string, optional
+            Format identifier
+        options: list, optional
+            Additional options for Mimirs load command
+        human_readable_name: string, optional
+            Optional human readable name for the resulting table
 
         Returns
         -------
         vizier.datastore.base.DatasetHandle
         """
-        raise NotImplementedError
-    
-    @abstractmethod
-    def unload_dataset(self, f_handle):
-        """Create a new dataset from a given file.
-
-        Raises ValueError if the given file could not be loaded as a dataset.
-
-        Parameters
-        ----------
-        f_handle : vizier.filestore.base.FileHandle
-            handle for an uploaded file on the associated file server.
-
-        Returns
-        -------
-        vizier.datastore.base.DatasetHandle
-        """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def update_annotation(
@@ -204,8 +209,8 @@ class Datastore(object):
         -------
         bool
         """
-        raise NotImplementedError
-    
+        raise NotImplementedError()
+
     @abstractmethod
     def update_object(
         self, identifier, key, old_value=None, new_value=None, obj_type=None
@@ -233,7 +238,32 @@ class Datastore(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def unload_dataset(
+        self, filepath, dataset_name, format='csv', options=[], filename=''
+    ):
+        """Export a dataset from a given name.
+
+        Raises ValueError if the given dataset could not be exported.
+
+        Parameters
+        ----------
+        dataset_name: string
+            Name of the dataset to unload
+        format: string
+            Format for output (csv, json, ect.)
+        options: dict
+            Options for data unload
+        filename: string
+            The output filename - may be empty if outputting to a database
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        raise NotImplementedError()
 
 
 class DefaultDatastore(Datastore):
@@ -296,30 +326,6 @@ class DefaultDatastore(Datastore):
                 columns=[column_id],
                 rows=[row_id]
             )
-            
-    def get_objects(self, identifier=None, obj_type=None, key=None):
-        """Get list of data objects for a resources of a given dataset. If only
-        the column id is provided annotations for the identifier column will be
-        returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
-
-        Parameters
-        ----------
-        identifier: string, optional
-            Unique object identifier
-        obj_type: string, optional
-            object type
-        key: string, optional
-            object key
-            
-        Returns
-        -------
-        vizier.datastore.object.dataset.DataObjectMetadata
-        """
-        raise NotImplementedError
-
 
     def get_dataset_dir(self, identifier):
         """Get the base directory for a dataset with given identifier. Having a
@@ -336,7 +342,7 @@ class DefaultDatastore(Datastore):
         string
         """
         return os.path.join(self.base_path, identifier)
-    
+
     def get_dataobject_dir(self, identifier):
         """Get the base directory for a dataobject with given identifier. Having a
         separate method makes it easier to change the folder structure used to
@@ -464,34 +470,6 @@ class DefaultDatastore(Datastore):
         # Write modified annotations to file
         annotations.to_file(metadata_filename)
         return True
-    
-    def update_object(
-        self, identifier, key, old_value=None, new_value=None, obj_type=None
-    ):
-        """Update the annotations for a component of the datasets with the given
-        identifier. Returns the updated annotations or None if the dataset
-        does not exist.
-
-        The distinction between old value and new value is necessary since
-        annotations have no unique identifier. We use the key,value pair to
-        identify an existing annotation for update. When creating a new
-        annotation th old value is None.
-
-        Parameters
-        ----------
-        identifier : string
-            Unique object identifier
-        key: string, optional
-            object key
-        old_value: string, optional
-            Previous value when updating an existing annotation.
-        new_value: string, optional
-            Updated value
-        Returns
-        -------
-        bool
-        """
-        raise NotImplementedError
 
 
 # ------------------------------------------------------------------------------

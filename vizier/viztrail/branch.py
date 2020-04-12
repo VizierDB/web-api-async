@@ -138,7 +138,7 @@ class BranchHandle(NamedObject):
         -------
         vizier.viztrail.workflow.base.WorkflowHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @property
     def created_at(self):
@@ -169,7 +169,7 @@ class BranchHandle(NamedObject):
         -------
         list(vizier.viztrail.workflow.base.WorkflowDescriptor)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_workflow(self, workflow_id=None):
@@ -186,7 +186,7 @@ class BranchHandle(NamedObject):
         -------
         vizier.viztrail.workflow.base.WorkflowHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @property
     def last_modified_at(self):

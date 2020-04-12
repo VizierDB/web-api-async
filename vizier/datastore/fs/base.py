@@ -31,6 +31,7 @@ from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
+from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
@@ -61,7 +62,10 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, annotations=None):
+    def create_dataset(
+        self, columns, rows, human_readable_name=None, annotations=None,
+        backend_options=[], dependencies=[]
+    ):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -78,8 +82,14 @@ class FileSystemDatastore(DefaultDatastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
+        human_readable_name: string, ignored
+            TODO: Add description.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
+        backend_options: list, ignored
+            TODO: Add description.
+        dependencies: string, ignored
+            TODO: Add description.
 
         Returns
         -------
@@ -232,19 +242,55 @@ class FileSystemDatastore(DefaultDatastore):
             )
         )
 
-    def load_dataset(self, f_handle):
-        """Create a new dataset from a given file.
-
-        Raises ValueError if the given file could not be loaded as a dataset.
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
 
         Parameters
         ----------
-        f_handle : vizier.filestore.base.FileHandle
-            Handle for an uploaded file
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
 
         Returns
         -------
-        vizier.datastore.fs.dataset.FileSystemDatasetHandle
+        vizier.datastore.object.dataobject.DataObjectMetadata
+        """
+        return DataObjectMetadata()
+
+    def load_dataset(
+        self, f_handle=None, url=None, detect_headers=True, infer_types=True,
+        load_format='csv', options=[], human_readable_name=None
+    ):
+        """Create a new dataset from a given file or Url.
+
+        Parameters
+        ----------
+        f_handle : vizier.filestore.base.FileHandle, optional
+            handle for an uploaded file on the associated file server.
+        url: string, optional, optional
+            Url for the file source
+        detect_headers: bool, optional
+            Detect column names in loaded file if True
+        infer_types: bool, optional
+            Infer column types for loaded dataset if True
+        load_format: string, optional
+            Format identifier
+        options: list, optional
+            Additional options for Mimirs load command
+        human_readable_name: string, optional
+            Optional human readable name for the resulting table
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetHandle
         """
         # The file handle might be None in which case an exception is raised
         if f_handle is None:
@@ -288,6 +334,53 @@ class FileSystemDatastore(DefaultDatastore):
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         return dataset
+
+    def update_object(
+        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    ):
+        """Update a data object.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique object identifier
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        bool
+        """
+        # TODO: Implementation needed
+        raise NotImplementedError()
+
+    def unload_dataset(
+        self, filepath, dataset_name, format='csv', options=[], filename=''
+    ):
+        """Export a dataset from a given name.
+
+        Raises ValueError if the given dataset could not be exported.
+
+        Parameters
+        ----------
+        dataset_name: string
+            Name of the dataset to unload
+        format: string
+            Format for output (csv, json, ect.)
+        options: dict
+            Options for data unload
+        filename: string
+            The output filename - may be empty if outputting to a database
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        # TODO: Implementation needed
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------

@@ -59,7 +59,7 @@ class WorkflowController(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def set_running(self, task_id, started_at=None):
@@ -81,7 +81,7 @@ class WorkflowController(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
@@ -116,4 +116,4 @@ class WorkflowController(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()

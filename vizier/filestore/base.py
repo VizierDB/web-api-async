@@ -21,7 +21,7 @@ and need to keep as a local copy because they are not accessible via an Url.
 import gzip
 import mimetypes
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 from vizier.core.util import get_unique_identifier
 
@@ -128,7 +128,7 @@ class FileHandle(object):
             return open(self.filepath, 'r')
 
 
-class Filestore(object):
+class Filestore(metaclass=ABCMeta):
     """Abstract API to upload and retrieve files."""
 
     @abstractmethod
@@ -145,7 +145,7 @@ class Filestore(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def download_file(self, uri, username=None, password=None):
@@ -164,7 +164,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_file(self, identifier):
@@ -180,7 +180,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_files(self):
@@ -190,7 +190,7 @@ class Filestore(object):
         -------
         list(vizier.filestore.base.FileHandle)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def upload_file(self, filename):
@@ -208,7 +208,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def upload_stream(self, file, file_name):
@@ -225,7 +225,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------

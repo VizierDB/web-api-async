@@ -45,7 +45,7 @@ class ProjectCache(object):
         -------
         vizier.engine.project.base.ProjectHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_project(self, project_id):
@@ -61,7 +61,7 @@ class ProjectCache(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_branch(self, project_id, branch_id):
@@ -79,7 +79,7 @@ class ProjectCache(object):
         -------
         vizier.viztrail.branch.BranchHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_project(self, project_id):
@@ -95,7 +95,7 @@ class ProjectCache(object):
         -------
         vizier.engine.project.base.ProjectHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_projects(self):
@@ -105,4 +105,4 @@ class ProjectCache(object):
         -------
         list(vizier.engine.project.base.ProjectHandle)
         """
-        raise NotImplementedError
+        raise NotImplementedError()

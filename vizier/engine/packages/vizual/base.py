@@ -22,6 +22,7 @@ import vizier.engine.packages.base as pckg
 """Global constants."""
 
 # Package name
+PACKAGE_DATA = 'data'
 PACKAGE_VIZUAL = 'vizual'
 
 # Package-specific identifier for VizUAL commands

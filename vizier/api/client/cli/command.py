@@ -42,12 +42,12 @@ class Command(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def help(self):
         """Print a simple help statement for the command."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def output(self, rows):
         """Output the given rows in tabular format. Each rows is a list of

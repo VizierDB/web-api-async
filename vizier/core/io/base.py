@@ -62,7 +62,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def create_object(self, parent_folder, identifier=None, content=None):
@@ -84,7 +84,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_folder(self, folder_path, force_delete=False):
@@ -98,7 +98,7 @@ class ObjectStore(object):
         force_delete: bool, optional
             Force deletion of the resource
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_object(self, object_path, force_delete=False):
@@ -111,7 +111,7 @@ class ObjectStore(object):
         force_delete: bool, optional
             Force deletion of the resource
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def exists(self, resource_path):
@@ -126,7 +126,7 @@ class ObjectStore(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def join(self, parent_folder, identifier):
@@ -143,7 +143,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_folders(self, folder_path, create=True):
@@ -162,7 +162,7 @@ class ObjectStore(object):
         -------
         list(string)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_objects(self, folder_path):
@@ -178,7 +178,7 @@ class ObjectStore(object):
         -------
         list(string)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def read_object(self, object_path):
@@ -195,7 +195,7 @@ class ObjectStore(object):
         -------
         dict or list
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def write_object(self, object_path, content):
@@ -208,7 +208,7 @@ class ObjectStore(object):
         content: dict or list
             Json object or array
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DefaultObjectStore(ObjectStore):

@@ -1,5 +1,6 @@
 packages:
     - vizual
+    - data
 engine:
     className: 'VizualTaskProcessor'
     moduleName: 'vizier.engine.packages.vizual.processor'

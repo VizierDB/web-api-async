@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Simple vizier client command line interface for testing purposes.
+# For more information use:
+#
+# $> vizcli help
+
+ARGS=()
+for a in "$@"; do
+    ARGS+=("${a}")
+done
+
+python ./vizier "${ARGS[@]}"

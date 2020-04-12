@@ -19,10 +19,10 @@ own filestore. These filestore instances are created by a filestore factory when
 the project is instantiated.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 
-class FilestoreFactory(object):
+class FilestoreFactory(metaclass=ABCMeta):
     """Create and delete filestore instances that are associated with vizier
     projects. Each filestore is associated with a project that is identified
     by a unique identifier.
@@ -37,7 +37,7 @@ class FilestoreFactory(object):
         identifier: string
             Unique identifier for filestore
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_filestore(self, identifier):
@@ -52,7 +52,7 @@ class FilestoreFactory(object):
         -------
         vizier.filestore.base.Filestore
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DevNullFilestoreFactory(FilestoreFactory):

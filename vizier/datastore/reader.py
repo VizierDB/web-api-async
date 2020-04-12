@@ -25,7 +25,6 @@ import csv
 import gzip
 import json
 
-from vizier.core.util import encode_values
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 
 """Json element names for default dataset serialization."""
@@ -68,7 +67,7 @@ class DatasetReader(object):
     @abstractmethod
     def close(self):
         """Signal the reader that no more rows will be read."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def next(self):
@@ -79,7 +78,7 @@ class DatasetReader(object):
         -------
         vizier.datastore.base.DatasetRow
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def open(self):
@@ -90,7 +89,7 @@ class DatasetReader(object):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DelimitedFileReader(DatasetReader):
@@ -307,7 +306,7 @@ class DefaultJsonDatasetReader(DatasetReader):
         json.dump({
                 KEY_ROWS: [{
                     KEY_ROW_ID: row.identifier,
-                    KEY_ROW_VALUES: encode_values(row.values)
+                    KEY_ROW_VALUES: row.values
                 } for row in rows]
             },
             fh

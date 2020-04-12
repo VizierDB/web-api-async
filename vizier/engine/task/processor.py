@@ -103,7 +103,7 @@ class TaskProcessor(object):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------

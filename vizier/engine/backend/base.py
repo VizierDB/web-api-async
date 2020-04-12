@@ -59,7 +59,7 @@ class TaskExecEngine(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def execute(self, task, command, context, resources=None):
@@ -89,7 +89,7 @@ class TaskExecEngine(object):
         ------
         vizier.engine.task.processor.ExecResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class NonSynchronousEngine(TaskExecEngine):
@@ -163,7 +163,7 @@ class VizierBackend(object):
         task_id: string
             Unique task identifier
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def execute(self, task, command, context, resources=None):
         """Execute a given command. The command will be executed immediately if
@@ -221,7 +221,7 @@ class VizierBackend(object):
             Optional information about resources that were generated during a
             previous execution of the command
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def next_task_state(self):
@@ -233,7 +233,7 @@ class VizierBackend(object):
         -------
         int
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def task_finished(self, task_id):
         """Notify a backend that a task has finished. This is primarily of
@@ -246,7 +246,7 @@ class VizierBackend(object):
         task_id: string
             Unique task id
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------

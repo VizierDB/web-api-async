@@ -205,7 +205,7 @@ def load_dataset(
             md.ARG(id=vizual.PARA_LOAD_OPTIONS, value=options)
         )
     return md.ModuleCommand(
-        vizual.PACKAGE_VIZUAL,
+        vizual.PACKAGE_DATA,
         vizual.VIZUAL_LOAD,
         arguments=arguments,
         packages=PACKAGE(validate=validate)

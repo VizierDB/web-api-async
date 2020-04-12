@@ -25,10 +25,10 @@ In this module we define the interface for the class that manages annotations
 for an individual object in a persistent manner.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 
-class ObjectAnnotationSet(object):
+class ObjectAnnotationSet(metaclass=ABCMeta):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
@@ -49,7 +49,7 @@ class ObjectAnnotationSet(object):
         replace: bool, optional
             Replace all previously associated values for key if True
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete(self, key, value=None):
@@ -70,7 +70,7 @@ class ObjectAnnotationSet(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def find_all(self, key, default_value=[]):
@@ -88,7 +88,7 @@ class ObjectAnnotationSet(object):
         -------
         list
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def find_one(self, key, default_value=None, raise_error_on_multi_value=True):
@@ -112,7 +112,7 @@ class ObjectAnnotationSet(object):
         -------
         scalar
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def replace(self, key, value):
         """Update the value for the property with the given key. If the value
@@ -138,7 +138,7 @@ class ObjectAnnotationSet(object):
         corresponding property will be replaced by the value or the values in a
         given list of values.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class AnnotationStore(object):
@@ -156,7 +156,7 @@ class AnnotationStore(object):
         annotations: dict, optional
             Dictionary of object annotations
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def values(self):
@@ -166,7 +166,7 @@ class AnnotationStore(object):
         -------
         dict()
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DefaultAnnotationSet(ObjectAnnotationSet):

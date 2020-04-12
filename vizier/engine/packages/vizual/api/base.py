@@ -81,7 +81,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_row(self, identifier, row_index, datastore):
@@ -103,7 +103,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def filter_columns(self, identifier, columns, names, datastore):
@@ -131,7 +131,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def insert_column(self, identifier, position, name, datastore):
@@ -156,7 +156,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def insert_row(self, identifier, position, datastore):
@@ -178,7 +178,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def load_dataset(
@@ -229,7 +229,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def empty_dataset(
@@ -258,7 +258,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
     
     @abstractmethod
     def unload_dataset(
@@ -289,7 +289,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def move_column(self, identifier, column_id, position, datastore):
@@ -313,7 +313,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def move_row(self, identifier, row_index, position, datastore):
@@ -337,7 +337,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def rename_column(self, identifier, column_id, name, datastore):
@@ -361,7 +361,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def sort_dataset(self, identifier, columns, reversed, datastore):
@@ -393,7 +393,7 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def update_cell(self, identifier, column_id, row_id, value, datastore):
@@ -419,4 +419,4 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        raise NotImplementedError
+        raise NotImplementedError()
