@@ -204,24 +204,18 @@ class MimirProcessor(TaskProcessor):
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
-        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE, cmd.MIMIR_SHAPE_DETECTOR]:
-            lens_name = mimir.createAdaptiveSchema(
-                mimir_table_name,
-                params,
-                command_id.upper()
-            )
-        else:
-            mimir_lens_response = mimir.createLens(
-                mimir_table_name,
-                params,
-                command_id.upper(),
-                arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
-                human_readable_name = ds_name.upper()
-            )
-            (lens_name, lens_annotations) = (
-                mimir_lens_response['lensName'],
-                None#mimir_lens_response['annotations']
-            )
+       
+        mimir_lens_response = mimir.createLens(
+            mimir_table_name,
+            params,
+            command_id.upper(),
+            arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
+            human_readable_name = ds_name.upper()
+        )
+        (lens_name, lens_annotations) = (
+            mimir_lens_response['lensName'],
+            None#mimir_lens_response['annotations']
+        )
         # Create a view including missing row ids for the result of a
         # MISSING KEY lens
         #if command_id == cmd.MIMIR_MISSING_KEY:
