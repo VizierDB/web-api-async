@@ -38,7 +38,7 @@ import vizier.engine.packages.pycell.base as cmd
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
 
-SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', False)
+SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', 'False')
 SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
 
 class PyCellTaskProcessor(TaskProcessor):
@@ -115,7 +115,7 @@ class PyCellTaskProcessor(TaskProcessor):
         # Run the Python code
         try:
             python_cell_preload(variables)
-            if SANDBOX_PYTHON_EXECUTION:
+            if SANDBOX_PYTHON_EXECUTION == 'True':
                 json_data = {'source':source, 
                              'datasets':context.datasets, 
                              'dataobjects':context.dataobjects, 
@@ -142,7 +142,7 @@ class PyCellTaskProcessor(TaskProcessor):
         # Set module outputs
         outputs = ModuleOutputs()
         is_success = (exception is None)
-        if SANDBOX_PYTHON_EXECUTION:
+        if SANDBOX_PYTHON_EXECUTION == 'True':
             for text in resdata['stdout']:
                 outputs.stdout.append(HtmlOutput(text))
             for text in resdata['stderr']:
