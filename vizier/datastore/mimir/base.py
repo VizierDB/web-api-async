@@ -184,7 +184,7 @@ def get_select_query(table_name, columns=None):
     str
     """
     if not columns is None:
-        col_list = ','.join([col.name_in_rdb for col in columns])
+        col_list = ','.join(['`' + col.name_in_rdb + '`' for col in columns])
         return 'SELECT ' + col_list + ' FROM ' + table_name
     else:
         return 'SELECT ' + ROW_ID + ' FROM ' + table_name

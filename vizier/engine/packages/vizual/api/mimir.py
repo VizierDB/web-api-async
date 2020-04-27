@@ -67,7 +67,7 @@ class MimirVizualApi(VizualApi):
         col_list = []
         for col in schema:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -106,7 +106,7 @@ class MimirVizualApi(VizualApi):
         col_list = []
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name
         sql += ' WHERE ' + ROW_ID + ' <> ' + MIMIR_ROWID_COL.to_sql_value(roid) 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
@@ -165,7 +165,7 @@ class MimirVizualApi(VizualApi):
             else:
                 schema.append(col)
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -227,7 +227,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append(" CAST('' AS int) AS " + col.name_in_rdb) 
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(
@@ -271,7 +271,7 @@ class MimirVizualApi(VizualApi):
         col_list = []
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name
         mimirSchema = mimir.getSchema(sql)
         union_list = []
         for col in mimirSchema[1:]:
@@ -409,7 +409,7 @@ class MimirVizualApi(VizualApi):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        source = "SELECT {};".format(", ".join(
+        source = "SELECT {}".format(", ".join(
                         default_val + " AS " + col_name
                         for default_val, col_name in initial_columns
                     ))
@@ -426,7 +426,7 @@ class MimirVizualApi(VizualApi):
             for col_defn, col_id in zip(initial_columns, range(len(initial_columns)))
         ]
 
-        ds = context.datastore.register_dataset(
+        ds = datastore.register_dataset(
             table_name=view_name,
             columns=columns,
             row_counter=1
@@ -625,11 +625,11 @@ class MimirVizualApi(VizualApi):
                 if idx == 0:
                     colSql = name_in_dataset + ' AS ' + name_in_rdb
                 elif idx == colIndex:
-                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name
+                    colSql = colSql + ', `' + name_in_dataset + '` AS `' + name + '`'
                     col.name = name
                     col.name_in_rdb = name
                 else:
-                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
+                    colSql = colSql + ', `' + name_in_dataset + '` AS `' + name_in_rdb + '`'
                 columns.append(col)
                 idx = idx + 1
             # Create view for loaded dataset
@@ -749,7 +749,7 @@ class MimirVizualApi(VizualApi):
                 col_list.append(stmt)
             else:
                 col_list.append(col.name_in_rdb)
-        sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + dataset.table_name 
+        sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(

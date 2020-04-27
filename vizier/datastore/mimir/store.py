@@ -104,9 +104,9 @@ class MimirDatastore(DefaultDatastore):
                 )
             )
             if colSql == '':
-                colSql = col.name + ' AS ' + col.name
+                colSql = '`' + col.name + '` AS `' + col.name + '`'
             else:
-                colSql = colSql + ', ' + col.name + ' AS ' + col.name
+                colSql = colSql + ', `' + col.name + '` AS `' + col.name + '`'
         # Create CSV file for load
         with open(tmp_file, 'w') as f_out:
             writer = csv.writer(f_out, quoting=csv.QUOTE_MINIMAL)
@@ -483,9 +483,9 @@ class MimirDatastore(DefaultDatastore):
                 name_in_rdb=name_in_rdb
             )
             if colSql == '':
-                colSql = name_in_dataset + ' AS ' + name_in_rdb
+                colSql = '`' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             else:
-                colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
+                colSql = colSql + ', `' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             columns.append(col)
         # Create view for loaded dataset
         sql = 'SELECT '+ colSql +' FROM '+init_load_name
