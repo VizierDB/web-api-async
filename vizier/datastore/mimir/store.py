@@ -90,7 +90,7 @@ class MimirDatastore(DefaultDatastore):
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
         # Write rows to temporary file in CSV format
-        tmp_file = os.path.abspath(self.base_path + identifier)
+        tmp_file = os.path.abspath(self.base_path + os.path.sep + identifier)
         # Create a list of columns that contain the user-vizible column name and
         # the name in the database
         db_columns = list()
@@ -114,9 +114,10 @@ class MimirDatastore(DefaultDatastore):
             for row in rows:
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
+        
         # Load CSV file using Mimirs loadCSV method.
         table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options, dependencies = dependencies)
-        os.remove(tmp_file)
+        #os.remove(tmp_file)
         sql = 'SELECT '+ colSql +' FROM '+table_name
         view_name, dependencies = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
