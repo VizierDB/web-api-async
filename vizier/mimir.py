@@ -193,6 +193,20 @@ def getSchema(query):
     resp = readResponse(requests.post(_mimir_url + 'schema', json=req_json))
     return resp['schema']
 
+def tableExists(tableName):
+    req_json = {
+      "query": 'SELECT * FROM ' + str(tableName)
+    }
+    try:
+        resp = readResponse(requests.post(_mimir_url + 'schema', json=req_json))
+        if resp['schema']:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
 def createSample(inputds, mode_config, seed = None):
   """
     Create a sample of dataset input according to the sampling mode

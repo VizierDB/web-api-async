@@ -361,6 +361,12 @@ class MimirVizualApi(VizualApi):
             result_resources[base.RESOURCE_FILEID] = file_id
         else:
             raise ValueError('no source identifier given for load')
+        
+        if dataset is not None:
+            # Check to see if table exists
+            if not mimir.tableExists(dataset.table_name):
+                dataset = None
+            
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
         if dataset is None:
