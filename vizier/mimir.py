@@ -27,23 +27,34 @@ _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
 class MimirError(Exception):
     def __init___(self,dErrorArguments):
-        Exception.__init__(self,dErrorArguments)
+        Exception.__init__(self, dErrorArguments)
+
+PASSTHROUGH_ERRORS = set([
+  "java.sql.SQLException",
+  "org.apache.spark.sql.AnalysisException"
+])
 
 def readResponse(resp):
     json_object = None
     try:
         resp.raise_for_status()
     except HTTPError as http_e:
-        raise MimirError({ 'errorMessage': http_e })
+        raise MimirError({ 'errorMessage': "Internal Error [Mimir]: Got a {} error code.".format(resp.status_code) })
     except Exception as e: 
-        raise MimirError({ 'errorMessage': e })
+        raise MimirError({ 'errorMessage': "Internal Error [HTTP -> Mimir]: {}".format(e) })
     else:
         try:
             json_object = resp.json()
         except Exception as e: 
-            raise MimirError({ 'errorMessage': e })
+            raise MimirError({ 'errorMessage': "Internal Error [Parse Mimir Response]: {}".format(e) })
     try:
         if not json_object['errorType'] is None and not json_object['errorMessage'] is None:
+            errorType = json_object.get("errorType", "Unknown")
+            errorMessage = json_object.get("errorMessage", "Unknown")
+            if errorType not in PASSTHROUGH_ERRORS:
+                errorMessage = "Internal Error [Mimir]: {}".format(errorMessage)
+            json_object["errorType"] = errorType
+            json_object["errorMessage"] = errorMessage
             raise MimirError(json_object)
     except KeyError: 
         pass
@@ -219,6 +230,48 @@ def createSample(inputds, mode_config, seed = None):
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
   return resp['viewName']
+
+def vizualScript(inputds, script, script_needs_compile = False):
+  """
+    Create a view that implements a sequence of vizual commands over a fixed input table
+
+    Parameters
+    ----------
+    inputds: string
+      The internal name of the dataset to apply the input script to
+    script: list[dictionary] or dictionary
+      The sequence of vizual commands to apply the input script to.  
+      If not a list, the parameter will be assumed to be a singleton
+      command and wrapped in a list.
+    script_needs_compile: boolean
+      Set to true if mimir should preprocess the script to provide more
+      spreadsheet-like semantics (e.g., lazy evaluation of expression 
+      cells)
+
+    Returns
+    -------
+    dictionary of 
+      - "name": The name of the created view 
+      - "script": The compiled version of the script (or just script if 
+                  script_needs_compile = False)
+  """
+
+  if type(script) is not list:
+    script = [script]
+
+  req_json = {
+    "input" : inputds,
+    "script" : script,
+    # "resultName": Option[String],
+    "compile": script_needs_compile
+  }
+  print(_mimir_url + "vizual/create")
+  print(json.dumps(req_json))
+  resp = readResponse(requests.post(_mimir_url + 'vizual/create', json=req_json))
+  assert("name" in resp)
+  assert("script" in resp)
+  return resp
+
 
   
 def getAvailableLansTypes():
