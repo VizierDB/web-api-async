@@ -63,3 +63,4 @@ resources/config/dev-config.yaml
 *.crc
 vizier_downloads/*
 
+/web-ui

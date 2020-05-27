@@ -78,7 +78,7 @@ class MimirVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def delete_row(self, identifier, rowid, datastore):
+    def delete_row(self, identifier, row_index, datastore):
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -107,7 +107,7 @@ class MimirVizualApi(VizualApi):
         for col in dataset.columns:
             col_list.append(col.name_in_rdb)
         sql = 'SELECT ' + ','.join(['`' + col + '`' for col in col_list ]) + ' FROM ' + dataset.table_name
-        sql += ' WHERE ' + ROW_ID + ' <> ' + MIMIR_ROWID_COL.to_sql_value(roid) 
+        sql += ' WHERE ' + ROW_ID + ' <> ' + MIMIR_ROWID_COL.to_sql_value(row_index) 
         view_name, dependencies = mimir.createView(dataset.table_name, sql)
         # Store updated dataset information with new identifier
         ds = datastore.register_dataset(

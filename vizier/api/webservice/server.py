@@ -541,6 +541,8 @@ def insert_workflow_module(project_id, branch_id, module_id):
         if not modules is None:
             return jsonify(modules)
     except ValueError as ex:
+        print(ex)
+        print(traceback.format_exc())
         raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
