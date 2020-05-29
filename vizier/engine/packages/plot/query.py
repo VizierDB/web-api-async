@@ -54,7 +54,8 @@ class DataStreamConsumer(object):
         self.cast_to_number = cast_to_number
         # Initialize the result set
         self.values = list()
-
+        self.values_caveats = list()
+        
     def consume(self, row, row_index):
         """Consume a dataset row. The position of the row in the ordered list of
         dataset rows is given by the row_index.
@@ -85,7 +86,7 @@ class DataStreamConsumer(object):
                         except ValueError:
                             pass
             self.values.append(val)
-
+            self.values_caveats.append(row.annotations[self.column_index])    
 
 class ChartQuery(object):
     """Query processor for simple chart queries."""
@@ -154,13 +155,18 @@ class ChartQuery(object):
                 max_values = len(c.values)
         # Create result array
         data = []
+        data_caveats = []
         for idx_row in range(max_values):
             row = list()
+            row_caveats = list()
             for idx_series in range(len(consumers)):
                 consumer = consumers[idx_series]
                 if idx_row < len(consumer.values):
                     row.append(consumer.values[idx_row])
+                    row_caveats.append(consumer.values_caveats[idx_row])
                 else:
                     row.append(None)
+                    row_caveats.append(None)
             data.append(row)
-        return data
+            data_caveats.append(row_caveats)
+        return (data, data_caveats)

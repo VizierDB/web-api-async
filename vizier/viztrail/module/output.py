@@ -198,7 +198,7 @@ class DatasetOutput(OutputObject):
 
 class ChartOutput(OutputObject):
     """Output object where the value is a string."""
-    def __init__(self, view, rows):
+    def __init__(self, view, rows, caveats):
         """Initialize the output object.
 
         Parameters
@@ -207,12 +207,15 @@ class ChartOutput(OutputObject):
             Handle defining the dataset chart view
         rows: list
             List of rows in the query result
+        caveats: list
+            one to one of rows.  does each row 
+            value have caveats or not
         """
         super(ChartOutput, self).__init__(
             type=OUTPUT_CHART,
             value={
                 'data': view.to_dict(),
-                'result': CHART_VIEW_DATA(view=view, rows=rows)
+                'result': CHART_VIEW_DATA(view=view, rows=rows, caveats=caveats)
             }
         )
 
@@ -260,7 +263,7 @@ class TextOutput(OutputObject):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def CHART_VIEW_DATA(view, rows):
+def CHART_VIEW_DATA(view, rows, caveats):
     """Create a dictionary serialization of daraset chart view results. The
     output is a dictionary with the following format (the xAxis element is
     optional):
@@ -302,6 +305,7 @@ def CHART_VIEW_DATA(view, rows):
     for s_idx in series:
         obj['series'].append({
             'label': view.data[s_idx].label,
-            'data': [row[s_idx] for row in rows]
+            'data': [row[s_idx] for row in rows],
+            'caveats': [row_caveats[s_idx] for row_caveats in caveats]
         })
     return obj

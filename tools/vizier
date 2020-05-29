@@ -175,20 +175,21 @@ fi
 echo "Checking for necessary database upgrades"
 UPGRADE_SCRIPT=tools/upgrade.py
 if [ -f "$UPGRADE_SCRIPT" ]; then
-    python $UPGRADE_SCRIPT
+    python3 $UPGRADE_SCRIPT
 else 
     UPGRADE_SCRIPT=upgrade.py
     if [ -f "$UPGRADE_SCRIPT" ]; then
-	    python $UPGRADE_SCRIPT
+	    python3 $UPGRADE_SCRIPT
 	else 
     	echo "$UPGRADE_SCRIPT does not exist"
     fi
 fi
 
-python -m flask run --with-threads &
+
+python3 -m flask run --with-threads --host=0.0.0.0 &
 #$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
 
-python - << EOF
+python3 - << EOF
 import requests
 import time
 mimir_up = False
