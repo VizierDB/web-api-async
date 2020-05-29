@@ -56,7 +56,7 @@ data_files = packages_files + processors_files + webui_files + mimir_jar
 
 setup(
     name='vizier-webapi',
-    version='0.6.6',
+    version='0.6.8',
     description='UI, Web API, and Backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
@@ -82,7 +82,7 @@ setup(
     ],
     include_package_data=True,
     data_files=data_files,
-    scripts=['tools/vizier'],
+    scripts=['tools/vizier', 'tools/upgrade.py'],
     cmdclass={'bdist_wheel': CustomBdistWheelCommand, 
               'build': CustomBuildCommand, 
               'install': CustomInstallCommand, 
