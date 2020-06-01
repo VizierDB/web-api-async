@@ -25,7 +25,7 @@ import os
 import io
 import tarfile
 
-from flask import Blueprint, jsonify, make_response, request, send_file, send_from_directory
+from flask import Blueprint, jsonify, make_response, request, send_file
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
@@ -37,7 +37,6 @@ import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
-import pkg_resources
 import json
 
 # -----------------------------------------------------------------------------
@@ -48,14 +47,12 @@ import json
 """Get application configuration parameters from environment variables."""
 config = AppConfig()
 
-webui_file_dir = os.getenv('WEB_UI_STATIC_FILES', "./web-ui/build/")#pkg_resources.resource_filename(__name__, os.getenv('WEB_UI_STATIC_FILES', "./web-ui/build/"))
-print(webui_file_dir)
 
 global api
 api = VizierApi(config, init=True)
 
 # Create the application blueprint
-bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path, static_folder=webui_file_dir)
+bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path)
 
 
 # ------------------------------------------------------------------------------
@@ -115,14 +112,6 @@ def create_project():
         raise srv.InvalidRequest(str(ex))
 
 
-@bp.route('/web-ui', defaults={'path': ''})
-@bp.route('/web-ui/<path:path>')
-def static_files(path):
-    if path != "" and os.path.exists(webui_file_dir + path):
-        return send_from_directory(webui_file_dir, path)
-    else:
-        return send_from_directory(webui_file_dir, 'index.html')
-
 @bp.route('/projects/<string:project_id>/export')
 def export_project(project_id):
     """Export the project data files as tar.gz.
@@ -130,7 +119,7 @@ def export_project(project_id):
     # Get the handle for the dataset with given identifier. The result is None
     # if no dataset with given identifier exists.
     base_dir = config.engine.data_dir
-    vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
+    vistrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
     datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
     si = io.BytesIO()
@@ -138,12 +127,13 @@ def export_project(project_id):
         tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
         tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
         tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep+project_id+os.path.sep)
-    
-    # Return the tar file 
+
+    # Return the tar file
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename="+project_id+".tar.gz"
     output.headers["Content-type"] = "application/x-gzip"
     return output
+
 
 @bp.route('/projects/import', methods=['POST'])
 def import_project():
@@ -178,26 +168,24 @@ def import_project():
                     vt_index_js = json.load(vtf)
                 if project_id in vt_index_js:
                     raise srv.InvalidRequest("This project already exists.")
-            
+
                 def ds_files(members):
                     for tarinfo in members:
                         if tarinfo.name.startswith("ds/"):
                             yield tarinfo
-                
+
                 def fs_files(members):
                     for tarinfo in tar:
                         if tarinfo.name.startswith("fs/"):
                             yield tarinfo
-                
+
                 def vt_files(members):
                     for tarinfo in tar:
                         if tarinfo.name.startswith("vt/"):
                             yield tarinfo
-                
-                
-                tar.extractall(path=base_dir,members=ds_files(tar))
-                tar.extractall(path=base_dir,members=fs_files(tar))
-                tar.extractall(path=base_dir,members=vt_files(tar))
+                tar.extractall(path=base_dir, members=ds_files(tar))
+                tar.extractall(path=base_dir, members=fs_files(tar))
+                tar.extractall(path=base_dir, members=vt_files(tar))
 
             with open(vtfpath, "w") as vtf:
                 json.dump(vt_index_js + [project_id], vtf)
@@ -205,7 +193,7 @@ def import_project():
             global api
             api = VizierApi(config, init=True)
             pj = api.projects.get_project(project_id)
-            if not pj is None:
+            if pj is not None:
                 return jsonify(pj)
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
@@ -214,10 +202,12 @@ def import_project():
         raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project format')
 
+
 @bp.route('/reload', methods=['POST'])
 def reload_api():
     global api
     api = VizierApi(config, init=True)
+
 
 @bp.route('/projects/<string:project_id>')
 def get_project(project_id):
@@ -225,7 +215,7 @@ def get_project(project_id):
     # Retrieve project serialization. If project does not exist the result
     # will be none.
     pj = api.projects.get_project(project_id)
-    if not pj is None:
+    if pj is not None:
         return jsonify(pj)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
@@ -266,7 +256,7 @@ def update_project(project_id):
     properties = deserialize.PROPERTIES(obj['properties'], allow_null=True)
     try:
         pj = api.projects.update_project(project_id, properties)
-        if not pj is None:
+        if pj is not None:
             return jsonify(pj)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -300,7 +290,11 @@ def create_branch(project_id):
     """
     # Abort with BAD REQUEST if request body is not in Json format or does not
     # contain the expected elements.
-    obj = srv.validate_json_request(request, required=['properties'], optional=['source'])
+    obj = srv.validate_json_request(
+        request,
+        required=['properties'],
+        optional=['source']
+    )
     # Get the branch point. If the source is given the dictionary should at
     # most contain the three identifier
     branch_id = None
@@ -313,7 +307,7 @@ def create_branch(project_id):
                 branch_id = source[key]
             elif key == 'workflowId':
                 workflow_id = source[key]
-            elif key ==  'moduleId':
+            elif key == 'moduleId':
                 module_id = source[key]
             else:
                 raise srv.InvalidRequest('invalid element \'' + key + '\' for branch point')
@@ -330,7 +324,7 @@ def create_branch(project_id):
             module_id=module_id,
             properties=properties
         )
-        if not branch is None:
+        if branch is not None:
             return jsonify(branch)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -355,7 +349,7 @@ def get_branch(project_id, branch_id):
     # Get the branch handle. The result is None if the project or the branch
     # do not exist.
     branch = api.branches.get_branch(project_id, branch_id)
-    if not branch is None:
+    if branch is not None:
         return jsonify(branch)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
@@ -389,7 +383,7 @@ def update_branch(project_id, branch_id):
             branch_id=branch_id,
             properties=properties
         )
-        if not branch is None:
+        if branch is not None:
             return jsonify(branch)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -406,7 +400,7 @@ def get_branch_head(project_id, branch_id):
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
     workflow = api.workflows.get_workflow(project_id=project_id, branch_id=branch_id)
-    if not workflow is None:
+    if workflow is not None:
         return jsonify(workflow)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
@@ -440,7 +434,7 @@ def append_branch_head(project_id, branch_id):
             command_id=cmd['commandId'],
             arguments=cmd['arguments']
         )
-        if not module is None:
+        if module is not None:
             return jsonify(module)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -458,7 +452,7 @@ def cancel_workflow(project_id, branch_id):
         project_id=project_id,
         branch_id=branch_id
     )
-    if not workflow is None:
+    if workflow is not None:
         return jsonify(workflow)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
@@ -473,7 +467,7 @@ def get_workflow(project_id, branch_id, workflow_id):
         branch_id=branch_id,
         workflow_id=workflow_id
     )
-    if not workflow is None:
+    if workflow is not None:
         return jsonify(workflow)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
 
@@ -489,7 +483,7 @@ def get_workflow_module(project_id, branch_id, module_id):
         branch_id=branch_id,
         module_id=module_id
     )
-    if not module is None:
+    if module is not None:
         return jsonify(module)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
@@ -502,7 +496,7 @@ def delete_workflow_module(project_id, branch_id, module_id):
         branch_id=branch_id,
         module_id=module_id
     )
-    if not result is None:
+    if result is not None:
         return jsonify(result)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
@@ -538,7 +532,7 @@ def insert_workflow_module(project_id, branch_id, module_id):
             command_id=cmd['commandId'],
             arguments=cmd['arguments']
         )
-        if not modules is None:
+        if modules is not None:
             return jsonify(modules)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -576,7 +570,7 @@ def replace_workflow_module(project_id, branch_id, module_id):
             command_id=cmd['commandId'],
             arguments=cmd['arguments']
         )
-        if not modules is None:
+        if modules is not None:
             return jsonify(modules)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -602,10 +596,10 @@ def update_task_state(task_id):
             labels.PROVENANCE
         ]
     )
-    # Update task state. The contents of the request body depend on the value of
-    # the new task state. The request body is evaluated by the API. The API will
-    # raise a ValueError if the request body is invalid. The result is None if
-    # the project or task are unknown.
+    # Update task state. The contents of the request body depend on the value
+    # of the new task state. The request body is evaluated by the API. The API
+    # will raise a ValueError if the request body is invalid. The result is
+    # None if the project or task are unknown.
     try:
         # Result is None if task is not found.
         result = api.tasks.update_task_state(
@@ -613,7 +607,7 @@ def update_task_state(task_id):
             state=obj[labels.STATE],
             body=obj
         )
-        if not result is None:
+        if result is not None:
             return jsonify(result)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -682,7 +676,7 @@ def create_dataset(project_id):
             rows=rows,
             annotations=annotations
         )
-        if not dataset is None:
+        if dataset is not None:
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -702,7 +696,7 @@ def get_dataset(project_id, dataset_id):
             offset=request.args.get(PAGE_OFFSET),
             limit=request.args.get(PAGE_LIMIT)
         )
-        if not dataset is None:
+        if dataset is not None:
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -724,7 +718,7 @@ def get_dataset_annotations(project_id, dataset_id):
         column_id=column_id,
         row_id=row_id
     )
-    if not annotations is None:
+    if annotations is not None:
         return jsonify(annotations)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
 
@@ -737,7 +731,7 @@ def get_dataset_descriptor(project_id, dataset_id):
             project_id=project_id,
             dataset_id=dataset_id
         )
-        if not dataset is None:
+        if dataset is not None:
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -765,8 +759,8 @@ def update_dataset_annotation(project_id, dataset_id):
         required=['key'],
         optional=['columnId', 'rowId', 'key', 'oldValue', 'newValue']
     )
-    # Create update statement and execute. The result is None if no dataset with
-    # given identifier exists.
+    # Create update statement and execute. The result is None if no dataset
+    # with given identifier exists.
     key = obj[labels.KEY] if labels.KEY in obj else None
     column_id = obj[labels.COLUMN_ID] if labels.COLUMN_ID in obj else None
     row_id = obj[labels.ROW_ID] if labels.ROW_ID in obj else None
@@ -782,7 +776,7 @@ def update_dataset_annotation(project_id, dataset_id):
             old_value=old_value,
             new_value=new_value
         )
-        if not annotations is None:
+        if annotations is not None:
             return jsonify(annotations)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
@@ -829,7 +823,7 @@ def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, chart_
         )
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    if not view is None:
+    if view is not None:
         return jsonify(view)
     raise srv.ResourceNotFound(
         ''.join([
@@ -865,7 +859,7 @@ def upload_file(project_id):
                 file=file,
                 file_name=filename
             )
-            if not f_handle is None:
+            if f_handle is not None:
                 return jsonify(f_handle), 201
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
@@ -879,7 +873,7 @@ def download_file(project_id, file_id):
     """Download file from file server."""
     # Get handle for file from the project's filestore
     f_handle = api.files.get_file(project_id, file_id)
-    if not f_handle is None:
+    if f_handle is not None:
         # Use send_file to send the contents of the file
         if f_handle.compressed:
             mimetype = 'application/gzip'

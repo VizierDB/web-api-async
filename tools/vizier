@@ -39,14 +39,14 @@ if [ $# -eq 2  ]
       then
         echo "ui dev mode!"
         UI_DEV="true"
-    fi 
+    fi
 fi
 
 echo $APP_RESOURCES_DIR
 
 #General
 # Web service name
-VIZIERSERVER_NAME="${VIZIERSERVER_NAME:-vizier}" 
+VIZIERSERVER_NAME="${VIZIERSERVER_NAME:-vizier}"
 export VIZIERSERVER_NAME
 #Log file directory used by the web server (DEFAULT: ./.vizierdb/logs)
 VIZIERSERVER_LOG_DIR="${VIZIERSERVER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs}"
@@ -141,7 +141,7 @@ export FLASK_ENV
 WEB_UI_STATIC_FILES="${WEB_UI_STATIC_FILES:-$STATIC_UI_FILES_DIR}"
 export WEB_UI_STATIC_FILES
 
-# on macos there is a weird corner case bug in multiprocessing that will crash python when 
+# on macos there is a weird corner case bug in multiprocessing that will crash python when
 # checking proxy settings before request. it is documented at the following url:
 # https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
 # the work around is to tell python to skip this check which works, but if you need proxy you are SOL

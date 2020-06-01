@@ -47,17 +47,18 @@ def package_files(directory):
                 paths[path] = [os.path.join(path, filename)]
     return [(k.replace('../', ''), v) for k, v in list(paths.items())]
 
+
 packages_files = package_files('resources/packages/')
 processors_files = package_files('resources/processors/')
-webui_files = package_files('../web-ui/build/')
-mimir_jar = [('mimir',['../mimir/bin/mimir-api'])]
-data_files = packages_files + processors_files + webui_files + mimir_jar
-#print(str(data_files))
+# webui_files = package_files('../web-ui/build/')
+# mimir_jar = [('mimir',['../mimir/bin/mimir-api'])]
+data_files = packages_files + processors_files  # + webui_files + mimir_jar
+
 
 setup(
     name='vizier-webapi',
     version='0.7.0',
-    description='UI, Web API, and Backend for data curation projects and workflows',
+    description='Web API backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
     packages=['vizier'],
@@ -83,9 +84,11 @@ setup(
     ],
     include_package_data=True,
     data_files=data_files,
-    scripts=['tools/vizier', 'tools/vizcli'],
-    cmdclass={'bdist_wheel': CustomBdistWheelCommand,
-              'build': CustomBuildCommand,
-              'install': CustomInstallCommand,
-              'develop':CustomDevelopCommand},
+    scripts=['tools/vizcli'],
+    cmdclass={
+        'bdist_wheel': CustomBdistWheelCommand,
+        'build': CustomBuildCommand,
+        'install': CustomInstallCommand,
+        'develop': CustomDevelopCommand
+    },
 )
