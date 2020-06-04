@@ -210,13 +210,13 @@ class VizualTaskProcessor(TaskProcessor):
         """
         # Get dataset name and and row index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        row_index = args.get_value(cmd.PARA_ROW)
+        row = args.get_value(cmd.PARA_ROW)
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute delete row command
         result = self.api.delete_row(
             identifier=ds.identifier,
-            row_index=row_index,
+            row_index=row,
             datastore=context.datastore
         )
         # Create result object

@@ -25,6 +25,7 @@ import vizier.config.base as config
 from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
+from vizier import debug_is_on
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -32,9 +33,6 @@ OUTPUT_TEXT = 'text/plain'
 OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
 OUTPUT_DATASET = 'dataset/view'
-
-def debug_is_on():
-    return str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True"
 
 def format_stack_trace(ex):
     trace = traceback.extract_tb(ex.__traceback__, limit = 30)

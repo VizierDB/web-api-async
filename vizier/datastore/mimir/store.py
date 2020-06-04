@@ -40,7 +40,9 @@ import vizier.mimir as mimir
 import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
+from vizier import debug_is_on
 import shutil
+import traceback
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -181,10 +183,17 @@ class MimirDatastore(DefaultDatastore):
         annotations = DatasetMetadata.from_file(
             self.get_metadata_filename(identifier)
         )
-        return MimirDatasetHandle.from_file(
+        handle = MimirDatasetHandle.from_file(
             dataset_file,
             annotations=annotations
         )
+        # Do a sanity check to make sure that the table exists in mimir
+        if debug_is_on():
+            if not handle.confirm_sync_with_mimir():
+                print("Mimir and Vizier are out of sync.  Expected to find dataset `{}` in Mimir but didn't.".format(handle.identifier))
+                return None
+            # traceback.print_stack()
+        return handle
 
     def get_annotations(self, identifier, column_id=-1, row_id='-1'):
         """Get list of annotations for a dataset component. Expects at least one
