@@ -192,11 +192,21 @@ class MimirProcessor(TaskProcessor):
                 result_cols.append(c_name)
             for idx, comment in enumerate(arguments.get_value(cmd.PARA_COMMENTS)):
                 commentParam = {}
-                commentParam ['expr'] = comment.get_value(cmd.PARA_EXPRESSION)
+                
+                # If target is defined, it is the column that we're trying to annotate
+                # If unset (or empty), it means we're annotating the row.
+                target = comment.get_value(cmd.PARA_EXPRESSION)
+                if (target is not None) and (target != ""):
+                    commentParam['target'] = target
+
+                # The comment
                 commentParam['comment'] = comment.get_value(cmd.PARA_COMMENT)
-                commentParam ['rows'] = []
-                if not comment.get_value(cmd.PARA_ROWID) is None:
-                    commentParam['rows'].append(comment.get_value(cmd.PARA_ROWID))
+
+                # If rowid is defined, it is the row that we're trying to annotate.  
+                # If unset (or empty), it means that we're annotating all rows
+                rowid = comment.get_value(cmd.PARA_ROWID) 
+                if (rowid is not None) and (rowid != ""):
+                    commentParam['rows'] = [ rowid ]
                 
                 #TODO: handle result columns
                 commentsParams.append(commentParam)
