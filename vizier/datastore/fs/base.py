@@ -37,6 +37,9 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
+import datamart_profiler
+import pandas as pd
+
 import vizier.datastore.base as base
 
 
@@ -265,6 +268,47 @@ class FileSystemDatastore(DefaultDatastore):
         """
         return DataObjectMetadata()
 
+    def format_type(self, structural_type, semantic_types=None ):
+        # typeData = ['String', 'Integer', 'Float', 'Categorical', 'DateTime', 'Text', 'Boolean', 'Real'];
+        switcher = {
+            'Enumeration' :  'categorical',
+            'DateTime' :  'datetime',
+            'Text' :  'varchar',
+            'Real' :  'real',
+            'Float' :  'real',
+            'Integer' :  'int',
+            'Boolean' :  'boolean'
+        }
+        if len(semantic_types) > 0:
+            column_type = semantic_types[0][semantic_types[0].rindex('/') + 1:]
+        else:
+            column_type = structural_type[structural_type.rindex('/') + 1:]
+        # Get the function from switcher dictionary
+        vizier_column_type = switcher.get(column_type, 'varchar')
+        return vizier_column_type
+
+    def get_types(self, f_handle):
+        print("Computing column types ...")
+        columns_name = []
+        data_rows = []
+        with f_handle.open() as csvfile:
+            reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
+            for col_name in next(reader):
+                columns_name.append(col_name.strip())
+            for row in reader:
+                values = [cast(v.strip()) for v in row]
+                data_rows.append(values)
+        df = pd.DataFrame(data=data_rows, columns=columns_name)
+        metadata = datamart_profiler.process_dataset(df, include_sample=True)
+
+        # get types
+        columns_info = metadata['columns']
+        column_types = {}
+        for column in columns_info:
+            vizier_column_type = self.format_type(column['structural_type'], column['semantic_types'])
+            column_types[column['name']] = vizier_column_type
+        return column_types
+
     def load_dataset(
         self, f_handle=None, url=None, detect_headers=True, infer_types=True,
         load_format='csv', options=[], human_readable_name=None
@@ -301,15 +345,18 @@ class FileSystemDatastore(DefaultDatastore):
         # Open the file as a csv file. Expects that the first row contains the
         # column names. Read dataset schema and dataset rows into two separate
         # lists.
+        column_types = self.get_types(f_handle)
         columns = []
         rows = []
         with f_handle.open() as csvfile:
             reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
             for col_name in next(reader):
+                column_type = column_types[col_name.strip()] if infer_types else None 
                 columns.append(
                     DatasetColumn(
                         identifier=len(columns),
-                        name=col_name.strip()
+                        name=col_name.strip(),
+                        data_type=column_type
                     )
                 )
             for row in reader:
