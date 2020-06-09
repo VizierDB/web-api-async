@@ -27,7 +27,7 @@ PACKAGE_MIMIR = 'mimir'
 #Identifier for Mimir lenses.
 MIMIR_DOMAIN = 'domain'
 MIMIR_GEOCODE = 'geocode'
-MIMIR_KEY_REPAIR ='key_repair'
+MIMIR_KEY_REPAIR ='repair_key'
 MIMIR_MISSING_KEY ='missing_key'
 MIMIR_MISSING_VALUE = 'missing_value'
 MIMIR_PICKER ='picker'

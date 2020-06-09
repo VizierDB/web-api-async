@@ -236,7 +236,7 @@
                         "value": "dataset"
                     }
                 ], 
-                "id": "key_repair", 
+                "id": "repair_key", 
                 "name": "Key Repair Lens", 
                 "parameter": [
                     {

@@ -117,7 +117,7 @@ class MimirProcessor(TaskProcessor):
             }
         elif command_id == cmd.MIMIR_KEY_REPAIR:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
-            params = [column.name_in_rdb]
+            params = { "key" : column.name_in_rdb }
             update_rows = True
         elif command_id == cmd.MIMIR_MISSING_KEY:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
