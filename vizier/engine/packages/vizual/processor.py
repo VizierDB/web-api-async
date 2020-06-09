@@ -421,11 +421,12 @@ class VizualTaskProcessor(TaskProcessor):
             raise_error=False,
             default_value=True
         )
-        infer_types = args.get_value(
-            cmd.PARA_INFER_TYPES,
-            raise_error=False,
-            default_value=True
-        )
+        infer_types = args.get_value(cmd.PARA_INFER_TYPES)
+        # infer_types = args.get_value(
+        #     cmd.PARA_INFER_TYPES,
+        #     raise_error=False,
+        #     default_value=True
+        # )
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
         print((args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False)))

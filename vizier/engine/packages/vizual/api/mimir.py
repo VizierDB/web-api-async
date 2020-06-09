@@ -289,7 +289,7 @@ class MimirVizualApi(VizualApi):
 
     def load_dataset(
         self, datastore, filestore, file_id=None, url=None, detect_headers=True,
-        infer_types=True, load_format='csv', options=[], username=None,
+        infer_types='none', load_format='csv', options=[], username=None,
         password=None, resources=None, reload=False, human_readable_name = None
     ):
         """Create (or load) a new dataset from a given file or Uri. It is
@@ -314,8 +314,8 @@ class MimirVizualApi(VizualApi):
             Identifier for a web resource
         detect_headers: bool, optional
             Detect column names in loaded file if True
-        infer_types: bool, optional
-            Infer column types for loaded dataset if True
+        infer_types: string, optional
+            Infer column types for loaded dataset if selected a profiler.
         load_format: string, optional
             Format identifier
         options: list, optional

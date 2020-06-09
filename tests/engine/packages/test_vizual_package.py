@@ -64,7 +64,7 @@ class TestVizualCommandValidation(unittest.TestCase):
             file={pckg.FILE_ID: '493ewkfj485ufjw490feofj'},
             load_format='json',
             detect_headers=True,
-            infer_types=True,
+            infer_types='none',
             validate=True
         )
 

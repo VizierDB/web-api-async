@@ -243,11 +243,23 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.parameter_declaration(
                     PARA_INFER_TYPES,
                     name='Infer Types',
-                    data_type=pckg.DT_BOOL,
+                    data_type=pckg.DT_STRING,
+                    values=[
+                        pckg.enum_value(value='none', text='Do not infer data types', is_default=True),
+                        pckg.enum_value(value='datamartprofiler', text='Datamart Profiler'),
+                        pckg.enum_value(value='mimirprofiler', text='Mimir Profiler')
+                    ],
                     index=3,
-                    default_value=True,
-                    required=False
+                    required=True
                 ),
+                # pckg.parameter_declaration(
+                #     PARA_INFER_TYPES,
+                #     name='Infer Types',
+                #     data_type=pckg.DT_BOOL,
+                #     index=3,
+                #     default_value=True,
+                #     required=False
+                # ),
                 pckg.parameter_declaration(
                     PARA_DETECT_HEADERS,
                     name='Detect Headers',
