@@ -114,10 +114,10 @@ class PlotProcessor(TaskProcessor):
                 dataset=ds
             )
         # Execute the query and get the result
-        rows = ChartQuery.exec_query(ds, view)
+        (rows, caveats) = ChartQuery.exec_query(ds, view)
         # Add chart view handle as module output
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows)]),
+            outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows, caveats=caveats)]),
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},
                 write=dict(),
