@@ -380,6 +380,8 @@ class MimirVizualApi(VizualApi):
             # Check to see if table exists
             if not mimir.tableExists(dataset.table_name):
                 dataset = None
+                if file_id is not None: 
+                    f_handle = filestore.get_file(file_id)
             
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
