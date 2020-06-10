@@ -187,7 +187,7 @@ FILE_RELOAD = 'reload'
 
 CATEGORY_DEFAULT = 'default'
 
-def package_declaration(identifier, commands, name=None, description=None):
+def package_declaration(identifier, commands, name=None, category=None, description=None):
     """Create a dictionary containing a package declaration.
 
     Parameters
@@ -211,6 +211,8 @@ def package_declaration(identifier, commands, name=None, description=None):
         obj[LABEL_NAME] = name
     if not description is None:
         obj[LABEL_DESCRIPTION] = description
+    if not category is None:
+        obj[LABEL_CATEGORY] = category
     return obj
 
 

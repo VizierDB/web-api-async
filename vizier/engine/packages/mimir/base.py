@@ -24,6 +24,9 @@ import vizier.engine.packages.base as pckg
 # Package name
 PACKAGE_MIMIR = 'mimir'
 
+# Category name
+CATEGORY_MIMIR = "data_m"
+
 #Identifier for Mimir lenses.
 MIMIR_DOMAIN = 'domain'
 MIMIR_GEOCODE = 'geocode'
@@ -79,6 +82,7 @@ def para_materialize_input(index):
 
 MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
+    category=CATEGORY_MIMIR,
     commands=[
         pckg.command_declaration(
             identifier=MIMIR_DOMAIN,
@@ -340,18 +344,16 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.constant_format('TYPE'),
                 pckg.constant_format('INFERENCE'),
                 pckg.constant_format('FOR'),
-                pckg.constant_format('COLUMNS'),
-                pckg.constant_format('IN'),
                 pckg.variable_format(pckg.PARA_DATASET),
                 pckg.constant_format('WITH'),
-                pckg.constant_format('percent_conform'),
-                pckg.constant_format('='),
+                pckg.constant_format('PERCENT'),
+                pckg.constant_format('CONFORM'),
                 pckg.variable_format(PARA_PERCENT_CONFORM)
             ]
         ),
         pckg.command_declaration(
             identifier=MIMIR_SHAPE_DETECTOR,
-            name='Shape Detector Adaptive Schema',
+            name='Shape Detector',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
@@ -380,45 +382,32 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
                     identifier=PARA_COMMENTS,
-                    name='Comment',
+                    name='Comments',
                     data_type=pckg.DT_LIST,
                     index=1
                 ),
-                pckg.parameter_declaration(
-                    identifier=PARA_EXPRESSION,
-                    name='Column or Expression',
-                    data_type=pckg.DT_STRING,
-                    index=2,
-                    parent=PARA_COMMENTS
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_COMMENT,
-                    name='Comment',
-                    data_type=pckg.DT_STRING,
-                    index=3,
-                    parent=PARA_COMMENTS
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_ROWID,
-                    name='Row Identifier',
-                    data_type=pckg.DT_ROW_ID,
-                    index=4,
-                    required=False,
-                    parent=PARA_COMMENTS
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_RESULT_COLUMNS,
-                    name='Result Columns',
-                    data_type=pckg.DT_LIST,
-                    index=5
-                ),
-                pckg.parameter_declaration(
-                    identifier=pckg.PARA_COLUMN,
-                    name='Column',
-                    data_type=pckg.DT_COLUMN_ID,
-                    index=6,
-                    parent=PARA_RESULT_COLUMNS
-                ),
+                    pckg.parameter_declaration(
+                        identifier=PARA_EXPRESSION,
+                        name='Column',
+                        data_type=pckg.DT_STRING,
+                        index=2,
+                        parent=PARA_COMMENTS
+                    ),
+                    pckg.parameter_declaration(
+                        identifier=PARA_COMMENT,
+                        name='Comment',
+                        data_type=pckg.DT_STRING,
+                        index=3,
+                        parent=PARA_COMMENTS
+                    ),
+                    pckg.parameter_declaration(
+                        identifier=PARA_ROWID,
+                        name='Row or Condition',
+                        data_type=pckg.DT_ROW_ID,
+                        index=4,
+                        required=False,
+                        parent=PARA_COMMENTS
+                    ),
                 para_materialize_input(5)
             ],
             format=[
