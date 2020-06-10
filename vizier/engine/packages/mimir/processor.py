@@ -33,6 +33,12 @@ import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as cmd
 import vizier.mimir as mimir
 
+LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES = set([
+    cmd.MIMIR_SCHEMA_MATCHING, 
+    cmd.MIMIR_TYPE_INFERENCE, 
+    cmd.MIMIR_SHAPE_DETECTOR
+])
+
 
 class MimirProcessor(TaskProcessor):
     """Implmentation of the task processor for the mimir package. The processor
@@ -211,6 +217,23 @@ class MimirProcessor(TaskProcessor):
                 #TODO: handle result columns
                 commentsParams.append(commentParam)
                 params = {'comments' : commentsParams}
+        elif command_id == cmd.MIMIR_PIVOT:
+            column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
+            params = {
+                "target" : column.name_in_rdb,
+                "keys" : [],
+                "values" : []
+            }
+            for col_arg in arguments.get_value(cmd.PARA_VALUES):
+                col = dataset.column_by_id(col_arg.get_value(cmd.PARA_VALUE))
+                params["values"].append(col.name_in_rdb)
+            for col_arg in arguments.get_value(cmd.PARA_KEYS, default_value=[]):
+                col = dataset.column_by_id(col_arg.get_value(cmd.PARA_KEY))
+                params["keys"].append(col.name_in_rdb)
+            if len(params["values"]) < 1:
+                raise ValueError("Need at least one value column")
+            update_rows = True
+            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
         else:
             raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
         # Create Mimir lens
@@ -222,45 +245,27 @@ class MimirProcessor(TaskProcessor):
             arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
             human_readable_name = ds_name.upper()
         )
-        (lens_name, lens_annotations) = (
-            mimir_lens_response['lensName'],
-            None#mimir_lens_response['annotations']
+        lens_name = mimir_lens_response['lensName']
+        lens_schema = mimir_lens_response['schema']
+
+        columns = [
+            MimirDatasetColumn(
+                identifier = col_id,
+                name_in_dataset = col["name"],
+                data_type = col["type"]
+            )
+            for (col, col_id) in zip(lens_schema, range(0, len(lens_schema)))
+        ]
+        ds = context.datastore.register_dataset(
+            table_name=lens_name,
+            columns=columns,
+            annotations=dataset.annotations
         )
-        # Create a view including missing row ids for the result of a
-        # MISSING KEY lens
-        #if command_id == cmd.MIMIR_MISSING_KEY:
-        #    lens_name, row_counter = create_missing_key_view(
-        #        dataset,
-        #        lens_name,
-        #        column
-        #    )
-        #    dataset.row_counter = row_counter
-        # Create datastore entry for lens.
-        if not store_as_dataset is None:
-            columns = list()
-            for c_name in column_names:
-                col_id = len(columns)
-                columns.append(
-                    MimirDatasetColumn(
-                        identifier=col_id,
-                        name_in_dataset=c_name
-                    )
-                )
-            ds = context.datastore.register_dataset(
-                table_name=lens_name,
-                columns=columns,
-                annotations=dataset.annotations
-            )
+        if store_as_dataset is not None:
             ds_name = store_as_dataset
-        else:
-            ds = context.datastore.register_dataset(
-                table_name=lens_name,
-                columns=dataset.columns,
-                annotations=dataset.annotations
-            )
-        # Add dataset schema and returned annotations to output
-        if command_id in [cmd.MIMIR_SCHEMA_MATCHING, cmd.MIMIR_TYPE_INFERENCE, cmd.MIMIR_SHAPE_DETECTOR]:
-            print_dataset_schema(outputs, ds_name, ds.columns)
+
+        if command_id in LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES:
+            print_dataset_schema(outputs, ds_name, columns)
         else:
             ds_output = server.api.datasets.get_dataset(
                 project_id=context.project_id,
@@ -270,7 +275,6 @@ class MimirProcessor(TaskProcessor):
             )
             outputs.stdout.append(DatasetOutput(ds_output))
         
-        #print_lens_annotations(outputs, lens_annotations)
         dsd = DatasetDescriptor(
                 identifier=ds.identifier,
                 columns=ds.columns,

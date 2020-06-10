@@ -28,39 +28,44 @@ PACKAGE_MIMIR = 'mimir'
 CATEGORY_MIMIR = "data_m"
 
 #Identifier for Mimir lenses.
-MIMIR_DOMAIN = 'domain'
-MIMIR_GEOCODE = 'geocode'
-MIMIR_KEY_REPAIR ='repair_key'
-MIMIR_MISSING_KEY ='missing_key'
-MIMIR_MISSING_VALUE = 'missing_value'
-MIMIR_PICKER ='picker'
-MIMIR_SCHEMA_MATCHING ='schema_matching'
-MIMIR_TYPE_INFERENCE ='type_inference'
-MIMIR_SHAPE_DETECTOR ='shape_watcher'
-MIMIR_COMMENT ='comment'
+MIMIR_DOMAIN          = 'domain'
+MIMIR_GEOCODE         = 'geocode'
+MIMIR_KEY_REPAIR      = 'repair_key'
+MIMIR_MISSING_KEY     = 'missing_key'
+MIMIR_MISSING_VALUE   = 'missing_value'
+MIMIR_PICKER          = 'picker'
+MIMIR_SCHEMA_MATCHING = 'schema_matching'
+MIMIR_TYPE_INFERENCE  = 'type_inference'
+MIMIR_SHAPE_DETECTOR  = 'shape_watcher'
+MIMIR_COMMENT         = 'comment'
+MIMIR_PIVOT           = 'pivot'
 
 # Command arguments
-PARA_CITY = 'city'
-PARA_COLUMN_NAME='column'
-PARA_COLUMNS = 'columns'
+PARA_CITY               = 'city'
+PARA_COLUMN_NAME        = 'column'
+PARA_COLUMNS            = 'columns'
 PARA_COLUMNS_CONSTRAINT = 'constraint'
-PARA_GEOCODER = 'geocoder'
-PARA_HOUSE_NUMBER = 'strnumber'
-PARA_MATERIALIZE_INPUT = 'materializeInput'
-PARA_PERCENT_CONFORM = 'percentConform'
-PARA_PICKAS = 'pickAs'
-PARA_PICKFROM = 'pickFrom'
-PARA_RESULT_DATASET = 'resultName'
-PARA_SCHEMA = 'schema'
-PARA_STATE = 'state'
-PARA_STREET = 'strname'
-PARA_TYPE = 'type'
-PARA_MODEL_NAME = 'modelName'
-PARA_COMMENTS = 'comments'
-PARA_RESULT_COLUMNS = 'resultColumns'
-PARA_EXPRESSION = 'expression'
-PARA_COMMENT = 'comment'
-PARA_ROWID = 'rowid'
+PARA_GEOCODER           = 'geocoder'
+PARA_HOUSE_NUMBER       = 'strnumber'
+PARA_MATERIALIZE_INPUT  = 'materializeInput'
+PARA_PERCENT_CONFORM    = 'percentConform'
+PARA_PICKAS             = 'pickAs'
+PARA_PICKFROM           = 'pickFrom'
+PARA_RESULT_DATASET     = 'resultName'
+PARA_SCHEMA             = 'schema'
+PARA_STATE              = 'state'
+PARA_STREET             = 'strname'
+PARA_TYPE               = 'type'
+PARA_MODEL_NAME         = 'modelName'
+PARA_COMMENTS           = 'comments'
+PARA_RESULT_COLUMNS     = 'resultColumns'
+PARA_EXPRESSION         = 'expression'
+PARA_COMMENT            = 'comment'
+PARA_ROWID              = 'rowid'
+PARA_KEY                = 'key'
+PARA_KEYS               = 'keys'
+PARA_VALUE              = 'value'
+PARA_VALUES             = 'values'
 
 """Mimir lens specification schema."""
 def para_materialize_input(index):
@@ -336,6 +341,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     identifier=PARA_PERCENT_CONFORM,
                     name='Percent Conform',
                     data_type=pckg.DT_DECIMAL,
+                    default_value=0.5,
                     index=1
                 ),
                 para_materialize_input(2)
@@ -428,6 +434,59 @@ MIMIR_LENSES = pckg.package_declaration(
                     ]
                 ),
                 pckg.constant_format(')', lspace=False)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=MIMIR_PIVOT,
+            name="Pivot",
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_COLUMN,
+                    name='Pivot Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUES,
+                    name='Value Columns',
+                    data_type=pckg.DT_LIST,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=3,
+                    parent=PARA_VALUES
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_KEYS,
+                    name='Key Columns',
+                    data_type=pckg.DT_LIST,
+                    index=4,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_KEY,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=5,
+                    parent=PARA_KEYS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_RESULT_DATASET,
+                    name='Output (if different)',
+                    data_type=pckg.DT_STRING,
+                    index=6,
+                    required=False
+                ),
+            ],
+            format=[
+                pckg.constant_format("PIVOT"),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format("ON"),
+                pckg.variable_format(PARA_COLUMN_NAME)
             ]
         )
     ]

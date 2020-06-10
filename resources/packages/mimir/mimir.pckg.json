@@ -725,6 +725,7 @@
                     },
                     {
                         "datatype": "decimal",
+                        "defaultValue": 0.5,
                         "hidden": false,
                         "id": "percentConform",
                         "index": 1,
@@ -926,6 +927,96 @@
                         "id": "materializeInput",
                         "index": 5,
                         "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "PIVOT"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "ON"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    }
+                ],
+                "id": "pivot",
+                "name": "Pivot",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Pivot Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "values",
+                        "index": 2,
+                        "name": "Value Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "Column",
+                        "parent": "values",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "keys",
+                        "index": 4,
+                        "name": "Key Columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "key",
+                        "index": 5,
+                        "name": "Column",
+                        "parent": "keys",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "resultName",
+                        "index": 6,
+                        "name": "Output (if different)",
                         "required": false
                     }
                 ]
