@@ -8,68 +8,6 @@
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
-                        "value": "DOMAIN"
-                    },
-                    {
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "const",
-                        "value": "FOR"
-                    },
-                    {
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "var",
-                        "value": "column"
-                    },
-                    {
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "const",
-                        "value": "IN"
-                    },
-                    {
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "var",
-                        "value": "dataset"
-                    }
-                ],
-                "id": "domain",
-                "name": "Domain Lens",
-                "parameter": [
-                    {
-                        "datatype": "dataset",
-                        "hidden": false,
-                        "id": "dataset",
-                        "index": 0,
-                        "name": "Dataset",
-                        "required": true
-                    },
-                    {
-                        "datatype": "colid",
-                        "hidden": false,
-                        "id": "column",
-                        "index": 1,
-                        "name": "Column",
-                        "required": true
-                    },
-                    {
-                        "datatype": "bool",
-                        "hidden": true,
-                        "id": "materializeInput",
-                        "index": 2,
-                        "name": "Materialize Input",
-                        "required": false
-                    }
-                ]
-            },
-            {
-                "format": [
-                    {
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "const",
                         "value": "GEOCODE"
                     },
                     {
@@ -484,7 +422,7 @@
                     }
                 ],
                 "id": "picker",
-                "name": "Picker Lens",
+                "name": "Merge Columns",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -507,7 +445,7 @@
                         "hidden": false,
                         "id": "pickFrom",
                         "index": 2,
-                        "name": "Pick From",
+                        "name": "Input",
                         "parent": "schema",
                         "required": true
                     },
@@ -516,7 +454,7 @@
                         "hidden": false,
                         "id": "pickAs",
                         "index": 3,
-                        "name": "Pick As",
+                        "name": "Output",
                         "required": false
                     },
                     {
@@ -855,20 +793,6 @@
                         "value": "comments"
                     },
                     {
-                        "format": [
-                            {
-                                "lspace": true,
-                                "rspace": true,
-                                "type": "var",
-                                "value": "column"
-                            }
-                        ],
-                        "lspace": true,
-                        "rspace": true,
-                        "type": "var",
-                        "value": "resultColumns"
-                    },
-                    {
                         "lspace": false,
                         "rspace": true,
                         "type": "const",
@@ -895,13 +819,13 @@
                         "required": true
                     },
                     {
-                        "datatype": "string",
+                        "datatype": "colid",
                         "hidden": false,
                         "id": "expression",
                         "index": 2,
                         "name": "Column",
                         "parent": "comments",
-                        "required": true
+                        "required": false
                     },
                     {
                         "datatype": "string",
@@ -913,7 +837,7 @@
                         "required": true
                     },
                     {
-                        "datatype": "rowid",
+                        "datatype": "string",
                         "hidden": false,
                         "id": "rowid",
                         "index": 4,

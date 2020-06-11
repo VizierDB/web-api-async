@@ -149,27 +149,25 @@ class MimirProcessor(TaskProcessor):
                 #param = '\'(' + param + ')\''
                 params.append(param)
         elif command_id == cmd.MIMIR_PICKER:
-            pick_from = list()
-            column_names = list()
+            ## Compute the input columns
+            inputs = []
             for col in arguments.get_value(cmd.PARA_SCHEMA):
                 c_col = col.get_value(cmd.PARA_PICKFROM)
                 column = dataset.column_by_id(c_col)
-                pick_from.append(column.name_in_rdb)
-                column_names.append(column.name.upper().replace(' ', '_'))
-            # Add result column to dataset schema
-            pick_as = arguments.get_value(
-                cmd.PARA_PICKAS,
-                default_value='PICK_ONE_' + '_'.join(column_names)
-            )
-            pick_as = dataset.get_unique_name(pick_as.strip().upper())
-            dataset.columns.append(
-                MimirDatasetColumn(
-                    identifier=dataset.max_column_id() + 1,
-                    name_in_dataset=pick_as
-                )
-            )
-            params = ['PICK_FROM(' + ','.join(pick_from) + ')']
-            params.append('PICK_AS(' + pick_as + ')')
+                inputs.append(column.name_in_rdb)
+
+            ## Compute the output column
+            output = arguments.get_value(cmd.PARA_PICKAS, default_value = inputs[0])
+            if output == "":
+                output = inputs[0]
+            else:
+                output = dataset.get_unique_name(output.strip().upper())
+
+            ## Compute the final parameter list
+            params = {
+                "inputs" : inputs,
+                "output" : output
+            }
         elif command_id == cmd.MIMIR_SCHEMA_MATCHING:
             store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
             if store_as_dataset in context.datasets:
@@ -192,31 +190,33 @@ class MimirProcessor(TaskProcessor):
                 params = [str(dseModel)]
         elif command_id == cmd.MIMIR_COMMENT:
             commentsParams = []
-            result_cols = []
-            for col in arguments.get_value(cmd.PARA_RESULT_COLUMNS):
-                c_name = col.get_value(pckg.PARA_COLUMN)
-                result_cols.append(c_name)
             for idx, comment in enumerate(arguments.get_value(cmd.PARA_COMMENTS)):
                 commentParam = {}
                 
                 # If target is defined, it is the column that we're trying to annotate
                 # If unset (or empty), it means we're annotating the row.
-                target = comment.get_value(cmd.PARA_EXPRESSION)
-                if (target is not None) and (target != ""):
-                    commentParam['target'] = target
+                column_id = comment.get_value(cmd.PARA_EXPRESSION, None)
+
+                if column_id is not None:
+                    column = dataset.column_by_id(column_id)
+                    commentParam['target'] = column.name_in_rdb
 
                 # The comment
                 commentParam['comment'] = comment.get_value(cmd.PARA_COMMENT)
 
                 # If rowid is defined, it is the row that we're trying to annotate.  
                 # If unset (or empty), it means that we're annotating all rows
-                rowid = comment.get_value(cmd.PARA_ROWID) 
+                rowid = comment.get_value(cmd.PARA_ROWID, None) 
                 if (rowid is not None) and (rowid != ""):
-                    commentParam['rows'] = [ rowid ]
+                    # If rowid begins with '=', it's a formula
+                    if rowid[0] == '=':
+                        commentParam['condition'] = rowid[1:]
+                    else:
+                        commentParam['rows'] = [ int(rowid) ]
                 
                 #TODO: handle result columns
                 commentsParams.append(commentParam)
-                params = {'comments' : commentsParams}
+            params = {'comments' : commentsParams}
         elif command_id == cmd.MIMIR_PIVOT:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = {

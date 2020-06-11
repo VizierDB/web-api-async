@@ -89,22 +89,22 @@ MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
     category=CATEGORY_MIMIR,
     commands=[
-        pckg.command_declaration(
-            identifier=MIMIR_DOMAIN,
-            name='Domain Lens',
-            parameters=[
-                pckg.para_dataset(0),
-                pckg.para_column(1),
-                para_materialize_input(2)
-            ],
-            format=[
-                pckg.constant_format('DOMAIN'),
-                pckg.constant_format('FOR'),
-                pckg.variable_format(pckg.PARA_COLUMN),
-                pckg.constant_format('IN'),
-                pckg.variable_format(pckg.PARA_DATASET)
-            ]
-        ),
+        # pckg.command_declaration(
+        #     identifier=MIMIR_DOMAIN,
+        #     name='Domain Lens',
+        #     parameters=[
+        #         pckg.para_dataset(0),
+        #         pckg.para_column(1),
+        #         para_materialize_input(2)
+        #     ],
+        #     format=[
+        #         pckg.constant_format('DOMAIN'),
+        #         pckg.constant_format('FOR'),
+        #         pckg.variable_format(pckg.PARA_COLUMN),
+        #         pckg.constant_format('IN'),
+        #         pckg.variable_format(pckg.PARA_DATASET)
+        #     ]
+        # ),
         pckg.command_declaration(
             identifier=MIMIR_GEOCODE,
             name='Geocode Lens',
@@ -241,7 +241,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_PICKER,
-            name='Picker Lens',
+            name='Merge Columns',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
@@ -252,14 +252,14 @@ MIMIR_LENSES = pckg.package_declaration(
                 ),
                 pckg.parameter_declaration(
                     identifier=PARA_PICKFROM,
-                    name='Pick From',
+                    name='Input',
                     data_type=pckg.DT_COLUMN_ID,
                     index=2,
                     parent=PARA_SCHEMA
                 ),
                 pckg.parameter_declaration(
                     identifier=PARA_PICKAS,
-                    name='Pick As',
+                    name='Output',
                     data_type=pckg.DT_STRING,
                     index=3,
                     required=False
@@ -395,9 +395,10 @@ MIMIR_LENSES = pckg.package_declaration(
                     pckg.parameter_declaration(
                         identifier=PARA_EXPRESSION,
                         name='Column',
-                        data_type=pckg.DT_STRING,
+                        data_type=pckg.DT_COLUMN_ID,
                         index=2,
-                        parent=PARA_COMMENTS
+                        parent=PARA_COMMENTS,
+                        required=False
                     ),
                     pckg.parameter_declaration(
                         identifier=PARA_COMMENT,
@@ -409,7 +410,7 @@ MIMIR_LENSES = pckg.package_declaration(
                     pckg.parameter_declaration(
                         identifier=PARA_ROWID,
                         name='Row or Condition',
-                        data_type=pckg.DT_ROW_ID,
+                        data_type=pckg.DT_STRING,
                         index=4,
                         required=False,
                         parent=PARA_COMMENTS
@@ -425,12 +426,6 @@ MIMIR_LENSES = pckg.package_declaration(
                     format=[
                         pckg.variable_format(PARA_EXPRESSION),
                         pckg.variable_format(PARA_COMMENT)
-                    ]
-                ),
-                pckg.group_format(
-                    PARA_RESULT_COLUMNS,
-                    format=[
-                        pckg.variable_format(pckg.PARA_COLUMN)
                     ]
                 ),
                 pckg.constant_format(')', lspace=False)
