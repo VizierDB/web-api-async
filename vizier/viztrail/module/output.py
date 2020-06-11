@@ -105,7 +105,6 @@ class ModuleOutputs(object):
         vizier.viztrail.module.output.ModuleOutputs
         """
         message = "ERROR: NO ERROR MESSAGE"
-        template = "{0}:{1!r}"
         try:
             if type(ex) is MimirError:
                 # message = "MIMIR ERROR"
@@ -134,11 +133,13 @@ class ModuleOutputs(object):
                                 format_stack_trace(ex)
                             )
             else:
-                message = template.format(type(ex).__name__, ex.args)
-                if debug_is_on():
-                    message = message + ":\n " + str(traceback.format_exc())
+                message = "{}{}\n{}".format(
+                    type(ex).__name__, 
+                    ( (": " + "; ".join(str(arg) for arg in ex.args)) if ex.args is not None else "" ), 
+                    format_stack_trace(ex)
+                )
         except Exception as e:
-            message = template.format(type(e).__name__, e.args)
+            message = "{0}:{1!r}".format(type(e).__name__, e.args)
             if debug_is_on():
                 message += "\n"+format_stack_trace(e)
 
