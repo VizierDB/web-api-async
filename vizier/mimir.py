@@ -31,7 +31,8 @@ class MimirError(Exception):
 
 PASSTHROUGH_ERRORS = set([
   "java.sql.SQLException",
-  "org.apache.spark.sql.AnalysisException"
+  "org.apache.spark.sql.AnalysisException",
+  "org.mimirdb.api.FormattedError"
 ])
 
 def readResponse(resp):
@@ -52,7 +53,7 @@ def readResponse(resp):
             errorType = json_object.get("errorType", "Unknown")
             errorMessage = json_object.get("errorMessage", "Unknown")
             if errorType not in PASSTHROUGH_ERRORS:
-                errorMessage = "Internal Error [Mimir]: {}".format(errorMessage)
+                errorMessage = "Internal Error [Mimir]: {} / {}".format(errorType, errorMessage)
             json_object["errorType"] = errorType
             json_object["errorMessage"] = errorMessage
             raise MimirError(json_object)
