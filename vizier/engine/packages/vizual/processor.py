@@ -414,7 +414,7 @@ class VizualTaskProcessor(TaskProcessor):
             raise ValueError('invalid source descriptor')
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
-        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
+        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else True
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
         detect_headers = args.get_value(
             cmd.PARA_DETECT_HEADERS,
