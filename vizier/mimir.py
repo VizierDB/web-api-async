@@ -173,6 +173,22 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
     resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
     return resp
 
+def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit = None, include_uncertainty = None): 
+    req_json = { "table" : table }
+    if columns is not None:
+      req_json["columns"] = columns
+    if offset is not None:
+      req_json["offset"] = offset
+    if offset_to_rowid is not None:
+      req_json["offset_to_rowid"] = offset_to_rowid
+    if limit is not None:
+      req_json["limit"] = limit
+    if include_uncertainty is not None:
+      req_json["includeUncertainty"] = include_uncertainty
+
+    resp = readResponse(requests.post(_mimir_url + 'query/table', json=req_json))
+    return resp
+
 def countRows(view_name):
     sql = 'SELECT COUNT(1) FROM ' + view_name 
     rs_count = vistrailsQueryMimirJson(sql, False, False)
