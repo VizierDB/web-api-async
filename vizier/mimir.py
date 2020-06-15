@@ -31,7 +31,8 @@ class MimirError(Exception):
 
 PASSTHROUGH_ERRORS = set([
   "java.sql.SQLException",
-  "org.apache.spark.sql.AnalysisException"
+  "org.apache.spark.sql.AnalysisException",
+  "org.mimirdb.api.FormattedError"
 ])
 
 def readResponse(resp):
@@ -52,7 +53,7 @@ def readResponse(resp):
             errorType = json_object.get("errorType", "Unknown")
             errorMessage = json_object.get("errorMessage", "Unknown")
             if errorType not in PASSTHROUGH_ERRORS:
-                errorMessage = "Internal Error [Mimir]: {}".format(errorMessage)
+                errorMessage = "Internal Error [Mimir]: {} / {}".format(errorType, errorMessage)
             json_object["errorType"] = errorType
             json_object["errorMessage"] = errorMessage
             raise MimirError(json_object)
@@ -171,6 +172,22 @@ def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input =
       "includeReasons": include_reasons
     } 
     resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
+    return resp
+
+def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit = None, include_uncertainty = None): 
+    req_json = { "table" : table }
+    if columns is not None:
+      req_json["columns"] = columns
+    if offset is not None:
+      req_json["offset"] = offset
+    if offset_to_rowid is not None:
+      req_json["offset_to_rowid"] = offset_to_rowid
+    if limit is not None:
+      req_json["limit"] = limit
+    if include_uncertainty is not None:
+      req_json["includeUncertainty"] = include_uncertainty
+
+    resp = readResponse(requests.post(_mimir_url + 'query/table', json=req_json))
     return resp
 
 def countRows(view_name):
