@@ -39,10 +39,12 @@ MIMIR_TYPE_INFERENCE  = 'type_inference'
 MIMIR_SHAPE_DETECTOR  = 'shape_watcher'
 MIMIR_COMMENT         = 'comment'
 MIMIR_PIVOT           = 'pivot'
+MIMIR_SHRED           = 'shred'
 
 # Command arguments
 PARA_CITY               = 'city'
 PARA_COLUMN_NAME        = 'column'
+PARA_OUTPUT_COLUMN      = 'output_col'
 PARA_COLUMNS            = 'columns'
 PARA_COLUMNS_CONSTRAINT = 'constraint'
 PARA_GEOCODER           = 'geocoder'
@@ -66,6 +68,8 @@ PARA_KEY                = 'key'
 PARA_KEYS               = 'keys'
 PARA_VALUE              = 'value'
 PARA_VALUES             = 'values'
+PARA_INDEX              = 'index'
+PARA_KEEP_ORIGINAL      = 'keepOriginal'
 
 """Mimir lens specification schema."""
 def para_materialize_input(index):
@@ -482,6 +486,82 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.variable_format(pckg.PARA_DATASET),
                 pckg.constant_format("ON"),
                 pckg.variable_format(PARA_COLUMN_NAME)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=MIMIR_SHRED,
+            name="Shred",
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_COLUMN_NAME,
+                    name='Input Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_COLUMNS,
+                    name='Rules',
+                    data_type=pckg.DT_LIST,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_OUTPUT_COLUMN,
+                    name='Output Column',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    required=False,
+                    parent=PARA_COLUMNS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_TYPE,
+                    name='Rule',
+                    data_type=pckg.DT_STRING,
+                    index=4,
+                    values=[
+                        pckg.enum_value(value="field"    , text="Delimited Field", is_default = True),
+                        pckg.enum_value(value="pattern"  , text="Regular Expression"),
+                        pckg.enum_value(value="explode"  , text="Explode Delimiter"),
+                        pckg.enum_value(value="substring", text="Substring"),
+                        pckg.enum_value(value="pass"     , text="Leave Unchanged")
+                    ],
+                    parent=PARA_COLUMNS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_EXPRESSION,
+                    name='Expression / Delimiter',
+                    data_type=pckg.DT_STRING,
+                    index=5,
+                    required=False,
+                    parent=PARA_COLUMNS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_INDEX,
+                    name='Group / Field (if needed)',
+                    data_type=pckg.DT_INT,
+                    index=6,
+                    required=False,
+                    default_value=1,
+                    parent=PARA_COLUMNS
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_KEEP_ORIGINAL,
+                    name='Keep Original Columns',
+                    data_type=pckg.DT_BOOL,
+                    default_value=False,
+                    index=7
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_RESULT_DATASET,
+                    name='Output Dataset (if different)',
+                    data_type=pckg.DT_STRING,
+                    index=8,
+                    required=False
+                )
+            ],
+            format=[
+                pckg.constant_format("SHRED"),
+                pckg.variable_format(pckg.PARA_DATASET),
             ]
         )
     ]

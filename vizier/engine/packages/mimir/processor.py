@@ -18,6 +18,8 @@
 in the Mimir lenses package.
 """
 
+import re
+
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
@@ -234,8 +236,57 @@ class MimirProcessor(TaskProcessor):
                 raise ValueError("Need at least one value column")
             update_rows = True
             store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
+        elif command_id == cmd.MIMIR_SHRED:
+            params = { 
+                "keepOriginalColumns" : arguments.get_value(cmd.PARA_KEEP_ORIGINAL)
+            }
+            shreds = []
+            global_input_col = dataset.column_by_id(arguments.get_value(cmd.PARA_COLUMN_NAME))
+            for (idx, shred) in enumerate(arguments.get_value(cmd.PARA_COLUMNS)):
+                output_col = shred.get_value(cmd.PARA_OUTPUT_COLUMN)
+                if output_col is None:
+                    output_col = "{}_{}".format(input_col,idx)
+                config = {}
+                shred_type = shred.get_value(cmd.PARA_TYPE)
+                expression = shred.get_value(cmd.PARA_EXPRESSION)
+                group = shred.get_value(cmd.PARA_INDEX)
+                if shred_type == "pattern":
+                    config["regexp"] = expression
+                    config["group"] = int(group)
+                elif shred_type == "field":
+                    config["separator"] = expression
+                    config["field"] = int(group)
+                elif shred_type == "explode":
+                    config["separator"] = expression
+                elif shred_type == "pass":
+                    pass
+                elif shred_type == "substring":
+                    range_parts = re.match("([0-9]+)(([+\\-])([0-9]+))?", expression)
+                    print(range_parts)
+                    if range_parts is None:
+                        raise ValueError("Substring requires a range of the form '10', '10-11', or '10+1', but got '{}'".format(expression))
+                    config["start"] = int(range_parts.group(1))-1 # Convert 1-based numbering to 0-based
+                    if range_parts.group(2) is None:
+                        config["end"] = config["start"] + 1
+                    elif range_parts.group(3) == "+":
+                        config["end"] = config["start"] + int(range_parts.group(4))
+                    elif range_parts.group(3) == "-":
+                        config["end"] = int(range_parts.group(4))
+                    else:
+                        raise ValueError("Invalid expression '{}' in substring shredder".format(expression))
+                else:
+                    raise ValueError("Invalid Shredding Type '{}'".format(shred_type))
+
+                shreds.append({
+                    **config,
+                    "op" : shred_type,
+                    "input" : global_input_col.name_in_rdb,
+                    "output" : output_col,
+                })
+            params["shreds"] = shreds
+            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
         else:
-            raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
+            raise ValueError("Unknown Mimir lens '{}'".format(command_id))
         # Create Mimir lens
        
         mimir_lens_response = mimir.createLens(
