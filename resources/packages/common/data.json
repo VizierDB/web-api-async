@@ -132,14 +132,30 @@
                         ]
                     }, 
                     {
-                        "datatype": "bool", 
-                        "defaultValue": false, 
-                        "hidden": false, 
-                        "id": "loadInferTypes", 
-                        "index": 3, 
-                        "name": "Infer Types", 
-                        "required": false
-                    }, 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "loadInferTypes",
+                        "index": 3,
+                        "name": "Infer Types",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Do not infer data types",
+                                "value": "none"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Datamart Profiler",
+                                "value": "datamartprofiler"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Mimir Profiler",
+                                "value": "mimirprofiler"
+                            }
+                        ]
+                    },
                     {
                         "datatype": "bool", 
                         "defaultValue": false, 

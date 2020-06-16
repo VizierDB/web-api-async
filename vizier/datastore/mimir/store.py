@@ -373,7 +373,7 @@ class MimirDatastore(DefaultDatastore):
     
     def download_dataset(
         self, url, username=None, password=None, filestore=None, detect_headers=True, 
-        infer_types=True, load_format='csv', options=[], human_readable_name=None
+        infer_types='none', load_format='csv', options=[], human_readable_name=None
     ):
         """Create a new dataset from a given file. Returns the handle for the
         downloaded file only if the filestore has been provided as an argument
@@ -391,8 +391,8 @@ class MimirDatastore(DefaultDatastore):
             Optional password for authentication
         detect_headers: bool, optional
             Detect column names in loaded file if True
-        infer_types: bool, optional
-            Infer column types for loaded dataset if True
+        infer_types: string, optional
+            Infer column types for loaded dataset if selected a profiler.
         load_format: string, optional
             Format identifier
         options: list, optional
@@ -420,7 +420,7 @@ class MimirDatastore(DefaultDatastore):
         )
 
     def load_dataset(
-        self, f_handle=None, url=None, detect_headers=True, infer_types=True,
+        self, f_handle=None, url=None, detect_headers=True, infer_types='none',
         load_format='csv', options=[], human_readable_name=None
     ):
         """Create a new dataset from a given file or url. Expects that either
@@ -436,8 +436,8 @@ class MimirDatastore(DefaultDatastore):
             Url for the file source
         detect_headers: bool, optional
             Detect column names in loaded file if True
-        infer_types: bool, optional
-            Infer column types for loaded dataset if True
+        infer_types: string, optional
+            Infer column types for loaded dataset if selected a profiler.
         load_format: string, optional
             Format identifier
         options: list, optional
@@ -459,6 +459,8 @@ class MimirDatastore(DefaultDatastore):
         elif not url is None:
             abspath = url
         # Load dataset into Mimir
+        # Check if infer_types is equal to 'mimirprofiler' then setup it as True otherwise False
+        infer_types = True if infer_types == 'mimirprofiler' else False
         init_load_name = mimir.loadDataSource(
             abspath,
             infer_types,

@@ -186,7 +186,7 @@ class DatastoreClient(Datastore):
         return DataObjectMetadata()
 
     def load_dataset(
-        self, f_handle=None, url=None, detect_headers=True, infer_types=True,
+        self, f_handle=None, url=None, detect_headers=True, infer_types='none',
         load_format='csv', options=[], human_readable_name=None
     ):
         """Create a new dataset from a given file or Url.
@@ -199,8 +199,8 @@ class DatastoreClient(Datastore):
             Url for the file source
         detect_headers: bool, optional
             Detect column names in loaded file if True
-        infer_types: bool, optional
-            Infer column types for loaded dataset if True
+        infer_types: string, optional
+            Infer column types for loaded dataset if selected a profiler.
         load_format: string, optional
             Format identifier
         options: list, optional
