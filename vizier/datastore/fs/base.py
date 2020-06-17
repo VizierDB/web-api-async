@@ -20,16 +20,17 @@ subfolder of a given base directory.
 """
 
 import csv
-import json
 import os
+import pandas as pd
 import shutil
 import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
@@ -37,10 +38,7 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
-import datamart_profiler
-import pandas as pd
-
-import vizier.datastore.base as base
+import vizier.datastore.profiling.datamart as datamart
 
 
 """Constants for data file names."""
@@ -50,13 +48,13 @@ DESCRIPTOR_FILE = 'descriptor.json'
 
 class FileSystemDatastore(DefaultDatastore):
     """Implementation of Vizier data store. Uses the file system to maintain
-    datasets. For each dataset a new subfolder is created. Within the folder the
-    dataset information is split across three files containing the descriptor,
-    annotation, and the dataset rows.
+    datasets. For each dataset a new subfolder is created. Within the folder
+    the dataset information is split across three files containing the
+    descriptor, annotation, and the dataset rows.
     """
     def __init__(self, base_path):
-        """Initialize the base directory that contains datasets. Each dataset is
-        maintained in a separate subfolder.
+        """Initialize the base directory that contains datasets. Each dataset
+        is maintained in a separate subfolder.
 
         Parameters
         ---------
@@ -87,7 +85,8 @@ class FileSystemDatastore(DefaultDatastore):
             List of dataset rows.
         human_readable_name: string, ignored
             TODO: Add description.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
+        default=None
             Annotations for dataset components
         backend_options: list, ignored
             TODO: Add description.
@@ -110,7 +109,7 @@ class FileSystemDatastore(DefaultDatastore):
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
         # Filter annotations for non-existing resources
-        if not annotations is None:
+        if annotations is not None:
             annotations = annotations.filter(
                 columns=[c.identifier for c in columns],
                 rows=[r.identifier for r in rows]
@@ -128,7 +127,7 @@ class FileSystemDatastore(DefaultDatastore):
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         # Write metadata file if annotations are given
-        if not annotations is None:
+        if annotations is not None:
             dataset.annotations.to_file(
                 self.get_metadata_filename(identifier)
             )
@@ -159,7 +158,9 @@ class FileSystemDatastore(DefaultDatastore):
         shutil.rmtree(dataset_dir)
         return True
 
-    def download_dataset(self, url, username=None, password=None, filestore=None):
+    def download_dataset(
+        self, url, username=None, password=None, filestore=None
+    ):
         """Create a new dataset from a given file. Returns the handle for the
         downloaded file only if the filestore has been provided as an argument
         in which case the file handle is meaningful file handle.
@@ -182,7 +183,7 @@ class FileSystemDatastore(DefaultDatastore):
         vizier.datastore.fs.dataset.FileSystemDatasetHandle,
         vizier.filestore.base.FileHandle
         """
-        if not filestore is None:
+        if filestore is not None:
             # Upload the file to the filestore to get the file handle
             fh = filestore.download_file(
                 url=url,
@@ -249,9 +250,9 @@ class FileSystemDatastore(DefaultDatastore):
         """Get list of data objects for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -268,47 +269,6 @@ class FileSystemDatastore(DefaultDatastore):
         """
         return DataObjectMetadata()
 
-    def format_type(self, structural_type, semantic_types=None ):
-        # typeData = ['String', 'Integer', 'Float', 'Categorical', 'DateTime', 'Text', 'Boolean', 'Real'];
-        switcher = {
-            'Enumeration' :  'categorical',
-            'DateTime' :  'datetime',
-            'Text' :  'varchar',
-            'Real' :  'real',
-            'Float' :  'real',
-            'Integer' :  'int',
-            'Boolean' :  'boolean'
-        }
-        if len(semantic_types) > 0:
-            column_type = semantic_types[0][semantic_types[0].rindex('/') + 1:]
-        else:
-            column_type = structural_type[structural_type.rindex('/') + 1:]
-        # Get the function from switcher dictionary
-        vizier_column_type = switcher.get(column_type, 'varchar')
-        return vizier_column_type
-
-    def get_types(self, f_handle):
-        print("Computing column types ...")
-        columns_name = []
-        data_rows = []
-        with f_handle.open() as csvfile:
-            reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
-            for col_name in next(reader):
-                columns_name.append(col_name.strip())
-            for row in reader:
-                values = [cast(v.strip()) for v in row]
-                data_rows.append(values)
-        df = pd.DataFrame(data=data_rows, columns=columns_name)
-        metadata = datamart_profiler.process_dataset(df, include_sample=True)
-
-        # get types
-        columns_info = metadata['columns']
-        column_types = {}
-        for column in columns_info:
-            vizier_column_type = self.format_type(column['structural_type'], column['semantic_types'])
-            column_types[column['name']] = vizier_column_type
-        return column_types
-
     def load_dataset(
         self, f_handle=None, url=None, detect_headers=True, infer_types='none',
         load_format='csv', options=[], human_readable_name=None
@@ -319,8 +279,8 @@ class FileSystemDatastore(DefaultDatastore):
         ----------
         f_handle : vizier.filestore.base.FileHandle, optional
             handle for an uploaded file on the associated file server.
-        url: string, optional, optional
-            Url for the file source
+        url: string, default=None
+            Url for the file source. Included for API completeness.
         detect_headers: bool, optional
             Detect column names in loaded file if True
         infer_types: string, optional
@@ -341,27 +301,38 @@ class FileSystemDatastore(DefaultDatastore):
             raise ValueError('unknown file')
         # Expects a file in a supported tabular data format.
         if not f_handle.is_tabular:
-            raise ValueError('cannot create dataset from file \'' + f_handle.name + '\'')
+            raise ValueError('cannot load dataset from %s ' % (f_handle.name))
         # Open the file as a csv file. Expects that the first row contains the
         # column names. Read dataset schema and dataset rows into two separate
         # lists.
-        column_types = self.get_types(f_handle)
-        columns = []
+        column_names = []
         rows = []
         with f_handle.open() as csvfile:
             reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
             for col_name in next(reader):
-                column_type = column_types[col_name.strip()] if infer_types == 'datamartprofiler' else None
-                columns.append(
-                    DatasetColumn(
-                        identifier=len(columns),
-                        name=col_name.strip(),
-                        data_type=column_type
-                    )
-                )
+                column_names.append(col_name.strip())
             for row in reader:
                 values = [cast(v.strip()) for v in row]
-                rows.append(DatasetRow(identifier=len(rows), values=values))
+                rows.append(values)
+        if infer_types == 'datamartprofiler':
+            # Run the Datamart profiler if requested by the user.
+            df = pd.DataFrame(data=rows, columns=column_names)
+            metadata = datamart.profile(df, include_sample=True)
+            column_types = datamart.get_types(metadata)
+        else:
+            metadata = None
+            column_types = dict()
+        # Create column objects.
+        columns = []
+        for col_name in column_names:
+            column_type = column_types.get(col_name)
+            columns.append(
+                DatasetColumn(
+                    identifier=len(columns),
+                    name=col_name.strip(),
+                    data_type=column_type
+                )
+            )
         # Get unique identifier and create subfolder for the new dataset
         identifier = get_unique_identifier()
         dataset_dir = self.get_dataset_dir(identifier)
@@ -369,7 +340,7 @@ class FileSystemDatastore(DefaultDatastore):
         # Write rows to data file
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
-        # Create dataset an write descriptor to file
+        # Create dataset and write descriptor to file
         dataset = FileSystemDatasetHandle(
             identifier=identifier,
             columns=columns,
@@ -453,24 +424,28 @@ def validate_dataset(columns, rows):
     -------
     int, int
     """
-    # Ensure that all column identifier are zero or greater, unique, and smaller
-    # than the column counter (if given)
+    # Ensure that all column identifier are zero or greater, unique, and
+    # smaller than the column counter (if given)
     col_ids = set()
     for col in columns:
+        col_id = col.identifier
         if col.identifier < 0:
-            raise ValueError('negative column identifier \'' + str(col.identifier) + '\'')
+            raise ValueError('negative identifier %d' % (col_id))
         elif col.identifier in col_ids:
-            raise ValueError('duplicate column identifier \'' + str(col.identifier) + '\'')
-        col_ids.add(col.identifier)
+            raise ValueError('duplicate identifier %d' % (col_id))
+        col_ids.add(col_id)
     # Ensure that all row identifier are zero or greater, unique, smaller than
     # the row counter (if given), and contain exactly one value for each column
     row_ids = set()
     for row in rows:
+        row_id = row.identifier
         if len(row.values) != len(columns):
-            raise ValueError('schema violation for row \'' + str(row.identifier) + '\'')
+            raise ValueError('schema violation for row %d' % str(row_id))
         elif row.identifier < 0:
-            raise ValueError('negative row identifier \'' + str(row.identifier) + '\'')
+            raise ValueError('negative row identifier %d' % str(row_id))
         elif row.identifier in row_ids:
-            raise ValueError('duplicate row identifier \'' + str(row.identifier) + '\'')
-        row_ids.add(row.identifier)
-    return max(col_ids) if len(col_ids) > 0 else -1, max(row_ids) if len(row_ids) > 0 else -1
+            raise ValueError('duplicate row identifier %d' % str(row_id))
+        row_ids.add(row_id)
+    max_colid = max(col_ids) if len(col_ids) > 0 else -1
+    max_rowid = max(row_ids) if len(row_ids) > 0 else -1
+    return max_colid, max_rowid
