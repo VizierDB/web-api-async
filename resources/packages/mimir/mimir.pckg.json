@@ -64,7 +64,7 @@
                     }
                 ],
                 "id": "geocode",
-                "name": "Geocode Lens",
+                "name": "Geocode",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -176,7 +176,7 @@
                     }
                 ],
                 "id": "repair_key",
-                "name": "Key Repair Lens",
+                "name": "Fix Key Column",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -345,7 +345,7 @@
                     }
                 ],
                 "id": "missing_key",
-                "name": "Missing Key Lens",
+                "name": "Fix Sequence",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -533,7 +533,7 @@
                     }
                 ],
                 "id": "schema_matching",
-                "name": "Schema Matching Lens",
+                "name": "Match Target Schema",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -651,7 +651,7 @@
                     }
                 ],
                 "id": "type_inference",
-                "name": "Type Inference Lens",
+                "name": "Fix Field Types",
                 "parameter": [
                     {
                         "datatype": "dataset",

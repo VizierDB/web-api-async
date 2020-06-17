@@ -295,7 +295,7 @@ class ModuleArguments(object):
             # parameter id is unknown.
             para = parameters.get(arg_id)
             datatype = para[pckg.LABEL_DATATYPE]
-            if arg_value is None:
+            if arg_value is None or arg_value == '':
                 if arg_id in required_key_values:
                     raise ValueError('missing value for parameter \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_BOOL:

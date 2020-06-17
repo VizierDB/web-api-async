@@ -111,7 +111,7 @@ MIMIR_LENSES = pckg.package_declaration(
         # ),
         pckg.command_declaration(
             identifier=MIMIR_GEOCODE,
-            name='Geocode Lens',
+            name='Geocode',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
@@ -168,7 +168,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_KEY_REPAIR,
-            name='Key Repair Lens',
+            name='Fix Key Column',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
@@ -228,7 +228,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_MISSING_KEY,
-            name='Missing Key Lens',
+            name='Fix Sequence',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.para_column(1),
@@ -284,7 +284,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_SCHEMA_MATCHING,
-            name='Schema Matching Lens',
+            name='Match Target Schema',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
@@ -338,7 +338,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_TYPE_INFERENCE,
-            name='Type Inference Lens',
+            name='Fix Field Types',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(

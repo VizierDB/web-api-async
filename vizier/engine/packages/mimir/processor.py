@@ -113,11 +113,16 @@ class MimirProcessor(TaskProcessor):
                     data_type=DATATYPE_REAL
                 )
             )
+            house = arguments.get_value(cmd.PARA_HOUSE_NUMBER, raise_error=False, default_value=None)
+            street = arguments.get_value(cmd.PARA_STREET, raise_error=False, default_value=None)
+            city = arguments.get_value(cmd.PARA_CITY, raise_error=False, default_value=None)
+            state = arguments.get_value(cmd.PARA_STATE, raise_error=False, default_value=None)
+
             params = {
-                'houseColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_HOUSE_NUMBER, raise_error=False)).name_in_rdb,
-                'streetColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STREET, raise_error=False)).name_in_rdb,
-                'cityColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_CITY, raise_error=False)).name_in_rdb,
-                'stateColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STATE, raise_error=False)).name_in_rdb,
+                'houseColumn': dataset.column_by_id(house).name_in_rdb   if house  is not None and house  != '' else None,
+                'streetColumn': dataset.column_by_id(street).name_in_rdb if street is not None and street != '' else None,
+                'cityColumn': dataset.column_by_id(city).name_in_rdb     if city   is not None and city   != '' else None,
+                'stateColumn': dataset.column_by_id(state).name_in_rdb   if state  is not None and state  != '' else None,
                 'geocoder': geocoder#,
                 #'latitudeColumn': Option[String],
                 #'longitudeColumn': Option[String],
@@ -262,18 +267,27 @@ class MimirProcessor(TaskProcessor):
                     pass
                 elif shred_type == "substring":
                     range_parts = re.match("([0-9]+)(([+\\-])([0-9]+))?", expression)
-                    print(range_parts)
+                    # print(range_parts)
+
+                    ## Mimir expects ranges to be given from start (inclusive) to end (exclusive)
+                    ## in a zero-based numbering scheme.
+
+                    ## Vizier expects input ranges to be given in a one-based numbering scheme.
+
+                    # Convert to this format
+
                     if range_parts is None:
                         raise ValueError("Substring requires a range of the form '10', '10-11', or '10+1', but got '{}'".format(expression))
                     config["start"] = int(range_parts.group(1))-1 # Convert 1-based numbering to 0-based
                     if range_parts.group(2) is None:
-                        config["end"] = config["start"] + 1
+                        config["end"] = config["start"] + 1 # if only one character, split one character
                     elif range_parts.group(3) == "+":
-                        config["end"] = config["start"] + int(range_parts.group(4))
+                        config["end"] = config["start"] + int(range_parts.group(4)) # start + length
                     elif range_parts.group(3) == "-":
-                        config["end"] = int(range_parts.group(4))
+                        config["end"] = int(range_parts.group(4)) # Explicit end, 1-based -> 0-based and exclusive cancel out
                     else:
                         raise ValueError("Invalid expression '{}' in substring shredder".format(expression))
+                    # print("Shredding {} <- {} -- {}".format(output_col,config["start"],config["end"]))
                 else:
                     raise ValueError("Invalid Shredding Type '{}'".format(shred_type))
 
