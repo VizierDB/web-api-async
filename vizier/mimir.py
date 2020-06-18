@@ -83,7 +83,7 @@ def createView(dataset, query):
       "query": query
     }
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['viewName'], []) #resp['dependencies'])
+    return (resp['viewName'], resp['dependencies'], resp['schema'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {

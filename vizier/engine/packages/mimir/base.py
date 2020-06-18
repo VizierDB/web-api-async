@@ -338,7 +338,7 @@ MIMIR_LENSES = pckg.package_declaration(
         ),
         pckg.command_declaration(
             identifier=MIMIR_TYPE_INFERENCE,
-            name='Fix Field Types',
+            name='Detect Field Types',
             parameters=[
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(

@@ -249,7 +249,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 ),
                 pckg.parameter_declaration(
                     PARA_DETECT_HEADERS,
-                    name='Detect Headers',
+                    name='File Has Headers',
                     data_type=pckg.DT_BOOL,
                     index=4,
                     default_value=True,

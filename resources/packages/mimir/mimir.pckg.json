@@ -651,7 +651,7 @@
                     }
                 ],
                 "id": "type_inference",
-                "name": "Fix Field Types",
+                "name": "Detect Field Types",
                 "parameter": [
                     {
                         "datatype": "dataset",

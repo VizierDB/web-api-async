@@ -92,24 +92,19 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name, dependencies = mimir.createView(
+            view_name, dependencies, mimirSchema = mimir.createView(
                 mimir_table_names,
                 source
             )
-            sql = 'SELECT * FROM ' + view_name
-            mimirSchema = mimir.getSchema(sql)
-
-            columns = list()
-
-            for col in mimirSchema:
-                col_id = len(columns)
-                name_in_dataset = col['name']
-                col = MimirDatasetColumn(
+            print(mimirSchema)
+            columns = [
+                MimirDatasetColumn(
                     identifier=col_id,
-                    name_in_dataset=name_in_dataset
+                    name_in_dataset=col['name'],
+                    data_type=col['type']
                 )
-                columns.append(col)
-
+                for (col_id, col) in enumerate(mimirSchema)
+            ]
             row_count = mimir.countRows(view_name)
             
             provenance = None
