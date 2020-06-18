@@ -18,6 +18,8 @@
 in the Mimir lenses package.
 """
 
+import re
+
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
@@ -111,11 +113,16 @@ class MimirProcessor(TaskProcessor):
                     data_type=DATATYPE_REAL
                 )
             )
+            house = arguments.get_value(cmd.PARA_HOUSE_NUMBER, raise_error=False, default_value=None)
+            street = arguments.get_value(cmd.PARA_STREET, raise_error=False, default_value=None)
+            city = arguments.get_value(cmd.PARA_CITY, raise_error=False, default_value=None)
+            state = arguments.get_value(cmd.PARA_STATE, raise_error=False, default_value=None)
+
             params = {
-                'houseColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_HOUSE_NUMBER, raise_error=False)).name_in_rdb,
-                'streetColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STREET, raise_error=False)).name_in_rdb,
-                'cityColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_CITY, raise_error=False)).name_in_rdb,
-                'stateColumn': dataset.column_by_id(arguments.get_value(cmd.PARA_STATE, raise_error=False)).name_in_rdb,
+                'houseColumn': dataset.column_by_id(house).name_in_rdb   if house  is not None and house  != '' else None,
+                'streetColumn': dataset.column_by_id(street).name_in_rdb if street is not None and street != '' else None,
+                'cityColumn': dataset.column_by_id(city).name_in_rdb     if city   is not None and city   != '' else None,
+                'stateColumn': dataset.column_by_id(state).name_in_rdb   if state  is not None and state  != '' else None,
                 'geocoder': geocoder#,
                 #'latitudeColumn': Option[String],
                 #'longitudeColumn': Option[String],
@@ -234,8 +241,66 @@ class MimirProcessor(TaskProcessor):
                 raise ValueError("Need at least one value column")
             update_rows = True
             store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
+        elif command_id == cmd.MIMIR_SHRED:
+            params = { 
+                "keepOriginalColumns" : arguments.get_value(cmd.PARA_KEEP_ORIGINAL)
+            }
+            shreds = []
+            global_input_col = dataset.column_by_id(arguments.get_value(cmd.PARA_COLUMN_NAME))
+            for (idx, shred) in enumerate(arguments.get_value(cmd.PARA_COLUMNS)):
+                output_col = shred.get_value(cmd.PARA_OUTPUT_COLUMN)
+                if output_col is None:
+                    output_col = "{}_{}".format(input_col,idx)
+                config = {}
+                shred_type = shred.get_value(cmd.PARA_TYPE)
+                expression = shred.get_value(cmd.PARA_EXPRESSION)
+                group = shred.get_value(cmd.PARA_INDEX)
+                if shred_type == "pattern":
+                    config["regexp"] = expression
+                    config["group"] = int(group)
+                elif shred_type == "field":
+                    config["separator"] = expression
+                    config["field"] = int(group)
+                elif shred_type == "explode":
+                    config["separator"] = expression
+                elif shred_type == "pass":
+                    pass
+                elif shred_type == "substring":
+                    range_parts = re.match("([0-9]+)(([+\\-])([0-9]+))?", expression)
+                    # print(range_parts)
+
+                    ## Mimir expects ranges to be given from start (inclusive) to end (exclusive)
+                    ## in a zero-based numbering scheme.
+
+                    ## Vizier expects input ranges to be given in a one-based numbering scheme.
+
+                    # Convert to this format
+
+                    if range_parts is None:
+                        raise ValueError("Substring requires a range of the form '10', '10-11', or '10+1', but got '{}'".format(expression))
+                    config["start"] = int(range_parts.group(1))-1 # Convert 1-based numbering to 0-based
+                    if range_parts.group(2) is None:
+                        config["end"] = config["start"] + 1 # if only one character, split one character
+                    elif range_parts.group(3) == "+":
+                        config["end"] = config["start"] + int(range_parts.group(4)) # start + length
+                    elif range_parts.group(3) == "-":
+                        config["end"] = int(range_parts.group(4)) # Explicit end, 1-based -> 0-based and exclusive cancel out
+                    else:
+                        raise ValueError("Invalid expression '{}' in substring shredder".format(expression))
+                    # print("Shredding {} <- {} -- {}".format(output_col,config["start"],config["end"]))
+                else:
+                    raise ValueError("Invalid Shredding Type '{}'".format(shred_type))
+
+                shreds.append({
+                    **config,
+                    "op" : shred_type,
+                    "input" : global_input_col.name_in_rdb,
+                    "output" : output_col,
+                })
+            params["shreds"] = shreds
+            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
         else:
-            raise ValueError('unknown Mimir lens \'' + str(lens) + '\'')
+            raise ValueError("Unknown Mimir lens '{}'".format(command_id))
         # Create Mimir lens
        
         mimir_lens_response = mimir.createLens(

@@ -64,7 +64,7 @@
                     }
                 ],
                 "id": "geocode",
-                "name": "Geocode Lens",
+                "name": "Geocode",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -176,7 +176,7 @@
                     }
                 ],
                 "id": "repair_key",
-                "name": "Key Repair Lens",
+                "name": "Fix Key Column",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -345,7 +345,7 @@
                     }
                 ],
                 "id": "missing_key",
-                "name": "Missing Key Lens",
+                "name": "Fix Sequence",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -533,7 +533,7 @@
                     }
                 ],
                 "id": "schema_matching",
-                "name": "Schema Matching Lens",
+                "name": "Match Target Schema",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -651,7 +651,7 @@
                     }
                 ],
                 "id": "type_inference",
-                "name": "Type Inference Lens",
+                "name": "Detect Field Types",
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -941,6 +941,131 @@
                         "id": "resultName",
                         "index": 6,
                         "name": "Output (if different)",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "SHRED"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "shred",
+                "name": "Shred",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Input Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "columns",
+                        "index": 2,
+                        "name": "Rules",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "output_col",
+                        "index": 3,
+                        "name": "Output Column",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "type",
+                        "index": 4,
+                        "name": "Rule",
+                        "parent": "columns",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Delimited Field",
+                                "value": "field"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Regular Expression",
+                                "value": "pattern"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Explode Delimiter",
+                                "value": "explode"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Substring",
+                                "value": "substring"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Leave Unchanged",
+                                "value": "pass"
+                            }
+                        ]
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "expression",
+                        "index": 5,
+                        "name": "Expression / Delimiter",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "int",
+                        "defaultValue": 1,
+                        "hidden": false,
+                        "id": "index",
+                        "index": 6,
+                        "name": "Group / Field (if needed)",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "defaultValue": false,
+                        "hidden": false,
+                        "id": "keepOriginal",
+                        "index": 7,
+                        "name": "Keep Original Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "resultName",
+                        "index": 8,
+                        "name": "Output Dataset (if different)",
                         "required": false
                     }
                 ]

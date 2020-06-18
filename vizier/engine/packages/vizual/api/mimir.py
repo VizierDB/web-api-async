@@ -442,7 +442,7 @@ class MimirVizualApi(VizualApi):
                         default_val + " AS " + col_name
                         for default_val, col_name in initial_columns
                     ))
-        view_name, dependencies = mimir.createView(
+        view_name, dependencies, schema = mimir.createView(
             dict(),
             source
         )
@@ -722,7 +722,7 @@ class MimirVizualApi(VizualApi):
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM '+dataset.table_name+' ORDER BY '
         sql += ','.join(order_by_clause) 
-        view_name, dependencies = mimir.createView(dataset.table_name, sql)
+        view_name, dependencies, schema = mimir.createView(dataset.table_name, sql)
         
         # Register new dataset with only a modified list of row identifier
         ds = datastore.register_dataset(
