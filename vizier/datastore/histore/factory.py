@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 New York University,
+# Copyright (C) 2017-2020 New York University,
 #                         University at Buffalo,
 #                         Illinois Institute of Technology.
 #
@@ -14,21 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Datastore factory implementation for the file system based datastore."""
+"""Datastore factory implementation for the HISTORE datastore."""
 
 import os
 import shutil
 
 from vizier.datastore.factory import DatastoreFactory
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.histore.base import HistoreDatastore
 
 
 """Configuration parameter."""
 PARA_DIRECTORY = 'directory'
 
 
-class FileSystemDatastoreFactory(DatastoreFactory):
-    """Datastore factory for file system based datastores."""
+class HistireDatastoreFactory(DatastoreFactory):
+    """Datastore factory for HISTORE datastores."""
     def __init__(self, base_path=None, properties=None):
         """Initialize the reference to the base directory that contains all
         datastore folders.
@@ -76,7 +76,7 @@ class FileSystemDatastoreFactory(DatastoreFactory):
 
         Returns
         -------
-        vizier.datastore.base.Datastore
+        vizier.datastore.histore.HistoreDatastore
         """
         datastore_dir = os.path.join(self.base_path, identifier)
-        return FileSystemDatastore(datastore_dir)
+        return HistoreDatastore(datastore_dir)

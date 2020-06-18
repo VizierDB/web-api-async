@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 New York University,
+# Copyright (C) 2017-2020 New York University,
 #                         University at Buffalo,
 #                         Illinois Institute of Technology.
 #
@@ -39,6 +39,7 @@ from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
 import vizier.datastore.profiling.datamart as datamart
+import vizier.datastore.util as util
 
 
 """Constants for data file names."""
@@ -100,7 +101,7 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
-        _, max_row_id = validate_dataset(columns=columns, rows=rows)
+        _, max_row_id = util.validate_dataset(columns=columns, rows=rows)
         # Get new identifier and create directory for new dataset
         identifier = get_unique_identifier()
         dataset_dir = self.get_dataset_dir(identifier)
@@ -317,7 +318,7 @@ class FileSystemDatastore(DefaultDatastore):
         if infer_types == 'datamartprofiler':
             # Run the Datamart profiler if requested by the user.
             df = pd.DataFrame(data=rows, columns=column_names)
-            metadata = datamart.profile(df, include_sample=True)
+            metadata = datamart.run(df)
             column_types = datamart.get_types(metadata)
         else:
             metadata = None
@@ -399,53 +400,3 @@ class FileSystemDatastore(DefaultDatastore):
         """
         # TODO: Implementation needed
         raise NotImplementedError()
-
-
-# ------------------------------------------------------------------------------
-# Helper Methods
-# ------------------------------------------------------------------------------
-
-def validate_dataset(columns, rows):
-    """Validate that (i) each column has a unique identifier, (ii) each row has
-    a unique identifier, and (iii) each row has exactly one value per column.
-
-    Returns the maximum column and row identifiers. Raises ValueError in case
-    of a schema violation.
-
-    Parameters
-    ----------
-    columns: list(vizier.datastore.dataset.DatasetColumn)
-        List of columns. It is expected that each column has a unique
-        identifier.
-    rows: list(vizier.datastore.dataset.DatasetRow)
-        List of dataset rows.
-
-    Returns
-    -------
-    int, int
-    """
-    # Ensure that all column identifier are zero or greater, unique, and
-    # smaller than the column counter (if given)
-    col_ids = set()
-    for col in columns:
-        col_id = col.identifier
-        if col.identifier < 0:
-            raise ValueError('negative identifier %d' % (col_id))
-        elif col.identifier in col_ids:
-            raise ValueError('duplicate identifier %d' % (col_id))
-        col_ids.add(col_id)
-    # Ensure that all row identifier are zero or greater, unique, smaller than
-    # the row counter (if given), and contain exactly one value for each column
-    row_ids = set()
-    for row in rows:
-        row_id = row.identifier
-        if len(row.values) != len(columns):
-            raise ValueError('schema violation for row %d' % str(row_id))
-        elif row.identifier < 0:
-            raise ValueError('negative row identifier %d' % str(row_id))
-        elif row.identifier in row_ids:
-            raise ValueError('duplicate row identifier %d' % str(row_id))
-        row_ids.add(row_id)
-    max_colid = max(col_ids) if len(col_ids) > 0 else -1
-    max_rowid = max(row_ids) if len(row_ids) > 0 else -1
-    return max_colid, max_rowid

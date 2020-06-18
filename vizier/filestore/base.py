@@ -18,12 +18,14 @@
 and need to keep as a local copy because they are not accessible via an Url.
 """
 
+import csv
 import gzip
 import mimetypes
+import os
 
 from abc import ABCMeta, abstractmethod
 
-from vizier.core.util import get_unique_identifier
+import vizier.core.util as util
 
 
 """File format identifier."""
@@ -35,7 +37,10 @@ ENCODING_GZIP = 'gzip'
 
 class FileHandle(object):
     """File handle for an uploaded file."""
-    def __init__(self, identifier, filepath, file_name, mimetype=None, encoding=None):
+    def __init__(
+        self, identifier, filepath, file_name, mimetype=None, encoding=None,
+        quotechar='"', quoting=csv.QUOTE_MINIMAL
+    ):
         """Initialize the file identifier, the (full) file path, the file
         format, and the file encoding (for compressed files).
 
@@ -66,6 +71,8 @@ class FileHandle(object):
         else:
             self.mimetype = mimetype
             self.encoding = encoding
+        self.quotechar = quotechar
+        self.quoting = quoting
 
     @property
     def compressed(self):
@@ -87,7 +94,7 @@ class FileHandle(object):
         -------
         string
         """
-        if self.mimetype ==  FORMAT_CSV:
+        if self.mimetype == FORMAT_CSV:
             return ','
         elif self.mimetype == FORMAT_TSV:
             return '\t'
@@ -257,3 +264,22 @@ def get_download_filename(url, info):
                 filename = content[content.rfind('filename="') + 11:]
                 return filename[:filename.find('"')]
     return 'download'
+
+
+def CSV(filename):
+    """Return a file handle object for a CSV file on disk.
+
+    Parameters
+    ----------
+    filename: string
+        Path to file on the local file system.
+
+    Returns
+    -------
+    vizier.filestore.base.Filehandle
+    """
+    return FileHandle(
+        identifier=util.get_unique_identifier(),
+        filepath=filename,
+        file_name=os.path.basename(filename)
+    )

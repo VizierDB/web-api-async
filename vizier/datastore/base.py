@@ -56,7 +56,8 @@ class Datastore(metaclass=ABCMeta):
             List of dataset rows.
         human_readable_name: string
             TODO: Add description.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
+                default=None
             Annotations for dataset components
         backend_options: list
             TODO: Add description.
@@ -74,9 +75,9 @@ class Datastore(metaclass=ABCMeta):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -96,9 +97,9 @@ class Datastore(metaclass=ABCMeta):
         """Get list of data objects for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -134,7 +135,8 @@ class Datastore(metaclass=ABCMeta):
     @abstractmethod
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
-        data store. Returns None if no dataset with the given identifier exists.
+        data store. Returns None if no dataset with the given identifier
+        exists.
 
         Parameters
         ----------
@@ -268,9 +270,9 @@ class Datastore(metaclass=ABCMeta):
 
 class DefaultDatastore(Datastore):
     """Implementation of Vizier data store. Uses the file system to maintain
-    datasets. For each dataset a new subfolder is created. Within the folder the
-    dataset information is split across three files containing the descriptor,
-    annotation, and the dataset rows.
+    datasets. For each dataset a new subfolder is created. Within the folder
+    the dataset information is split across three files containing the
+    descriptor, annotation, and the dataset rows.
     """
     def __init__(self, base_path):
         """Initialize the base directory that contains datasets. Each dataset is
@@ -290,9 +292,9 @@ class DefaultDatastore(Datastore):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -310,7 +312,7 @@ class DefaultDatastore(Datastore):
         dataset_dir = self.get_dataset_dir(identifier)
         if not os.path.isdir(dataset_dir):
             return None
-        annotations=DatasetMetadata.from_file(
+        annotations = DatasetMetadata.from_file(
             self.get_metadata_filename(identifier)
         )
         if column_id is None and row_id is None:
@@ -361,7 +363,8 @@ class DefaultDatastore(Datastore):
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
-        data store. Returns None if no dataset with the given identifier exists.
+        data store. Returns None if no dataset with the given identifier
+        exists.
 
         Parameters
         ----------
@@ -423,8 +426,8 @@ class DefaultDatastore(Datastore):
         dataset_dir = self.get_dataset_dir(identifier)
         if not os.path.isdir(dataset_dir):
             return None
-        # Read annotations from file, Evaluate update statement and write result
-        # back to file.
+        # Read annotations from file, Evaluate update statement and write
+        # the result back to file.
         metadata_filename = self.get_metadata_filename(identifier)
         annotations = DatasetMetadata.from_file(metadata_filename)
         # Get object annotations
@@ -435,7 +438,7 @@ class DefaultDatastore(Datastore):
         else:
             elements = annotations.cells
         # Identify the type of operation: INSERT, DELETE or UPDATE
-        if old_value is None and not new_value is None:
+        if old_value is None and new_value is not None:
             elements.append(
                 DatasetAnnotation(
                     key=key,
@@ -444,7 +447,7 @@ class DefaultDatastore(Datastore):
                     row_id=row_id
                 )
             )
-        elif not old_value is None and new_value is None:
+        elif old_value is not None and new_value is None:
             del_index = None
             for i in range(len(elements)):
                 a = elements[i]
@@ -455,7 +458,7 @@ class DefaultDatastore(Datastore):
             if del_index is None:
                 return False
             del elements[del_index]
-        elif not old_value is None and not new_value is None:
+        elif old_value is not None and new_value is not None:
             anno = None
             for a in elements:
                 if a.column_id == column_id and a.row_id == row_id:
@@ -482,7 +485,9 @@ def collabel_2_index(label):
     """Convert a column label into a column index (based at 0), e.g., 'A'-> 1,
     'B' -> 2, ..., 'AA' -> 27, etc.
 
-    Returns -1 if the given labe is not composed only of upper case letters A-Z.
+    Returns -1 if the given labe is not composed only of upper case letters
+    A-Z.
+
     Parameters
     ----------
     label : string
@@ -493,7 +498,7 @@ def collabel_2_index(label):
     int
     """
     # The following code is adopted from
-    # https://stackoverflow.com/questions/7261936/convert-an-excel-or-spreadsheet-column-letter-to-its-number-in-pythonic-fashion
+    # https://stackoverflow.com/questions/7261936
     num = 0
     for c in label:
         if ord('A') <= ord(c) <= ord('Z'):
@@ -518,11 +523,11 @@ def encode_values(values):
     for val in values:
         if isinstance(val, str):
             try:
-                result.append(val)#val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
+                result.append(val)  # val.encode('utf-8'))
+            except UnicodeDecodeError:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
+                except UnicodeDecodeError:
                     result.append(val.decode('latin1').encode('utf-8'))
         else:
             result.append(val)
@@ -585,9 +590,9 @@ def get_column_index(columns, column_id):
         if name_index >= 0:
             return name_index
         elif name_index == -1:
-            raise ValueError('unknown column \'' + str(column_id) + '\'')
+            raise ValueError("unknown column '{}'".format(column_id))
         else:
-            raise ValueError('not a unique column name \'' + str(column_id) + '\'')
+            raise ValueError("duplicate column name '{}'".format(column_id))
 
 
 def get_index_for_column(dataset, col_id):

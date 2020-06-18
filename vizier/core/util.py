@@ -16,9 +16,12 @@
 
 """Collection of helper methods."""
 
+import errno
 import json
 import os
 import uuid
+
+from datetime import datetime, date, time
 
 
 """Name of logger used for monitoring workflow engine performance."""
@@ -53,6 +56,33 @@ def cast(value):
             return value
 
 
+def createdir(directory, abs=False):
+    """Safely create the given directory path if it does not exist.
+
+    Parameters
+    ----------
+    directory: string
+        Path to directory that is being created.
+    abs: boolean, optional
+        Return absolute path if true
+
+    Returns
+    -------
+    string
+    """
+    # Based on https://stackoverflow.com/questions/273192/
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:  # pragma: no cover
+            if e.errno != errno.EEXIST:
+                raise
+    if abs:
+        return os.path.abspath(directory)
+    else:
+        return directory
+
+
 def delete_env(name):
     """Delete variable with the given name from the set of environment
     variables. This is primarily used for test purposes.
@@ -67,7 +97,11 @@ def delete_env(name):
 
 
 def default_serialize(obj):
-    """JSON serializer for objects not serializable by default json code"""
+    """JSON serializer for objects not serializable by default json code."""
+
+    if isinstance(obj, datetime):
+        serial = obj.isoformat()
+        return serial
 
     if isinstance(obj, date):
         serial = obj.isoformat()
@@ -101,10 +135,10 @@ def encode_values(values):
         if isinstance(val, str):
             try:
                 result.append(val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
+            except UnicodeDecodeError:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
+                except UnicodeDecodeError:
                     result.append(val.decode('latin1').encode('utf-8'))
         else:
             result.append(val)
@@ -145,7 +179,7 @@ def init_value(value, default_value):
     -------
     any
     """
-    return value if not value is None else default_value
+    return value if value is not None else default_value
 
 
 def is_scalar(value):
@@ -186,7 +220,7 @@ def is_valid_name(name):
     for c in name:
         if c.isalnum():
             allnums += 1
-        elif not c in ['_', '-', ' ']:
+        elif c not in ['_', '-', ' ']:
             return False
     return (allnums > 0)
 

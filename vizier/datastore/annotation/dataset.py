@@ -73,7 +73,7 @@ class DatasetMetadata(object):
             row_id=row_id
         )
         if row_id is None and column_id is None:
-            self.annotations.append(annotation) 
+            self.annotations.append(annotation)
         if row_id is None:
             self.columns.append(annotation)
         elif column_id is None:
@@ -309,7 +309,7 @@ class DatasetMetadata(object):
             cells=cells,
             columns=columns,
             rows=rows,
-            annotations=annotations 
+            annotations=annotations
         )
 
     def remove(self, key=None, value=None, column_id=None, row_id=None):
@@ -421,7 +421,6 @@ def deduplicate(elements):
     s = sorted(elements, key=lambda a: (a.column_id, a.row_id, a.key, a.value))
     result = s[:1]
     for a in s[1:]:
-        l = result[-1]
-        if a.column_id != l.column_id or a.row_id != l.row_id or a.key != l.key or a.value != l.value:
+        if not a.is_equal(result[-1]):
             result.append(a)
     return result

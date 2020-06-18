@@ -16,3 +16,4 @@ shapely
 astor
 deprecated
 histore==0.1.1
+datamart-profiler

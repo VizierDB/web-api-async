@@ -29,7 +29,7 @@ SWITCHER = {
 }
 
 
-def get_types(metadata):
+def get_types(metadata, column_types=dict()):
     """Parse Datamart profiler result to return a dictionary that maps column
     names to data types.
 
@@ -37,6 +37,8 @@ def get_types(metadata):
     ----------
     metadata: dict
         Metadata dictionary returned bt the Datamart profiler.
+    column_types: dict
+        Optional dictionary of user provided default column types.
 
     Returns
     -------
@@ -50,11 +52,13 @@ def get_types(metadata):
         else:
             structural_type = column['structural_type']
             column_type = structural_type[structural_type.rindex('/') + 1:]
-        column_types[column['name']] = SWITCHER.get(column_type, 'varchar')
+        col_name = column['name']
+        default_type = column_types.get(col_name, 'varchar')
+        column_types[col_name] = SWITCHER.get(column_type, default_type)
     return column_types
 
 
-def profile(df):
+def run(df):
     """Execute the Datamart profiler on a given data frame.
 
     Parameters
@@ -66,4 +70,4 @@ def profile(df):
     -------
     dict
     """
-    return dmp.process_dataset(df, include_sample=True)
+    return dmp.process_dataset(df, include_sample=False)
