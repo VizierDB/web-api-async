@@ -41,7 +41,6 @@ LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES = set([
     cmd.MIMIR_SHAPE_DETECTOR
 ])
 
-
 class MimirProcessor(TaskProcessor):
     """Implmentation of the task processor for the mimir package. The processor
     uses an instance of the vizual API to allow running on different types of

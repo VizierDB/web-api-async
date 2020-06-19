@@ -137,7 +137,7 @@ DEFAULT_SETTINGS = {
     VIZIERSERVER_ENGINE: base.MIMIR_ENGINE,
     VIZIERSERVER_PACKAGE_PATH: './resources/packages/common:./resources/packages/mimir',
     VIZIERSERVER_PROCESSOR_PATH: './resources/processors/common:./resources/processors/mimir',
-    VIZIERENGINE_DATA_DIR: base.ENV_DIRECTORY,
+    VIZIERENGINE_DATA_DIR: "vizier-data/{}".format(base.ENV_DIRECTORY),
     VIZIERENGINE_BACKEND: base.BACKEND_MULTIPROCESS,
     VIZIERENGINE_USE_SHORT_IDENTIFIER: True,
     VIZIERENGINE_SYNCHRONOUS: None,
