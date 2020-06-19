@@ -28,7 +28,6 @@ the dataset schema.
 
 import json
 
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 

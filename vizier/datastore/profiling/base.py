@@ -61,5 +61,6 @@ def run(df, profiler=None, column_types=dict()):
     else:
         # By default, the data type for each column is 'varchar'
         for col in df.columns:
-            column_types = column_types.get(col, 'varchar')
+            if col not in column_types:
+                column_types[col] = 'varchar'
     return metadata, column_types

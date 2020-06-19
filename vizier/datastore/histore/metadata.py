@@ -29,9 +29,8 @@ import vizier.core.util as util
 
 
 """Definition of file names and file name templates."""
+FILE = '{}.json'
 FOLDER = '.viziermeta'
-PROFILER_FILE = '{}.profile.json'
-SCHEMA_FILE = '{}.schema.json'
 
 
 class SnapshotMetadata(object):
@@ -65,40 +64,21 @@ class SnapshotMetadata(object):
         -------
         (list(vizier.datastore.dataset.DatasetColumn), dict)
         """
-        schemafile, profilerfile = self.files(snapshot_id)
-        # Read schema information.
-        with open(schemafile, 'r') as f:
+        filename = os.path.join(self.basedir, FILE.format(snapshot_id))
+        # Read metadata from file.
+        with open(filename, 'r') as f:
             doc = util.load_json(f.read())
+        # De-serialize columns information.
         columns = list()
-        for obj in doc:
+        for obj in doc['columns']:
             col = DatasetColumn(
                 identifier=obj['id'],
                 name=obj['name'],
                 data_type=obj['type']
             )
             columns.append(col)
-        # Read profiler results
-        with open(profilerfile, 'r') as f:
-            profiling = util.load_json(f.read())
-        return columns, profiling
-
-    def files(self, snapshot_id):
-        """Get path to file for schema data and profiling results for the given
-        dataset snapshot. Returns a tuple with (schema file, profiler file).
-
-        Parameters
-        ----------
-        snapshot_id: int
-            Unique snapshot version identifier.
-
-        Returns
-        -------
-        (string, string)
-        """
-        return (
-            os.path.join(self.basedir, SCHEMA_FILE.format(snapshot_id)),
-            os.path.join(self.basedir, PROFILER_FILE.format(snapshot_id))
-        )
+        # Return column list and profiling results.
+        return columns, doc['profiling']
 
     def write(self, snapshot_id, columns, profiling):
         """Write metadata information for a dataset snapshot to the file
@@ -113,17 +93,19 @@ class SnapshotMetadata(object):
         profiling: dict
             Additional profiling metadata.
         """
-        schemafile, profilerfile = self.files(snapshot_id)
-        # Write serialization of dataset columns.
-        doc = list()
+        filename = os.path.join(self.basedir, FILE.format(snapshot_id))
+        # Serialize dataset columns.
+        collist = list()
         for col in columns:
-            doc.append({
+            collist.append({
                 'id': col.identifier,
                 'name': col.name,
                 'type': col.data_type
             })
-        with open(schemafile, 'w') as f:
+        # Combine all metdata in a single document
+        doc = {
+            'columns': collist,
+            'profiling': profiling
+        }
+        with open(filename, 'w') as f:
             util.dump_json(obj=doc, stream=f)
-        # Write profiling results.
-        with open(profilerfile, 'w') as f:
-            util.dump_json(obj=profiling, stream=f)

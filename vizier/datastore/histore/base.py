@@ -33,7 +33,7 @@ from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.histore.dataset import HistoreSnapshotHandle
 from vizier.datastore.histore.metadata import SnapshotMetadata
-from vizier.datastore.histore.reader import DataFrameReader, OnDemandReader
+from vizier.datastore.histore.reader import OnDemandReader
 from vizier.datastore.object.dataobject import DataObjectMetadata
 
 import vizier.datastore.histore.identifier as ID
@@ -95,6 +95,7 @@ class HistoreDatastore(DefaultDatastore):
         archive = PersistentArchive(basedir=dataset_dir)
         snapshot = archive.commit(df)
         return self.commit_dataset(
+            archive=archive,
             archive_id=archive_id,
             snapshot_id=snapshot.version,
             dataset_dir=dataset_dir,
@@ -106,14 +107,16 @@ class HistoreDatastore(DefaultDatastore):
         )
 
     def commit_dataset(
-        self, archive_id, snapshot_id, dataset_dir, df, schema, metadata,
-        column_types, annotations
+        self, archive, archive_id, snapshot_id, dataset_dir, df, schema,
+        metadata, column_types, annotations
     ):
         """Commit changes to a given archive after merging a dataset snapshot.
         Snapshot metadata and annotations are written to file.
 
         Parameters
         ----------
+        archive: histore.archive.base.Archive
+            Archive for dataset snapshots.
         archive_id: string
             Unique dataset archive identifier
         snapshot_id: int
@@ -159,7 +162,7 @@ class HistoreDatastore(DefaultDatastore):
             identifier=ID.create(archive_id, snapshot_id),
             columns=columns,
             row_count=len(df.index),
-            reader=DataFrameReader(df),
+            reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
             profiling=metadata.get(profiling.PROFILING_RESULTS, dict()),
             annotations=annotations
         )
@@ -260,7 +263,7 @@ class HistoreDatastore(DefaultDatastore):
         # Load the dataset handle
         return HistoreSnapshotHandle(
             identifier=identifier,
-            columns=archive,
+            columns=columns,
             row_count=metadata[profiling.ROWCOUNT],
             reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
             profiling=metadata.get(profiling.PROFILING_RESULTS, dict()),
@@ -342,14 +345,13 @@ class HistoreDatastore(DefaultDatastore):
 
         Parameters
         ----------
-        origin : string
-            Unique dataset identifier for the dataset snapshot from which the
-            given data frame was derived.
+        origin : vizier.datastore.histore.dataset.HistoreSnapshotHandle
+            Handle for the dataset snapshot from which the given data frame was
+            generated.
         df: pandas.DataFrame
             Data frame containing the dataset snapshot.
         profiler: string, default=None
             Identifier for data profiler that is used to infer column types.
-            If None, all column types will be 'varchar'.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
                 default=None
             Annotations for dataset components
@@ -360,18 +362,18 @@ class HistoreDatastore(DefaultDatastore):
         """
         # Split dataset archive and snapshot identifier. This will raise a
         # ValueError if the identifier is invalid.
-        archive_id, snapshot_id = ID.parse(origin)
+        archive_id, snapshot_id = ID.parse(origin.identifier)
         # Test if a folder for the given dataset archive exists. If not
         # raise an error.
         dataset_dir = self.get_dataset_dir(archive_id)
         if not os.path.isdir(dataset_dir):
-            raise ValueError("unknown dataset '{}'".format(origin))
+            raise ValueError("unknown dataset '{}'".format(origin.identifier))
         # Create instance of the archive that maintains dataset snapshots.
         # Raises an error if the archive does not have a snapshot with the
         # given identifier.
         archive = PersistentArchive(basedir=dataset_dir)
         if not archive.snapshots().has_version(snapshot_id):
-            raise ValueError("unknown dataset '{}'".format(origin))
+            raise ValueError("unknown dataset '{}'".format(origin.identifier))
         # Generate data profiling results and column types for the data frame.
         metadata, column_types = profiling.run(df=df, profiler=profiler)
         # Commit the given data frame to the archive.
@@ -380,6 +382,7 @@ class HistoreDatastore(DefaultDatastore):
         schema = archive.schema().at_version(snapshot.version)
         df.columns = schema
         return self.commit_dataset(
+            archive=archive,
             archive_id=archive_id,
             snapshot_id=snapshot.version,
             dataset_dir=dataset_dir,

@@ -80,6 +80,18 @@ class HistoreSnapshotHandle(DatasetHandle):
                 row_id=row_id
             )
 
+    def profiler(self):
+        """Get list of profiler names that were executed on the data frame.
+
+        Returns
+        -------
+        list(string)
+        """
+        if len(self._profiling) > 0:
+            return list(self._profiling.keys())[0]
+        else:
+            return None
+
     def profiling(self, profiler):
         """Get data profiling results for the profilier with the given
         identifier.

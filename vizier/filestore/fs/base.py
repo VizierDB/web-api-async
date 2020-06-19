@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Default implementation of the file store. This implementation keeps all files
-and their metadata on disk.
+"""Default implementation of the file store. This implementation keeps all
+files and their metadata on disk.
 """
 
-import gzip
 import json
 import os
 import shutil
-import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import Filestore, FileHandle
@@ -76,7 +76,7 @@ class FileSystemFilestore(Filestore):
         -------
         bool
         """
-        file_dir =self.get_file_dir(identifier)
+        file_dir = self.get_file_dir(identifier)
         if os.path.isdir(file_dir):
             shutil.rmtree(file_dir, ignore_errors=True)
             return True
