@@ -62,7 +62,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations.filter(columns=colfilter)
         )
         return VizualApiResult(ds)
@@ -96,7 +95,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations.filter(rows=list(df.index))
         )
         return VizualApiResult(ds)
@@ -137,7 +135,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations.filter(columns=columns)
         )
         return VizualApiResult(ds)
@@ -178,7 +175,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -212,7 +208,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -422,7 +417,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
@@ -550,7 +544,6 @@ class OpencleanVizualApi(VizualApi):
         ds = datastore.update_dataset(
             origin=dataset,
             df=df,
-            profiler=dataset.profiler(),
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)

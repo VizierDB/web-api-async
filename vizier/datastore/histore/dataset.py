@@ -20,12 +20,14 @@ maintained in HISTORE archive.
 
 from vizier.datastore.dataset import DatasetHandle
 
+import vizier.datastore.profiling.base as profiling
+
 
 class HistoreSnapshotHandle(DatasetHandle):
     """Handle for a dataset snapshot that is maintained in a HISTORE archive.
     """
     def __init__(
-        self, identifier, columns, row_count, reader, profiling, annotations
+        self, identifier, columns, reader, metadata, annotations
     ):
         """Initialize the dataset handle.
 
@@ -47,11 +49,11 @@ class HistoreSnapshotHandle(DatasetHandle):
         super(HistoreSnapshotHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_count,
+            row_count=metadata.get(profiling.ROWCOUNT),
             annotations=annotations
         )
         self._reader = reader
-        self._profiling = profiling
+        self._profiling = metadata.get(profiling.PROFILING_RESULTS, dict())
 
     def get_annotations(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier
@@ -80,32 +82,23 @@ class HistoreSnapshotHandle(DatasetHandle):
                 row_id=row_id
             )
 
-    def profiler(self):
-        """Get list of profiler names that were executed on the data frame.
-
-        Returns
-        -------
-        list(string)
-        """
-        if len(self._profiling) > 0:
-            return list(self._profiling.keys())[0]
-        else:
-            return None
-
-    def profiling(self, profiler):
-        """Get data profiling results for the profilier with the given
-        identifier.
-
-        Parameters
-        ----------
-        profiler: string
-            Unique data profiler identifier.
+    def profile(self):
+        """Get profiling results for the dataset.
 
         Returns
         -------
         dict
         """
-        return self._profiling.get(profiler, dict())
+        return self._profiling.get(profiling.PROFILER_DATA, dict())
+
+    def profiler(self):
+        """Get name of data profiler that was executed on the dataset.
+
+        Returns
+        -------
+        string
+        """
+        return self._profiling.get(profiling.PROFILER_NAME)
 
     def reader(self, offset=0, limit=-1):
         """Get reader for the dataset to access the dataset rows. The optional

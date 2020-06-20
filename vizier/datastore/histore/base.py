@@ -59,7 +59,7 @@ class HistoreDatastore(DefaultDatastore):
         super(HistoreDatastore, self).__init__(basedir)
 
     def create_archive(
-        self, df, profiler, column_types=dict(), annotations=None
+        self, df, profiler, default_types=None, annotations=None
     ):
         """Create a new persistent archive that contains the given data frame
         as the first snapshot. Returns a handle for the dataset snapshot.
@@ -71,7 +71,7 @@ class HistoreDatastore(DefaultDatastore):
         profiler: string, default=None
             Identifier for data profiler that is used to infer column types.
             If None, all column types will be 'varchar'.
-        column_types: dict
+        default_types: list, default=None
             Optional mapping of column names to column types.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
                 default=None
@@ -82,10 +82,10 @@ class HistoreDatastore(DefaultDatastore):
         vizier.datastore.histore.dataset.HistoreSnapshotHandle
         """
         # Generate data profiling results and column types for the data frame.
-        metadata, column_types = profiling.run(
+        metadata = profiling.run(
             df=df,
             profiler=profiler,
-            column_types=column_types
+            default_types=default_types
         )
         # Create a new folder for the archive that maintains the dataset
         archive_id = get_unique_identifier()
@@ -102,13 +102,12 @@ class HistoreDatastore(DefaultDatastore):
             df=df,
             schema=list(df.columns),
             metadata=metadata,
-            column_types=column_types,
             annotations=annotations
         )
 
     def commit_dataset(
         self, archive, archive_id, snapshot_id, dataset_dir, df, schema,
-        metadata, column_types, annotations
+        metadata, annotations
     ):
         """Commit changes to a given archive after merging a dataset snapshot.
         Snapshot metadata and annotations are written to file.
@@ -130,8 +129,6 @@ class HistoreDatastore(DefaultDatastore):
             Columns in the commited data frame schema.
         metadata: dict
             Dictionary containing data profiling results.
-        column_types: dict
-            Mapping of column names to column types.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
                 default=None
             Annotations for dataset components
@@ -141,13 +138,14 @@ class HistoreDatastore(DefaultDatastore):
         vizier.datastore.histore.dataset.HistoreSnapshotHandle
         """
         # Create column objects.
+        column_types = metadata[profiling.COLUMN_TYPES]
         columns = []
-        for column in schema:
+        for colidx, column in enumerate(schema):
             columns.append(
                 DatasetColumn(
                     identifier=column.colid,
                     name=column,
-                    data_type=column_types.get(column)
+                    data_type=column_types[colidx]
                 )
             )
         # Write annotations if given.
@@ -161,9 +159,8 @@ class HistoreDatastore(DefaultDatastore):
         return HistoreSnapshotHandle(
             identifier=ID.create(archive_id, snapshot_id),
             columns=columns,
-            row_count=len(df.index),
+            metadata=metadata,
             reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
-            profiling=metadata.get(profiling.PROFILING_RESULTS, dict()),
             annotations=annotations
         )
 
@@ -210,10 +207,10 @@ class HistoreDatastore(DefaultDatastore):
         # Convert given columns into type that is expected by HISTORE. Generate
         # mapping of column names to the defined column type.
         df_columns = list()
-        column_types = dict()
+        default_types = dict()
         for col in columns:
             df_columns.append(Column(colid=col.identifier, name=col.name))
-            column_types[col.name] = col.data_type
+            default_types.append(col.data_type)
         # Extract values and identifier from data rows to create the pandas
         # data frame.
         index = list()
@@ -227,7 +224,7 @@ class HistoreDatastore(DefaultDatastore):
         return self.create_archive(
             df=df,
             profiler=profiler,
-            column_types=column_types,
+            default_types=default_types,
             annotation=annotations
         )
 
@@ -264,9 +261,8 @@ class HistoreDatastore(DefaultDatastore):
         return HistoreSnapshotHandle(
             identifier=identifier,
             columns=columns,
-            row_count=metadata[profiling.ROWCOUNT],
+            metadata=metadata,
             reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
-            profiling=metadata.get(profiling.PROFILING_RESULTS, dict()),
             annotations=DatasetMetadata.from_file(
                 self.get_metadata_filename(archive_id)
             )
@@ -339,7 +335,7 @@ class HistoreDatastore(DefaultDatastore):
         # Create archive for dataset snapshot and return the dataset handle.
         return self.create_archive(df=df, profiler=profiler)
 
-    def update_dataset(self, origin, df, profiler=None, annotations=None):
+    def update_dataset(self, origin, df, annotations=None):
         """Create a new persistent archive that contains the given data frame
         as the first snapshot. Returns a handle for the dataset snapshot.
 
@@ -350,8 +346,11 @@ class HistoreDatastore(DefaultDatastore):
             generated.
         df: pandas.DataFrame
             Data frame containing the dataset snapshot.
-        profiler: string, default=None
-            Identifier for data profiler that is used to infer column types.
+        run_profiler: bool, default=True
+            Indicates that the values in the data frame have changed compared
+            to the version of origin. Will run the data profiler on the given
+            data frame. If False, the profiling results from the origin will
+            be used.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
                 default=None
             Annotations for dataset components
@@ -375,10 +374,10 @@ class HistoreDatastore(DefaultDatastore):
         if not archive.snapshots().has_version(snapshot_id):
             raise ValueError("unknown dataset '{}'".format(origin.identifier))
         # Generate data profiling results and column types for the data frame.
-        metadata, column_types = profiling.run(df=df, profiler=profiler)
-        # Commit the given data frame to the archive.
+        metadata = profiling.run(df=df, profiler=origin.profiler())
+        # Commit the given data frame to the archive. Then get the updated list
+        # of data frame columns (in order to have access to column identifier).
         snapshot = archive.commit(df, origin=snapshot_id)
-        # Make sure to update the data fra,e columns.
         schema = archive.schema().at_version(snapshot.version)
         df.columns = schema
         return self.commit_dataset(
@@ -389,7 +388,6 @@ class HistoreDatastore(DefaultDatastore):
             df=df,
             schema=schema,
             metadata=metadata,
-            column_types=column_types,
             annotations=annotations
         )
 

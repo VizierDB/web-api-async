@@ -20,23 +20,28 @@ import vizier.datastore.profiling.datamart as datamart
 
 
 """Default elements in data profiling results."""
-ROWCOUNT = 'rowCount'
+COLUMN_TYPES = 'columnTypes'
 PROFILING_RESULTS = 'profiling'
+PROFILER_NAME = 'name'
+PROFILER_DATA = 'data'
+ROWCOUNT = 'rowCount'
 
 
-def run(df, profiler=None, column_types=dict()):
+def run(df, profiler=None, default_types=None):
     """Create profiling results for a given data frame. Will at least assign
     a data type to each column in the data frame.
 
-    Returns a tuple containing the profiling result dictionary and the mapping
-    of column names to data types.
+    Returns a dictionary containing at least two elements (at most three):
 
-    The profiling result will contain the row count for the given data frame.
-    If a profiler is specified the results of running that profiler on the data
-    frame will be included in the returned metadata dictionary.
-
-    NOTE: The profiling will currently not work properly for data frames with
-    duplicate column names.
+    - ROWCOUNT ('rowCount'): Number of rows in the data frame.
+    - COLUMN_TYPES ('columnTypes'): List if raw data types for columns in the
+      data frame. The position in the returned list corresponds to the position
+      of columns in the data frame.
+    - PROFILING_RESULTS ('profiling'): Results from running the optional data
+      profiler on the data frame. This element is optional. If present, it
+      contains two elements:
+      - PROFILER_NAME ('name'): Unique profiler identifier
+      - PROFILER_DATA ('data'): Profiler results.
 
     Parameters
     ----------
@@ -45,22 +50,31 @@ def run(df, profiler=None, column_types=dict()):
     profilers: string, default=None
         Identifier for data profiler that is used to infer column types.
         If None, all column types will be 'varchar' by default.
-    column_types: dict, default=dict
-        Optional mapping of column names to default column types.
+    default_types: list, default=None
+        Optional list of default column types.
 
     Returns
     -------
-    dict, dict
+    dict
     """
-    metadata = dict({ROWCOUNT: len(df.index)})
-    if profiler == 'datamartprofiler':
-        # Run the Datamart profiler if requested by the user.
-        results = datamart.run(df)
-        column_types = datamart.get_types(results, column_types=column_types)
-        metadata[PROFILING_RESULTS] = {'datamartprofiler': results}
+    # If the list of default column types is given, the number of elements in
+    # the list have to match the number of columns in the data frame.
+    if default_types is not None:
+        if len(df.columns) != len(default_types):
+            msg = 'incompatible data type list {}'
+            raise ValueError(msg.format(default_types))
     else:
         # By default, the data type for each column is 'varchar'
-        for col in df.columns:
-            if col not in column_types:
-                column_types[col] = 'varchar'
-    return metadata, column_types
+        default_types = ['varchar'] * len(df.columns)
+    # The number of rows is always part of the returned meta data dictionary.
+    metadata = dict({ROWCOUNT: len(df.index)})
+    if profiler == 'datamartprofiler':
+        data = datamart.run(df)
+        metadata[PROFILING_RESULTS] = {
+            PROFILER_NAME: profiler,
+            PROFILER_DATA: data
+        }
+        metadata[COLUMN_TYPES] = datamart.get_types(df, data)
+    else:
+        metadata[COLUMN_TYPES] = default_types
+    return metadata

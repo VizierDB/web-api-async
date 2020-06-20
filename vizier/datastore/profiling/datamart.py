@@ -29,32 +29,40 @@ SWITCHER = {
 }
 
 
-def get_types(metadata, column_types=dict()):
-    """Parse Datamart profiler result to return a dictionary that maps column
-    names to data types.
+def get_types(df, metadata):
+    """Parse Datamart profiler result to return a list with data types. The
+    returned list contains exactly one data type for each column in the data
+    frame. The position in the list corresponds to the column at the respective
+    position in the data frame schema.
 
     Parameters
     ----------
     metadata: dict
         Metadata dictionary returned bt the Datamart profiler.
-    column_types: dict
-        Optional dictionary of user provided default column types.
 
     Returns
     -------
-    dict
+    list
     """
-    column_types = {}
-    for column in metadata['columns']:
-        semantic_types = column['semantic_types']
-        if semantic_types:
-            column_type = semantic_types[0][semantic_types[0].rindex('/') + 1:]
+    # This code assumes that the datamart profiler returns a list of profiling
+    # results for each column with the order in the list corresponding the the
+    # order of columns in the input data frame.
+    column_types = list()
+    for colidx, colname in enumerate(list(df.columns)):
+        column = metadata['columns'][colidx]
+        if column['name'] == colname:
+            semantic = column['semantic_types']
+            if semantic:
+                column_type = semantic[0][semantic[0].rindex('/') + 1:]
+            else:
+                structural = column['structural_type']
+                column_type = structural[structural.rindex('/') + 1:]
+            column_type = SWITCHER.get(column_type, 'varchar')
         else:
-            structural_type = column['structural_type']
-            column_type = structural_type[structural_type.rindex('/') + 1:]
-        col_name = column['name']
-        default_type = column_types.get(col_name, 'varchar')
-        column_types[col_name] = SWITCHER.get(column_type, default_type)
+            # If the assumption about the order of results does not hold
+            # set the type for this column to a default value.
+            column_type = 'varchar'
+        column_types.append(column_type)
     return column_types
 
 

@@ -84,7 +84,7 @@ class OnDemandReader(ReaderFactory):
         pandas.DataFrame
         """
         # Read the data frame for the snapshot if it is not cached.
-        if not self._df:
+        if self._df is None:
             self._df = self.archive.checkout(version=self.snapshot_id)
         return self._df
 
