@@ -375,7 +375,7 @@ paths:
         get:
             summary: Get module state
             description: Get state of a module in the head workflow of a branch
-            operationId: getBranchHead
+            operationId: getModuleState
             tags:
                 - workflow
             parameters:
@@ -747,6 +747,33 @@ paths:
                     description: Dataset data
                     schema:
                         $ref: '#/definitions/DatasetDescriptor'
+                404:
+                    description: Unknown project or dataset
+    /projects/{projectId}/datasets/{datasetId}/profiling:
+        get:
+            summary: Get dataset profiling results
+            description: Get data profiling results for a dataset
+            operationId: getDatasetProfiling
+            tags:
+                - dataset
+            parameters:
+                - name: projectId
+                  in: path
+                  required: true
+                  description: The unique project identifier
+                  type: string
+                - name: datasetId
+                  in: path
+                  required: true
+                  description: The unique dataset identifier
+                  type: string
+            produces:
+                - application/json
+            responses:
+                200:
+                    description: Profiling result
+                    schema:
+                        $ref: '#/definitions/DatasetProfiling'
                 404:
                     description: Unknown project or dataset
     #
@@ -1138,6 +1165,16 @@ definitions:
                 type: string
             name:
                 type: string
+    DatasetProfiling:
+      type: object
+      required:
+        - name
+        - data
+      properties:
+        name:
+          type: string
+        data:
+          type: object
     DatasetRow:
         type: object
         description: Row in a dataset
@@ -1274,6 +1311,8 @@ definitions:
                 type: string
             arguments:
                 type: array
+                items:
+                  type: object
     ObjectProperty:
         type: object
         description: Key-value pair for user-defined object properties

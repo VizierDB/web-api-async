@@ -19,7 +19,7 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 from vizier.datastore.annotation.dataset import DatasetMetadata
 
@@ -276,7 +276,7 @@ class DatasetDescriptor(object):
         return output
 
 
-class DatasetHandle(DatasetDescriptor):
+class DatasetHandle(DatasetDescriptor, metaclass=ABCMeta):
     """Abstract class to maintain information about a dataset in a Vizier
     datastore. Contains the unique dataset identifier, the lists of
     columns in the dataset schema, and a reference to the dataset
@@ -365,6 +365,17 @@ class DatasetHandle(DatasetDescriptor):
         Returns
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_profiling(self):
+        """Get profiling information for the dataset. If no profiling
+        information is available the result shoud be an empty dictionary.
+
+        Returns
+        -------
+        dict
         """
         raise NotImplementedError()
 

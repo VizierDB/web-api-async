@@ -319,19 +319,18 @@ class FileSystemDatastore(DefaultDatastore):
             # Run the Datamart profiler if requested by the user.
             df = pd.DataFrame(data=rows, columns=column_names)
             metadata = datamart.run(df)
-            column_types = datamart.get_types(metadata)
+            column_types = datamart.get_types(df, metadata)
         else:
             metadata = None
-            column_types = dict()
+            column_types = list()
         # Create column objects.
         columns = []
-        for col_name in column_names:
-            column_type = column_types.get(col_name)
+        for col_name, col_type in zip(column_names, column_types):
             columns.append(
                 DatasetColumn(
                     identifier=len(columns),
                     name=col_name.strip(),
-                    data_type=column_type
+                    data_type=col_type
                 )
             )
         # Get unique identifier and create subfolder for the new dataset

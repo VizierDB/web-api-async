@@ -145,7 +145,19 @@ class FileSystemDatasetHandle(DatasetHandle):
         elif column_id is None:
             return self.annotations.for_row(row_id)
         else:
-            return self.annotations.for_cell(column_id=column_id, row_id=row_id)
+            return self.annotations.for_cell(
+                column_id=column_id,
+                row_id=row_id
+            )
+
+    def get_profiling(self):
+        """Get profiling results for the dataset.
+
+        Returns
+        -------
+        dict
+        """
+        return dict()
 
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset

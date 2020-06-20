@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 New York University,
+# Copyright (C) 2017-2020 New York University,
 #                         University at Buffalo,
 #                         Illinois Institute of Technology.
 #
@@ -36,6 +36,7 @@ from vizier.datastore.annotation.dataset import DatasetMetadata
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
+import vizier.api.webservice.message as msg
 import vizier.config.app as app
 import json
 
@@ -217,7 +218,7 @@ def get_project(project_id):
     pj = api.projects.get_project(project_id)
     if pj is not None:
         return jsonify(pj)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
 @bp.route('/projects/<string:project_id>', methods=['DELETE'])
@@ -225,7 +226,7 @@ def delete_project(project_id):
     """Delete an existing project."""
     if api.projects.delete_project(project_id):
         return '', 204
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
 @bp.route('/projects/<string:project_id>', methods=['PUT'])
@@ -260,7 +261,7 @@ def update_project(project_id):
             return jsonify(pj)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
 # ------------------------------------------------------------------------------
@@ -310,7 +311,9 @@ def create_branch(project_id):
             elif key == 'moduleId':
                 module_id = source[key]
             else:
-                raise srv.InvalidRequest('invalid element \'' + key + '\' for branch point')
+                raise srv.InvalidRequest(
+                    "invalid element '{}' for branch point".format(key)
+                )
     # Get the properties for the new branch
     properties = deserialize.PROPERTIES(obj['properties'])
     # Create a new workflow. The result is the descriptor for the new workflow
@@ -328,19 +331,25 @@ def create_branch(project_id):
             return jsonify(branch)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['DELETE'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>',
+    methods=['DELETE']
+)
 def delete_branch(project_id, branch_id):
     """Delete branch from a given project."""
     try:
-        success = api.branches.delete_branch(project_id=project_id, branch_id=branch_id)
+        success = api.branches.delete_branch(
+            project_id=project_id,
+            branch_id=branch_id
+        )
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
     if success:
         return '', 204
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
 @bp.route('/projects/<string:project_id>/branches/<string:branch_id>')
@@ -351,10 +360,13 @@ def get_branch(project_id, branch_id):
     branch = api.branches.get_branch(project_id, branch_id)
     if branch is not None:
         return jsonify(branch)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>', methods=['PUT'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>',
+    methods=['PUT']
+)
 def update_branch(project_id, branch_id):
     """Update properties for a given project workflow branch. Expects a set of
     key,value-pairs in the request body. Properties with given key but missing
@@ -387,7 +399,7 @@ def update_branch(project_id, branch_id):
             return jsonify(branch)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
 # ------------------------------------------------------------------------------
@@ -399,13 +411,19 @@ def get_branch_head(project_id, branch_id):
     """Get handle for a workflow at the HEAD of a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
-    workflow = api.workflows.get_workflow(project_id=project_id, branch_id=branch_id)
+    workflow = api.workflows.get_workflow(
+        project_id=project_id,
+        branch_id=branch_id
+    )
     if workflow is not None:
         return jsonify(workflow)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head', methods=['POST'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>/head',
+    methods=['POST']
+)
 def append_branch_head(project_id, branch_id):
     """Append a module to the workflow that is at the HEAD of the given branch.
 
@@ -438,10 +456,13 @@ def append_branch_head(project_id, branch_id):
             return jsonify(module)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/cancel', methods=['POST'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>/head/cancel',
+    methods=['POST']
+)
 def cancel_workflow(project_id, branch_id):
     """Cancel execution for all running and pending modules in the head
     workflow of a given project branch.
@@ -454,10 +475,10 @@ def cancel_workflow(project_id, branch_id):
     )
     if workflow is not None:
         return jsonify(workflow)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_BRANCH(project_id, branch_id))
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>')  # noqa: E501
 def get_workflow(project_id, branch_id, workflow_id):
     """Get handle for a workflow in a given project branch."""
     # Get the workflow handle. The result is None if the project, branch or
@@ -469,10 +490,12 @@ def get_workflow(project_id, branch_id, workflow_id):
     )
     if workflow is not None:
         return jsonify(workflow)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or workflow \'' + workflow_id + '\'')
+    raise srv.ResourceNotFound(
+        msg.UNKNOWN_WORKFLOW(project_id, branch_id, workflow_id)
+    )
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>')  # noqa: E501
 def get_workflow_module(project_id, branch_id, module_id):
     """Get handle for a module in the head workflow of a given project branch.
     """
@@ -485,10 +508,15 @@ def get_workflow_module(project_id, branch_id, module_id):
     )
     if module is not None:
         return jsonify(module)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound(
+        msg.UNKNOWN_MODULE(project_id, branch_id, module_id)
+    )
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['DELETE'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>',   # noqa: E501
+    methods=['DELETE']
+)
 def delete_workflow_module(project_id, branch_id, module_id):
     """Delete a module in the head workflow of a given project branch."""
     result = api.workflows.delete_workflow_module(
@@ -498,10 +526,15 @@ def delete_workflow_module(project_id, branch_id, module_id):
     )
     if result is not None:
         return jsonify(result)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound(
+        msg.UNKNOWN_MODULE(project_id, branch_id, module_id)
+    )
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['POST'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>',   # noqa: E501
+    methods=['POST']
+)
 def insert_workflow_module(project_id, branch_id, module_id):
     """Insert a module into a workflow branch before the specified module and
     execute the resulting workflow.
@@ -536,10 +569,15 @@ def insert_workflow_module(project_id, branch_id, module_id):
             return jsonify(modules)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound(
+        msg.UNKNOWN_MODULE(project_id, branch_id, module_id)
+    )
 
 
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>', methods=['PUT'])
+@bp.route(
+    '/projects/<string:project_id>/branches/<string:branch_id>/head/modules/<string:module_id>',   # noqa: E501
+    methods=['PUT']
+)
 def replace_workflow_module(project_id, branch_id, module_id):
     """Replace a module in the current project workflow branch and execute the
     resulting workflow.
@@ -574,7 +612,9 @@ def replace_workflow_module(project_id, branch_id, module_id):
             return jsonify(modules)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
+    raise srv.ResourceNotFound(
+        msg.UNKNOWN_MODULE(project_id, branch_id, module_id)
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -680,7 +720,7 @@ def create_dataset(project_id):
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>')
@@ -700,10 +740,10 @@ def get_dataset(project_id, dataset_id):
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
 
 
-@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')  # noqa: E501
 def get_dataset_annotations(project_id, dataset_id):
     """Get annotations that are associated with the given dataset.
     """
@@ -720,10 +760,24 @@ def get_dataset_annotations(project_id, dataset_id):
     )
     if annotations is not None:
         return jsonify(annotations)
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
 
 
-@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/profiling')  # noqa: E501
+def get_dataset_profiling(project_id, dataset_id):
+    """Get profiling results for a dataset."""
+    # Get annotations for dataset with given identifier. The result is None if
+    # no dataset with given identifier exists.
+    metadata = api.datasets.get_profiling(
+        project_id=project_id,
+        dataset_id=dataset_id
+    )
+    if metadata is not None:
+        return jsonify(metadata)
+    raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
+
+
+@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/descriptor')  # noqa: E501
 def get_dataset_descriptor(project_id, dataset_id):
     """Get the descriptor for the dataset with given identifier."""
     try:
@@ -735,10 +789,13 @@ def get_dataset_descriptor(project_id, dataset_id):
             return jsonify(dataset)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
 
 
-@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
+@bp.route(
+    '/projects/<string:project_id>/datasets/<string:dataset_id>/annotations',
+    methods=['POST']
+)
 def update_dataset_annotation(project_id, dataset_id):
     """Update an annotation that is associated with a component of the given
     dataset.
@@ -780,7 +837,7 @@ def update_dataset_annotation(project_id, dataset_id):
             return jsonify(annotations)
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/csv')
@@ -791,7 +848,7 @@ def download_dataset(project_id, dataset_id):
     # if no dataset with given identifier exists.
     _, dataset = api.datasets.get_dataset_handle(project_id, dataset_id)
     if dataset is None:
-        raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
+        raise srv.ResourceNotFound(msg.UNKNOWN_DATASET(project_id, dataset_id))
     # Read the dataset into a string buffer in memory
     si = io.StringIO()
     cw = csv.writer(si)
@@ -809,8 +866,10 @@ def download_dataset(project_id, dataset_id):
 # ------------------------------------------------------------------------------
 # Views
 # ------------------------------------------------------------------------------
-@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')
-def get_dataset_chart_view(project_id, branch_id, workflow_id, module_id, chart_id):
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/workflows/<string:workflow_id>/modules/<string:module_id>/charts/<string:chart_id>')  # noqa: E501
+def get_dataset_chart_view(
+    project_id, branch_id, workflow_id, module_id, chart_id
+):
     """Get content of a dataset chart view for a given workflow module.
     """
     try:
@@ -865,7 +924,7 @@ def upload_file(project_id):
             raise srv.InvalidRequest(str(ex))
     else:
         raise srv.InvalidRequest('no file or url specified in request')
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_PROJECT(project_id))
 
 
 @bp.route('/projects/<string:project_id>/files/<string:file_id>')
@@ -885,4 +944,4 @@ def download_file(project_id, file_id):
             attachment_filename=f_handle.file_name,
             as_attachment=True
         )
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or file \'' + file_id + '\'')
+    raise srv.ResourceNotFound(msg.UNKNOWN_FILE(project_id, file_id))

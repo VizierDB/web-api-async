@@ -82,7 +82,7 @@ class HistoreSnapshotHandle(DatasetHandle):
                 row_id=row_id
             )
 
-    def profile(self):
+    def get_profiling(self):
         """Get profiling results for the dataset.
 
         Returns
@@ -90,6 +90,9 @@ class HistoreSnapshotHandle(DatasetHandle):
         dict
         """
         return self._profiling.get(profiling.PROFILER_DATA, dict())
+
+    # Keep this for compatibility reasons.
+    profile = get_profiling
 
     def profiler(self):
         """Get name of data profiler that was executed on the dataset.

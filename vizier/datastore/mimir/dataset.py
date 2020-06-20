@@ -318,6 +318,15 @@ class MimirDatasetHandle(DatasetHandle):
                         )
             return annotations
 
+    def get_profiling(self):
+        """Get profiling results for the dataset.
+
+        Returns
+        -------
+        dict
+        """
+        return dict()
+
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset
         is empty the result is -1.
