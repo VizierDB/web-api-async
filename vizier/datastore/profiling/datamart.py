@@ -16,6 +16,9 @@
 
 import datamart_profiler as dmp
 
+from collections import defaultdict
+from queue import Queue
+
 
 """Mapping from Datamart data type names to Vizier data type names."""
 SWITCHER = {
@@ -44,26 +47,25 @@ def get_types(df, metadata):
     -------
     list
     """
-    # This code assumes that the datamart profiler returns a list of profiling
-    # results for each column with the order in the list corresponding the the
-    # order of columns in the input data frame.
-    column_types = list()
-    for colidx, colname in enumerate(list(df.columns)):
-        column = metadata['columns'][colidx]
-        if column['name'] == colname:
-            semantic = column['semantic_types']
-            if semantic:
-                column_type = semantic[0][semantic[0].rindex('/') + 1:]
-            else:
-                structural = column['structural_type']
-                column_type = structural[structural.rindex('/') + 1:]
-            column_type = SWITCHER.get(column_type, 'varchar')
+    # Start by creating a mapping from column names to data types. The schema
+    # of the data frame may contain duplicate names. To account for this we
+    # assign with each entry in the mapping a list of types. This code assumes
+    # that the datamart profiler returns a list of profiling results for each
+    # column with the order in the list corresponding the the order of columns
+    # in the input data frame.
+    type_mapping = defaultdict(Queue)
+    for column in metadata['columns']:
+        name = column['name']
+        semantic_types = column['semantic_types']
+        if semantic_types:
+            data_type = semantic_types[0][semantic_types[0].rindex('/') + 1:]
         else:
-            # If the assumption about the order of results does not hold
-            # set the type for this column to a default value.
-            column_type = 'varchar'
-        column_types.append(column_type)
-    return column_types
+            structural_type = column['structural_type']
+            data_type = structural_type[structural_type.rindex('/') + 1:]
+        type_mapping[name].put(SWITCHER.get(data_type, 'varchar'))
+    # Convert the mapping into a list of types in order of the columns in the
+    # data frame.
+    return [type_mapping[name].get() for name in df.columns]
 
 
 def run(df):
