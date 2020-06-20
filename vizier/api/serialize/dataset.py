@@ -182,6 +182,10 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
             ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
                 project_id=project_id,
                 dataset_id=dataset_id
+            ),
+            ref.PROFILING_GET: urls.get_dataset_profiling(
+                project_id=project_id,
+                dataset_id=dataset_id
             )
         })
     return obj
@@ -327,7 +331,7 @@ def DATASET_ROW(row):
     -------
     dict
     """
-  
+
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,
