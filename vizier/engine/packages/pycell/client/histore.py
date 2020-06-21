@@ -99,7 +99,7 @@ class VizierDBClient(object):
         origin = self.get_dataset_identifier(name)
         ds = self.datastore.update_dataset(origin=origin, df=dataset)
         self.set_dataset_identifier(name, ds.identifier)
-        self.descriptors[ds.identifier] = ds
+        self.descriptors[ds.identifier] = ds.descriptor()
         return ds.to_dataframe()
 
     def create(self, name, dataset, profiler=None):
@@ -137,7 +137,7 @@ class VizierDBClient(object):
         # Write dataset to datastore and add new dataset to context
         ds = self.datastore.create_archive(df=dataset, profiler=profiler)
         self.set_dataset_identifier(name, ds.identifier)
-        self.descriptors[ds.identifier] = ds
+        self.descriptors[ds.identifier] = ds.descriptor()
         return ds.to_dataframe()
 
     # Include for compatibility with previous syntax
@@ -231,7 +231,7 @@ class VizierDBClient(object):
         # Write dataset to datastore and add new dataset to context
         ds = self.datastore.load_dataset(fh=CSV(filename), profiler=profiler)
         self.set_dataset_identifier(name, ds.identifier)
-        self.descriptors[ds.identifier] = ds
+        self.descriptors[ds.identifier] = ds.descriptor()
         return ds.to_dataframe()
 
     def remove_dataset_identifier(self, name):

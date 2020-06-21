@@ -17,6 +17,9 @@
 """Dataset reader for pandas data frames."""
 
 from abc import ABCMeta, abstractmethod
+from datetime import datetime, date, time
+
+import numpy as np
 
 from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.reader import DatasetReader
@@ -150,8 +153,8 @@ class DataFrameReader(DatasetReader, ReaderFactory):
         if self.is_open:
             if self.read_index < self.size:
                 row = DatasetRow(
-                    identifier=self.df.index[self.read_index],
-                    values=list(self.df.iloc[self.read_index])
+                    identifier=int(self.df.index[self.read_index]),
+                    values=[convert(v) for v in self.df.iloc[self.read_index]]
                 )
                 self.read_index += 1
                 return row
@@ -199,3 +202,22 @@ class DataFrameReader(DatasetReader, ReaderFactory):
         if not self.is_open:
             self.is_open = True
         return self
+
+
+# -- Helper Functions ---------------------------------------------------------
+
+def convert(val):
+    """Ensure that a value is Json serializable."""
+    if isinstance(val, np.integer):
+        return int(val)
+    elif isinstance(val, np.floating):
+        return float(val)
+    elif isinstance(val, np.ndarray):
+        return val.tolist()
+    elif isinstance(val, datetime):
+        return val.isoformat()
+    elif isinstance(val, date):
+        return val.isoformat()
+    elif isinstance(val, time):
+        return val.isoformat()
+    return val

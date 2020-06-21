@@ -444,7 +444,7 @@ class VizierEngine(WorkflowController):
         self.backend.execute_async(
             task=task,
             command=module.command,
-            context=task_context(datasets,dataobjects),
+            context=task_context(datasets, dataobjects),
             resources=module.provenance.resources
         )
 
@@ -518,7 +518,7 @@ class VizierEngine(WorkflowController):
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
-            
+
             # Get the index of the module at which the new module is inserted
             module_index = None
             modules = head.modules
@@ -528,7 +528,7 @@ class VizierEngine(WorkflowController):
                     break
             if module_index is None:
                 return None
-            
+
             # Get handle for the inserted module
             if module_index > 0:
                 datasets = modules[module_index - 1].datasets
@@ -811,7 +811,7 @@ class VizierEngine(WorkflowController):
             dsanddo.update(dataobjects)
             context_all = provenance.get_database_state(dsanddo)
             context_ds, context_do = provenance.split_context(context_all)
-            
+
             module.set_success(
                 finished_at=finished_at,
                 datasets=context_ds,
@@ -819,8 +819,9 @@ class VizierEngine(WorkflowController):
                 provenance=provenance,
                 dataobjects=context_do
             )
+
             print("Module {} finished at {} / Context: {}".format(
-                module.external_form, 
+                module.external_form,
                 finished_at,
                 context_ds
             ))
@@ -874,7 +875,7 @@ class VizierEngine(WorkflowController):
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
-    
+
 def pop_task(tasks, task_id):
     """Remove task with given identifier and return the task handle. The result
     is None if no task with the given identifier exists.

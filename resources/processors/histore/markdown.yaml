@@ -1,0 +1,5 @@
+packages:
+    - markdown
+engine:
+    className: 'MarkdownTaskProcessor'
+    moduleName: 'vizier.engine.packages.markdown.processor'

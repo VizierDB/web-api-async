@@ -323,6 +323,16 @@ class DatasetHandle(DatasetDescriptor, metaclass=ABCMeta):
         )
         self.annotations = annotations if annotations else DatasetMetadata()
 
+    @abstractmethod
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        raise NotImplementedError()
+
     def fetch_rows(self, offset=0, limit=-1):
         """Get list of dataset rows. The offset and limit parameters are
         intended for pagination.

@@ -331,7 +331,6 @@ def DATASET_ROW(row):
     -------
     dict
     """
-
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,

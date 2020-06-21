@@ -18,7 +18,7 @@
 maintained in HISTORE archive.
 """
 
-from vizier.datastore.dataset import DatasetHandle
+from vizier.datastore.dataset import DatasetDescriptor, DatasetHandle
 
 import vizier.datastore.profiling.base as profiling
 
@@ -57,6 +57,19 @@ class HistoreSnapshotHandle(DatasetHandle):
         self.archive = archive
         self._reader = reader
         self._profiling = metadata.get(profiling.PROFILING_RESULTS, dict())
+
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.dataset.DatasetDescriptor
+        """
+        return DatasetDescriptor(
+            identifier=self.identifier,
+            columns=self.columns,
+            row_count=self.row_count
+        )
 
     def get_annotations(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier

@@ -27,7 +27,7 @@ from vizier.datastore.histore.base import HistoreDatastore
 PARA_DIRECTORY = 'directory'
 
 
-class HistireDatastoreFactory(DatastoreFactory):
+class HistoreDatastoreFactory(DatastoreFactory):
     """Datastore factory for HISTORE datastores."""
     def __init__(self, base_path=None, properties=None):
         """Initialize the reference to the base directory that contains all

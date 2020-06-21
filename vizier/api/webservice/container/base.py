@@ -136,7 +136,7 @@ def get_engine(config):
     # Get backend identifier. Raise ValueError if value does not identify
     # a valid backend.
     backend_id = config.engine.backend.identifier
-    if not backend_id in base.BACKENDS:
+    if backend_id not in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     # Get the identifier factory for the viztrails repository and create
     # the object store. At this point we use the default object store only.
@@ -153,13 +153,15 @@ def get_engine(config):
     # the viztrails repository. The datastore and filestore factories depend
     # on the values of engine identifier (DEV or MIMIR).
     base_dir = config.engine.data_dir
-    viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
-        filestore_factory=FileSystemFilestoreFactory(filestores_dir)
+        filestore_factory = FileSystemFilestoreFactory(filestores_dir)
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
         if config.engine.identifier == base.DEV_ENGINE:
             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
+        elif config.engine.identifier == base.HISTORE_ENGINE:
+            import vizier.datastore.histore.factory as histore
+            datastore_factory = histore.HistoreDatastoreFactory(datastores_dir)
         else:
             datastore_factory = MimirDatastoreFactory(datastores_dir)
     else:

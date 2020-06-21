@@ -87,6 +87,15 @@ class FileSystemDatasetHandle(DatasetHandle):
         if max_row_id is None:
             raise ValueError('invalid max')
         self._max_row_id = max_row_id
+        
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self
 
     @staticmethod
     def from_file(descriptor_file, data_file, annotations=None):

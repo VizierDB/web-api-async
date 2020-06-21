@@ -136,7 +136,7 @@ class HistoreDatastore(DefaultDatastore):
             columns.append(
                 DatasetColumn(
                     identifier=column.colid,
-                    name=column,
+                    name=str(column),
                     data_type=column_types[colidx]
                 )
             )

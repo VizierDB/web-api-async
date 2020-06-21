@@ -28,13 +28,13 @@ import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
 from vizier.api.webservice import server
 from vizier.config.app import AppConfig
-import vizier.mimir as mimir
-from vizier.datastore.mimir.dataset import MimirDatasetColumn
+
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
 
 config = AppConfig()
+
 
 class VizualTaskProcessor(TaskProcessor):
     """Implmentation of the task processor for the vizual package. The processor
@@ -429,7 +429,6 @@ class VizualTaskProcessor(TaskProcessor):
         # )
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
-        print((args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False)))
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
             m_opts.append({'name':'datasourceErrors', 'value':'true'})
         if not options is None:
@@ -469,9 +468,11 @@ class VizualTaskProcessor(TaskProcessor):
             offset=0,
             limit=10
         )
-        ds_output['name'] = ds_name 
+        ds_output['name'] = ds_name
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            outputs=ModuleOutputs(
+                stdout=[DatasetOutput(ds_output)]
+            ),
             provenance=ModuleProvenance(
                 read=dict(), # need to explicitly declare a lack of dependencies
                 write={ds_name: ds},
@@ -542,7 +543,7 @@ class VizualTaskProcessor(TaskProcessor):
         output_name = args.get_value(pckg.PARA_NAME).lower()
         if not is_valid_name(output_name):
             raise ValueError('invalid dataset name \'' + output_name + '\'')
-        
+
         input_ds = context.get_dataset(input_name)
         if input_ds is None:
             raise ValueError('invalid dataset \'' + input_name + '\'')
@@ -561,7 +562,7 @@ class VizualTaskProcessor(TaskProcessor):
             provenance=provenance
         )
 
-        
+
     def compute_unload_dataset(self, args, context):
         """Execute unload dataset command.
 
@@ -579,7 +580,7 @@ class VizualTaskProcessor(TaskProcessor):
         # Get the new dataset name. Raise exception if a dataset with the
         # specified name already exsists.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-       
+
         if not is_valid_name(ds_name):
             raise ValueError('invalid dataset name \'' + ds_name + '\'')
         # Get components of the load source. Raise exception if the source
@@ -587,7 +588,7 @@ class VizualTaskProcessor(TaskProcessor):
         unload_format = args.get_value(cmd.PARA_UNLOAD_FORMAT)
         options = args.get_value(cmd.PARA_UNLOAD_OPTIONS, raise_error=False)
         m_opts = []
-        
+
         if not options is None:
             for option in options:
                 unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
@@ -612,11 +613,11 @@ class VizualTaskProcessor(TaskProcessor):
         # Create result object
         outputhtml = HtmlOutput(''.join(["<div><a href=\""+ config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
         return ExecResult(
-            outputs=ModuleOutputs( 
+            outputs=ModuleOutputs(
                 stdout=[outputhtml]
             ),
             provenance=ModuleProvenance(
-                read= { 
+                read= {
                     ds_name: context.datasets.get(ds_name.lower(), None)
                 },
                 write=dict()

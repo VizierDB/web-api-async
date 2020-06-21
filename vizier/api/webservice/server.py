@@ -25,7 +25,9 @@ import os
 import io
 import tarfile
 
-from flask import Blueprint, jsonify, make_response, request, send_file
+from flask import (
+    Blueprint, jsonify, make_response, request, send_file, send_from_directory
+)
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
@@ -48,12 +50,20 @@ import json
 """Get application configuration parameters from environment variables."""
 config = AppConfig()
 
+webui_file_dir = os.getenv('WEB_UI_STATIC_FILES', "./web-ui/build/")
+print("Serving static UI files from {}".format(webui_file_dir))
+
 
 global api
 api = VizierApi(config, init=True)
 
 # Create the application blueprint
-bp = Blueprint('app', __name__, url_prefix=config.webservice.app_path)
+bp = Blueprint(
+    'app',
+    __name__,
+    url_prefix=config.webservice.app_path,
+    static_folder=webui_file_dir
+)
 
 
 # ------------------------------------------------------------------------------
@@ -198,7 +208,6 @@ def import_project():
                 return jsonify(pj)
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
-            print(ex)
     else:
         raise srv.InvalidRequest('no file or url specified in request')
     raise srv.ResourceNotFound('unknown project format')
@@ -945,3 +954,16 @@ def download_file(project_id, file_id):
             as_attachment=True
         )
     raise srv.ResourceNotFound(msg.UNKNOWN_FILE(project_id, file_id))
+
+
+# -----------------------------------------------------------------------------
+# Web-UI
+# -----------------------------------------------------------------------------
+
+@bp.route('/web-ui', defaults={'path': ''})
+@bp.route('/web-ui/<path:path>')
+def static_files(path):
+    if path != "" and os.path.exists(webui_file_dir + path):
+        return send_from_directory(webui_file_dir, path)
+    else:
+        return send_from_directory(webui_file_dir, 'index.html')

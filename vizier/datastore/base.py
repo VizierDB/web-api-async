@@ -145,7 +145,7 @@ class Datastore(metaclass=ABCMeta):
 
         Returns
         -------
-        vizier.datastore.base.DatasetDescriptor
+        vizier.datastore.dataset.DatasetDescriptor
         """
         raise NotImplementedError()
 
@@ -375,7 +375,7 @@ class DefaultDatastore(Datastore):
         -------
         vizier.datastore.base.DatasetDescriptor
         """
-        return self.get_dataset(identifier)
+        return self.get_dataset(identifier).descriptor()
 
     def get_metadata_filename(self, identifier):
         """Get filename of meatdata file for the dataset with the given

@@ -232,6 +232,15 @@ class MimirDatasetHandle(DatasetHandle):
         self.table_name = table_name
         self.row_counter = row_counter
 
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self
+
     @staticmethod
     def from_file(filename, annotations=None):
         """Read dataset from file. Expects the file to be in Json format which
