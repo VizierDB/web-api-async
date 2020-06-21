@@ -13,3 +13,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from vizier.engine.packages.pycell.processor import PyCellTaskProcessor  # noqa: F401, E501
