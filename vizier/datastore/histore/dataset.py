@@ -27,7 +27,7 @@ class HistoreSnapshotHandle(DatasetHandle):
     """Handle for a dataset snapshot that is maintained in a HISTORE archive.
     """
     def __init__(
-        self, identifier, columns, reader, metadata, annotations
+        self, identifier, columns, metadata, annotations, archive, reader
     ):
         """Initialize the dataset handle.
 
@@ -38,13 +38,15 @@ class HistoreSnapshotHandle(DatasetHandle):
         columns: list(vizier.datastore.base.DatasetColumn)
             List of columns. It is expected that each column has a unique
             identifier.
-        reader: vizier.datastore.histore.reader.ReaderFactory
-            Factory for readers that provide access to the dataset rows.
         profiling: dict
             Dictionary mapping profiler names to profiling results.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
                 default=None
             Annotations for dataset components
+        archive: histore.archive.base.Archive
+            Archive that maintains the dataset snapshots.
+        reader: vizier.datastore.histore.reader.ReaderFactory
+            Factory for readers that provide access to the dataset rows.
         """
         super(HistoreSnapshotHandle, self).__init__(
             identifier=identifier,
@@ -52,6 +54,7 @@ class HistoreSnapshotHandle(DatasetHandle):
             row_count=metadata.get(profiling.ROWCOUNT),
             annotations=annotations
         )
+        self.archive = archive
         self._reader = reader
         self._profiling = metadata.get(profiling.PROFILING_RESULTS, dict())
 

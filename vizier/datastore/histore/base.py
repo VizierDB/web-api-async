@@ -92,22 +92,19 @@ class HistoreDatastore(DefaultDatastore):
         dataset_dir = self.get_dataset_dir(archive_id)
         os.makedirs(dataset_dir)
         # Persist the data frame as the first archive snapshot.
-        archive = PersistentArchive(basedir=dataset_dir)
+        archive = DatasetArchive(identifier=archive_id, basedir=dataset_dir)
         snapshot = archive.commit(df)
         return self.commit_dataset(
             archive=archive,
-            archive_id=archive_id,
-            snapshot_id=snapshot.version,
-            dataset_dir=dataset_dir,
             df=df,
             schema=list(df.columns),
+            snapshot_id=snapshot.version,
             metadata=metadata,
             annotations=annotations
         )
 
     def commit_dataset(
-        self, archive, archive_id, snapshot_id, dataset_dir, df, schema,
-        metadata, annotations
+        self, archive, df, schema, snapshot_id, metadata, annotations
     ):
         """Commit changes to a given archive after merging a dataset snapshot.
         Snapshot metadata and annotations are written to file.
@@ -116,17 +113,12 @@ class HistoreDatastore(DefaultDatastore):
         ----------
         archive: histore.archive.base.Archive
             Archive for dataset snapshots.
-        archive_id: string
-            Unique dataset archive identifier
-        snapshot_id: int
-            Dataset snapshot version number.
-        dataset_dir: string
-            Base directory for all files that are associated with the dataset
-            archive.
         df: pandas.DataFrame
             Data frame containing the dataset snapshot.
         schema: list(histore.archive.schema.Column)
             Columns in the commited data frame schema.
+        snapshot_id: int
+            Dataset snapshot version number.
         metadata: dict
             Dictionary containing data profiling results.
         annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
@@ -151,17 +143,22 @@ class HistoreDatastore(DefaultDatastore):
         # Write annotations if given.
         if annotations is not None:
             annotations.to_file(
-                self.get_metadata_filename(archive_id)
+                self.get_metadata_filename(archive.identifier)
             )
         # Write snapshot metadata.
-        SnapshotMetadata(dataset_dir).write(snapshot_id, columns, metadata)
+        SnapshotMetadata(self.get_dataset_dir(archive.identifier)).write(
+            snapshot_id=snapshot_id,
+            columns=columns,
+            profiling=metadata
+        )
         # Create handle for the new dataset snapshot.
         return HistoreSnapshotHandle(
-            identifier=ID.create(archive_id, snapshot_id),
+            identifier=ID.create(archive.identifier, snapshot_id),
             columns=columns,
             metadata=metadata,
-            reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
-            annotations=annotations
+            annotations=annotations,
+            archive=archive,
+            reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id)
         )
 
     def create_dataset(
@@ -252,7 +249,7 @@ class HistoreDatastore(DefaultDatastore):
         # Create instance of the archive that maintains dataset snapshots.
         # Returns None if the archive does not have a snapshot with the given
         # identifier.
-        archive = PersistentArchive(basedir=dataset_dir)
+        archive = DatasetArchive(identifier=archive_id, basedir=dataset_dir)
         if not archive.snapshots().has_version(snapshot_id):
             return None
         # Read the snapshot meatdata.
@@ -262,10 +259,11 @@ class HistoreDatastore(DefaultDatastore):
             identifier=identifier,
             columns=columns,
             metadata=metadata,
-            reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id),
             annotations=DatasetMetadata.from_file(
                 self.get_metadata_filename(archive_id)
-            )
+            ),
+            archive=archive,
+            reader=OnDemandReader(archive=archive, snapshot_id=snapshot_id)
         )
 
     def get_objects(self, identifier=None, obj_type=None, key=None):
@@ -341,9 +339,12 @@ class HistoreDatastore(DefaultDatastore):
 
         Parameters
         ----------
-        origin : vizier.datastore.histore.dataset.HistoreSnapshotHandle
-            Handle for the dataset snapshot from which the given data frame was
-            generated.
+        origin : (
+                string or
+                vizier.datastore.histore.dataset.HistoreSnapshotHandle
+            )
+            Handle or identifier for the dataset snapshot from which the given
+            data frame was generated.
         df: pandas.DataFrame
             Data frame containing the dataset snapshot.
         run_profiler: bool, default=True
@@ -359,20 +360,15 @@ class HistoreDatastore(DefaultDatastore):
         -------
         vizier.datastore.histore.dataset.HistoreSnapshotHandle
         """
-        # Split dataset archive and snapshot identifier. This will raise a
-        # ValueError if the identifier is invalid.
-        archive_id, snapshot_id = ID.parse(origin.identifier)
-        # Test if a folder for the given dataset archive exists. If not
-        # raise an error.
-        dataset_dir = self.get_dataset_dir(archive_id)
-        if not os.path.isdir(dataset_dir):
-            raise ValueError("unknown dataset '{}'".format(origin.identifier))
-        # Create instance of the archive that maintains dataset snapshots.
-        # Raises an error if the archive does not have a snapshot with the
-        # given identifier.
-        archive = PersistentArchive(basedir=dataset_dir)
-        if not archive.snapshots().has_version(snapshot_id):
-            raise ValueError("unknown dataset '{}'".format(origin.identifier))
+        # Get the dataset of origin if only the dataset identifier is given.
+        if not isinstance(origin, HistoreSnapshotHandle):
+            if isinstance(origin, str):
+                origin = self.get_dataset(origin)
+            else:
+                raise ValueError('invalid origin {}'.format(origin))
+        # Split dataset archive and snapshot identifier.
+        _, snapshot_id = ID.parse(origin.identifier)
+        archive = origin.archive
         # Generate data profiling results and column types for the data frame.
         metadata = profiling.run(df=df, profiler=origin.profiler())
         # Commit the given data frame to the archive. Then get the updated list
@@ -382,11 +378,9 @@ class HistoreDatastore(DefaultDatastore):
         df.columns = schema
         return self.commit_dataset(
             archive=archive,
-            archive_id=archive_id,
-            snapshot_id=snapshot.version,
-            dataset_dir=dataset_dir,
             df=df,
             schema=schema,
+            snapshot_id=snapshot.version,
             metadata=metadata,
             annotations=annotations
         )
@@ -437,3 +431,21 @@ class HistoreDatastore(DefaultDatastore):
         """
         # TODO: Implementation needed
         raise NotImplementedError()
+
+
+class DatasetArchive(PersistentArchive):
+    """Archive that maintains dataset snapshots. Extends the persistent archive
+    with a unique archive identifier.
+    """
+    def __init__(self, identifier, basedir):
+        """Initialize the base directory and the archive identifier.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique archive identifier.
+        basedir: string
+            Path to base directory for archive files.
+        """
+        super(DatasetArchive, self).__init__(basedir=basedir)
+        self.identifier = identifier
