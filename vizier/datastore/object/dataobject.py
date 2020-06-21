@@ -40,7 +40,7 @@ class DataObjectMetadata(object):
             objects
         """
         self.objects = objects if not objects is None else list()
-        
+
     def add(self, key, value, identifier, obj_type):
         """Add a new annotation for a dataset resource. The resource obj_type is
         determined based on the column and row identifier values. At least one
@@ -95,7 +95,7 @@ class DataObjectMetadata(object):
         ----------
         columns: list(string)
             List of object obj_types
-     
+
         Returns
         -------
         vizier.datastore.object.dataset.DataObjectMetadata
@@ -103,7 +103,7 @@ class DataObjectMetadata(object):
         result = DataObjectMetadata(
             objects=list(),
         )
-        
+
         for obj in self.objects:
             if obj.obj_type in obj_types:
                 result.objects.append(obj)
@@ -217,7 +217,7 @@ class DataObjectMetadata(object):
         objects = None
         if 'objects' in doc:
             objects = [DataObject.from_dict(a) for a in doc['objects']]
-        
+
         return DataObjectMetadata(
             objects=objects
         )
@@ -240,9 +240,9 @@ class DataObjectMetadata(object):
             if obj.identifier is None or obj.obj_type is None or obj.key is None:
                 raise ValueError('invalid data object')
             objects.append(obj)
-            
+
         return DataObjectMetadata(
-            objects=objects 
+            objects=objects
         )
 
     def remove(self, key=None, value=None, identifier=None, obj_type=None):
@@ -264,20 +264,20 @@ class DataObjectMetadata(object):
         obj_type: string, optional
             obj_type
         """
-            
+
         nunz = 0
         if key is None:
             nunz = nunz + 1
         if value is None:
-            nunz = nunz + 1  
+            nunz = nunz + 1
         if identifier is None:
-            nunz = nunz + 1 
+            nunz = nunz + 1
         if obj_type is None:
             nunz = nunz + 1
-        
-        if nunz is not 1:
+
+        if nunz != 1:
             raise ValueError('only one param must not be none')
-        
+
         objects = list()
         for obj in self.objects:
             if key is not None and obj.key != key:
@@ -289,7 +289,6 @@ class DataObjectMetadata(object):
             if obj_type is not None and obj.obj_type != obj_type:
                 objects.append(obj)
         self.objects = objects
-        
 
     def to_file(self, filename):
         """Write current annotations to file in default file format. The default

@@ -2,4 +2,4 @@ packages:
     - python
 engine:
     className: 'PyCellTaskProcessor'
-    moduleName: 'vizier.engine.packages.pycell.processor'
+    moduleName: 'vizier.engine.packages.pycell.processor.base'

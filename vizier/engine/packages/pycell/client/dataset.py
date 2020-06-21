@@ -17,15 +17,9 @@
 """Classes to manipulate vizier datasets from within the Python workflow cell.
 """
 
-import numpy as np
-import pandas as pd
-
-from vizier.datastore.dataset import DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
 from vizier.datastore.annotation.dataset import DatasetMetadata
 from bokeh.models.sources import ColumnDataSource
-
-import vizier.datastore.dataset as ds
-
 
 class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
@@ -101,7 +95,7 @@ class DatasetClient(object):
         -------
         int
         """
-        return ds.get_column_index(self.columns, column_id)
+        return get_column_index(self.columns, column_id)
 
     def delete_column(self, name):
         """Delete column from the dataset.
@@ -555,88 +549,3 @@ class ObjectMetadataSet(object):
         for anno in self.annotations:
             result.add(anno.key)
         return list(result)
-
-
-# -- Helper functions and classes ---------------------------------------------
-
-class Column(str):
-    """Columns in openclean data frames are subclasses of Python strings that
-    contain a unique column identifier. This implementation is based on:
-    https://bytes.com/topic/python/answers/32098-my-experiences-subclassing-string
-
-    The order of creation is that the __new__ method is called which returns
-    the object then __init__ is called.
-
-    NOTE: This code is copied from openclean.
-    """
-    def __new__(cls, colid, name, *args, **keywargs):
-        """Initialize the String object with the given column name. Ignore the
-        column identifier.
-
-        Parameters
-        ----------
-        colid: int
-            Unique column identifier
-        name: string
-            Column name
-        """
-        return str.__new__(cls, str(name))
-
-    def __init__(self, colid, name):
-        """Initialize the unique column identifier. The column name has already
-        been initialized by the __new__ method that is called prior to the
-        __init__ method.
-
-        Parameters
-        ----------
-        colid: int
-            Unique column identifier
-        name: string
-            Column name
-        """
-        self.colid = colid
-
-
-def coltype(dtype):
-    """Convert data type for pandas data frame columns to vizire data type.
-
-    Parameters
-    ----------
-    dtype: numpy.dtype
-        Data type of a data frame column.
-
-    Returns
-    -------
-    string
-    """
-    if dtype == np.int64:
-        return ds.DATATYPE_INT
-    elif dtype == np.float64:
-        return ds.DATATYPE_REAL
-    else:
-        return ds.DATATYPE_VARCHAR
-
-
-def dataframe(dataset):
-    """Temporary helper function to convert a Vizier data set into a pandas
-    data frame.
-
-    Parameters
-    ----------
-    dataset: vizier.datastore.base.DatasetHandle, optional
-        Handle to the dataset for which this is a client. If None this is a
-        new dataset.
-
-    Returns
-    -------
-    pandas.DataFrame
-    """
-    # Create list of row values and row identifiers.
-    data, rowids = list(), list()
-    for row in dataset.fetch_rows():
-        data.append(row.values)
-        rowids.append(row.identifier)
-    # Create instances of the columns class that extends the Python string with
-    # a reference to the Vizier column indentifier.
-    schema = [Column(colid=c.identifier, name=c.name) for c in dataset.columns]
-    return pd.DataFrame(data=data, index=rowids, columns=schema)

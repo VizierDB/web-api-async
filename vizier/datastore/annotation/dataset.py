@@ -36,17 +36,20 @@ class DatasetMetadata(object):
 
         Parameters
         ----------
-        columns: list(vizier.datastpre.annotation.base.ColumnAnnotation), optional
+        columns: list(vizier.datastpre.annotation.base.ColumnAnnotation),
+                default=None
             Annotations for dataset columns
-        rows: list(vizier.datastpre.annotation.base.RowAnnotation), optional
+        rows: list(vizier.datastpre.annotation.base.RowAnnotation),
+                default=None
             Annotations for dataset rows
-        cells: list(vizier.datastpre.annotation.base.CellAnnotation), optional
+        cells: list(vizier.datastpre.annotation.base.CellAnnotation),
+                default=None
             Annotations for dataset cells
         """
-        self.annotations = annotations if not annotations is None else list()
-        self.columns = columns if not columns is None else list()
-        self.rows = rows if not rows is None else list()
-        self.cells = cells if not cells is None else list()
+        self.annotations = annotations if annotations is not None else list()
+        self.columns = columns if columns is not None else list()
+        self.rows = rows if rows is not None else list()
+        self.cells = cells if cells is not None else list()
 
     def add(self, key, value, column_id=None, row_id=None):
         """Add a new annotation for a dataset resource. The resource type is
@@ -73,7 +76,7 @@ class DatasetMetadata(object):
             row_id=row_id
         )
         if row_id is None and column_id is None:
-            self.annotations.append(annotation) 
+            self.annotations.append(annotation)
         if row_id is None:
             self.columns.append(annotation)
         elif column_id is None:
@@ -140,19 +143,19 @@ class DatasetMetadata(object):
             rows=self.rows if rows is None else list(),
             cells=self.cells if columns is None and rows is None else list()
         )
-        if not columns is None:
+        if columns is not None:
             for anno in self.columns:
                 if anno.column_id in columns:
                     result.columns.append(anno)
-        if not rows is None:
+        if rows is not None:
             for anno in self.rows:
                 if anno.row_id in rows:
                     result.rows.append(anno)
-        if not columns is None or not rows is None:
+        if columns is not None or rows is not None:
             for anno in self.cells:
-                if not columns is None and not anno.column_id in columns:
+                if columns is not None and anno.column_id not in columns:
                     continue
-                elif not rows is None and not anno.row_id in rows:
+                elif rows is not None and anno.row_id not in rows:
                     continue
                 result.cells.append(anno)
         return result
@@ -184,7 +187,7 @@ class DatasetMetadata(object):
         elif len(result) == 1 or not raise_error_on_multi_value:
             return result[0]
         else:
-            raise ValueError('multiple annotation values for \'' + str(key) + '\'')
+            raise ValueError("multiple annotations for '{}'".format(key))
 
     def for_cell(self, column_id, row_id):
         """Get list of annotations for the specified cell
@@ -279,7 +282,7 @@ class DatasetMetadata(object):
 
     @staticmethod
     def from_list(values):
-        """Create dataset metadata instance from list of dataset annotations
+        """Create dataset metadata instance from list of dataset annotations.
 
         Parameters
         ----------
@@ -295,13 +298,14 @@ class DatasetMetadata(object):
         rows = list()
         annotations = list()
         for anno in values:
-            if anno.column_id is None and anno.row_id is None and anno.value is None:
+            col_id, row_id, val = anno.column_id, anno.row_id, anno.value
+            if col_id is None and row_id is None and val is None:
                 raise ValueError('invalid dataset annotaiton')
-            elif anno.column_id is None and anno.row_id is None:
+            elif col_id is None and row_id is None:
                 annotations.append(anno)
-            elif anno.row_id is None:
+            elif row_id is None:
                 columns.append(anno)
-            elif anno.column_id is None:
+            elif col_id is None:
                 rows.append(anno)
             else:
                 cells.append(anno)
@@ -309,7 +313,7 @@ class DatasetMetadata(object):
             cells=cells,
             columns=columns,
             rows=rows,
-            annotations=annotations 
+            annotations=annotations
         )
 
     def remove(self, key=None, value=None, column_id=None, row_id=None):
@@ -334,7 +338,7 @@ class DatasetMetadata(object):
         # Get the resource annotations list and the indices of the candidates
         # that match the resource identifier.
         if column_id is None and row_id is None:
-            raise ValueError('must specify at least one dataset resource identifier')
+            raise ValueError('must specify at least one resource identifier')
         elif column_id is None:
             elements = self.rows
         elif row_id is None:
@@ -371,8 +375,8 @@ class DatasetMetadata(object):
             del elements[i]
 
     def to_file(self, filename):
-        """Write current annotations to file in default file format. The default
-        serializartion format is Json.
+        """Write current annotations to file in default file format. The
+        default serializartion format is Json.
 
         Parameters
         ----------
@@ -421,7 +425,6 @@ def deduplicate(elements):
     s = sorted(elements, key=lambda a: (a.column_id, a.row_id, a.key, a.value))
     result = s[:1]
     for a in s[1:]:
-        l = result[-1]
-        if a.column_id != l.column_id or a.row_id != l.row_id or a.key != l.key or a.value != l.value:
+        if not a.is_equal(result[-1]):
             result.append(a)
     return result

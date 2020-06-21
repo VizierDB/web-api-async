@@ -232,6 +232,15 @@ class MimirDatasetHandle(DatasetHandle):
         self.table_name = table_name
         self.row_counter = row_counter
 
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self
+
     @staticmethod
     def from_file(filename, annotations=None):
         """Read dataset from file. Expects the file to be in Json format which
@@ -317,6 +326,15 @@ class MimirDatasetHandle(DatasetHandle):
                             )
                         )
             return annotations
+
+    def get_profiling(self):
+        """Get profiling results for the dataset.
+
+        Returns
+        -------
+        dict
+        """
+        return dict()
 
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset

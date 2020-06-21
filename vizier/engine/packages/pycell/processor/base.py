@@ -91,7 +91,7 @@ class PyCellTaskProcessor(TaskProcessor):
         for obj in dos:
             inj_src = inj_src + obj.value + "\n\n"
             dataobjects.append([obj.key,obj.identifier])
-        # Assemble the source to run in the interpreter 
+        # Assemble the source to run in the interpreter
         source = inj_src + cell_src
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
@@ -116,10 +116,10 @@ class PyCellTaskProcessor(TaskProcessor):
         try:
             python_cell_preload(variables)
             if SANDBOX_PYTHON_EXECUTION:
-                json_data = {'source':source, 
-                             'datasets':context.datasets, 
-                             'dataobjects':context.dataobjects, 
-                             'datastore':context.datastore.__class__.__name__, 
+                json_data = {'source':source,
+                             'datasets':context.datasets,
+                             'dataobjects':context.dataobjects,
+                             'datastore':context.datastore.__class__.__name__,
                              'basepath':context.datastore.base_path}
                 res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
                 resdata = res.json()
@@ -130,7 +130,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 client.setattr('datastore',context.datastore)
                 client.setattr('datasets',resdata['datasets'])
                 client.setattr('dataobjects',resdata['dataobjects'] )
-                
+
             else:
                 exec(source, variables, variables)
         except Exception as ex:
@@ -147,7 +147,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 outputs.stdout.append(HtmlOutput(text))
             for text in resdata['stderr']:
                 outputs.stderr.append(TextOutput(text))
-                is_success = False        
+                is_success = False
         else:
             for tag, text in stream:
                 text = ''.join(text).strip()
@@ -156,7 +156,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 else:
                     outputs.stderr.append(TextOutput(text))
                     is_success = False
-        
+
         if is_success:
             # Create provenance information. Ensure that all dictionaries
             # contain elements of expected types, i.e, ensure that the user did
@@ -179,7 +179,7 @@ class PyCellTaskProcessor(TaskProcessor):
             for name in client.write:
                 if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
-                
+
                 if name in client.datasets:
                     wr_id = client.datasets[name]
                     if not isinstance(wr_id, str):
@@ -212,10 +212,10 @@ class PyCellTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
-        
+
 class DotDict(dict):
     def __getattr__(self,val):
         return self[val]
-    
+
     def setattr(self, attr_name, val):
         self[attr_name] = val

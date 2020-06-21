@@ -27,7 +27,6 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 import os
-import io
 
 from vizier.api.webservice.branch import VizierBranchApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
@@ -136,12 +135,12 @@ class VizierApi(object):
         package_listing = list()
         for pckg in self.engine.packages.values():
             pckg_obj = {'id': pckg.identifier, 'name': pckg.name, 'category': pckg.category}
-            if not pckg.description is None:
+            if pckg.description is not None:
                 pckg_obj['description'] = pckg.description
             pckg_commands = list()
             for cmd in list(pckg.commands.values()):
                 cmd_obj = {'id': cmd.identifier, 'name': cmd.name}
-                if not cmd.description is None:
+                if cmd.description is not None:
                     cmd_obj['description'] = cmd.description
                 cmd_obj['parameters'] = list(cmd.parameters.values())
                 pckg_commands.append(cmd_obj)
@@ -168,19 +167,21 @@ class VizierApi(object):
             })
         }
 
+
 class DotDict(dict):
-    def __getattr__(self,val):
+    def __getattr__(self, val):
         return self[val]
-    
+
     def setattr(self, attr_name, val):
         self[attr_name] = val
 
     def save(self, dst):
-        #from shutil import copyfileobj
-        #copyfileobj(io.BytesIO(str(self.data)),open(str(dst).encode(),'wb'))    
-        with open(str(dst), "w") as fw, open(str(self.file),"r") as fr: 
+        # from shutil import copyfileobj
+        # copyfileobj(io.BytesIO(str(self.data)),open(str(dst).encode(),'wb'))
+        with open(str(dst), "w") as fw, open(str(self.file), "r") as fr:
             fw.writelines(l for l in fr)
-        
+
+
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------
@@ -202,7 +203,7 @@ def get_engine(config):
     # Get backend identifier. Raise ValueError if value does not identify
     # a valid backend.
     backend_id = config.engine.backend.identifier
-    if not backend_id in base.BACKENDS:
+    if backend_id not in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     # Get the identifier factory for the viztrails repository and create
     # the object store. At this point we use the default object store only.
@@ -226,12 +227,15 @@ def get_engine(config):
         base_path=os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR),
         object_store=object_store
     )
-    if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
+    if config.engine.identifier in base.ENGINES:
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
-        filestore_factory=FileSystemFilestoreFactory(filestores_dir)
+        filestore_factory = FileSystemFilestoreFactory(filestores_dir)
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
         if config.engine.identifier == base.DEV_ENGINE:
             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
+        elif config.engine.identifier == base.HISTORE_ENGINE:
+            import vizier.datastore.histore.factory as histore
+            datastore_factory = histore.HistoreDatastoreFactory(datastores_dir)
         else:
             datastore_factory = MimirDatastoreFactory(datastores_dir)
         # The default engine uses a common project cache.
@@ -245,11 +249,11 @@ def get_engine(config):
         # Create an optional task processor for synchronous tasks if given
         synchronous = None
         sync_commands_list = config.engine.sync_commands
-        if not sync_commands_list is None:
+        if sync_commands_list is not None:
             commands = dict()
             for el in sync_commands_list.split(':'):
                 package_id, command_id = el.split('.')
-                if not package_id in commands:
+                if package_id not in commands:
                     commands[package_id] = dict()
                 commands[package_id][command_id] = processors[package_id]
             synchronous = SynchronousTaskEngine(

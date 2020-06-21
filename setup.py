@@ -79,8 +79,7 @@ setup(
         'geopandas',
         'bokeh',
         'shapely',
-        'astor',
-        'deprecated'
+        'astor'
     ],
     include_package_data=True,
     data_files=data_files,

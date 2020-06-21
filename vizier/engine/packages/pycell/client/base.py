@@ -14,32 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The vizier datastore client enables access to and manipulation of datasets
-in a datastore from within a Python script.
+"""The vizier datastore client enables access to and manipulation of datasets in
+a datastore from within a python script.
 """
 
-import pandas as pd
+from vizier.core.util import is_valid_name, get_unique_identifier
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
+from vizier.datastore.object.dataobject import DataObjectMetadata
+from vizier.engine.packages.pycell.client.dataset import DatasetClient
+from os.path import normpath, basename
+from os import path
 import os
 import re
 import ast
 import astor
 import inspect
-
-from deprecated import deprecated
-from os.path import normpath, basename
-from os import path
-
-from vizier.core.util import is_valid_name, get_unique_identifier
-from vizier.datastore.dataset import (
-    DatasetColumn, DatasetDescriptor, DatasetRow
-)
-from vizier.datastore.annotation.dataset import DatasetMetadata
-from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
-from vizier.datastore.object.dataobject import DataObjectMetadata
-from vizier.engine.packages.pycell.client.dataset import (
-    Column, dataframe, coltype
-)
-
 
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
@@ -140,7 +131,7 @@ class VizierDBClient(object):
         self.dataobjects[name] = identifier
         self.write.add(name)
 
-    def create_dataset(self, name, dataset, backend_options=[]):
+    def create_dataset(self, name, dataset, backend_options = []):
         """Create a new dataset with given name.
 
         Raises ValueError if a dataset with given name already exist.
@@ -149,14 +140,12 @@ class VizierDBClient(object):
         ----------
         name : string
             Unique dataset name
-        dataset : pandas.DataFrame
+        dataset : vizier.datastore.client.DatasetClient
             Dataset object
-        backend_options: list
-            TODO: Add description.
 
         Returns
         -------
-        pandas.DataFrame
+        vizier.datastore.client.DatasetClient
         """
         # Raise an exception if a dataset with the given name already exists or
         # if the name is not valid
@@ -166,32 +155,41 @@ class VizierDBClient(object):
             raise ValueError('dataset \'' + name + '\' already exists')
         if not is_valid_name(name):
             raise ValueError('invalid dataset name \'' + name + '\'')
-        # Create list of columns for new dataset.
+        # Create list of columns for new dataset. Ensure that every column has
+        # a positive identifier
         columns = list()
-        for c in range(len(dataset.columns)):
-            # Column index for a data frame may contain integers.
-            colname = str(dataset.columns[c])
-            col = DatasetColumn(
-                identifier=c,
-                name=colname,
-                data_type=coltype(dataset.dtypes[c])
-            )
-            columns.append(col)
-        # Create list of rows for the new dataset.
-        rows = list()
-        for _, values in dataset.iterrows():
-            row = DatasetRow(identifier=len(rows), values=list(values))
-            rows.append(row)
+        if len(dataset.columns) > 0:
+            column_counter = max(max([col.identifier for col in dataset.columns]) + 1, 0)
+            for col in dataset.columns:
+                if col.identifier < 0:
+                    col.identifier = column_counter
+                    column_counter += 1
+                columns.append(
+                    DatasetColumn(
+                        identifier=col.identifier,
+                        name=col.name,
+                        data_type=col.data_type
+                    )
+                )
+        rows = dataset.rows
+        if len(rows) > 0:
+            # Ensure that all rows have positive identifier
+            row_counter = max(max([row.identifier for row in rows]) + 1, 0)
+            for row in rows:
+                if row.identifier < 0:
+                    row.identifier = row_counter
+                    row_counter += 1
         # Write dataset to datastore and add new dataset to context
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
+            annotations=dataset.annotations,
             human_readable_name=name.upper(),
             backend_options=backend_options
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
-        return dataframe(self.datastore.get_dataset(ds.identifier))
+        return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
 
     def drop_dataset(self, name):
         """Remove the dataset with the given name.
@@ -226,7 +224,7 @@ class VizierDBClient(object):
 
         Returns
         -------
-        pandas.DataFrame
+        vizier.datastore.client.DatasetClient
         """
         # Make sure to record access idependently of whether the dataset exists
         # or not. Ignore read access to datasets that have been written.
@@ -239,7 +237,7 @@ class VizierDBClient(object):
         dataset = self.datastore.get_dataset(identifier)
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
-        return dataframe(dataset)
+        return DatasetClient(dataset=dataset)
 
     def get_dataset_identifier(self, name):
         """Returns the unique identifier for the dataset with the given name.
@@ -276,15 +274,14 @@ class VizierDBClient(object):
         # Dataset names are case insensitive
         return name.lower() in self.datasets
 
-    @deprecated(version='0.7.0', reason='Switch to pandas DataFrame')
     def new_dataset(self):
         """Get a dataset client instance for a new dataset.
 
         Returns
         -------
-        pandas.DataFrame
+        vizier.datastore.client.DatasetClient
         """
-        return pd.DataFrame()
+        return DatasetClient()
 
     def remove_dataset_identifier(self, name):
         """Remove the entry in the dataset dictionary that is associated with
@@ -357,12 +354,12 @@ class VizierDBClient(object):
         ----------
         name : string
             Unique dataset name
-        dataset : pandas.DataFrame
+        dataset : vizier.datastore.base.Dataset
             Dataset object
 
         Returns
         -------
-        pandas.DataFrame
+        vizier.datastore.client.DatasetClient
         """
         # Get identifier for the dataset with the given name. Will raise an
         # exception if the name is unknown
@@ -373,62 +370,43 @@ class VizierDBClient(object):
             # Record access to the datasets
             self.read.add(name.lower())
             raise ValueError('unknown dataset \'' + identifier + '\'')
-        # Create list of dataset columns from columns in the data frame. Ensure
-        # that all column identifier are positive integer and unique.
-        columns = list()
-        colids = set()
         column_counter = source_dataset.max_column_id() + 1
-        for c in range(len(dataset.columns)):
-            col = dataset.columns[c]
-            if not isinstance(col, Column):
-                col = Column(colid=column_counter, colname=str(col))
-                column_counter += 1
-            if col.colid in colids:
-                raise ValueError('duplicate column identifier %d' % col.colid)
-            elif col.colid < 0:
-                raise ValueError('invalid column identifier %d' % col.colid)
-            col = DatasetColumn(
-                identifier=col.colid,
-                name=str(col),
-                data_type=coltype(dataset.dtypes[c])
-            )
-            columns.append(col)
-            colids.add(col.identifier)
-        # Create list of dataset rows. Ensure that all row identifier are
-        # positive integer and unique.
-        rows = list()
-        rowids = set()
         row_counter = source_dataset.max_row_id() + 1
-        for rowid, values in dataset.iterrows():
-            if rowid < 0:
-                rowid = row_counter
-                row_counter += 1
-            if rowid in rowids:
-                raise ValueError('duplicate row identifier %d' % rowid)
-            row = DatasetRow(identifier=rowid, values=list(values))
-            rows.append(row)
-            rowids.add(rowid)
-        # Gather up the read dependencies so that we can pass them to mimir
+        # Update column and row identifier
+        columns = dataset.columns
+        rows = dataset.rows
+        # Ensure that all columns has positive identifier
+        for col in columns:
+            if col.identifier < 0:
+                col.identifier = column_counter
+                column_counter += 1
+        # Ensure that all rows have positive identifier
+        #for row in rows:
+        #    if row.identifier < 0:
+        #        row.identifier = row_counter
+        #        row_counter += 1
+        # Write dataset to datastore and add new dataset to context
+
+        #gather up the read dependencies so that we can pass them to mimir
         # so that we can at least track coarse grained provenance.
         # TODO: we are asumming mimir dataset and datastore
         #       here and need to generalize this
-        # read_dep = []
-        # for dept_name in self.read:
-        #    if not isinstance(dept_name, str):
-        #        raise RuntimeError('invalid read name')
-        #    dept_id = self.get_dataset_identifier(dept_name)
-        #    dept_dataset = self.datastore.get_dataset(dept_id)
-        #    read_dep.append(dept_dataset.table_name)
+        read_dep = []
+        for dept_name in self.read:
+            if not isinstance(dept_name, str):
+                raise RuntimeError('invalid read name')
+            dept_id = self.get_dataset_identifier(dept_name)
+            dept_dataset = self.datastore.get_dataset(dept_id)
+            read_dep.append(dept_dataset.table_name)
         ds = self.datastore.create_dataset(
             columns=columns,
-            rows=rows
+            rows=rows,
+            annotations=dataset.annotations,
+            dependencies=read_dep
         )
-        #    dependencies=read_dep
-        #)
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
-        return dataframe(dataset=self.datastore.get_dataset(ds.identifier))
-
+        return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
 
 class Analyzer(ast.NodeVisitor):
     def __init__(self, name):
@@ -479,3 +457,4 @@ class Analyzer(ast.NodeVisitor):
 
     def get_Source(self):
         return self.source
+    

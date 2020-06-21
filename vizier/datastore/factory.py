@@ -15,8 +15,8 @@
 # limitations under the License.
 
 """Factory object for datastore instances. Each project is associated with its
-own datastore. These datastore instances are created by a datastore factory when
-the project is instantiated.
+own datastore. These datastore instances are created by a datastore factory
+when the project is instantiated.
 """
 
 from abc import ABCMeta, abstractmethod
@@ -41,7 +41,8 @@ class DatastoreFactory(metaclass=ABCMeta):
 
     @abstractmethod
     def get_datastore(self, identifier):
-        """Get the datastore instance for the project with the given identifier.
+        """Get the datastore instance for the project with the given
+        identifier.
 
         Paramaters
         ----------

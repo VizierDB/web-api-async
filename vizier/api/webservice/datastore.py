@@ -18,7 +18,6 @@
 the datastores that are associated with vizier projects.
 """
 
-from vizier.core.util import is_scalar
 from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.serialize.dataset as serialize
@@ -67,7 +66,8 @@ class VizierDatastoreApi(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
+                default=None
             Annotations for dataset components
 
         Returns
@@ -89,15 +89,17 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_annotations(self, project_id, dataset_id, column_id=None, row_id=None):
+    def get_annotations(
+        self, project_id, dataset_id, column_id=None, row_id=None
+    ):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
         If only the column id is provided annotations for the identifier column
         will be returned. If only the row identifier is given all annotations
         for the specified row are returned. Otherwise, all annotations for the
-        specified cell are returned. If both identifier are None all annotations
-        for the dataset are returned.
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -114,8 +116,8 @@ class VizierDatastoreApi(object):
         -------
         dict
         """
-        # Retrieve the dataset. The result is None if the dataset or the project
-        # do not exist.
+        # Retrieve the dataset. The result is None if the dataset or the
+        # project do not exist.
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
@@ -152,17 +154,17 @@ class VizierDatastoreApi(object):
         -------
         dict
         """
-        # Retrieve the dataset. The result is None if the dataset or the project
-        # do not exist.
+        # Retrieve the dataset. The result is None if the dataset or the
+        # project do not exist.
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
         # Determine offset and limits
-        if not offset is None:
+        if offset is not None:
             offset = max(0, int(offset))
         else:
             offset = 0
-        if not limit is None:
+        if limit is not None:
             result_size = int(limit)
         else:
             result_size = self.defaults.row_limit
@@ -234,6 +236,27 @@ class VizierDatastoreApi(object):
         if project is None:
             return None, None
         return project, project.datastore.get_dataset(dataset_id)
+
+    def get_profiling(self, project_id, dataset_id):
+        """Get data profiling results for a given dataset.
+
+        Parameters
+        ----------
+        project_id : string
+            Unique project identifier
+        dataset_id : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        dict
+        """
+        # Retrieve the dataset. The result is None if the dataset or the
+        # project do not exist.
+        project, dataset = self.get_dataset_handle(project_id, dataset_id)
+        if dataset is None:
+            return None
+        return dataset.get_profiling() if dataset is not None else None
 
     def update_annotation(
         self, project_id, dataset_id, column_id=None, row_id=None, key=None,

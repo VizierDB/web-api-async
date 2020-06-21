@@ -28,7 +28,6 @@ the dataset schema.
 
 import json
 
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 
@@ -88,6 +87,15 @@ class FileSystemDatasetHandle(DatasetHandle):
         if max_row_id is None:
             raise ValueError('invalid max')
         self._max_row_id = max_row_id
+        
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self
 
     @staticmethod
     def from_file(descriptor_file, data_file, annotations=None):
@@ -146,7 +154,19 @@ class FileSystemDatasetHandle(DatasetHandle):
         elif column_id is None:
             return self.annotations.for_row(row_id)
         else:
-            return self.annotations.for_cell(column_id=column_id, row_id=row_id)
+            return self.annotations.for_cell(
+                column_id=column_id,
+                row_id=row_id
+            )
+
+    def get_profiling(self):
+        """Get profiling results for the dataset.
+
+        Returns
+        -------
+        dict
+        """
+        return dict()
 
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset

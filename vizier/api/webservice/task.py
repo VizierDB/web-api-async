@@ -103,6 +103,4 @@ class VizierTaskApi(object):
         else:
             raise ValueError('invalid state change')
         # Create state change result
-        if not result is None:
-            return {labels.RESULT: result}
-        return None
+        return {labels.RESULT: result} if result is not None else None

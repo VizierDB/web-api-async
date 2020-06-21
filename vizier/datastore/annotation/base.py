@@ -54,12 +54,29 @@ class DatasetAnnotation(object):
         row_id: int, optional
             Unique row identifier
         """
-        #if column_id is None and row_id is None:
+        # if column_id is None and row_id is None:
         #    raise ValueError('invalid dataset resource identifier')
         self.key = key
         self.value = value
         self.column_id = column_id
         self.row_id = row_id
+
+    def is_equal(self, anno):
+        """Test if two annotations are equals.
+
+        Parameters
+        ----------
+        anno: vizier.datastore.annotation.base.DatasetAnnotation
+        """
+        if self.column_id != anno.column_id:
+            return False
+        if self.row_id != anno.row_id:
+            return False
+        if self.key != anno.key:
+            return False
+        if self.value != anno.value:
+            return False
+        return True
 
     def to_dict(self):
         """Get default dictionary serialization for the annotation object.

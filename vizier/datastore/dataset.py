@@ -19,9 +19,10 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.base import get_column_index
 
 
 """Identifier for column data types. By now the following data types are
@@ -74,9 +75,9 @@ class DatasetColumn(object):
         data_type: string, optional
             String representation of the column data type.
         """
-        self.identifier = identifier if not identifier is None else -1
+        self.identifier = identifier if identifier is not None else -1
         self.name = name
-        self.data_type = data_type if not data_type is None else DATATYPE_VARCHAR
+        self.data_type = data_type if data_type else DATATYPE_VARCHAR
 
     def __str__(self):
         """Human-readable string representation for the column.
@@ -86,8 +87,8 @@ class DatasetColumn(object):
         string
         """
         name = self.name
-        if not self.data_type is None:
-             name += '(' + str(self.data_type) + ')'
+        if self.data_type is not None:
+            name += '(' + str(self.data_type) + ')'
         return name
 
 
@@ -117,8 +118,8 @@ class DatasetDescriptor(object):
             Number of rows in the dataset
         """
         self.identifier = identifier
-        self.columns = columns if not columns is None else list()
-        self.row_count = row_count if not row_count is None else 0
+        self.columns = columns if columns is not None else list()
+        self.row_count = row_count if row_count is not None else 0
         self.name = name
 
     def column_by_id(self, identifier):
@@ -165,8 +166,8 @@ class DatasetDescriptor(object):
     def column_index(self, column_id):
         """Get position of a given column in the dataset schema. The given
         column identifier could either be of type int (i.e., the index position
-        of the column), or a string (either the column name or column label). If
-        column_id is of type string it is first assumed to be a column name.
+        of the column), or a string (either the column name or column label).
+        If column_id is of type string it is first assumed to be a column name.
         Only if no column matches the column name or if multiple columns with
         the given name exist will the value of column_id be interpreted as a
         label.
@@ -274,7 +275,7 @@ class DatasetDescriptor(object):
         return output
 
 
-class DatasetHandle(DatasetDescriptor):
+class DatasetHandle(DatasetDescriptor, metaclass=ABCMeta):
     """Abstract class to maintain information about a dataset in a Vizier
     datastore. Contains the unique dataset identifier, the lists of
     columns in the dataset schema, and a reference to the dataset
@@ -292,7 +293,10 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, annotations=None, name=None):
+    def __init__(
+        self, identifier, columns=None, row_count=None, annotations=None,
+        name=None
+    ):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -300,14 +304,15 @@ class DatasetHandle(DatasetDescriptor):
 
         Parameters
         ----------
-        identifier: string, optional
+        identifier: string
             Unique dataset identifier.
-        columns: list(DatasetColumn), optional
+        columns: list(DatasetColumn), default=None
             List of columns. It is expected that each column has a unique
             identifier.
-        row_count: int, optional
+        row_count: int, default=None
             Number of rows in the dataset
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
+                default=None
             Annotations for dataset components
         """
         super(DatasetHandle, self).__init__(
@@ -316,7 +321,17 @@ class DatasetHandle(DatasetDescriptor):
             row_count=row_count,
             name=name
         )
-        self.annotations = annotations if not annotations is None else DatasetMetadata()
+        self.annotations = annotations if annotations else DatasetMetadata()
+
+    @abstractmethod
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        raise NotImplementedError()
 
     def fetch_rows(self, offset=0, limit=-1):
         """Get list of dataset rows. The offset and limit parameters are
@@ -336,8 +351,8 @@ class DatasetHandle(DatasetDescriptor):
         # Return empty list for special case that limit is 0
         if limit == 0:
             return list()
-        # Collect rows in result list. Skip first rows if offset is greater than
-        # zero
+        # Collect rows in result list. Skip first rows if offset is greater
+        # than zero.
         rows = list()
         with self.reader(offset=offset, limit=limit) as reader:
             for row in reader:
@@ -359,6 +374,17 @@ class DatasetHandle(DatasetDescriptor):
         Returns
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_profiling(self):
+        """Get profiling information for the dataset. If no profiling
+        information is available the result shoud be an empty dictionary.
+
+        Returns
+        -------
+        dict
         """
         raise NotImplementedError()
 
@@ -406,98 +432,6 @@ class DatasetRow(object):
         annotations: list(bool), optional
             Optional flags indicating whether row cells are annotated
         """
-        self.identifier = identifier if not identifier is None else -1
-        self.values = values if not values is None else list()
-        self.annotations = annotations if not values is None else list()
-
-
-# ------------------------------------------------------------------------------
-#
-# Helper Methods
-#
-# ------------------------------------------------------------------------------
-
-def collabel_2_index(label):
-    """Convert a column label into a column index (based at 0), e.g., 'A'-> 1,
-    'B' -> 2, ..., 'AA' -> 27, etc.
-
-    Returns -1 if the given labe is not composed only of upper case letters A-Z.
-    Parameters
-    ----------
-    label : string
-        Column label (expected to be composed of upper case letters A-Z)
-
-    Returns
-    -------
-    int
-    """
-    # The following code is adopted from
-    # https://stackoverflow.com/questions/7261936/convert-an-excel-or-spreadsheet-column-letter-to-its-number-in-pythonic-fashion
-    num = 0
-    for c in label:
-        if ord('A') <= ord(c) <= ord('Z'):
-            num = num * 26 + (ord(c) - ord('A')) + 1
-        else:
-            return -1
-    return num
-
-
-def get_column_index(columns, column_id):
-    """Get position of a column in a given column list. The column identifier
-    can either be of type int (i.e., the index position of the column in the
-    given list), or a string (either the column name or column label). If
-    column_id is of type string it is first assumed to be a column name.
-    Only if no column matches the column name or if multiple columns with
-    the given name exist will the value of column_id be interpreted as a
-    label.
-
-    Raises ValueError if column_id does not reference an existing column in
-    the dataset schema.
-
-    Parameters
-    ----------
-    columns: list(vizier.datastore.base.DatasetColumn)
-        List of columns in a dataset schema
-    column_id : int or string
-        Column index, name, or label
-
-    Returns
-    -------
-    int
-    """
-    if isinstance(column_id, int):
-        # Return column if it is a column index and withing the range of
-        # dataset columns
-        if column_id >= 0 and column_id < len(columns):
-            return column_id
-        raise ValueError('invalid column index \'' + str(column_id) + '\'')
-    elif isinstance(column_id, str):
-        # Get index for column that has a name that matches column_id. If
-        # multiple matches are detected column_id will be interpreted as a
-        # column label
-        name_index = -1
-        for i in range(len(columns)):
-            col_name = columns[i].name
-            if col_name.lower() == column_id.lower():
-                if name_index == -1:
-                    name_index = i
-                else:
-                    # Multiple columns with the same name exist. Signal that
-                    # no unique column was found by setting name_index to -1.
-                    name_index = -2
-                    break
-        if name_index < 0:
-            # Check whether column_id is a column label that is within the
-            # range of the dataset schema
-            label_index = collabel_2_index(column_id)
-            if label_index > 0:
-                if label_index <= len(columns):
-                    name_index = label_index - 1
-        # Return index of column with matching name or label if there exists
-        # a unique solution. Otherwise raise exception.
-        if name_index >= 0:
-            return name_index
-        elif name_index == -1:
-            raise ValueError('unknown column \'' + str(column_id) + '\'')
-        else:
-            raise ValueError('not a unique column name \'' + str(column_id) + '\'')
+        self.identifier = identifier if identifier is not None else -1
+        self.values = values if values is not None else list()
+        self.annotations = annotations if values is not None else list()
