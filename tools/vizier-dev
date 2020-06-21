@@ -1,0 +1,204 @@
+#!/bin/bash
+
+set -eu
+
+CWD="$(pwd)"
+RUNNER_DIR=$(exec 2>/dev/null;cd -- $(dirname "$0"); unset PWD; /usr/bin/pwd || /bin/pwd || pwd)
+USER_DATA_DIR="${USER_DATA_DIR:-$CWD/vizier-data/}"
+mkdir -p "$USER_DATA_DIR"
+APP_RESOURCES_DIR=$RUNNER_DIR/../
+STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
+
+MIMIR_DEV="false"
+UI_DEV="false"
+if [ $# -eq 1 ]
+  then
+    if [ "$1" == "devmimir" ]
+      then
+        echo "mimir dev mode!"
+        MIMIR_DEV="true"
+        APP_RESOURCES_DIR=$CWD/
+        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
+    fi
+    if [ "$1" == "devui" ]
+      then
+        echo "ui dev mode!"
+        UI_DEV="true"
+    fi
+fi
+if [ $# -eq 2  ]
+  then
+    if [ "$2" == "devmimir" ]
+      then
+        echo "mimir dev mode!"
+        MIMIR_DEV="true"
+        APP_RESOURCES_DIR=$CWD/
+        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
+    fi
+    if [ "$2" == "devui" ]
+      then
+        echo "ui dev mode!"
+        UI_DEV="true"
+    fi
+fi
+
+echo $APP_RESOURCES_DIR
+
+#General
+# Web service name
+VIZIERSERVER_NAME="${VIZIERSERVER_NAME:-vizier}"
+export VIZIERSERVER_NAME
+#Log file directory used by the web server (DEFAULT: ./.vizierdb/logs)
+VIZIERSERVER_LOG_DIR="${VIZIERSERVER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs}"
+export VIZIERSERVER_LOG_DIR
+# Flag indicating whether server is started in debug mode (DEFAULT: True)
+VIZIERSERVER_DEBUG="${VIZIERSERVER_DEBUG:-False}"
+export VIZIERSERVER_DEBUG
+
+#Web Service
+# Base URL of the server running the web service (DEFAULT: http://localhost)
+VIZIERSERVER_BASE_URL="${VIZIERSERVER_BASE_URL:-http://localhost}"
+export VIZIERSERVER_BASE_URL
+# Public server port (DEFAULT: 5000)
+VIZIERSERVER_SERVER_PORT="${VIZIERSERVER_SERVER_PORT:-5000}"
+export VIZIERSERVER_SERVER_PORT
+# Locally bound server port (DEFAULT: 5000)
+VIZIERSERVER_SERVER_LOCAL_PORT="${VIZIERSERVER_SERVER_LOCAL_PORT:-5000}"
+export VIZIERSERVER_SERVER_LOCAL_PORT
+# Application path for Web API (DEFAULT: /vizier-db/api/v1)
+VIZIERSERVER_APP_PATH="${VIZIERSERVER_APP_PATH:-/vizier-db/api/v1}"
+export VIZIERSERVER_APP_PATH
+# Default row limit for requests that read datasets (DEFAULT: 25)
+VIZIERSERVER_ROW_LIMIT="${VIZIERSERVER_ROW_LIMIT:-25}"
+export VIZIERSERVER_ROW_LIMIT
+# Maximum row limit for requests that read datasets (DEFAULT: -1 (returns all rows))
+VIZIERSERVER_MAX_ROW_LIMIT="${VIZIERSERVER_MAX_ROW_LIMIT:--1}"
+export VIZIERSERVER_MAX_ROW_LIMIT
+# Maximum size for file uploads in bytes (DEFAULT: 16777216)
+VIZIERSERVER_MAX_UPLOAD_SIZE="${VIZIERSERVER_MAX_UPLOAD_SIZE:-16777216}"
+export VIZIERSERVER_MAX_UPLOAD_SIZE
+
+#Workflow Execution Engine
+# Name of the workflow execution engine (DEFAULT: DEV)
+VIZIERSERVER_ENGINE="${VIZIERSERVER_ENGINE:-MIMIR}"
+export VIZIERSERVER_ENGINE
+# Path to the package declaration directory (DEFAULT: ./resources/packages/common)
+VIZIERSERVER_PACKAGE_PATH="${VIZIERSERVER_PACKAGE_PATH:-${APP_RESOURCES_DIR}resources/packages/common:${APP_RESOURCES_DIR}resources/packages/mimir}"
+export VIZIERSERVER_PACKAGE_PATH
+# Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors/common:./resources/processors/dev)
+VIZIERSERVER_PROCESSOR_PATH="${VIZIERSERVER_PROCESSOR_PATH:-${APP_RESOURCES_DIR}resources/processors/common:${APP_RESOURCES_DIR}resources/processors/mimir}"
+export VIZIERSERVER_PROCESSOR_PATH
+
+#Workflow Engine
+# Name of the execution backend. The currently implemented backends are CELERY, MULTIPROCESS, or CONTAINER (DEFAULT: MULTIPROCESS).
+VIZIERENGINE_BACKEND="${VIZIERENGINE_BACKEND:-MULTIPROCESS}"
+export VIZIERENGINE_BACKEND
+# Colon separated list of package.command strings that identify the commands that are executed synchronously (DEFAULT: None)
+VIZIERENGINE_SYNCHRONOUS="${VIZIERENGINE_SYNCHRONOUS:-}"
+export VIZIERENGINE_SYNCHRONOUS
+# Flag indicating whether short identifiers (eight characters instead of 32) are used by the viztrail repository (DEFAULT: True)
+VIZIERENGINE_USE_SHORT_IDENTIFIER="${VIZIERENGINE_USE_SHORT_IDENTIFIER:-True}"
+export VIZIERENGINE_USE_SHORT_IDENTIFIER
+# Base data directory for storing data. The datastore, filestore, and viztrail repository will create sub-folders in the directory for maintaining information and resources they maintain.
+VIZIERENGINE_DATA_DIR="${VIZIERENGINE_DATA_DIR:-${USER_DATA_DIR}.vizierdb}"
+export VIZIERENGINE_DATA_DIR
+
+#CELERY Backend
+# Colon separated list of package.command.queue strings that define routing information for individual commands (DEFAULT: None)
+VIZIERENGINE_CELERY_ROUTES="${VIZIERENGINE_CELERY_ROUTES:-}"
+export VIZIERENGINE_CELERY_ROUTES
+# URL for the celery broker (DEFAULT: amqp://guest@localhost//)
+CELERY_BROKER_URL="${CELERY_BROKER_URL:-amqp://guest@localhost//}"
+export CELERY_BROKER_URL
+
+#CELERY Worker Configuration
+# Identifier for environment in which the worker operates (supported values are DEV, MIMIR, and REMOTE) (DEFAULT: DEV)
+VIZIERWORKER_ENV="${VIZIERWORKER_ENV:-MIMIR}"
+export VIZIERWORKER_ENV
+# Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors/common:./resources/processors/dev)
+VIZIERWORKER_PROCESSOR_PATH="${VIZIERWORKER_PROCESSOR_PATH:-${APP_RESOURCES_DIR}resources/processors/common:${APP_RESOURCES_DIR}resources/processors/mimir}"
+export VIZIERWORKER_PROCESSOR_PATH
+# Log file directory used by the worker (DEFAULT: ./.vizierdb/logs/worker)
+VIZIERWORKER_LOG_DIR="${VIZIERWORKER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs/worker}"
+export VIZIERWORKER_LOG_DIR
+# URL of the controlling web service (DEFAULT: http://localhost:5000/vizier-db/api/v1)
+VIZIERWORKER_CONTROLLER_URL="${VIZIERWORKER_CONTROLLER_URL:-http://localhost:5000/vizier-db/api/v1}"
+export VIZIERWORKER_CONTROLLER_URL
+
+#COURSIER_CACHE="${COURSIER_CACHE:-${APP_RESOURCES_DIR}mimir/cache}"
+#export COURSIER_CACHE
+
+MIMIR_HOST="${MIMIR_HOST:-"127.0.0.1"}"
+export MIMIR_HOST
+MIMIR_URL="${MIMIR_URL:-"http://127.0.0.1:8089/api/v2/"}"
+export MIMIR_URL
+
+FLASK_APP="${FLASK_APP:-vizier.wsgi:app}"
+export FLASK_APP
+FLASK_ENV="${FLASK_ENV:-development}"
+export FLASK_ENV
+
+WEB_UI_STATIC_FILES="${WEB_UI_STATIC_FILES:-$STATIC_UI_FILES_DIR}"
+export WEB_UI_STATIC_FILES
+
+# on macos there is a weird corner case bug in multiprocessing that will crash python when
+# checking proxy settings before request. it is documented at the following url:
+# https://blog.yimingliu.com/2015/07/22/python-multiprocessing-code-crashes-on-os-x-under-ipython/
+# the work around is to tell python to skip this check which works, but if you need proxy you are SOL
+export no_proxy='*'
+
+REQ_JAVA_VER="8"
+JAVA_VER=$(java -version 2>&1 | grep -i version | sed 's/.*version ".*\.\(.*\)\..*"/\1/; 1q')
+
+if [ "$JAVA_VER" != "$REQ_JAVA_VER" ]
+then
+    echo "Java version $REQ_JAVA_VER is required. You have: $JAVA_VER"
+    echo "Please install java $REQ_JAVA_VER and try again: apt install openjdk-$REQ_JAVA_VER-jre"
+    # exit 1
+fi
+
+trap "kill 0" EXIT
+
+#if [ "$MIMIR_DEV" == "true" ]
+#  then
+#    cd ../mimir; sbt "runMimirVizier --dataDirectory $USER_DATA_DIR" &
+#    cd ../web-api-async
+#  else
+#    ${APP_RESOURCES_DIR}mimir/mimir-api --dataDirectory $USER_DATA_DIR &
+#fi
+#if [ "$UI_DEV" == "true" ]
+#  then
+#    cd ../web-ui; yarn start &
+#    cd ../web-api-async
+#fi
+
+echo "Checking for necessary database upgrades"
+python tools/upgrade.py
+
+python -m flask run --with-threads &
+#$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
+
+#python - << EOF
+#import requests
+#import time
+#mimir_up = False
+#api_up = False
+#print("Waiting for services to start...")
+#while not (mimir_up and api_up):
+#    time.sleep( 2 )
+#    try:
+#        if not mimir_up:
+#            mimir_up = requests.get('${MIMIR_URL}lens').status_code == 200
+#        if not api_up:
+#            api_up = requests.get('$VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH').status_code == 200
+#    except:
+#        pass
+#
+#EOF
+
+echo "Vizier is up and running:"
+echo "    - Access the Vizier ui in your browser at: "
+echo " "
+echo "    $VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH/web-ui/vizier-db"
+
+wait

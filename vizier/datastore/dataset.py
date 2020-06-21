@@ -22,8 +22,7 @@ workflows.
 from abc import ABCMeta, abstractmethod
 
 from vizier.datastore.annotation.dataset import DatasetMetadata
-
-import vizier.datastore.base as base
+from vizier.datastore.base import get_column_index
 
 
 """Identifier for column data types. By now the following data types are
@@ -185,7 +184,7 @@ class DatasetDescriptor(object):
         -------
         int
         """
-        return base.get_column_index(self.columns, column_id)
+        return get_column_index(self.columns, column_id)
 
     def get_index(self, column_id):
         """Get index position for column with given id. Returns None if no
