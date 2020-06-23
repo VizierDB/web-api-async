@@ -33,34 +33,36 @@ OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
 OUTPUT_DATASET = 'dataset/view'
 
+
 def debug_is_on():
     return str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True"
 
+
 def format_stack_trace(ex):
-    trace = traceback.extract_tb(ex.__traceback__, limit = 30)
+    trace = traceback.extract_tb(ex.__traceback__, limit=30)
     # print("{}".format(trace))
     if not debug_is_on():
         trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
     trace = list([
         "{} {} line {}{}".format(
             # Function Name
-            "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)", 
+            "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)",
 
             # File
-            "on" if element[0] == "<string>" else "in "+element[0]+", ", 
+            "on" if element[0] == "<string>" else "in "+element[0]+", ",
 
             # Line #
             element[1],
 
             # Line Content
-            "\n    "+element[3] if element[3] != "" else ""  
+            "\n    "+element[3] if element[3] != "" else ""
         )
         for element in trace
     ])
     if len(trace) > 0:
         trace.reverse()
         trace = (
-            ["  ... caused by "+trace[0]]+
+            ["  ... caused by "+trace[0]] +
             ["  ... called by "+line for line in trace[1:]]
         )
     else:
@@ -89,9 +91,8 @@ class ModuleOutputs(object):
         stdout: list(vizier.viztrail.module.OutputObject)
             Standard output stream
         """
-        self.stdout = stdout if not stdout is None else list()
-        self.stderr = stderr if not stderr is None else list()
-
+        self.stdout = stdout if stdout is not None else list()
+        self.stderr = stderr if stderr is not None else list()
 
     def error(self, ex):
         """Add stack trace for execution error to STDERR stream of the output
@@ -119,13 +120,13 @@ class ModuleOutputs(object):
                     message = message + "\nDEBUG IS ON"
                     if "stackTrace" in err_data:
                         message = "{}\n{}\n--------".format(message, err_data["stackTrace"])
-                    message = "{}\n{}".format(message, format_stack_trace(ex)) 
+                    message = "{}\n{}".format(message, format_stack_trace(ex))
             elif type(ex) is ConnectionError:
                 message = "Couldn't connect to Mimir (Vizier's dataflow layer).  Make sure it's running."
             elif type(ex) is SyntaxError:
                 context, line, pos, content = ex.args[1]
                 message = "Syntax error (line {}:{})\n{}{}^-- {}".format(
-                              line, pos, 
+                              line, pos,
                               content,
                               " " * pos,
                               ex.args[0]
@@ -295,7 +296,7 @@ def CHART_VIEW_DATA(view, rows):
     # Create a list of series indexes. Then remove the series that contains the
     # x-axis labels (if given). Keep x-axis data in a separate list
     series = list(range(len(view.data)))
-    if not view.x_axis is None:
+    if view.x_axis is not None:
         obj['xAxis'] = {'data': [row[view.x_axis] for row in rows]}
         del series[view.x_axis]
     obj['series'] = list()

@@ -158,7 +158,7 @@ class VizualTaskProcessor(TaskProcessor):
                 context=context
             )
         else:
-            raise ValueError('unknown vizual command \'' + str(command_id) + '\'')
+            raise ValueError("unknown vizual command '{}'".format(command_id))
 
     def compute_delete_column(self, args, context):
         """Execute delete column command.
@@ -246,7 +246,7 @@ class VizualTaskProcessor(TaskProcessor):
         # dictionary of datasets in the context. Will raise exception if the
         # specified dataset does not exist.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        ds = context.get_dataset(ds_name)
+        context.get_dataset(ds_name)
         datasets = dict(context.datasets)
         del datasets[ds_name]
         return ExecResult(
@@ -406,15 +406,15 @@ class VizualTaskProcessor(TaskProcessor):
         source_desc = args.get_value(cmd.PARA_FILE)
         file_id = None
         url = None
-        if pckg.FILE_ID in source_desc and source_desc[pckg.FILE_ID] is not None:
+        if source_desc.get(pckg.FILE_ID) is not None:
             file_id = source_desc[pckg.FILE_ID]
-        elif pckg.FILE_URL in source_desc and source_desc[pckg.FILE_URL] is not None:
+        elif source_desc.get(pckg.FILE_URL) is not None:
             url = source_desc[pckg.FILE_URL]
         else:
             raise ValueError('invalid source descriptor')
-        username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
-        password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
-        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
+        username = source_desc.get(pckg.FILE_USERNAME)
+        password = source_desc.get(pckg.FILE_PASSWORD)
+        reload = source_desc.get(pckg.FILE_RELOAD, False)
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
         detect_headers = args.get_value(
             cmd.PARA_DETECT_HEADERS,
@@ -422,20 +422,15 @@ class VizualTaskProcessor(TaskProcessor):
             default_value=True
         )
         infer_types = args.get_value(cmd.PARA_INFER_TYPES)
-        # infer_types = args.get_value(
-        #     cmd.PARA_INFER_TYPES,
-        #     raise_error=False,
-        #     default_value=True
-        # )
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
-            m_opts.append({'name':'datasourceErrors', 'value':'true'})
-        if not options is None:
+            m_opts.append({'name': 'datasourceErrors', 'value': 'true'})
+        ifoptions is  not None:
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
-                m_opts.append({'name':load_opt_key,  'value':load_opt_val})
+                m_opts.append({'name': load_opt_key,  'value': load_opt_val})
         # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,
@@ -450,12 +445,12 @@ class VizualTaskProcessor(TaskProcessor):
             password=password,
             resources=context.resources,
             reload=reload,
-            human_readable_name = ds_name.upper()
+            human_readable_name=ds_name.upper()
         )
         # Delete the uploaded file (of load was from file). A reference to the
         # created dataset is in the resources and will be used if the module is
         # re-executed.
-        #if not file_id is None:
+        # if not file_id is None:
         #    context.filestore.delete_file(file_id)
         ds = DatasetDescriptor(
             identifier=result.dataset.identifier,
@@ -474,7 +469,7 @@ class VizualTaskProcessor(TaskProcessor):
                 stdout=[DatasetOutput(ds_output)]
             ),
             provenance=ModuleProvenance(
-                read=dict(), # need to explicitly declare a lack of dependencies
+                read=dict(),  # explicitly declare a lack of dependencies
                 write={ds_name: ds},
                 resources=result.resources
             )
@@ -502,8 +497,8 @@ class VizualTaskProcessor(TaskProcessor):
             raise ValueError('invalid dataset name \'' + ds_name + '\'')
         try:
             ds = self.api.empty_dataset(
-                datastore = context.datastore,
-                filestore = context.filestore
+                datastore=context.datastore,
+                filestore=context.filestore
             )
             provenance = ModuleProvenance(
                 write={
@@ -513,9 +508,11 @@ class VizualTaskProcessor(TaskProcessor):
                         row_count=ds.row_count
                     )
                 },
-                read=dict() # Need to explicitly declare a lack of dependencies.
+                read=dict()  # explicitly declare a lack of dependencies.
             )
-            outputs.stdout.append(TextOutput("Empty dataset '{}' created".format(ds_name)))
+            outputs.stdout.append(
+                TextOutput("Empty dataset '{}' created".format(ds_name))
+            )
         except Exception as ex:
             provenance = ModuleProvenance()
             outputs.error(ex)
@@ -552,16 +549,17 @@ class VizualTaskProcessor(TaskProcessor):
 
         provenance = ModuleProvenance(
                 write={output_name: input_ds},
-                read ={input_name: input_ds.identifier}
+                read={input_name: input_ds.identifier}
             )
         outputs = ModuleOutputs()
-        outputs.stdout.append(TextOutput("Cloned `{}` as `{}`".format(input_name, output_name)))
+        outputs.stdout.append(
+            TextOutput("Cloned `{}` as `{}`".format(input_name, output_name))
+        )
         return ExecResult(
             is_success=True,
             outputs=outputs,
             provenance=provenance
         )
-
 
     def compute_unload_dataset(self, args, context):
         """Execute unload dataset command.
@@ -589,11 +587,14 @@ class VizualTaskProcessor(TaskProcessor):
         options = args.get_value(cmd.PARA_UNLOAD_OPTIONS, raise_error=False)
         m_opts = []
 
-        if not options is None:
+        if options is not None:
             for option in options:
                 unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
                 unload_opt_val = option.get_value(cmd.PARA_UNLOAD_OPTION_VALUE)
-                m_opts.append({'name':unload_opt_key,  'value':unload_opt_val})
+                m_opts.append({
+                    'name': unload_opt_key,
+                    'value': unload_opt_val
+                })
         # Execute load command.
         dataset = context.get_dataset(ds_name)
         result = self.api.unload_dataset(
@@ -604,12 +605,6 @@ class VizualTaskProcessor(TaskProcessor):
             options=m_opts,
             resources=context.resources
         )
-        # Delete the uploaded file (of load was from file). A reference to the
-        # created dataset is in the resources and will be used if the module is
-        # re-executed.
-        #file_id = result.resources[apibase.RESOURCE_FILEID]
-        #if not file_id is None:
-        #    context.filestore.delete_file(file_id)
         # Create result object
         outputhtml = HtmlOutput(''.join(["<div><a href=\""+ config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
         return ExecResult(
@@ -617,7 +612,7 @@ class VizualTaskProcessor(TaskProcessor):
                 stdout=[outputhtml]
             ),
             provenance=ModuleProvenance(
-                read= {
+                read={
                     ds_name: context.datasets.get(ds_name.lower(), None)
                 },
                 write=dict()
@@ -820,9 +815,6 @@ class VizualTaskProcessor(TaskProcessor):
             stdout=[str(result.dataset.row_count) + ' row(s) sorted'],
             database_state=context.datasets
         )
-
-        vizierdb.set_dataset_identifier(ds_name, ds_id)
-        outputs.stdout(content=PLAIN_TEXT(str(count) + ' row(s) sorted'))
 
     def compute_update_cell(self, args, context):
         """Execute update cell command.

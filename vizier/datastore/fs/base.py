@@ -30,7 +30,9 @@ import urllib.parse
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
-from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.datastore.dataset import (
+    DatasetColumn, DatasetDescriptor, DatasetRow
+)
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
@@ -323,7 +325,7 @@ class FileSystemDatastore(DefaultDatastore):
         else:
             metadata = None
             column_types = list()
-        # Create column objects.
+        # Create column and row objects for the dataset.
         columns = []
         for col_name, col_type in zip(column_names, column_types):
             columns.append(
@@ -333,6 +335,9 @@ class FileSystemDatastore(DefaultDatastore):
                     data_type=col_type
                 )
             )
+        rows = []
+        for rowid, values in df.iterrows():
+            rows.append(DatasetRow(identifier=rowid, values=list(values)))
         # Get unique identifier and create subfolder for the new dataset
         identifier = get_unique_identifier()
         dataset_dir = self.get_dataset_dir(identifier)

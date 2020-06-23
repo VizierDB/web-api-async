@@ -83,7 +83,7 @@ setup(
     ],
     include_package_data=True,
     data_files=data_files,
-    scripts=['tools/vizcli'],
+    scripts=['tools/vizier', 'tools/upgrade.py'],
     cmdclass={
         'bdist_wheel': CustomBdistWheelCommand,
         'build': CustomBuildCommand,

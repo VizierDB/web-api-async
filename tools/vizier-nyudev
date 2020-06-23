@@ -9,17 +9,9 @@ mkdir -p "$USER_DATA_DIR"
 APP_RESOURCES_DIR=$RUNNER_DIR/../
 STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
 
-MIMIR_DEV="false"
 UI_DEV="false"
 if [ $# -eq 1 ]
   then
-    if [ "$1" == "devmimir" ]
-      then
-        echo "mimir dev mode!"
-        MIMIR_DEV="true"
-        APP_RESOURCES_DIR=$CWD/
-        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
-    fi
     if [ "$1" == "devui" ]
       then
         echo "ui dev mode!"
@@ -28,13 +20,6 @@ if [ $# -eq 1 ]
 fi
 if [ $# -eq 2  ]
   then
-    if [ "$2" == "devmimir" ]
-      then
-        echo "mimir dev mode!"
-        MIMIR_DEV="true"
-        APP_RESOURCES_DIR=$CWD/
-        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
-    fi
     if [ "$2" == "devui" ]
       then
         echo "ui dev mode!"
@@ -52,7 +37,7 @@ export VIZIERSERVER_NAME
 VIZIERSERVER_LOG_DIR="${VIZIERSERVER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs}"
 export VIZIERSERVER_LOG_DIR
 # Flag indicating whether server is started in debug mode (DEFAULT: True)
-VIZIERSERVER_DEBUG="${VIZIERSERVER_DEBUG:-False}"
+VIZIERSERVER_DEBUG="${VIZIERSERVER_DEBUG:-True}"
 export VIZIERSERVER_DEBUG
 
 #Web Service
@@ -112,11 +97,11 @@ CELERY_BROKER_URL="${CELERY_BROKER_URL:-amqp://guest@localhost//}"
 export CELERY_BROKER_URL
 
 #CELERY Worker Configuration
-# Identifier for environment in which the worker operates (supported values are DEV, MIMIR, and REMOTE) (DEFAULT: DEV)
-VIZIERWORKER_ENV="${VIZIERWORKER_ENV:-MIMIR}"
+# Identifier for environment in which the worker operates (supported values are DEV, MIMIR, HISTORE and REMOTE) (DEFAULT: HISTORE)
+VIZIERWORKER_ENV="${VIZIERWORKER_ENV:-HISTORE}"
 export VIZIERWORKER_ENV
 # Path to the task processor definitions for supported packages (DEFAULT: ./resources/processors/common:./resources/processors/dev)
-VIZIERWORKER_PROCESSOR_PATH="${VIZIERWORKER_PROCESSOR_PATH:-${APP_RESOURCES_DIR}resources/processors/common:${APP_RESOURCES_DIR}resources/processors/mimir}"
+VIZIERWORKER_PROCESSOR_PATH="${VIZIERWORKER_PROCESSOR_PATH:-${APP_RESOURCES_DIR}resources/processors/histore}"
 export VIZIERWORKER_PROCESSOR_PATH
 # Log file directory used by the worker (DEFAULT: ./.vizierdb/logs/worker)
 VIZIERWORKER_LOG_DIR="${VIZIERWORKER_LOG_DIR:-${USER_DATA_DIR}.vizierdb/logs/worker}"
@@ -124,14 +109,6 @@ export VIZIERWORKER_LOG_DIR
 # URL of the controlling web service (DEFAULT: http://localhost:5000/vizier-db/api/v1)
 VIZIERWORKER_CONTROLLER_URL="${VIZIERWORKER_CONTROLLER_URL:-http://localhost:5000/vizier-db/api/v1}"
 export VIZIERWORKER_CONTROLLER_URL
-
-#COURSIER_CACHE="${COURSIER_CACHE:-${APP_RESOURCES_DIR}mimir/cache}"
-#export COURSIER_CACHE
-
-MIMIR_HOST="${MIMIR_HOST:-"127.0.0.1"}"
-export MIMIR_HOST
-MIMIR_URL="${MIMIR_URL:-"http://127.0.0.1:8089/api/v2/"}"
-export MIMIR_URL
 
 FLASK_APP="${FLASK_APP:-vizier.wsgi:app}"
 export FLASK_APP
@@ -159,42 +136,10 @@ fi
 
 trap "kill 0" EXIT
 
-#if [ "$MIMIR_DEV" == "true" ]
-#  then
-#    cd ../mimir; sbt "runMimirVizier --dataDirectory $USER_DATA_DIR" &
-#    cd ../web-api-async
-#  else
-#    ${APP_RESOURCES_DIR}mimir/mimir-api --dataDirectory $USER_DATA_DIR &
-#fi
-#if [ "$UI_DEV" == "true" ]
-#  then
-#    cd ../web-ui; yarn start &
-#    cd ../web-api-async
-#fi
-
 echo "Checking for necessary database upgrades"
 python tools/upgrade.py
 
 python -m flask run --with-threads &
-#$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
-
-#python - << EOF
-#import requests
-#import time
-#mimir_up = False
-#api_up = False
-#print("Waiting for services to start...")
-#while not (mimir_up and api_up):
-#    time.sleep( 2 )
-#    try:
-#        if not mimir_up:
-#            mimir_up = requests.get('${MIMIR_URL}lens').status_code == 200
-#        if not api_up:
-#            api_up = requests.get('$VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH').status_code == 200
-#    except:
-#        pass
-#
-#EOF
 
 echo "Vizier is up and running:"
 echo "    - Access the Vizier ui in your browser at: "
