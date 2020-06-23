@@ -20,7 +20,9 @@ from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput
+from vizier.viztrail.module.output import (
+    ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput
+)
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
@@ -426,7 +428,7 @@ class VizualTaskProcessor(TaskProcessor):
         m_opts = []
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
             m_opts.append({'name': 'datasourceErrors', 'value': 'true'})
-        ifoptions is  not None:
+        if options is not None:
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
