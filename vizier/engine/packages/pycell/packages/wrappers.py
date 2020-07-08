@@ -10,7 +10,7 @@ import json
 class GoogleMapClusterWrapper():
     
     def do_output(self, latlngjson, centerlat, centerlon, zoom, width, height):
-        print(("""
+        return(("""
         <div style="width:"""+str(width)+"""; height:"""+str(int(height)-30)+"""">
             <style>
               /* Always set the map height explicitly to define the size of the div
@@ -181,7 +181,7 @@ class LeafletClusterWrapper():
                     height= int(height),
                    )
             
-        print(iframe_html)
+        return(iframe_html)
         
         
     
@@ -354,7 +354,7 @@ class D3ChartWrapper():
                     height= int(height)+60,
                    )
             
-        print(iframe_html)
+        return(iframe_html)
         
 
 class TetrisWrapper():
