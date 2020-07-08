@@ -60,6 +60,9 @@ class DatasetClient(object):
             self._annotations = DatasetMetadata()
             self._rows = list()
 
+    def __getitem__(self, key):
+        return self.get_column(key)
+
     @property
     def annotations(self):
         """Get all dataset annotations.
@@ -408,6 +411,9 @@ class MutableDatasetRow(DatasetRow):
             values=values
         )
         self.dataset = dataset
+
+    def __getitem__(self, key):
+        return self.get_value(key)
 
     def annotations(self, column):
         """Get annotation object for given row cell.

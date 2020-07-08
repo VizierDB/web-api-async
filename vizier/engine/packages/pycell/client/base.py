@@ -59,6 +59,9 @@ class VizierDBClient(object):
         self.write = set()
         self.delete = None
 
+    def __getitem__(self, key):
+        return self.get_dataset(key)
+
     def export_module_decorator(self, original_func):
         def wrapper(*args, **kwargs):
             self.read.add(original_func.__name__)
