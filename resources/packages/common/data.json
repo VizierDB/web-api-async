@@ -146,7 +146,7 @@
                         "hidden": false, 
                         "id": "loadDetectHeaders", 
                         "index": 4, 
-                        "name": "Detect Headers", 
+                        "name": "File Has Headers", 
                         "required": false
                     }, 
                     {

@@ -161,7 +161,7 @@ class ModuleProvenance(object):
             if self.write[name] is None:
                 debug("DEPENDENT / WRITE FAILED")
                 return True
-            elif name in datasets:
+            elif name in datasets and name not in self.read:
                 debug("DEPENDENT / OVERWRITE")
                 return True
         # Check if all read dependencies are present and have not been modified

@@ -210,13 +210,13 @@ class VizualTaskProcessor(TaskProcessor):
         """
         # Get dataset name and and row index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        row_index = args.get_value(cmd.PARA_ROW)
+        row = args.get_value(cmd.PARA_ROW)
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute delete row command
         result = self.api.delete_row(
             identifier=ds.identifier,
-            row_index=row_index,
+            row_index=row,
             datastore=context.datastore
         )
         # Create result object
@@ -414,7 +414,7 @@ class VizualTaskProcessor(TaskProcessor):
             raise ValueError('invalid source descriptor')
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
-        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
+        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else True
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
         detect_headers = args.get_value(
             cmd.PARA_DETECT_HEADERS,

@@ -40,7 +40,9 @@ import vizier.mimir as mimir
 import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
+from vizier import debug_is_on
 import shutil
+import traceback
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -90,7 +92,7 @@ class MimirDatastore(DefaultDatastore):
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
         # Write rows to temporary file in CSV format
-        tmp_file = os.path.abspath(self.base_path + identifier)
+        tmp_file = os.path.abspath(self.base_path + os.path.sep + identifier)
         # Create a list of columns that contain the user-vizible column name and
         # the name in the database
         db_columns = list()
@@ -104,9 +106,9 @@ class MimirDatastore(DefaultDatastore):
                 )
             )
             if colSql == '':
-                colSql = col.name + ' AS ' + col.name
+                colSql = '`' + col.name + '` AS `' + col.name + '`'
             else:
-                colSql = colSql + ', ' + col.name + ' AS ' + col.name
+                colSql = colSql + ', `' + col.name + '` AS `' + col.name + '`'
         # Create CSV file for load
         with open(tmp_file, 'w') as f_out:
             writer = csv.writer(f_out, quoting=csv.QUOTE_MINIMAL)
@@ -114,11 +116,12 @@ class MimirDatastore(DefaultDatastore):
             for row in rows:
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
+        
         # Load CSV file using Mimirs loadCSV method.
         table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options, dependencies = dependencies)
-        os.remove(tmp_file)
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
-        view_name, dependencies = mimir.createView(table_name, sql)
+        #os.remove(tmp_file)
+        sql = 'SELECT '+ colSql +' FROM '+table_name
+        view_name, dependencies, schema = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
         row_count = mimir.countRows(view_name)
         
@@ -180,10 +183,17 @@ class MimirDatastore(DefaultDatastore):
         annotations = DatasetMetadata.from_file(
             self.get_metadata_filename(identifier)
         )
-        return MimirDatasetHandle.from_file(
+        handle = MimirDatasetHandle.from_file(
             dataset_file,
             annotations=annotations
         )
+        # Do a sanity check to make sure that the table exists in mimir
+        if debug_is_on():
+            if not handle.confirm_sync_with_mimir():
+                print("Mimir and Vizier are out of sync.  Expected to find dataset `{}` in Mimir but didn't.".format(handle.identifier))
+                return None
+            # traceback.print_stack()
+        return handle
 
     def get_annotations(self, identifier, column_id=-1, row_id='-1'):
         """Get list of annotations for a dataset component. Expects at least one
@@ -483,13 +493,13 @@ class MimirDatastore(DefaultDatastore):
                 name_in_rdb=name_in_rdb
             )
             if colSql == '':
-                colSql = name_in_dataset + ' AS ' + name_in_rdb
+                colSql = '`' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             else:
-                colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
+                colSql = colSql + ', `' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             columns.append(col)
         # Create view for loaded dataset
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
-        view_name, dependencies = mimir.createView(init_load_name, sql)
+        sql = 'SELECT '+ colSql +' FROM '+init_load_name
+        view_name, dependencies, schema = mimir.createView(init_load_name, sql)
         # TODO: this is a hack to speed up this step a bit.
         #  we get the first row id and the count and take a range;
         #  this is fragile and should be made better
@@ -584,7 +594,7 @@ class MimirDatastore(DefaultDatastore):
         # Depending on whether we need to update row ids we either query the
         # database or just get the schema. In either case mimir_schema will
         # contain a the returned Mimir schema information.
-        sql = base.get_select_query(table_name, columns=columns) + ';'
+        sql = base.get_select_query(table_name, columns=columns) 
         mimir_schema = mimir.getSchema(sql)
         
         # Create a mapping of column name (in database) to column type. This
@@ -664,6 +674,6 @@ def create_missing_key_view(dataset, lens_name, key_column):
     col_list = [stmt]
     for column in dataset.columns:
         col_list.append(column.name_in_rdb)
-    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name + ';'
-    view_name, dependencies = mimir.createView(dataset.table_name, sql)
+    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name 
+    view_name, dependencies, schema = mimir.createView(dataset.table_name, sql)
     return view_name, dataset.row_counter + len(case_conditions)

@@ -61,4 +61,6 @@ resources/config/dev-config.yaml
 /run.sh
 *.jar
 *.crc
+vizier_downloads/*
 
+/web-ui

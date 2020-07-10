@@ -26,7 +26,7 @@ from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
-from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject, HtmlOutput, TextOutput, OUTPUT_TEXT
 from vizier.viztrail.module.provenance import ModuleProvenance
 from os.path import normpath, basename
 from os import path
@@ -38,7 +38,7 @@ import vizier.engine.packages.pycell.base as cmd
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
 
-SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', False)
+SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', "False")
 SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
 
 class PyCellTaskProcessor(TaskProcessor):
@@ -100,7 +100,9 @@ class PyCellTaskProcessor(TaskProcessor):
             datastore=context.datastore,
             datasets=context.datasets,
             source=cell_src,
-            dataobjects=context.dataobjects
+            dataobjects=context.dataobjects,
+            project_id=context.project_id,
+            output_format=args.get_value(cmd.OUTPUT_FORMAT, default_value = OUTPUT_TEXT)
         )
         variables = {VARS_DBCLIENT: client}
         # Redirect standard output and standard error streams
@@ -114,13 +116,15 @@ class PyCellTaskProcessor(TaskProcessor):
         resdata = None
         # Run the Python code
         try:
-            python_cell_preload(variables)
-            if SANDBOX_PYTHON_EXECUTION:
+            python_cell_preload(variables, client = client)
+            if SANDBOX_PYTHON_EXECUTION == "True":
                 json_data = {'source':source, 
                              'datasets':context.datasets, 
                              'dataobjects':context.dataobjects, 
                              'datastore':context.datastore.__class__.__name__, 
-                             'basepath':context.datastore.base_path}
+                             'basepath':context.datastore.base_path,
+                             'project_id':context.project_id,
+                             'output_format':client.output_format}
                 res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
                 resdata = res.json()
                 client = DotDict()
@@ -129,7 +133,13 @@ class PyCellTaskProcessor(TaskProcessor):
                 client.setattr('descriptors',{})
                 client.setattr('datastore',context.datastore)
                 client.setattr('datasets',resdata['datasets'])
-                client.setattr('dataobjects',resdata['dataobjects'] )
+                client.setattr('dataobjects',resdata['dataobjects'])
+                client.setattr('output_format',resdata['output_format'])
+                client.setattr('stdout',
+                    [
+                        OutputObject(type = item['type'], value = item['value'])
+                        for item in resdata.fetch('explicit_stdout', [])
+                    ])
                 
             else:
                 exec(source, variables, variables)
@@ -142,9 +152,9 @@ class PyCellTaskProcessor(TaskProcessor):
         # Set module outputs
         outputs = ModuleOutputs()
         is_success = (exception is None)
-        if SANDBOX_PYTHON_EXECUTION:
+        if SANDBOX_PYTHON_EXECUTION == "True":
             for text in resdata['stdout']:
-                outputs.stdout.append(HtmlOutput(text))
+                outputs.stdout.append(OutputObject(value = text, type = client.output_format))
             for text in resdata['stderr']:
                 outputs.stderr.append(TextOutput(text))
                 is_success = False        
@@ -152,11 +162,13 @@ class PyCellTaskProcessor(TaskProcessor):
             for tag, text in stream:
                 text = ''.join(text).strip()
                 if tag == 'out':
-                    outputs.stdout.append(HtmlOutput(text))
+                    outputs.stdout.append(OutputObject(value = text, type = client.output_format))
                 else:
                     outputs.stderr.append(TextOutput(text))
                     is_success = False
-        
+        for output in client.stdout:
+            outputs.stdout.append(output)
+
         if is_success:
             # Create provenance information. Ensure that all dictionaries
             # contain elements of expected types, i.e, ensure that the user did

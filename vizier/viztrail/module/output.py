@@ -25,6 +25,7 @@ import vizier.config.base as config
 from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
+from vizier import debug_is_on
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -32,9 +33,6 @@ OUTPUT_TEXT = 'text/plain'
 OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
 OUTPUT_DATASET = 'dataset/view'
-
-def debug_is_on():
-    return str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True"
 
 def format_stack_trace(ex):
     trace = traceback.extract_tb(ex.__traceback__, limit = 30)
@@ -107,7 +105,6 @@ class ModuleOutputs(object):
         vizier.viztrail.module.output.ModuleOutputs
         """
         message = "ERROR: NO ERROR MESSAGE"
-        template = "{0}:{1!r}"
         try:
             if type(ex) is MimirError:
                 # message = "MIMIR ERROR"
@@ -136,11 +133,13 @@ class ModuleOutputs(object):
                                 format_stack_trace(ex)
                             )
             else:
-                message = template.format(type(ex).__name__, ex.args)
-                if debug_is_on():
-                    message = message + ":\n " + str(traceback.format_exc())
+                message = "{}{}\n{}".format(
+                    type(ex).__name__, 
+                    ( (": " + "; ".join(str(arg) for arg in ex.args)) if ex.args is not None else "" ), 
+                    format_stack_trace(ex)
+                )
         except Exception as e:
-            message = template.format(type(e).__name__, e.args)
+            message = "{0}:{1!r}".format(type(e).__name__, e.args)
             if debug_is_on():
                 message += "\n"+format_stack_trace(e)
 
