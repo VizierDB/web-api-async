@@ -24,11 +24,19 @@ from bokeh.io import output_notebook
 from bokeh.io.notebook import install_notebook_hook
 from bokeh.embed import json_item, file_html
 
-def python_cell_preload(variables):
-  """Convenient place to hook extension code that needs to run before a python cell"""
+target_client = None
 
-  ## Set up Bokeh
-  output_notebook(notebook_type = 'vizier')
+def python_cell_preload(variables, client):
+    global target_client
+    """Convenient place to hook extension code that needs to run before a python cell"""
+
+    ## Set up Bokeh
+    target_client = client
+    output_notebook(notebook_type = 'vizier')
+
+def python_cell_close():
+    global target_client
+    target_client = None
 
 
 #################### Bokeh Support ####################
@@ -43,6 +51,7 @@ def vizier_bokeh_load(resources, verbose, hide_banner, load_timeout):
 def vizier_bokeh_show(obj, state, notebook_handle):
     """Hook called by Bokeh when show() is called"""
     # r = "bokeh_plot_"+str([ random.choice(range(0, 10)) for x in range(0, 20) ])
+    global target_client
     plot_object_id = "bokeh_plot_{}".format(obj.id)
 
     # Generate and sanitize the plot content
@@ -50,13 +59,17 @@ def vizier_bokeh_show(obj, state, notebook_handle):
     content = re.sub(r"\"", r"&#34;", content) 
 
     # Allocate a div for the plot to be rendered into
-    print(('<div id="{}"></div>'.format(plot_object_id)))
+    html = (('<div id="{}"></div>'.format(plot_object_id)))
 
     # Hack around the lack of support for script-tags in cell results: 
     # load an image that doesn't exist, and add an onError script that 
     # actually embeds the image.  Note the substitution of single-quotes
     # in the sanitization step above.
-    print(('<img src onError="Bokeh.embed.embed_item('+content+');"/>'))
+    html += (('<img src onError="Bokeh.embed.embed_item('+content+');"/>'))
+    if target_client is None:
+        print(html)
+    else:
+        target_client.show_html(html)
 
 def vizier_bokeh_app(app, state, notebook_url, **kwargs):
     """Hook called by Bokeh when an app is started."""

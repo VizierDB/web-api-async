@@ -35,7 +35,7 @@ class DatasetClient(object):
     rows : list(vizier.datastore.client.MutableDatasetRow)
         List of rows in the dataset
     """
-    def __init__(self, dataset=None):
+    def __init__(self, dataset=None, client=None, existing_name=None):
         """Initialize the client for a given dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -46,8 +46,14 @@ class DatasetClient(object):
         dataset: vizier.datastore.base.DatasetHandle, optional
             Handle to the dataset for which this is a client. If None this is a
             new dataset.
+        client: vizier.engine.packages.pycell.client.VizierDBClient, optional
+            Provide a client, to allow use of dataset.save(), dataset.save_as()
+        existing_name: string, optional
+            Provide an existing name, to allow use of dataset.save()
         """
         self.dataset = dataset
+        self.client = client
+        self.existing_name = existing_name
         if not dataset is None:
             self.identifier = dataset.identifier
             self.columns = dataset.columns
@@ -59,6 +65,19 @@ class DatasetClient(object):
             self.columns = list()
             self._annotations = DatasetMetadata()
             self._rows = list()
+
+    def __getitem__(self, key):
+        return self.get_column(key)
+
+    def save(self, name = None):
+        if self.client is None:
+            raise "Client field unset.  Use `vizierdb.create_dataset()` or `vizierdb.update_dataset()` instead."
+        if name is None and self.existing_name is None:
+            raise "This is a new dataset.  Use `ds.save(name = ...)` to specify a name."
+        if name is None:
+            self.client.update_dataset(name = self.existing_name, dataset = self)
+        else:
+            self.client.create_dataset(name = name, dataset = self)
 
     @property
     def annotations(self):
@@ -321,10 +340,12 @@ class DatasetClient(object):
         if map_provider == 'Google':
             import json
             from vizier.engine.packages.pycell.packages.wrappers import GoogleMapClusterWrapper
-            GoogleMapClusterWrapper().do_output(json.dumps(addrpts), center_lat, center_lon, zoom, width, height) 
+            html = GoogleMapClusterWrapper().do_output(json.dumps(addrpts), center_lat, center_lon, zoom, width, height) 
+            self.client.show_html(html)
         elif map_provider == 'OSM':  
             from vizier.engine.packages.pycell.packages.wrappers import LeafletClusterWrapper
-            LeafletClusterWrapper().do_output(addrpts, center_lat, center_lon, zoom, width, height) 
+            html = LeafletClusterWrapper().do_output(addrpts, center_lat, center_lon, zoom, width, height) 
+            self.client.show_html(html)
         else:
             print("Unknown map provider: please specify: OSM or Google")
 
@@ -378,8 +399,12 @@ class DatasetClient(object):
         if key is not None:
             data=data[data.index(key)]    
             
-        D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height), 
+        html = D3ChartWrapper().do_output(data=data, charttype=chart_type, width=str(width), height=str(height), 
             title=title, subtitle=subtitle, legendtitle=legend_title)
+        self.client.show_html(html)
+
+    def show(self):
+        self.client.show(self)
         
 class MutableDatasetRow(DatasetRow):
     """Row in a Vizier DB dataset.
@@ -408,6 +433,9 @@ class MutableDatasetRow(DatasetRow):
             values=values
         )
         self.dataset = dataset
+
+    def __getitem__(self, key):
+        return self.get_value(key)
 
     def annotations(self, column):
         """Get annotation object for given row cell.
