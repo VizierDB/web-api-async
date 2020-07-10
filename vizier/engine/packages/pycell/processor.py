@@ -123,7 +123,8 @@ class PyCellTaskProcessor(TaskProcessor):
                              'dataobjects':context.dataobjects, 
                              'datastore':context.datastore.__class__.__name__, 
                              'basepath':context.datastore.base_path,
-                             'project_id':context.project_id}
+                             'project_id':context.project_id,
+                             'output_format':client.output_format}
                 res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
                 resdata = res.json()
                 client = DotDict()
@@ -132,7 +133,8 @@ class PyCellTaskProcessor(TaskProcessor):
                 client.setattr('descriptors',{})
                 client.setattr('datastore',context.datastore)
                 client.setattr('datasets',resdata['datasets'])
-                client.setattr('dataobjects',resdata['dataobjects'] )
+                client.setattr('dataobjects',resdata['dataobjects'])
+                client.setattr('output_format',resdata['output_format'])
                 client.setattr('stdout',
                     [
                         OutputObject(type = item['type'], value = item['value'])
