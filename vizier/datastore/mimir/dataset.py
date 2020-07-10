@@ -306,7 +306,7 @@ class MimirDatasetHandle(DatasetHandle):
             has_reasons = len(buffer) > 0
             if has_reasons:
                 for value in buffer:
-                    value = value['english']
+                    value = value['message']
                     if value != '':
                         annotations.append(
                             DatasetAnnotation(
@@ -368,3 +368,11 @@ class MimirDatasetHandle(DatasetHandle):
         }
         with open(filename, 'w') as f:
             dump_json(doc, f)
+
+    def confirm_sync_with_mimir(self):
+        try:
+            sch = mimir.getSchema("SELECT * FROM `{}`".format(self.table_name))
+            return True
+        except mimir.MimirError:
+            return False
+

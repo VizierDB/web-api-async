@@ -210,11 +210,11 @@ class ModuleArguments(object):
                                 datasets=datasets
                             )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
-                            if pckg.FILE_URL in value:
+                            if pckg.FILE_URL in value and value[pckg.FILE_URL] != None:
                                 token = value[pckg.FILE_URL]
-                            elif pckg.FILE_NAME in value:
+                            elif pckg.FILE_NAME in value and value[pckg.FILE_NAME] != None:
                                 token = format_str(value[pckg.FILE_NAME])
-                            elif pckg.FILE_ID in value:
+                            elif pckg.FILE_ID in value and value[pckg.FILE_ID] != None:
                                 token = format_str(value[pckg.FILE_ID])
                             else:
                                 token = '?file?'
@@ -295,24 +295,27 @@ class ModuleArguments(object):
             # parameter id is unknown.
             para = parameters.get(arg_id)
             datatype = para[pckg.LABEL_DATATYPE]
-            if arg_value is None:
+            if arg_value is None or arg_value == '':
                 if arg_id in required_key_values:
                     raise ValueError('missing value for parameter \'' + str(arg_id) + '\'')
             elif datatype == pckg.DT_BOOL:
                 if not isinstance(arg_value, bool):
-                    raise ValueError('expected bool for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected bool for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
             elif datatype == pckg.DT_DECIMAL:
                 if not isinstance(arg_value, float):
-                    raise ValueError('expected float for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected float for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
             elif datatype == pckg.DT_SCALAR:
                 if not is_scalar(arg_value):
-                    raise ValueError('expected scalar for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected scalar for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
             elif datatype in pckg.INT_TYPES:
                 if not isinstance(arg_value, int):
-                    raise ValueError('expected int for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected int for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
             elif datatype in pckg.STRING_TYPES:
-                if not isinstance(arg_value, str):
-                    raise ValueError('expected string for \'' + str(arg_id) + '\'')
+                # JSON stupidly makes number-like strings into numbers
+                if isinstance(arg_value, int) or isinstance(arg_value, float):
+                    self.arguments[arg_id] = str(arg_value)
+                elif not isinstance(arg_value, str):
+                    raise ValueError('expected string for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
             elif datatype == pckg.DT_FILE_ID:
                 # Expects a dictinary that contains at least a fileId or the
                 # an uri element
@@ -322,15 +325,15 @@ class ModuleArguments(object):
                     raise ValueError('invalid file identifier')
             elif datatype == pckg.DT_LIST:
                 if not isinstance(arg_value, list):
-                    raise ValueError('expected list for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected list for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
                 for args in arg_value:
                     args.validate(parameters)
             elif datatype == pckg.DT_RECORD:
                 if not isinstance(arg_value, ModuleArguments):
-                    raise ValueError('expected list for \'' + str(arg_id) + '\'')
+                    raise ValueError('expected list for \'' + str(arg_id) + '\' (got \'' + str(arg_value) + '\')')
                 arg_value.validate(parameters)
             else:
-                raise RuntimeError('unknonw data type \'' + str(datatype) + '\'')
+                raise RuntimeError('unknown data type \'' + str(datatype) + '\' (got \'' + str(arg_value) + '\')')
             keys.add(arg_id)
         # Ensure that all mandatory arguments are given
         for key in required_key_values:

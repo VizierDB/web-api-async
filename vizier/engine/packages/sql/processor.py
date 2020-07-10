@@ -77,7 +77,7 @@ class SQLTaskProcessor(TaskProcessor):
         # variables
         source = args.get_value(cmd.PARA_SQL_SOURCE)
         if not source.endswith(';'):
-            source = source + ';'
+            source = source 
         ds_name = args.get_value(cmd.PARA_OUTPUT_DATASET, raise_error=False)
         # Get mapping of datasets in the context to their respective table
         # name in the Mimir backend
@@ -92,32 +92,19 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name = mimir.createView(
+            view_name, dependencies, mimirSchema = mimir.createView(
                 mimir_table_names,
                 source
             )
-            sql = 'SELECT * FROM ' + view_name
-            mimirSchema = mimir.getSchema(sql)
-
-            columns = list()
-            colSql = ''
-
-            for col in mimirSchema:
-                col_id = len(columns)
-                name_in_dataset = col['name']
-                col = MimirDatasetColumn(
+            print(mimirSchema)
+            columns = [
+                MimirDatasetColumn(
                     identifier=col_id,
-                    name_in_dataset=name_in_dataset
+                    name_in_dataset=col['name'],
+                    data_type=col['type']
                 )
-                if colSql == '':
-                    colSql = name_in_dataset + ' AS ' + name_in_dataset
-                else:
-                    colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_dataset
-                columns.append(col)
-
-            sql = 'SELECT ' + colSql + ' FROM {{input}};'
-            view_name = mimir.createView(view_name, sql)
-
+                for (col_id, col) in enumerate(mimirSchema)
+            ]
             row_count = mimir.countRows(view_name)
             
             provenance = None
@@ -137,6 +124,13 @@ class SQLTaskProcessor(TaskProcessor):
                 limit=10
             )
             ds_output['name'] = ds_name
+
+            dependencies = dict(
+                (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
+                for dep_name in dependencies
+            )
+            # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
+
             outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={
@@ -145,7 +139,8 @@ class SQLTaskProcessor(TaskProcessor):
                         columns=ds.columns,
                         row_count=ds.row_count
                     )
-                }
+                },
+                read=dependencies
             )
         except Exception as ex:
             provenance = ModuleProvenance()

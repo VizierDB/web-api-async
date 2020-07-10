@@ -56,7 +56,7 @@ data_files = packages_files + processors_files + webui_files + mimir_jar
 
 setup(
     name='vizier-webapi',
-    version='0.6.5',
+    version='0.6.6',
     description='UI, Web API, and Backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
@@ -72,11 +72,13 @@ setup(
         'pyyaml>=5.1.0',
         'requests',
         'unicodecsv>=0.14.1',
+        'sklearn',
         'numpy',
         'pandas',
         'geopandas',
         'bokeh',
-        'shapely'
+        'shapely',
+        'astor'
     ],
     include_package_data=True,
     data_files=data_files,

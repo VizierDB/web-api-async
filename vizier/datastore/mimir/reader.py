@@ -106,15 +106,15 @@ class MimirDatasetReader(DatasetReader):
         if not self.is_open:
             # Query the database to get the list of rows. Sort rows according to
             # order in row_ids and return a InMemReader
-            sql = base.get_select_query(self.table_name, columns=self.columns)
-            if self.rowid != None:
-                sql += ' WHERE ROWID() = ' + str(self.rowid)
-            if self.is_range_query:
-                if self.limit > 0:
-                    sql +=  ' LIMIT ' + str(self.limit)
-                if self.offset > 0:
-                    sql += ' OFFSET ' + str(self.offset) 
-            rs = mimir.vistrailsQueryMimirJson(sql+ ';', True, False)
+            rs = mimir.getTable(
+                    table = self.table_name,
+                    columns = [col.name_in_rdb for col in self.columns],
+                    offset_to_rowid = self.rowid,
+                    limit = self.limit if self.is_range_query else None,
+                    offset = self.offset if self.is_range_query else None,
+                    include_uncertainty = True
+                )
+
             #self.row_ids = rs['prov']
             # Initialize mapping of column rdb names to index positions in
             # dataset rows
@@ -136,7 +136,7 @@ class MimirDatasetReader(DatasetReader):
                     col = self.columns[i]
                     col_index = self.col_map[col.name_in_rdb]
                     values[i] = base.mimir_value_to_python(row[col_index], col)
-                    annotation_flag_values[i] = row_annotation_flags[col_index]
+                    annotation_flag_values[i] = not row_annotation_flags[col_index]
                 self.rows.append(DatasetRow(row_id, values, annotation_flag_values))
             self.read_index = 0
             self.is_open = True

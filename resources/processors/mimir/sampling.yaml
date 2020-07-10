@@ -1,0 +1,5 @@
+packages:
+    - sampling
+engine:
+    className: 'SamplingProcessor'
+    moduleName: 'vizier.engine.packages.sample.processor'

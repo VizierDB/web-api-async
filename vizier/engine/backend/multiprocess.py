@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from vizier.api.serialize import labels
 
 """Default multi-process backend to execute vizier workflow tasks. The default
 backend starts a separate process for each task that is being executed. This
@@ -138,7 +139,8 @@ class MultiProcessBackend(VizierBackend):
         project = self.projects.get_project(task.project_id)
         # Execute task using execute command function
         import time
-        time.sleep( 1 )
+        #TODO: figure out why sleeping here fixes a dependent cell re-execution not re-executing
+        time.sleep( 2 )
         pool.apply_async(
             exec_command,
             args=(
@@ -148,8 +150,9 @@ class MultiProcessBackend(VizierBackend):
                     project_id=task.project_id,
                     datastore=project.datastore,
                     filestore=project.filestore,
-                    datasets=context,
-                    resources=resources
+                    datasets=context[labels.CONTEXT_DATASETS],
+                    resources=resources,
+                    dataobjects=context[labels.CONTEXT_DATAOBJECTS]
                 ),
                 processor,
             ),

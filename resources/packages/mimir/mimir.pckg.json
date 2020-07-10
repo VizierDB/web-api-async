@@ -1,661 +1,137 @@
 {
     "mimir": {
+        "category": "data_m",
         "command": [
             {
                 "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "DOMAIN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FOR"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "column"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "IN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }
-                ], 
-                "id": "domain", 
-                "name": "Domain Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 1, 
-                        "name": "Column", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 2, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "GEOCODE"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "dataset"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "COLUMNS"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "prefix": "HOUSE_NUMBER=", 
-                        "rspace": true, 
-                        "type": "opt", 
+                        "lspace": true,
+                        "prefix": "HOUSE_NUMBER=",
+                        "rspace": true,
+                        "type": "opt",
                         "value": "strnumber"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "prefix": "STREET=", 
-                        "rspace": true, 
-                        "type": "opt", 
+                        "lspace": true,
+                        "prefix": "STREET=",
+                        "rspace": true,
+                        "type": "opt",
                         "value": "strname"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "prefix": "CITY=", 
-                        "rspace": true, 
-                        "type": "opt", 
+                        "lspace": true,
+                        "prefix": "CITY=",
+                        "rspace": true,
+                        "type": "opt",
                         "value": "city"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "prefix": "STATE=", 
-                        "rspace": true, 
-                        "type": "opt", 
+                        "lspace": true,
+                        "prefix": "STATE=",
+                        "rspace": true,
+                        "type": "opt",
                         "value": "state"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "USING"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "geocoder"
                     }
-                ], 
-                "id": "geocode", 
-                "name": "Geocode Lens", 
+                ],
+                "id": "geocode",
+                "name": "Geocode",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "strnumber", 
-                        "index": 1, 
-                        "name": "House Nr.", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "strnumber",
+                        "index": 1,
+                        "name": "House Nr.",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "strname", 
-                        "index": 2, 
-                        "name": "Street", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "strname",
+                        "index": 2,
+                        "name": "Street",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "city", 
-                        "index": 3, 
-                        "name": "City", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "city",
+                        "index": 3,
+                        "name": "City",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "state", 
-                        "index": 4, 
-                        "name": "State", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "state",
+                        "index": 4,
+                        "name": "State",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "geocoder", 
-                        "index": 5, 
-                        "name": "Geocoder", 
-                        "required": true, 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "geocoder",
+                        "index": 5,
+                        "name": "Geocoder",
+                        "required": true,
                         "values": [
                             {
-                                "isDefault": true, 
-                                "text": "GOOGLE", 
+                                "isDefault": true,
+                                "text": "GOOGLE",
                                 "value": "GOOGLE"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "OSM", 
+                                "isDefault": false,
+                                "text": "OSM",
                                 "value": "OSM"
                             }
                         ]
-                    }, 
+                    },
                     {
-                        "datatype": "bool", 
+                        "datatype": "bool",
                         "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 6, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "KEY"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "REPAIR"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FOR"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "column"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "IN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }
-                ], 
-                "id": "key_repair", 
-                "name": "Key Repair Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 1, 
-                        "name": "Column", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 2, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "MISSING"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "VALUES"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FOR"
-                    }, 
-                    {
-                        "format": [
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "column"
-                            }, 
-                            {
-                                "lspace": true, 
-                                "prefix": "WITH CONSTRAINT ", 
-                                "rspace": true, 
-                                "type": "opt", 
-                                "value": "constraint"
-                            }
-                        ], 
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "columns"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "IN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }
-                ], 
-                "id": "missing_value", 
-                "name": "Missing Value Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "columns", 
-                        "index": 1, 
-                        "name": "Columns", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 2, 
-                        "name": "Column", 
-                        "parent": "columns", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "constraint", 
-                        "index": 3, 
-                        "name": "Constraint", 
-                        "parent": "columns", 
-                        "required": false
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 4, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "MISSING"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "KEYS"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FOR"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "column"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "IN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }
-                ], 
-                "id": "missing_key", 
-                "name": "Missing Key Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 1, 
-                        "name": "Column", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 2, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "PICK"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FROM"
-                    }, 
-                    {
-                        "format": [
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "pickFrom"
-                            }
-                        ], 
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "schema"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "prefix": "AS ", 
-                        "rspace": true, 
-                        "type": "opt", 
-                        "value": "pickAs"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "IN"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }
-                ], 
-                "id": "picker", 
-                "name": "Picker Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "schema", 
-                        "index": 1, 
-                        "name": "Columns", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "colid", 
-                        "hidden": false, 
-                        "id": "pickFrom", 
-                        "index": 2, 
-                        "name": "Pick From", 
-                        "parent": "schema", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "pickAs", 
-                        "index": 3, 
-                        "name": "Pick As", 
-                        "required": false
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 4, 
-                        "name": "Materialize Input", 
-                        "required": false
-                    }
-                ]
-            }, 
-            {
-                "format": [
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "SCHEMA"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "MATCHING"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": false, 
-                        "type": "const", 
-                        "value": "("
-                    }, 
-                    {
-                        "format": [
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "column"
-                            }, 
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "type"
-                            }
-                        ], 
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "schema"
-                    }, 
-                    {
-                        "lspace": false, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": ")"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "AS"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "resultName"
-                    }
-                ], 
-                "id": "schema_matching", 
-                "name": "Schema Matching Lens", 
-                "parameter": [
-                    {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "schema", 
-                        "index": 1, 
-                        "name": "Schema", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 2, 
-                        "name": "Column Name", 
-                        "parent": "schema", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "type", 
-                        "index": 3, 
-                        "name": "Data Type", 
-                        "parent": "schema", 
-                        "required": true, 
-                        "values": [
-                            {
-                                "isDefault": true, 
-                                "text": "int", 
-                                "value": "int"
-                            }, 
-                            {
-                                "isDefault": false, 
-                                "text": "varchar", 
-                                "value": "varchar"
-                            }
-                        ]
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "resultName", 
-                        "index": 4, 
-                        "name": "Store Result As ...", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "bool", 
-                        "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 5, 
-                        "name": "Materialize Input", 
+                        "id": "materializeInput",
+                        "index": 6,
+                        "name": "Materialize Input",
                         "required": false
                     }
                 ]
@@ -663,291 +139,938 @@
             {
                 "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "TYPE"
-                    }, 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "KEY"
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "INFERENCE"
-                    }, 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "REPAIR"
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FOR"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "IN"
-                    }, 
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
                         "value": "dataset"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "WITH"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "PERCENT"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "CONFORM"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "percentConform"
                     }
-                ], 
-                "id": "type_inference", 
-                "name": "Type Inference Adaptive Schema", 
+                ],
+                "id": "repair_key",
+                "name": "Fix Key Column",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "decimal", 
-                        "hidden": false, 
-                        "id": "percentConform", 
-                        "index": 1, 
-                        "name": "Percent Conform", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "bool", 
+                        "datatype": "bool",
                         "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 2, 
-                        "name": "Materialize Input", 
+                        "id": "materializeInput",
+                        "index": 2,
+                        "name": "Materialize Input",
                         "required": false
                     }
                 ]
-            }, 
+            },
             {
-			  "format": [
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "SHAPE"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "DETECTOR"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "FOR"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "var",
-			      "value": "dataset"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "WITH"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "model_name"
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "const",
-			      "value": "="
-			    },
-			    {
-			      "lspace": true,
-			      "rspace": true,
-			      "type": "var",
-			      "value": "modelName"
-			    }
-			  ],
-			  "id": "shape_watcher",
-			  "name": "Shape Detector Adaptive Schema",
-			  "parameter": [
-			    {
-			      "datatype": "dataset",
-			      "hidden": false,
-			      "id": "dataset",
-			      "index": 0,
-			      "name": "Dataset",
-			      "required": true
-			    },
-			    {
-			      "datatype": "string",
-			      "hidden": false,
-			      "id": "modelName",
-			      "index": 1,
-			      "name": "Model Name",
-			      "required": false
-			    }
-			  ]
-			},
-			{
                 "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "COMMENT"
-                    }, 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "MISSING"
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "dataset"
-                    }, 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "VALUES"
+                    },
                     {
-                        "lspace": true, 
-                        "rspace": false, 
-                        "type": "const", 
-                        "value": "("
-                    }, 
-                    {
-                        "format": [
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "expression"
-                            }, 
-                            {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
-                                "value": "comment"
-                            }
-                        ], 
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "comments"
-                    }, 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FOR"
+                    },
                     {
                         "format": [
                             {
-                                "lspace": true, 
-                                "rspace": true, 
-                                "type": "var", 
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
                                 "value": "column"
+                            },
+                            {
+                                "lspace": true,
+                                "prefix": "WITH CONSTRAINT ",
+                                "rspace": true,
+                                "type": "opt",
+                                "value": "constraint"
                             }
-                        ], 
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "resultColumns"
-                    }, 
+                        ],
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "columns"
+                    },
                     {
-                        "lspace": false, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": ")"
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "IN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
                     }
-                ], 
-                "id": "comment", 
-                "name": "Comment Lens", 
+                ],
+                "id": "missing_value",
+                "name": "Missing Value Lens",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "comments", 
-                        "index": 1, 
-                        "name": "Comments", 
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "columns",
+                        "index": 1,
+                        "name": "Columns",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "expression", 
-                        "index": 2, 
-                        "name": "Column or Expression", 
-                        "parent": "comments", 
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 2,
+                        "name": "Column",
+                        "parent": "columns",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "comment", 
-                        "index": 3, 
-                        "name": "Comment", 
-                        "parent": "comments", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "rowid", 
-                        "hidden": false, 
-                        "id": "rowid", 
-                        "index": 4, 
-                        "name": "Row Identifier", 
-                        "parent": "comments", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "constraint",
+                        "index": 3,
+                        "name": "Constraint",
+                        "parent": "columns",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "resultColumns", 
-                        "index": 5, 
-                        "name": "Result Columns", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "column", 
-                        "index": 6, 
-                        "name": "Result Column", 
-                        "parent": "resultColumns", 
-                        "required": true
-                    }, 
-                    {
-                        "datatype": "bool", 
+                        "datatype": "bool",
                         "hidden": true,
-                        "id": "materializeInput", 
-                        "index": 7, 
-                        "name": "Materialize Input", 
+                        "id": "materializeInput",
+                        "index": 4,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "MISSING"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "KEYS"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FOR"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "IN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "missing_key",
+                "name": "Fix Sequence",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "bool",
+                        "hidden": true,
+                        "id": "materializeInput",
+                        "index": 2,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "PICK"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FROM"
+                    },
+                    {
+                        "format": [
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "pickFrom"
+                            }
+                        ],
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "schema"
+                    },
+                    {
+                        "lspace": true,
+                        "prefix": "AS ",
+                        "rspace": true,
+                        "type": "opt",
+                        "value": "pickAs"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "IN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "picker",
+                "name": "Merge Columns",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "schema",
+                        "index": 1,
+                        "name": "Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "pickFrom",
+                        "index": 2,
+                        "name": "Input",
+                        "parent": "schema",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "pickAs",
+                        "index": 3,
+                        "name": "Output",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "hidden": true,
+                        "id": "materializeInput",
+                        "index": 4,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "SCHEMA"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "MATCHING"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": false,
+                        "type": "const",
+                        "value": "("
+                    },
+                    {
+                        "format": [
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "column"
+                            },
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "type"
+                            }
+                        ],
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "schema"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": true,
+                        "type": "const",
+                        "value": ")"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "AS"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "resultName"
+                    }
+                ],
+                "id": "schema_matching",
+                "name": "Match Target Schema",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "schema",
+                        "index": 1,
+                        "name": "Schema",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 2,
+                        "name": "Column Name",
+                        "parent": "schema",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "type",
+                        "index": 3,
+                        "name": "Data Type",
+                        "parent": "schema",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "int",
+                                "value": "int"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "varchar",
+                                "value": "varchar"
+                            }
+                        ]
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "resultName",
+                        "index": 4,
+                        "name": "Store Result As ...",
+                        "required": true
+                    },
+                    {
+                        "datatype": "bool",
+                        "hidden": true,
+                        "id": "materializeInput",
+                        "index": 5,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "TYPE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "INFERENCE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FOR"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "WITH"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "PERCENT"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "CONFORM"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "percentConform"
+                    }
+                ],
+                "id": "type_inference",
+                "name": "Detect Field Types",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "decimal",
+                        "defaultValue": 0.5,
+                        "hidden": false,
+                        "id": "percentConform",
+                        "index": 1,
+                        "name": "Percent Conform",
+                        "required": true
+                    },
+                    {
+                        "datatype": "bool",
+                        "hidden": true,
+                        "id": "materializeInput",
+                        "index": 2,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "SHAPE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DETECTOR"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FOR"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "WITH"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "model_name"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "="
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "modelName"
+                    }
+                ],
+                "id": "shape_watcher",
+                "name": "Shape Detector",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "modelName",
+                        "index": 1,
+                        "name": "Model Name",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COMMENT"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": false,
+                        "type": "const",
+                        "value": "("
+                    },
+                    {
+                        "format": [
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "expression"
+                            },
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "comment"
+                            }
+                        ],
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "comments"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": true,
+                        "type": "const",
+                        "value": ")"
+                    }
+                ],
+                "id": "comment",
+                "name": "Comment Lens",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "comments",
+                        "index": 1,
+                        "name": "Comments",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "expression",
+                        "index": 2,
+                        "name": "Column",
+                        "parent": "comments",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "comment",
+                        "index": 3,
+                        "name": "Comment",
+                        "parent": "comments",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "rowid",
+                        "index": 4,
+                        "name": "Row or Condition",
+                        "parent": "comments",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "hidden": true,
+                        "id": "materializeInput",
+                        "index": 5,
+                        "name": "Materialize Input",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "PIVOT"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "ON"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    }
+                ],
+                "id": "pivot",
+                "name": "Pivot",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Pivot Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "values",
+                        "index": 2,
+                        "name": "Value Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "Column",
+                        "parent": "values",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "keys",
+                        "index": 4,
+                        "name": "Key Columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "key",
+                        "index": 5,
+                        "name": "Column",
+                        "parent": "keys",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "resultName",
+                        "index": 6,
+                        "name": "Output (if different)",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "SHRED"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "shred",
+                "name": "Shred",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Input Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "columns",
+                        "index": 2,
+                        "name": "Rules",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "output_col",
+                        "index": 3,
+                        "name": "Output Column",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "type",
+                        "index": 4,
+                        "name": "Rule",
+                        "parent": "columns",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Delimited Field",
+                                "value": "field"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Regular Expression",
+                                "value": "pattern"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Explode Delimiter",
+                                "value": "explode"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Substring",
+                                "value": "substring"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Leave Unchanged",
+                                "value": "pass"
+                            }
+                        ]
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "expression",
+                        "index": 5,
+                        "name": "Expression / Delimiter",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "int",
+                        "defaultValue": 1,
+                        "hidden": false,
+                        "id": "index",
+                        "index": 6,
+                        "name": "Group / Field (if needed)",
+                        "parent": "columns",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "defaultValue": false,
+                        "hidden": false,
+                        "id": "keepOriginal",
+                        "index": 7,
+                        "name": "Keep Original Columns",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "resultName",
+                        "index": 8,
+                        "name": "Output Dataset (if different)",
                         "required": false
                     }
                 ]
             }
-        ], 
-        "id": "mimir",
-        "category": "data_m"
+        ],
+        "id": "mimir"
     }
 }

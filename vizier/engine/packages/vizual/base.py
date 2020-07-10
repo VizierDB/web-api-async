@@ -31,6 +31,8 @@ VIZUAL_DROP_DS = 'dropDataset'
 VIZUAL_INS_COL = 'insertColumn'
 VIZUAL_INS_ROW = 'insertRow'
 VIZUAL_LOAD = 'load'
+VIZUAL_EMPTY_DS = 'empty'
+VIZUAL_CLONE_DS = 'clone'
 VIZUAL_UNLOAD = 'unload'
 VIZUAL_MOV_COL = 'moveColumn'
 VIZUAL_MOV_ROW = 'moveRow'
@@ -247,7 +249,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 ),
                 pckg.parameter_declaration(
                     PARA_DETECT_HEADERS,
-                    name='Detect Headers',
+                    name='File Has Headers',
                     data_type=pckg.DT_BOOL,
                     index=4,
                     default_value=True,

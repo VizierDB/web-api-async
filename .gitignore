@@ -55,3 +55,12 @@ vizier-data/
 vizier-data*/
 vizier/env
 resources/config/dev-config.yaml
+/vizier/ds
+/vizier/fs
+/vizier/vt
+/run.sh
+*.jar
+*.crc
+vizier_downloads/*
+
+/web-ui

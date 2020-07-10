@@ -1,0 +1,407 @@
+{
+    "data": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "LOAD"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "DATASET"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "name"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "FROM"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "file"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": false,
+                        "type": "const",
+                        "value": "(load format:"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": false,
+                        "type": "var",
+                        "value": "loadFormat"
+                    },
+                    {
+                        "lspace": false,
+                        "rspace": false,
+                        "type": "const",
+                        "value": ")"
+                    }
+                ], 
+                "id": "load", 
+                "name": "Load Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "name", 
+                        "index": 1,
+                        "name": "Dataset Name", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "fileid", 
+                        "hidden": false, 
+                        "id": "file", 
+                        "index": 0,
+                        "name": "Source File", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadFormat", 
+                        "index": 2, 
+                        "name": "Load Format", 
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "CSV", 
+                                "value": "csv"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JSON", 
+                                "value": "json"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "PDF", 
+                                "value": "mimir.exec.spark.datasource.pdf"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Google Sheet", 
+                                "value": "mimir.exec.spark.datasource.google.spreadsheet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "XML", 
+                                "value": "com.databricks.spark.xml"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Excel", 
+                                "value": "com.crealytics.spark.excel"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JDBC Source", 
+                                "value": "jdbc"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Text", 
+                                "value": "text"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Parquet", 
+                                "value": "parquet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "ORC", 
+                                "value": "orc"
+                            }
+                        ]
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "defaultValue": false, 
+                        "hidden": false, 
+                        "id": "loadInferTypes", 
+                        "index": 3, 
+                        "name": "Infer Types", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "defaultValue": false, 
+                        "hidden": false, 
+                        "id": "loadDetectHeaders", 
+                        "index": 4, 
+                        "name": "File Has Headers", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "bool", 
+                        "hidden": false, 
+                        "id": "loadDataSourceErrors", 
+                        "index": 5, 
+                        "name": "Data Source Error Annotations", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "loadOptions", 
+                        "index": 6, 
+                        "name": "Load Options", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadOptionKey", 
+                        "index": 7, 
+                        "name": "Option Key", 
+                        "parent": "loadOptions", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "loadOptionValue", 
+                        "index": 8, 
+                        "name": "Option Value", 
+                        "parent": "loadOptions", 
+                        "required": false
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CREATE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "EMPTY"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "DATASET"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "name"
+                    }
+                ], 
+                "id": "empty", 
+                "name": "Empty Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "name", 
+                        "index": 0, 
+                        "name": "Dataset Name", 
+                        "required": true
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CLONE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "DATASET"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "name"
+                    }
+                ], 
+                "id": "clone", 
+                "name": "Clone Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "name", 
+                        "index": 0, 
+                        "name": "Name of Copy", 
+                        "required": true
+                    }
+                ]
+            }, 
+            {
+                "format": [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "UNLOAD"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "TO"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "unloadFormat"
+                    }
+                ], 
+                "id": "unload", 
+                "name": "Unload Dataset", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "dataset", 
+                        "index": 0, 
+                        "name": "Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadFormat", 
+                        "index": 1, 
+                        "name": "Unload Format", 
+                        "required": true, 
+                        "values": [
+                            {
+                                "isDefault": true, 
+                                "text": "CSV", 
+                                "value": "csv"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JSON", 
+                                "value": "json"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Google Sheet", 
+                                "value": "mimir.exec.spark.datasource.google.spreadsheet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "XML", 
+                                "value": "com.databricks.spark.xml"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Excel", 
+                                "value": "com.crealytics.spark.excel"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "JDBC Source", 
+                                "value": "jdbc"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Text", 
+                                "value": "text"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "Parquet", 
+                                "value": "parquet"
+                            }, 
+                            {
+                                "isDefault": false, 
+                                "text": "ORC", 
+                                "value": "orc"
+                            }
+                        ]
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "unloadOptions", 
+                        "index": 2, 
+                        "name": "Unload Options", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadOptionKey", 
+                        "index": 3, 
+                        "name": "Option Key", 
+                        "parent": "unloadOptions", 
+                        "required": false
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "unloadOptionValue", 
+                        "index": 4, 
+                        "name": "Option Value", 
+                        "parent": "unloadOptions", 
+                        "required": false
+                    }
+                ]
+            }
+        ], 
+        "id": "data",
+        "category": "code"
+    }
+}

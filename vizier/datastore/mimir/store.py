@@ -31,6 +31,8 @@ from vizier.core.util import get_unique_identifier, min_max
 from vizier.core.timestamp import  get_current_time
 from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.object.dataobject import DataObjectMetadata
+from vizier.datastore.object.base import DataObject
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
@@ -38,11 +40,13 @@ import vizier.mimir as mimir
 import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
+from vizier import debug_is_on
 import shutil
+import traceback
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
-
+DATA_OBJECT_FILE = 'dataobjects.json'
 
 class MimirDatastore(DefaultDatastore):
     """Vizier data store implementation using Mimir.
@@ -88,7 +92,7 @@ class MimirDatastore(DefaultDatastore):
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
         # Write rows to temporary file in CSV format
-        tmp_file = os.path.abspath(self.base_path + identifier)
+        tmp_file = os.path.abspath(self.base_path + os.path.sep + identifier)
         # Create a list of columns that contain the user-vizible column name and
         # the name in the database
         db_columns = list()
@@ -102,9 +106,9 @@ class MimirDatastore(DefaultDatastore):
                 )
             )
             if colSql == '':
-                colSql = col.name + ' AS ' + col.name
+                colSql = '`' + col.name + '` AS `' + col.name + '`'
             else:
-                colSql = colSql + ', ' + col.name + ' AS ' + col.name
+                colSql = colSql + ', `' + col.name + '` AS `' + col.name + '`'
         # Create CSV file for load
         with open(tmp_file, 'w') as f_out:
             writer = csv.writer(f_out, quoting=csv.QUOTE_MINIMAL)
@@ -112,11 +116,12 @@ class MimirDatastore(DefaultDatastore):
             for row in rows:
                 record = helper.encode_values(row.values)
                 writer.writerow(record)
+        
         # Load CSV file using Mimirs loadCSV method.
         table_name = mimir.loadDataSource(tmp_file, True, True, human_readable_name = human_readable_name, backend_options = backend_options, dependencies = dependencies)
-        os.remove(tmp_file)
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
-        view_name = mimir.createView(table_name, sql)
+        #os.remove(tmp_file)
+        sql = 'SELECT '+ colSql +' FROM '+table_name
+        view_name, dependencies, schema = mimir.createView(table_name, sql)
         # Get number of rows in the view that was created in the backend
         row_count = mimir.countRows(view_name)
         
@@ -142,6 +147,21 @@ class MimirDatastore(DefaultDatastore):
         string
         """
         return os.path.join(self.get_dataset_dir(identifier), DATASET_FILE)
+    
+    def get_data_object_file(self, identifier):
+        """Get the absolute path of the file that maintains the dataset metadata
+        such as the order of row id's and column information.
+
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
     def get_dataset(self, identifier):
         """Read a full dataset from the data store. Returns None if no dataset
@@ -163,10 +183,17 @@ class MimirDatastore(DefaultDatastore):
         annotations = DatasetMetadata.from_file(
             self.get_metadata_filename(identifier)
         )
-        return MimirDatasetHandle.from_file(
+        handle = MimirDatasetHandle.from_file(
             dataset_file,
             annotations=annotations
         )
+        # Do a sanity check to make sure that the table exists in mimir
+        if debug_is_on():
+            if not handle.confirm_sync_with_mimir():
+                print("Mimir and Vizier are out of sync.  Expected to find dataset `{}` in Mimir but didn't.".format(handle.identifier))
+                return None
+            # traceback.print_stack()
+        return handle
 
     def get_annotations(self, identifier, column_id=-1, row_id='-1'):
         """Get list of annotations for a dataset component. Expects at least one
@@ -189,6 +216,56 @@ class MimirDatastore(DefaultDatastore):
         # any existing uncertainty annotations for the cell.
         return self.get_dataset(identifier).get_annotations(column_id,row_id)
     
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the specified
+        cell are returned. If both identifier are None all annotations for the
+        dataset are returned.
+
+        Parameters
+        ----------
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
+            
+        Returns
+        -------
+        vizier.datastore.object.dataset.DataObjectMetadata
+        """
+        if identifier is not None and obj_type is None and key is None:
+            data_object_file = self.get_data_object_file(identifier)
+            if not os.path.isfile(data_object_file):
+                return DataObjectMetadata()
+            else:
+                return DataObjectMetadata.from_file(
+                data_object_file
+            )
+        
+        dsdirs = filter(lambda x: os.path.isdir(x) and 
+                        os.path.exists(os.path.join(x,DATA_OBJECT_FILE)), 
+                        [os.path.join(self.base_path, o) for o in os.listdir(self.base_path)])
+        dsoids = [os.path.basename(os.path.normpath(o)) for o in dsdirs]
+        dsofiles = [os.path.join(os.path.join(self.base_path,dsoid), 
+                                 DATA_OBJECT_FILE) for dsoid in dsoids]
+        if identifier is None and obj_type is None and key is None:
+            return DataObjectMetadata(objects=[ object for objects in 
+                                               [DataObjectMetadata.from_file( dsofile ).objects 
+                                                for dsofile in dsofiles] for object in objects])
+        elif identifier is None and obj_type is not None and key is None:
+            return DataObjectMetadata(objects=[ object for objects in 
+                                               [DataObjectMetadata.from_file( dsofile ).for_type(obj_type) 
+                                                for dsofile in dsofiles] for object in objects])
+        elif identifier is None and obj_type is None and key is not None:
+            return DataObjectMetadata(objects=[ object for objects in 
+                                               [DataObjectMetadata.from_file( dsofile ).for_key(key) 
+                                                for dsofile in dsofiles] for object in objects])
+        else:
+            raise ValueError("specify only one of: identifier, obj_type or key")
     
     def update_annotation(
         self, identifier, key, old_value=None, new_value=None, column_id=None,
@@ -225,7 +302,84 @@ class MimirDatastore(DefaultDatastore):
         #data = {"packageId":"mimir","commandId":"comment","arguments":[{"id":"dataset","value":"mv"},{"id":"comments","value":[[{"id":"expression","value":column},{"id":"comment","value":new_value},{"id":"rowid","value":row_id}]]},{"id":"resultColumns","value":[[{"id":"column","value":column}]]},{"id":"materializeInput","value":False}]}
         #resp = requests.post(url,json=data)
        
+    def update_object(
+        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique object identifier
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        bool
+        """
+        # Raise ValueError if column id and row id are both None
+        if identifier is None or key is None or obj_type is None:
+            raise ValueError('invalid resource identifier')
+        # Return None if the dataset is unknown
         
+        dataobj_dir = self.get_dataobject_dir(identifier)
+        data_object_filename = self.get_data_object_file(identifier)
+        data_objects = None
+        if not os.path.isdir(dataobj_dir):
+            #it's a new object so create it
+            os.makedirs(dataobj_dir)
+            data_objects = DataObjectMetadata()
+        else:
+            # Read objects from file, Evaluate update statement and write result
+            # back to file.
+            data_objects = DataObjectMetadata.from_file(data_object_filename)
+        # Get object annotations
+        elements = data_objects.objects
+        # Identify the type of operation: INSERT, DELETE or UPDATE
+        if old_value is None and not new_value is None:
+            elements.append(
+                DataObject(
+                    key=key,
+                    value=new_value,
+                    identifier=identifier,
+                    obj_type=obj_type
+                )
+            )
+        elif not old_value is None and new_value is None:
+            del_index = None
+            for i in range(len(elements)):
+                a = elements[i]
+                if a.identifier == identifier and a.value == old_value:
+                    del_index = i
+                    break
+            if del_index is None:
+                return False
+            del elements[del_index]
+        elif not old_value is None and not new_value is None:
+            obj = None
+            for a in elements:
+                if a.identifier == identifier and a.value == old_value:
+                    obj = a
+                    break
+            if obj is None:
+                return False
+            obj.value = new_value
+        else:
+            raise ValueError('invalid modification operation')
+        # Write modified annotations to file
+        data_objects.to_file(data_object_filename)
+        return True   
     
     def download_dataset(
         self, url, username=None, password=None, filestore=None, detect_headers=True, 
@@ -339,13 +493,13 @@ class MimirDatastore(DefaultDatastore):
                 name_in_rdb=name_in_rdb
             )
             if colSql == '':
-                colSql = name_in_dataset + ' AS ' + name_in_rdb
+                colSql = '`' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             else:
-                colSql = colSql + ', ' + name_in_dataset + ' AS ' + name_in_rdb
+                colSql = colSql + ', `' + name_in_dataset + '` AS `' + name_in_rdb + '`'
             columns.append(col)
         # Create view for loaded dataset
-        sql = 'SELECT '+ colSql +' FROM {{input}};'
-        view_name = mimir.createView(init_load_name, sql)
+        sql = 'SELECT '+ colSql +' FROM '+init_load_name
+        view_name, dependencies, schema = mimir.createView(init_load_name, sql)
         # TODO: this is a hack to speed up this step a bit.
         #  we get the first row id and the count and take a range;
         #  this is fragile and should be made better
@@ -440,7 +594,7 @@ class MimirDatastore(DefaultDatastore):
         # Depending on whether we need to update row ids we either query the
         # database or just get the schema. In either case mimir_schema will
         # contain a the returned Mimir schema information.
-        sql = base.get_select_query(table_name, columns=columns) + ';'
+        sql = base.get_select_query(table_name, columns=columns) 
         mimir_schema = mimir.getSchema(sql)
         
         # Create a mapping of column name (in database) to column type. This
@@ -520,6 +674,6 @@ def create_missing_key_view(dataset, lens_name, key_column):
     col_list = [stmt]
     for column in dataset.columns:
         col_list.append(column.name_in_rdb)
-    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name + ';'
-    view_name = mimir.createView(dataset.table_name, sql)
+    sql = 'SELECT ' + ','.join(col_list) + ' FROM ' + lens_name 
+    view_name, dependencies, schema = mimir.createView(dataset.table_name, sql)
     return view_name, dataset.row_counter + len(case_conditions)

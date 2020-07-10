@@ -17,6 +17,8 @@ if [ $# -eq 1 ]
       then
         echo "mimir dev mode!"
         MIMIR_DEV="true"
+        APP_RESOURCES_DIR=$CWD/
+        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
     fi
     if [ "$1" == "devui" ]
       then
@@ -30,6 +32,8 @@ if [ $# -eq 2  ]
       then
         echo "mimir dev mode!"
         MIMIR_DEV="true"
+        APP_RESOURCES_DIR=$CWD/
+        STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}../web-ui/build/
     fi
     if [ "$2" == "devui" ]
       then
@@ -37,6 +41,8 @@ if [ $# -eq 2  ]
         UI_DEV="true"
     fi 
 fi
+
+echo $APP_RESOURCES_DIR
 
 #General
 # Web service name
@@ -155,7 +161,7 @@ trap "kill 0" EXIT
 
 if [ "$MIMIR_DEV" == "true" ]
   then
-    cd ../mimir; sbt "runMimirVizier --dataDirectory $USER_DATA_DIR" &
+    cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
     cd ../web-api-async
   else
     ${APP_RESOURCES_DIR}mimir/mimir-api --dataDirectory $USER_DATA_DIR &
@@ -165,10 +171,25 @@ if [ "$UI_DEV" == "true" ]
     cd ../web-ui; yarn start &
     cd ../web-api-async
 fi
-python -m flask run --with-threads &
+
+echo "Checking for necessary database upgrades"
+UPGRADE_SCRIPT=tools/upgrade.py
+if [ -f "$UPGRADE_SCRIPT" ]; then
+    python3 $UPGRADE_SCRIPT
+else 
+    UPGRADE_SCRIPT=upgrade.py
+    if [ -f "$UPGRADE_SCRIPT" ]; then
+	    python3 $UPGRADE_SCRIPT
+	else 
+    	echo "$UPGRADE_SCRIPT does not exist"
+    fi
+fi
+
+
+python3 -m flask run --with-threads --host=0.0.0.0 &
 #$RUNNER_DIRgunicorn -w 1 --threads 8 --bind 0.0.0.0:$VIZIERSERVER_SERVER_LOCAL_PORT vizier.wsgi:app
 
-python - << EOF
+python3 - << EOF
 import requests
 import time
 mimir_up = False

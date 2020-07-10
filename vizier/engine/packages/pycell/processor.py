@@ -13,10 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from vizier.datastore.object.base import DataObject
 
 """Implementation of the task processor for the Python cell package."""
 
 import sys
+import requests
+import os
 
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
@@ -25,6 +28,9 @@ from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from os.path import normpath, basename
+from os import path
+from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as cmd
@@ -32,6 +38,8 @@ import vizier.engine.packages.pycell.base as cmd
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
 
+SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', "False")
+SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
 
 class PyCellTaskProcessor(TaskProcessor):
     """Implementation of the task processor for the Python cell package."""
@@ -73,14 +81,26 @@ class PyCellTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        # Get Python script from user arguments
-        source = args.get_value(cmd.PYTHON_SOURCE)
+        #get
+        objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
+        dos = [object for objects in [objects.for_id(doid) for doid in [ value for key, value in context.dataobjects.items()]] for object in objects ]
+        inj_src = ''
+        # Get Python script from user arguments.  It is the source for VizierDBClient
+        cell_src = args.get_value(cmd.PYTHON_SOURCE)
+        dataobjects = list()
+        for obj in dos:
+            inj_src = inj_src + obj.value + "\n\n"
+            dataobjects.append([obj.key,obj.identifier])
+        # Assemble the source to run in the interpreter 
+        source = inj_src + cell_src
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
         client = VizierDBClient(
             datastore=context.datastore,
-            datasets=context.datasets
+            datasets=context.datasets,
+            source=cell_src,
+            dataobjects=context.dataobjects
         )
         variables = {VARS_DBCLIENT: client}
         # Redirect standard output and standard error streams
@@ -91,44 +111,52 @@ class PyCellTaskProcessor(TaskProcessor):
         sys.stderr = OutputStream(tag='err', stream=stream)
         # Keep track of exception that is thrown by the code
         exception = None
+        resdata = None
         # Run the Python code
-
-
         try:
             python_cell_preload(variables)
-            lines = [line for line in source.split('\n') if line.lstrip()[0] != '#'] # last executable line
-            last = lines[-1]
-            if(source.split('\n')[0].lower() != '#!magicoutput' or last[0] == ' ' or last[0] == '\t' or 'print(' in  last): # if tabbed in or last line is already print don't override
-                exec(source, variables, variables)
+            if SANDBOX_PYTHON_EXECUTION == "True":
+                json_data = {'source':source, 
+                             'datasets':context.datasets, 
+                             'dataobjects':context.dataobjects, 
+                             'datastore':context.datastore.__class__.__name__, 
+                             'basepath':context.datastore.base_path}
+                res = requests.post(SANDBOX_PYTHON_URL,json=json_data)
+                resdata = res.json()
+                client = DotDict()
+                for key, value in resdata['provenance'].items():
+                    client.setattr(key,value)
+                client.setattr('descriptors',{})
+                client.setattr('datastore',context.datastore)
+                client.setattr('datasets',resdata['datasets'])
+                client.setattr('dataobjects',resdata['dataobjects'] )
+                
             else:
-                last_get_type = "print("+lines[-1]+".__class__)"
-                all_but_last = '\n'.join(lines[:-1]) # all but last line
-                exec(all_but_last, variables, variables)
-                exec(last_get_type, variables, variables)
-                if(stream[-1][1][0] == "<class 'pandas.core.frame.DataFrame'>"):
-                    exec('print('+last+'.style.highlight_null().render())', variables, variables)
-                    #del outputs[-2]
-                elif("<class 'matplotlib." in stream[-1][1][0]):
-                    exec('import io\nf= io.BytesIO()\n'+last+'\nplt.savefig(f, format="svg")\nprint(f.getvalue().decode("utf-8"))', variables, variables)
-                else:
-                    exec(last, variables, variables)
+                exec(source, variables, variables)
         except Exception as ex:
             exception = ex
         finally:
             # Make sure to reverse redirection of output streams
             sys.stdout = out
             sys.stderr = err
-
         # Set module outputs
         outputs = ModuleOutputs()
         is_success = (exception is None)
-        for tag, text in stream:
-            text = ''.join(text).strip()
-            if tag == 'out':
+        if SANDBOX_PYTHON_EXECUTION == "True":
+            for text in resdata['stdout']:
                 outputs.stdout.append(HtmlOutput(text))
-            else:
+            for text in resdata['stderr']:
                 outputs.stderr.append(TextOutput(text))
-                is_success = False
+                is_success = False        
+        else:
+            for tag, text in stream:
+                text = ''.join(text).strip()
+                if tag == 'out':
+                    outputs.stdout.append(HtmlOutput(text))
+                else:
+                    outputs.stderr.append(TextOutput(text))
+                    is_success = False
+        
         if is_success:
             # Create provenance information. Ensure that all dictionaries
             # contain elements of expected types, i.e, ensure that the user did
@@ -141,20 +169,33 @@ class PyCellTaskProcessor(TaskProcessor):
                     read[name] = context.datasets[name]
                     if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in mapping dictionary')
+                elif name in dataobjects:
+                    read[name] = dataobjects[name]
+                    if not isinstance(read[name], str):
+                        raise RuntimeError('invalid element in mapping dictionary')
                 else:
                     read[name] = None
             write = dict()
             for name in client.write:
                 if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
-                ds_id = client.datasets[name]
-                if not ds_id is None:
-                    if not isinstance(ds_id, str):
+                
+                if name in client.datasets:
+                    wr_id = client.datasets[name]
+                    if not isinstance(wr_id, str):
                         raise RuntimeError('invalid value in mapping dictionary')
-                    elif ds_id in client.descriptors:
-                        write[name] = client.descriptors[ds_id]
+                    elif wr_id in client.descriptors:
+                        write[name] = client.descriptors[wr_id]
                     else:
-                        write[name] = client.datastore.get_descriptor(ds_id)
+                        write[name] = client.datastore.get_descriptor(wr_id)
+                elif name in client.dataobjects:
+                    wr_id = client.dataobjects[name]
+                    if not isinstance(wr_id, str):
+                        raise RuntimeError('invalid value in mapping dictionary')
+                    elif wr_id in client.descriptors:
+                        write[name] = client.descriptors[wr_id]
+                    else:
+                        write[name] = client.datastore.get_objects(identifier=wr_id).objects[0]
                 else:
                     write[name] = None
             provenance = ModuleProvenance(
@@ -171,3 +212,10 @@ class PyCellTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
+        
+class DotDict(dict):
+    def __getattr__(self,val):
+        return self[val]
+    
+    def setattr(self, attr_name, val):
+        self[attr_name] = val

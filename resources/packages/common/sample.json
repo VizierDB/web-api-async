@@ -1,0 +1,273 @@
+{
+    "sampling": {
+        "command": [
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CREATE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "sample_rate"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "SAMPLE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "OF "
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "input_dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "output_dataset"
+                    }
+                ], 
+                "id": "basic_sample", 
+                "name": "Basic Sample", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "sample_rate", 
+                        "index": 1, 
+                        "name": "Sampling Rate (0.0-1.0)", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "output_dataset", 
+                        "index": 2, 
+                        "name": "Output Dataset", 
+                        "required": false
+                    }
+                    
+                ]
+            },
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CREATE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "MANUALLY"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "STRATIFIED"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "SAMPLE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "OF "
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "input_dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "output_dataset"
+                    }
+                ], 
+                "id": "manual_stratified_sample", 
+                "name": "Manually Stratified Sample", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "stratification_column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "list", 
+                        "hidden": false, 
+                        "id": "strata", 
+                        "index": 2, 
+                        "name": "Strata", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "stratum_value", 
+                        "index": 3, 
+                        "name": "Column Value", 
+                        "parent": "strata", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "sample_rate", 
+                        "index": 4, 
+                        "name": "Sampling Rate (0.0-1.0)", 
+                        "parent": "strata", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "output_dataset", 
+                        "index": 2, 
+                        "name": "Output Dataset", 
+                        "required": false
+                    }
+                    
+                ]
+            },        
+            {
+                "format" : [
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "CREATE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "STRATIFIED"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "SAMPLE"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "OF "
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "input_dataset"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "const", 
+                        "value": "AS"
+                    }, 
+                    {
+                        "lspace": true, 
+                        "rspace": true, 
+                        "type": "var", 
+                        "value": "output_dataset"
+                    }
+                ], 
+                "id": "automatic_stratified_sample", 
+                "name": "Automatically Stratified Sample", 
+                "parameter": [
+                    {
+                        "datatype": "dataset", 
+                        "hidden": false, 
+                        "id": "input_dataset", 
+                        "index": 0, 
+                        "name": "Input Dataset", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "colid", 
+                        "hidden": false, 
+                        "id": "stratification_column", 
+                        "index": 1, 
+                        "name": "Column", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "decimal", 
+                        "hidden": false, 
+                        "id": "sample_rate", 
+                        "index": 2, 
+                        "name": "Total Sampling Rate (0.0-1.0)", 
+                        "required": true
+                    }, 
+                    {
+                        "datatype": "string", 
+                        "hidden": false, 
+                        "id": "output_dataset", 
+                        "index": 3, 
+                        "name": "Output Dataset", 
+                        "required": false
+                    }
+                    
+                ]
+            }        
+        ], 
+        "id": "sampling",
+        "category": "code"
+    }
+}

@@ -78,7 +78,7 @@ class PlotProcessor(TaskProcessor):
         # Get user-provided name for the new chart and verify that it is a
         # valid name
         chart_name = args.get_value(pckg.PARA_NAME, default_value=ds_name+' Plot') 
-        if chart_name == '':
+        if chart_name == '' or chart_name == None:
             chart_name = ds_name+' Plot'
         if not is_valid_name(chart_name):
             raise ValueError('invalid chart name \'' + str(chart_name) + '\'')
@@ -114,10 +114,10 @@ class PlotProcessor(TaskProcessor):
                 dataset=ds
             )
         # Execute the query and get the result
-        rows = ChartQuery.exec_query(ds, view)
+        (rows, caveats) = ChartQuery.exec_query(ds, view)
         # Add chart view handle as module output
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows)]),
+            outputs=ModuleOutputs(stdout=[ChartOutput(view=view, rows=rows, caveats=caveats)]),
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},
                 write=dict(),

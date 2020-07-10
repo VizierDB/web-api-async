@@ -22,6 +22,14 @@ In addition to information about accessed and manipulated datasets the
 provenance object allows to carry state from previous executions for a module.
 """
 
+import os
+from vizier.datastore.object.base import DataObject, DataObjectDescriptor
+
+def debug(message):
+    if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
+        print("PROVENANCE: {}".format(message))
+
+
 
 class ModuleProvenance(object):
     """The module provenance object maintains information about the datasets
@@ -60,10 +68,14 @@ class ModuleProvenance(object):
         ----------
         read: dict(string:string), optional
             Dictionary of datasets that the module used as input. The key is the
-            dataset name and the value the dataset identifier.
+            dataset name and the value the dataset identifier.  None as the value
+            indicates that the prior version of the specified dataset is unknown
+            (i.e., will force re-execution always).
         write: dict(string:vizier.datastore.dataset.DatasetDescriptor), optional
             Dictionary of datasets that the module modified. The key is the
-            dataset name and the value the dataset identifier.
+            dataset name and the value the dataset identifier.  None as the value
+            indicates a failed attempt at writing (i.e., will force re-execution
+            always)
         delete: list(string) or set(string), optional
             List of names for datasets that have been deleted by a module
         resources: dict(string: scalar), optional
@@ -140,30 +152,47 @@ class ModuleProvenance(object):
         # Always execute if any of the provenance information for the module is
         # unknown (i.e., None)
         if self.read is None or self.write is None:
+            debug("DEPENDENT / UNKNOWN ({}, {})".format(self.read, self.write))
             return True
         # Always execute if the module unsuccessfully attempted to write a
         # dataset or if it creates or changes a dataset that is not
         # in the read dependencies but that exists in the current state
         for name in self.write:
             if self.write[name] is None:
+                debug("DEPENDENT / WRITE FAILED")
                 return True
-            elif name in datasets and not name in self.read:
+            elif name in datasets and name not in self.read:
+                debug("DEPENDENT / OVERWRITE")
                 return True
         # Check if all read dependencies are present and have not been modified
         for name in self.read:
             if not name in datasets:
+                debug("DEPENDENT / READ MISSING")
                 return True
             elif self.read[name] is None:
+                debug("DEPENDENT / READ UNKNOWN")
                 return True
             elif self.read[name] != datasets[name].identifier:
+                debug("DEPENDENT / READ DIFFERENT")
                 return True
         # If any dataset is being deleted that does not exist in the current
         # state we re-execute (because this may lead to an unwanted error state)
         if not self.delete is None:
             for name in self.delete:
                 if not name in datasets:
+                    debug("DEPENDENT / DELETED")
                     return True
         # The database state is the same as for the previous execution of the
         # module (with respect to the input dependencies). Thus, the module
         # does not need to be re-executed.
+        debug("INDEPENDENT")
         return False
+    
+    def split_context(self, context_all):
+        # datasets
+        context_ds = {key: value for (key, value) in context_all.items() 
+                      if not ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) )}
+        # dataobjects
+        context_do = {key: value for (key, value) in context_all.items() 
+                      if (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
+        return context_ds, context_do

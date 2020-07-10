@@ -28,6 +28,8 @@ import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
 from vizier.api.webservice import server
 from vizier.config.app import AppConfig
+import vizier.mimir as mimir
+from vizier.datastore.mimir.dataset import MimirDatasetColumn
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -102,6 +104,16 @@ class VizualTaskProcessor(TaskProcessor):
             )
         elif command_id == cmd.VIZUAL_LOAD:
             return self.compute_load_dataset(
+                args=arguments,
+                context=context
+            )
+        elif command_id == cmd.VIZUAL_EMPTY_DS:
+            return self.compute_empty_dataset(
+                args=arguments,
+                context=context
+            )
+        elif command_id == cmd.VIZUAL_CLONE_DS:
+            return self.compute_clone_dataset(
                 args=arguments,
                 context=context
             )
@@ -198,13 +210,13 @@ class VizualTaskProcessor(TaskProcessor):
         """
         # Get dataset name and and row index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        row_index = args.get_value(cmd.PARA_ROW)
+        row = args.get_value(cmd.PARA_ROW)
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute delete row command
         result = self.api.delete_row(
             identifier=ds.identifier,
-            row_index=row_index,
+            row_index=row,
             datastore=context.datastore
         )
         # Create result object
@@ -402,7 +414,7 @@ class VizualTaskProcessor(TaskProcessor):
             raise ValueError('invalid source descriptor')
         username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
         password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
-        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else False
+        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else True
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
         detect_headers = args.get_value(
             cmd.PARA_DETECT_HEADERS,
@@ -460,11 +472,94 @@ class VizualTaskProcessor(TaskProcessor):
         return ExecResult(
             outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
             provenance=ModuleProvenance(
-                read={ds_name: None},
+                read=dict(), # need to explicitly declare a lack of dependencies
                 write={ds_name: ds},
                 resources=result.resources
             )
         )
+
+    def compute_empty_dataset(self, args, context):
+        """Execute empty dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        outputs = ModuleOutputs()
+        ds_name = args.get_value(pckg.PARA_NAME).lower()
+        if ds_name in context.datasets:
+            raise ValueError('dataset \'' + ds_name + '\' exists')
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+        try:
+            ds = self.api.empty_dataset(
+                datastore = context.datastore,
+                filestore = context.filestore
+            )
+            provenance = ModuleProvenance(
+                write={
+                    ds_name: DatasetDescriptor(
+                        identifier=ds.identifier,
+                        columns=ds.columns,
+                        row_count=ds.row_count
+                    )
+                },
+                read=dict() # Need to explicitly declare a lack of dependencies.
+            )
+            outputs.stdout.append(TextOutput("Empty dataset '{}' created".format(ds_name)))
+        except Exception as ex:
+            provenance = ModuleProvenance()
+            outputs.error(ex)
+        return ExecResult(
+            is_success=(len(outputs.stderr) == 0),
+            outputs=outputs,
+            provenance=provenance
+        )
+
+    def compute_clone_dataset(self, args, context):
+        """Execute empty dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        input_name = args.get_value(pckg.PARA_DATASET).lower()
+        output_name = args.get_value(pckg.PARA_NAME).lower()
+        if not is_valid_name(output_name):
+            raise ValueError('invalid dataset name \'' + output_name + '\'')
+        
+        input_ds = context.get_dataset(input_name)
+        if input_ds is None:
+            raise ValueError('invalid dataset \'' + input_name + '\'')
+
+        print("{}: {}".format(input_ds.identifier, input_ds))
+
+        provenance = ModuleProvenance(
+                write={output_name: input_ds},
+                read ={input_name: input_ds.identifier}
+            )
+        outputs = ModuleOutputs()
+        outputs.stdout.append(TextOutput("Cloned `{}` as `{}`".format(input_name, output_name)))
+        return ExecResult(
+            is_success=True,
+            outputs=outputs,
+            provenance=provenance
+        )
+
         
     def compute_unload_dataset(self, args, context):
         """Execute unload dataset command.
@@ -520,7 +615,9 @@ class VizualTaskProcessor(TaskProcessor):
                 stdout=[outputhtml]
             ),
             provenance=ModuleProvenance(
-                read=dict(),
+                read= { 
+                    ds_name: context.datasets.get(ds_name.lower(), None)
+                },
                 write=dict()
             )
         )
@@ -614,7 +711,7 @@ class VizualTaskProcessor(TaskProcessor):
         # Get dataset name, column specification, and new column name.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
         column_id = args.get_value(pckg.PARA_COLUMN)
-        column_name = args.get_value(pckg.PARA_NAME)
+        column_name = args.get_value(pckg.PARA_NAME).upper()
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute rename column command.

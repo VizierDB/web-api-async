@@ -133,7 +133,7 @@ DEFAULT_SETTINGS = {
     VIZIERSERVER_APP_PATH: '/vizier-db/api/v1',
     VIZIERSERVER_ROW_LIMIT: 25,
     VIZIERSERVER_MAX_ROW_LIMIT: base.DEFAULT_MAX_ROW_LIMIT,
-    VIZIERSERVER_MAX_UPLOAD_SIZE: 16 * 1024 * 1024,
+    VIZIERSERVER_MAX_UPLOAD_SIZE: 64 * 1024 * 1024,
     VIZIERSERVER_ENGINE: base.MIMIR_ENGINE,
     VIZIERSERVER_PACKAGE_PATH: './resources/packages/common:./resources/packages/mimir',
     VIZIERSERVER_PROCESSOR_PATH: './resources/processors/common:./resources/processors/mimir',
