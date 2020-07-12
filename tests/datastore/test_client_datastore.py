@@ -37,7 +37,7 @@ store = DatastoreClient(
 ds = store.create_dataset(
     columns=[DatasetColumn(identifier=0, name='Name'), DatasetColumn(identifier=1, name='Age')],
     rows=[DatasetRow(identifier=0, values=['Alice', 32]), DatasetRow(identifier=1, values=['Bob', 23])],
-    annotations=DatasetMetadata(rows=[DatasetAnnotation(row_id=1, key='user:comment', value='Needs cleaning')])
+    properties={ "example_property" : "foo" }
 )
 
 print(ds)
@@ -48,47 +48,5 @@ dh = store.get_dataset(ds.identifier)
 for row in dh.fetch_rows():
     print([row.identifier] + row.values)
 
-annotations = dh.get_annotations()
-print_annotations(annotations)
-
-store.update_annotation(
-    identifier=dh.identifier,
-    column_id=1,
-    row_id=1,
-    key='user:comment',
-    new_value='Older'
-)
-
-store.update_annotation(
-    identifier=dh.identifier,
-    column_id=1,
-    row_id=1,
-    key='user:comment',
-    new_value='Older than before'
-)
-
-annotations = dh.get_annotations()
-print_annotations(annotations)
-
-store.update_annotation(
-    identifier=dh.identifier,
-    column_id=1,
-    row_id=1,
-    key='user:comment',
-    old_value='Older than before'
-)
-
-annotations = dh.get_annotations()
-print_annotations(annotations)
-
-store.update_annotation(
-    identifier=dh.identifier,
-    column_id=1,
-    row_id=1,
-    key='user:comment',
-    old_value='Older',
-    new_value='Older than before'
-)
-
-annotations = dh.get_annotations()
+annotations = dh.get_properties()
 print_annotations(annotations)

@@ -21,7 +21,6 @@ NAME = 'name'
 DATA = 'data'
 
 # Properties
-PROPERTIES = 'properties'
 KEY = 'key'
 VALUE = 'value'
 
@@ -41,6 +40,7 @@ ROWS = 'rows'
 ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
 ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
+CAVEATS = 'caveats'
 
 # Dataobjects
 OBJECT_TYPE="objType"

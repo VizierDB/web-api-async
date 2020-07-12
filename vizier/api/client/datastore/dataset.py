@@ -46,7 +46,7 @@ class RemoteDatasetHandle(DatasetHandle):
         self.rows = rows
         self.store = store
 
-    def get_annotations(self, column_id=None, row_id=None):
+    def get_caveats(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -61,7 +61,7 @@ class RemoteDatasetHandle(DatasetHandle):
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
-        annotations = self.store.get_annotations(self.identifier)
+        annotations = self.store.get_caveats(self.identifier)
         if column_id is None and row_id is None:
             return annotations.values
         elif row_id is None:

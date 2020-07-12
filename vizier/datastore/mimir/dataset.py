@@ -256,7 +256,7 @@ class MimirDatasetHandle(DatasetHandle):
             row_counter=doc['rowCounter']
         )
 
-    def get_annotations(self, column_id=None, row_id=None):
+    def get_caveats(self, column_id=None, row_id=None):
         """Get list of annotations for a dataset component. If both identifier
         equal -1 all annotations for a dataset are returned.
 

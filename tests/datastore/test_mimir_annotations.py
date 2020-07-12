@@ -45,7 +45,7 @@ class TestMimirDatasetAnnotations(unittest.TestCase):
         for row in rows:
             print(str(row.identifier) + '\t' + str(row.values))
         for row_id in ds.row_ids:
-            for anno in ds.get_annotations(column_id=1, row_id=row_id):
+            for anno in ds.get_caveats(column_id=1, row_id=row_id):
                 print(str(row_id) + '\t' + anno.key + '=' + str(anno.value))
 
 

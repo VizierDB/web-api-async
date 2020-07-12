@@ -21,9 +21,6 @@ workflows.
 
 from abc import abstractmethod
 
-from vizier.datastore.annotation.dataset import DatasetMetadata
-
-
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
 (format yyyy-MM-dd hh:mm:ss:zzzz).
@@ -288,7 +285,7 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, annotations=None, name=None):
+    def __init__(self, identifier, columns=None, row_count=None, properties=None, name=None):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -312,7 +309,7 @@ class DatasetHandle(DatasetDescriptor):
             row_count=row_count,
             name=name
         )
-        self.annotations = annotations if not annotations is None else DatasetMetadata()
+        self.properties = properties
 
     def fetch_rows(self, offset=0, limit=-1):
         """Get list of dataset rows. The offset and limit parameters are
@@ -341,7 +338,7 @@ class DatasetHandle(DatasetDescriptor):
         return rows
 
     @abstractmethod
-    def get_annotations(self, column_id=None, row_id=None):
+    def get_caveats(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -355,6 +352,20 @@ class DatasetHandle(DatasetDescriptor):
         Returns
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_properties(self):
+        """Get all annotations for a given dataset resource. If both identifier
+        are None all dataset annotations are returned.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        dict
         """
         raise NotImplementedError
 

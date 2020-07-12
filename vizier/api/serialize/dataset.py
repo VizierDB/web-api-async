@@ -175,11 +175,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
                 project_id=project_id,
                 dataset_id=dataset_id
             ),
-            ref.ANNOTATIONS_GET: urls.get_dataset_annotations(
-                project_id=project_id,
-                dataset_id=dataset_id
-            ),
-            ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
+            ref.ANNOTATIONS_GET: urls.get_dataset_caveats(
                 project_id=project_id,
                 dataset_id=dataset_id
             )

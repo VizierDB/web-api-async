@@ -335,9 +335,9 @@ def mimir_shape_detector(
         packages=PACKAGE(validate=validate)
     )
 
-    def mimir_comment(
-        dataset_name, comments, result_columns, materialize_input=False, validate=False
-    ):
+def mimir_comment(
+    dataset_name, comments, result_columns, materialize_input=False, validate=False
+):
     """Create instance of mimir comment lens command.
 
     Parameters

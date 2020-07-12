@@ -89,7 +89,7 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_annotations(self, project_id, dataset_id, column_id=None, row_id=None):
+    def get_caveats(self, project_id, dataset_id, column_id=None, row_id=None):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
@@ -120,7 +120,7 @@ class VizierDatastoreApi(object):
         if dataset is None:
             return None
         annos = DatasetMetadata.from_list(
-                    project.datastore.get_annotations(
+                    project.datastore.get_caveats(
                         identifier=dataset_id,
                         column_id=column_id,
                         row_id=row_id
@@ -235,56 +235,3 @@ class VizierDatastoreApi(object):
             return None, None
         return project, project.datastore.get_dataset(dataset_id)
 
-    def update_annotation(
-        self, project_id, dataset_id, column_id=None, row_id=None, key=None,
-        old_value=None, new_value=None
-    ):
-        """Update the annotations for a component of the datasets with the given
-        identifier. Returns the modified object annotations or None if the
-        dataset does not exist.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        dataset_id : string
-            Unique dataset identifier
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
-        anno_id: int
-            Unique annotation identifier
-        key: string, optional
-            Annotation key
-        value: string, optional
-            Annotation value
-
-        Returns
-        -------
-        dict
-        """
-        # Retrieve the project and dataset from the repository to ensure that
-        # it exists.
-        project = self.projects.get_project(project_id)
-        if project is None:
-            return None
-        # Update annotations using that datastore that is associated with the
-        # project. The result will be None if the dataset does not exist.
-        result = project.datastore.update_annotation(
-            identifier=dataset_id,
-            column_id=column_id,
-            row_id=row_id,
-            key=key,
-            old_value=old_value,
-            new_value=new_value
-        )
-        if result is None:
-            return None
-        # Return updated annotations.
-        return self.get_annotations(
-            project_id=project_id,
-            dataset_id=dataset_id,
-            column_id=column_id,
-            row_id=row_id
-        )

@@ -25,7 +25,6 @@ import csv
 import gzip
 import json
 
-from vizier.core.util import encode_values
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 
 """Json element names for default dataset serialization."""
@@ -303,11 +302,12 @@ class DefaultJsonDatasetReader(DatasetReader):
             fh = gzip.open(self.filename, 'wb')
         else:
             fh = open(self.filename, 'w')
+
         # Write dataset rows
         json.dump({
                 KEY_ROWS: [{
                     KEY_ROW_ID: row.identifier,
-                    KEY_ROW_VALUES: encode_values(row.values)
+                    KEY_ROW_VALUES: row.values
                 } for row in rows]
             },
             fh

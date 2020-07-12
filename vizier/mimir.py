@@ -61,18 +61,19 @@ def readResponse(resp):
         pass
     return json_object
 
-def createLens(dataset, params, type, materialize, human_readable_name = None):
+def createLens(dataset, params, type, materialize, human_readable_name = None, properties = {}):
     req_json = {
       "input": dataset,
       "params": params,
       "type": type,
       "materialize": materialize,
-      "humanReadableName": human_readable_name
+      "humanReadableName": human_readable_name,
+      "properties" : properties
     }
     resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
     return resp
 
-def createView(dataset, query):
+def createView(dataset, query, properties = {}):
     depts = None
     if isinstance(dataset, dict):
         depts = dataset
@@ -80,7 +81,8 @@ def createView(dataset, query):
         depts = {dataset:dataset}
     req_json = {
       "input": depts,
-      "query": query
+      "query": query,
+      "properties" : properties
     }
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
     return (resp['viewName'], resp['dependencies'], resp['schema'])
@@ -97,14 +99,15 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = []):
+def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = [], properties = {}):
     req_json ={
       "file": file,
       "format": format,
       "inferTypes": infer_types,
       "detectHeaders": detect_headers,
       "backendOption": backend_options,
-      "dependencies": dependencies
+      "dependencies": dependencies,
+      "properties" : properties
     }
     if human_readable_name != None:
       req_json["humanReadableName"] = human_readable_name
@@ -235,7 +238,7 @@ def tableExists(tableName):
         return False
 
 
-def createSample(inputds, mode_config, seed = None):
+def createSample(inputds, mode_config, seed = None, properties = {}):
   """
     Create a sample of dataset input according to the sampling mode
     configuration given in modejs.  See Mimir's mimir.algebra.sampling
@@ -257,12 +260,13 @@ def createSample(inputds, mode_config, seed = None):
   req_json = { 
     "source" : inputds,
     "samplingMode" : mode_config,
-    "seed" : seed
+    "seed" : seed, 
+    "properties" : properties
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
   return resp['viewName']
 
-def vizualScript(inputds, script, script_needs_compile = False):
+def vizualScript(inputds, script, script_needs_compile = False, properties = {}):
   """
     Create a view that implements a sequence of vizual commands over a fixed input table
 
@@ -294,7 +298,8 @@ def vizualScript(inputds, script, script_needs_compile = False):
     "input" : inputds,
     "script" : script,
     # "resultName": Option[String],
-    "compile": script_needs_compile
+    "compile": script_needs_compile, 
+    "properties" : properties
   }
   print(_mimir_url + "vizual/create")
   print(json.dumps(req_json))
@@ -305,7 +310,7 @@ def vizualScript(inputds, script, script_needs_compile = False):
 
 
   
-def getAvailableLansTypes():
+def getAvailableLensTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']
     
 def getAvailableAdaptiveSchemas():

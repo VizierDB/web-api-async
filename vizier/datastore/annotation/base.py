@@ -14,15 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Vizier supports annotations for dataset columns, rows, and cells. Each
-annotation is a key,value pair. Each annotation contains the identifier of the
-particular resource that it is associated with.
+"""
+    Several Vizier datastores support annotating elements of the dataset with caveats, short
+    human-readable descriptions of potential land-mines in the data.  Each caveat has a unique
+    identifier and a message, and may optionally include a grouping identifier called a family.
 """
 
-from vizier.core.util import is_scalar
 
-
-class DatasetAnnotation(object):
+class DatasetCaveat(object):
     """Dataset annotations are key,value pairs. Each annotation is associated
     with one of the following dataset resource types: column, row, cell. The
     resource is identified by the combination of column id and row id. At least
@@ -30,36 +29,31 @@ class DatasetAnnotation(object):
 
     Attributes
     ----------
-    key: string
-        Annotation key
-    value: scalar
-        Annotation value
-    column_id: int, optional
-        Unique column identifier
-    row_id: int, optional
-        Unique row identifier
+    key: list(scalar)
+        Opaque, unique identifier for this caveat.  Used to obtain more detailed information.
+    message: string
+        The message describing this caveat
+    family: scalar, optional
+        Opaque grouping key, used to associate sets of caveats together
     """
-    def __init__(self, key, value, column_id=None, row_id=None):
+    def __init__(self, key, message, family = None):
         """Initialize the annotation components. Raises ValueError if both
         identifier are None.
 
         Parameters
         ----------
-        key: string
-            Annotation key
-        value: string
-            Annotation value
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
+        key: list(scalar)
+            Opaque, unique identifier for this caveat.  Used to obtain more detailed information.
+        message: string
+            The message describing this caveat
+        family: scalar
+            Opaque grouping key, used to associate sets of caveats together
         """
         #if column_id is None and row_id is None:
         #    raise ValueError('invalid dataset resource identifier')
         self.key = key
-        self.value = value
-        self.column_id = column_id
-        self.row_id = row_id
+        self.message = message
+        self.family = family
 
     def to_dict(self):
         """Get default dictionary serialization for the annotation object.
@@ -70,13 +64,10 @@ class DatasetAnnotation(object):
         -------
         dict
         """
-        if not is_scalar(self.value):
-            raise ValueError('invalid annotation value')
         return {
             'key': self.key,
-            'value': self.value,
-            'columnId': self.column_id,
-            'rowId': self.row_id
+            'message': self.message,
+            'family': self.family
         }
 
     @staticmethod
@@ -94,7 +85,6 @@ class DatasetAnnotation(object):
         """
         return DatasetAnnotation(
             key=doc['key'],
-            value=doc['value'],
-            column_id=doc['columnId'],
-            row_id=doc['rowId']
+            message=doc['message'],
+            family=doc.get('family', None)
         )

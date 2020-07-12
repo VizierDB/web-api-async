@@ -32,7 +32,6 @@ from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
@@ -61,7 +60,7 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, annotations=None):
+    def create_dataset(self, columns, rows, properties=None):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -78,8 +77,8 @@ class FileSystemDatastore(DefaultDatastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
-            Annotations for dataset components
+        properties: dict(string, ANY), optional
+            Properties for dataset components
 
         Returns
         -------
@@ -96,12 +95,6 @@ class FileSystemDatastore(DefaultDatastore):
         # Write rows to data file
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
-        # Filter annotations for non-existing resources
-        if not annotations is None:
-            annotations = annotations.filter(
-                columns=[c.identifier for c in columns],
-                rows=[r.identifier for r in rows]
-            )
         # Create dataset an write dataset file
         dataset = FileSystemDatasetHandle(
             identifier=identifier,
@@ -109,22 +102,28 @@ class FileSystemDatastore(DefaultDatastore):
             data_file=data_file,
             row_count=len(rows),
             max_row_id=max_row_id,
-            annotations=annotations
+            properties=properties
         )
         dataset.to_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         # Write metadata file if annotations are given
-        if not annotations is None:
-            dataset.annotations.to_file(
-                self.get_metadata_filename(identifier)
-            )
+        if properties is not None:
+            dataset.write_properties_to_file(self.get_properties_filename(identifier))
         # Return handle for new dataset
         return DatasetDescriptor(
             identifier=dataset.identifier,
             columns=dataset.columns,
             row_count=dataset.row_count
         )
+
+    def get_properties(self, identifier):
+        properties_filename = self.get_properties_filename(identifier)
+        if os.path.isfile(properties_filename):
+            with open(properties_filename, 'r') as f:
+                return json.loads(f.read())
+        else:
+            return {}
 
     def delete_dataset(self, identifier):
         """Delete dataset with given identifier. Returns True if dataset existed
@@ -186,10 +185,7 @@ class FileSystemDatastore(DefaultDatastore):
                 response = urllib.request.urlopen(url)
                 filename = get_download_filename(url, response.info())
                 download_file = os.path.join(temp_dir, filename)
-                mode = 'w'
-                if filename.endswith('.gz'):
-                    mode += 'b'
-                with open(download_file, mode) as f:
+                with open(download_file, 'wb') as f:
                     f.write(response.read())
                 fh = FileHandle(
                     identifier=filename,
@@ -227,9 +223,7 @@ class FileSystemDatastore(DefaultDatastore):
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
             data_file=os.path.join(dataset_dir, DATA_FILE),
-            annotations=DatasetMetadata.from_file(
-                self.get_metadata_filename(identifier)
-            )
+            properties_filename=self.get_properties_filename(identifier)
         )
 
     def load_dataset(self, f_handle):

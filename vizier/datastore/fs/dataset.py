@@ -27,8 +27,8 @@ the dataset schema.
 """
 
 import json
+import os
 
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetColumn, DatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 
@@ -59,7 +59,7 @@ class FileSystemDatasetHandle(DatasetHandle):
     """
     def __init__(
         self, identifier, columns, max_row_id, data_file, row_count=0,
-        annotations=None
+        properties={}
     ):
         """Initialize the dataset handle.
 
@@ -75,14 +75,14 @@ class FileSystemDatasetHandle(DatasetHandle):
             in Json format.
         rows: int, optional
             Number of rows in the dataset
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        properties: dict(string, ANY), optional
             Annotations for dataset components
         """
         super(FileSystemDatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
             row_count=row_count,
-            annotations=annotations
+            properties=properties
         )
         self.data_file = data_file
         if max_row_id is None:
@@ -90,7 +90,7 @@ class FileSystemDatasetHandle(DatasetHandle):
         self._max_row_id = max_row_id
 
     @staticmethod
-    def from_file(descriptor_file, data_file, annotations=None):
+    def from_file(descriptor_file, data_file, properties_filename=None):
         """Read dataset descriptor from file and return a new instance of the
         dataset handle.
 
@@ -100,7 +100,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             Path to the file containing the dataset descriptor
         data_file: string
             Path to the file that contains the dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        properties: vizier.datastore.annotation.dataset.DatasetMetadata, optional
             Annotations for dataset components
 
         Returns
@@ -109,6 +109,10 @@ class FileSystemDatasetHandle(DatasetHandle):
         """
         with open(descriptor_file, 'r') as f:
             doc = json.loads(f.read())
+        properties = {}
+        if os.path.isfile(properties_filename):
+            with open(properties_filename, 'r') as f:
+                properties = json.loads(f.read())
         return FileSystemDatasetHandle(
             identifier=doc[KEY_IDENTIFIER],
             columns=[
@@ -121,32 +125,26 @@ class FileSystemDatasetHandle(DatasetHandle):
             data_file=data_file,
             row_count=doc[KEY_ROWCOUNT],
             max_row_id=doc[KEY_MAXROWID],
-            annotations=annotations
+            properties=properties
         )
 
-    def get_annotations(self, column_id=None, row_id=None):
+    def write_properties_to_file(self, file):
+        with open(file, 'w') as f:
+            json.dump(self.properties, f)
+
+
+    def get_properties(self):
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
         Parameters
         ----------
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
 
         Returns
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
-        if column_id is None and row_id is None:
-            return self.annotations.values
-        elif row_id is None:
-            return self.annotations.for_column(row_id)
-        elif column_id is None:
-            return self.annotations.for_row(row_id)
-        else:
-            return self.annotations.for_cell(column_id=column_id, row_id=row_id)
+        return self.properties
 
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset
