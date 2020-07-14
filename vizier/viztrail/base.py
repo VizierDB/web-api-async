@@ -23,7 +23,6 @@ optional name. Each branch is a sequence of workflow versions.
 
 from abc import abstractmethod
 
-from vizier.core.annotation.base import ObjectAnnotationSet
 from vizier.core.timestamp import get_current_time
 
 
@@ -44,7 +43,7 @@ class NamedObject(object):
     ----------
     name: string
         Human readable viztrail name
-    properties: vizier.core.annotation.base.ObjectAnnotationSet
+    properties: dict(string, any)
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(self, properties):
@@ -52,9 +51,11 @@ class NamedObject(object):
 
         Parameters
         ----------
-        properties: vizier.core.annotation.base.ObjectAnnotationSet
+        properties: dict(string, any)
             Handler for user-defined properties
         """
+        if properties is None:
+            raise Exception("NO PROPERTIES SET")
         self.properties = properties
 
     @property
@@ -66,11 +67,7 @@ class NamedObject(object):
         -------
         string
         """
-        return self.properties.find_one(
-            key=PROPERTY_NAME,
-            default_value=None,
-            raise_error_on_multi_value=False
-        )
+        return self.properties.get(PROPERTY_NAME, None)
 
     @name.setter
     def name(self, value):
@@ -81,7 +78,7 @@ class NamedObject(object):
         name: string
             Human-readable name for the viztrail
         """
-        return self.properties.replace(key=PROPERTY_NAME, value=str(value))
+        self.properties[key] = str(value)
 
 
 # ------------------------------------------------------------------------------
@@ -109,11 +106,11 @@ class ViztrailHandle(NamedObject):
         changes to the viztrail properties but only to branches and workflows.
     name: string
         Human readable viztrail name
-    properties: vizier.core.annotation.base.ObjectAnnotationSet
+    properties: dict(string, ANY)
         Set of user-defined properties that are associated with this viztrail
     """
     def __init__(
-        self, identifier, properties=None, branches=None, default_branch=None, created_at=None
+        self, identifier, properties={}, branches=None, default_branch=None, created_at=None
     ):
         """Initialize the viztrail descriptor.
 
@@ -121,7 +118,7 @@ class ViztrailHandle(NamedObject):
         ----------
         identifier : string
             Unique viztrail identifier
-        properties: vizier.core.annotation.base.ObjectAnnotationSet, optional
+        properties: dict(string, any), optional
             Handler for user-defined properties
         branches: list(vizier.viztrail.branch.BranchHandle), optional
             List of branches in the viztrail
@@ -131,7 +128,7 @@ class ViztrailHandle(NamedObject):
             Timestamp of project creation (UTC)
         """
         super(ViztrailHandle, self).__init__(
-            properties=properties if not properties is None else ObjectAnnotationSet()
+            properties=properties
         )
         self.identifier = identifier
         self.branches = dict()

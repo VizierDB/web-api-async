@@ -18,8 +18,6 @@ import json
 import re
 
 from vizier.core.util import dump_json, load_json
-from vizier.datastore.annotation.base import DatasetAnnotation
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 from vizier.datastore.mimir.reader import MimirDatasetReader
 
@@ -203,8 +201,8 @@ class MimirDatasetHandle(DatasetHandle):
     dataset.
     """
     def __init__(
-        self, identifier, columns, table_name,
-        row_counter, annotations=None, name=None
+        self, identifier, columns, properties, 
+        row_count=None, name=None
     ):
         """Initialize the descriptor.
 
@@ -219,42 +217,47 @@ class MimirDatasetHandle(DatasetHandle):
             Reference to relational database table containing the dataset.
         row_counter: int
             Counter for unique row ids
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata
-            Annotations for dataset components
+        properties: dict(string, any)
+            Properties for the newly created dataset for dataset components
         """
         super(MimirDatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_counter,
-            annotations=annotations,
             name=name
         )
-        self.table_name = table_name
-        self.row_counter = row_counter
+        self._properties = properties
+        self._row_count = row_count
 
     @staticmethod
-    def from_file(filename, annotations=None):
-        """Read dataset from file. Expects the file to be in Json format which
-        is the default serialization format used by to_file().
-
-        Parameters
-        ----------
-        filename: string
-            Name of the file to read.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
-            Annotations for dataset components
-        Returns
-        -------
-        vizier.datastore.mimir.dataset.MimirDatasetHandle
-        """
-        with open(filename, 'r') as f:
-            doc = load_json(f.read())
+    def from_mimir_result(table_name, schema, properties, row_count = None, name = None):
+        columns = [
+            MimirDatasetColumn(
+                identifier=identifier,
+                name_in_dataset=col["name"],
+                name_in_rdb=col["name"],
+                data_type=col["type"]
+            )
+            for identifier, col in enumerate(schema)
+        ]
         return MimirDatasetHandle(
-            identifier=doc['id'],
-            columns=[MimirDatasetColumn.from_dict(obj) for obj in doc['columns']],
-            table_name=doc['tableName'],
-            row_counter=doc['rowCounter']
+            identifier = table_name,
+            columns = columns,
+            properties = properties,
+            row_count = row_count,
+            name = name, 
         )
+
+    def get_row_count(self):
+        if self._row_count is None:
+            self._row_count = mimir.countRows(self.identifier)
+        return self._row_count
+
+    def get_properties(self):
+        return self._properties
+
+    def write_properties_to_file(self, file):
+        if self.properties != {}:
+            raise Exception("MIMIR SHOULD NOT BE SAVING PROPERTIES LOCALLY")
 
     def get_caveats(self, column_id=None, row_id=None):
         """Get list of annotations for a dataset component. If both identifier
@@ -278,7 +281,7 @@ class MimirDatasetHandle(DatasetHandle):
             # dataset.
             annotations = []
             sql = 'SELECT * '
-            sql += 'FROM ' + self.table_name + ' '
+            sql += 'FROM ' + self.identifier + ' '
             annoList = mimir.explainEverythingJson(sql)
             for anno in annoList:
                 annotations.append(
@@ -301,7 +304,7 @@ class MimirDatasetHandle(DatasetHandle):
             )
             column = self.column_by_id(column_id)
             sql = 'SELECT * '
-            sql += 'FROM ' + self.table_name + ' '
+            sql += 'FROM ' + self.identifier + ' '
             buffer = mimir.explainCell(sql, column.name_in_rdb, str(row_id))
             has_reasons = len(buffer) > 0
             if has_reasons:
@@ -328,7 +331,7 @@ class MimirDatasetHandle(DatasetHandle):
         """
         return self.row_counter
 
-    def reader(self, offset=0, limit=-1, rowid=None):
+    def reader(self, offset=0, limit=None, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.
@@ -345,7 +348,7 @@ class MimirDatasetHandle(DatasetHandle):
         vizier.datastore.mimir.MimirDatasetReader
         """
         return MimirDatasetReader(
-            table_name=self.table_name,
+            table_name=self.identifier,
             columns=self.columns,
             offset=offset,
             limit=limit,
@@ -363,7 +366,7 @@ class MimirDatasetHandle(DatasetHandle):
         doc = {
             'id': self.identifier,
             'columns': [col.to_dict() for col in self.columns],
-            'tableName': str(self.table_name),
+            'tableName': str(self.identifier),
             'rowCounter': self.row_counter
         }
         with open(filename, 'w') as f:
@@ -371,7 +374,7 @@ class MimirDatasetHandle(DatasetHandle):
 
     def confirm_sync_with_mimir(self):
         try:
-            sch = mimir.getSchema("SELECT * FROM `{}`".format(self.table_name))
+            sch = mimir.getSchema("SELECT * FROM `{}`".format(self.identifier))
             return True
         except mimir.MimirError:
             return False

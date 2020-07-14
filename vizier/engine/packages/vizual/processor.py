@@ -26,7 +26,6 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
-from vizier.api.webservice import server
 from vizier.config.app import AppConfig
 import vizier.mimir as mimir
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
@@ -34,14 +33,12 @@ from vizier.datastore.mimir.dataset import MimirDatasetColumn
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
 
-config = AppConfig()
-
 class VizualTaskProcessor(TaskProcessor):
     """Implmentation of the task processor for the vizual package. The processor
     uses an instance of the vizual API to allow running on different types of
     datastores (e.g., the default datastore or the Mimir datastore).
     """
-    def __init__(self, api=None, properties=None):
+    def __init__(self, api=None, properties=None, config = AppConfig()):
         """Initialize the vizual API instance. Either expects an API instance or
         a dictionary from which an instance can be loaded. The second option is
         only attempted if the given api is None.
@@ -51,6 +48,7 @@ class VizualTaskProcessor(TaskProcessor):
         api: vizier.engine.packages.vizual.api.base.VizualApi, optional
             Instance of the vizual API
         """
+        self.config = config
         if not api is None:
             self.api = api
         else:
@@ -462,6 +460,7 @@ class VizualTaskProcessor(TaskProcessor):
             columns=result.dataset.columns,
             row_count=result.dataset.row_count
         )
+        from vizier.api.webservice import server
         ds_output = server.api.datasets.get_dataset(
             project_id=context.project_id,
             dataset_id=ds.identifier,
@@ -499,16 +498,16 @@ class VizualTaskProcessor(TaskProcessor):
         if not is_valid_name(ds_name):
             raise ValueError('invalid dataset name \'' + ds_name + '\'')
         try:
-            ds = self.api.empty_dataset(
+            result = self.api.empty_dataset(
                 datastore = context.datastore,
                 filestore = context.filestore
             )
             provenance = ModuleProvenance(
                 write={
                     ds_name: DatasetDescriptor(
-                        identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
+                        identifier=result.identifier,
+                        columns=result.columns,
+                        row_count=1
                     )
                 },
                 read=dict() # Need to explicitly declare a lack of dependencies.
@@ -609,7 +608,7 @@ class VizualTaskProcessor(TaskProcessor):
         #if not file_id is None:
         #    context.filestore.delete_file(file_id)
         # Create result object
-        outputhtml = HtmlOutput(''.join(["<div><a href=\""+ config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
+        outputhtml = HtmlOutput(''.join(["<div><a href=\""+ self.config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
         return ExecResult(
             outputs=ModuleOutputs( 
                 stdout=[outputhtml]

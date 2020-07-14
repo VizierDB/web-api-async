@@ -19,8 +19,7 @@ created by the serializers back into instances of the respective Python
 classes.
 """
 
-from vizier.datastore.annotation.base import DatasetAnnotation
-from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -58,8 +57,7 @@ def DATASET_DESCRIPTOR(obj):
     """
     return DatasetDescriptor(
         identifier=obj[labels.ID],
-        columns=DATASET_COLUMNS(obj[labels.COLUMNS]),
-        row_count=obj[labels.ROWCOUNT]
+        columns=DATASET_COLUMNS(obj[labels.COLUMNS])
     )
 
 

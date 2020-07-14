@@ -39,7 +39,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -99,7 +99,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -151,7 +151,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -205,7 +205,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -256,7 +256,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()

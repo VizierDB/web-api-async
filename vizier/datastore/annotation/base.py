@@ -55,6 +55,13 @@ class DatasetCaveat(object):
         self.message = message
         self.family = family
 
+    def __repr__(self):
+        return "{}({}) = '{}'".format(
+                self.family if self.family is None else "GENERIC_CAVEAT",
+                ", ".join(key),
+                message
+            )
+
     def to_dict(self):
         """Get default dictionary serialization for the annotation object.
 

@@ -24,11 +24,9 @@ from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn
 from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.store import create_missing_key_view
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.api.webservice import server
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.engine.packages.base as pckg
@@ -310,28 +308,16 @@ class MimirProcessor(TaskProcessor):
             arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
             human_readable_name = ds_name.upper()
         )
-        lens_name = mimir_lens_response['lensName']
+        lens_name = mimir_lens_response['name']
         lens_schema = mimir_lens_response['schema']
+        lens_properties = mimir_lens_response['properties']
 
-        columns = [
-            MimirDatasetColumn(
-                identifier = col_id,
-                name_in_dataset = col["name"],
-                data_type = col["type"]
-            )
-            for (col, col_id) in zip(lens_schema, range(0, len(lens_schema)))
-        ]
-        ds = context.datastore.register_dataset(
-            table_name=lens_name,
-            columns=columns,
-            annotations=dataset.annotations
-        )
-        if store_as_dataset is not None:
-            ds_name = store_as_dataset
+        ds = MimirDatasetHandle.from_mimir_response(lens_name, lens_schema, lens_properties)
 
         if command_id in LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES:
             print_dataset_schema(outputs, ds_name, columns)
         else:
+            from vizier.api.webservice import server
             ds_output = server.api.datasets.get_dataset(
                 project_id=context.project_id,
                 dataset_id=ds.identifier,
@@ -340,21 +326,16 @@ class MimirProcessor(TaskProcessor):
             )
             outputs.stdout.append(DatasetOutput(ds_output))
         
-        dsd = DatasetDescriptor(
-                identifier=ds.identifier,
-                columns=ds.columns,
-                row_count=ds.row_count
-            )
-        result_resources = dict()
-        result_resources[base.RESOURCE_DATASET] = ds.identifier
-                
         # Return task result
         return ExecResult(
             outputs=outputs,
             provenance=ModuleProvenance(
                 read={input_ds_name: dataset.identifier},
-                write={ds_name: dsd},
-                resources=result_resources
+                write={ds_name: DatasetDescriptor(
+                    identifier=ds.identifier,
+                    columns=ds.columns,
+                    row_count=ds.row_count
+                )}
             )
         )
 

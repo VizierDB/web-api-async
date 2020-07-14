@@ -18,7 +18,6 @@
 and folders in an object store.
 """
 
-from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
@@ -230,7 +229,7 @@ class OSBranchHandle(BranchHandle):
     @staticmethod
     def create_branch(
         identifier, base_path, modules_folder, is_default=False, provenance=None,
-        properties=None, created_at=None, modules=None, object_store=None
+        properties={}, created_at=None, modules=None, object_store=None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -321,11 +320,7 @@ class OSBranchHandle(BranchHandle):
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,
-            properties=PersistentAnnotationSet(
-                object_path=object_store.join(base_path, OBJ_PROPERTIES),
-                object_store=object_store,
-                annotations=properties
-            ),
+            properties=properties,
             workflows=workflows,
             head=head,
             object_store=object_store
@@ -475,10 +470,7 @@ class OSBranchHandle(BranchHandle):
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,
-            properties=PersistentAnnotationSet(
-                object_path=object_store.join(base_path, OBJ_PROPERTIES),
-                object_store=object_store
-            ),
+            properties={},
             workflows=workflows,
             head=head,
             object_store=object_store

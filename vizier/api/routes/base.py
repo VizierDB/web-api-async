@@ -17,6 +17,7 @@
 """The url factory is used to generate urls for all resources (routes) that are
 accessible via the web service.
 """
+import vizier.api.serialize.labels as labels
 
 
 """Element keys for initialization using a properties dictionary."""
@@ -455,7 +456,7 @@ class UrlFactory(object):
         """
         return self.get_project(project_id) + '/datasets/' + dataset_id
 
-    def get_dataset_caveats(self, project_id, dataset_id):
+    def get_dataset_caveats(self, project_id, dataset_id, column_id=None, row_id=None):
         """Url to retrieve dataset annotations.
 
         Parameters
@@ -469,7 +470,14 @@ class UrlFactory(object):
         -------
         string
         """
-        return self.get_dataset(project_id, dataset_id) + '/annotations'
+        args = [(labels.COLUMN, column_id), (labels.ROW, column_id)]
+        args = "&".join(
+            "{}={}".format(arg, value) 
+            for arg, value in args
+            if value is not None
+        )
+        args = "?"+args if args != "" else ""
+        return self.get_dataset(project_id, dataset_id) + '/annotations' + args
 
     def get_dataset_descriptor(self, project_id, dataset_id):
         """Url to retrieve dataset descriptor.

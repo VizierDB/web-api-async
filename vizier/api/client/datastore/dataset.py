@@ -20,7 +20,7 @@ from vizier.datastore.reader import InMemDatasetReader
 
 class RemoteDatasetHandle(DatasetHandle):
     """Handle for dataset that has been downloaded from a (remote) API."""
-    def __init__(self, identifier, columns, row_count, rows, store):
+    def __init__(self, identifier, columns, rows, store):
         """Initialize the dataset handle. The list of rows is a list of
         dictionaries in the default serialization format.
 
@@ -40,8 +40,7 @@ class RemoteDatasetHandle(DatasetHandle):
         """
         super(RemoteDatasetHandle, self).__init__(
             identifier=identifier,
-            columns=columns,
-            row_count=row_count
+            columns=columns
         )
         self.rows = rows
         self.store = store
@@ -61,18 +60,10 @@ class RemoteDatasetHandle(DatasetHandle):
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
-        annotations = self.store.get_caveats(self.identifier)
-        if column_id is None and row_id is None:
-            return annotations.values
-        elif row_id is None:
-            return annotations.for_column(row_id)
-        elif column_id is None:
-            return annotations.for_row(row_id)
-        else:
-            return annotations.for_cell(column_id=column_id, row_id=row_id)
+        return self.store.get_caveats(self.identifier, column_id, row_id)
 
 
-    def reader(self, offset=0, limit=-1):
+    def reader(self, offset=0, limit=None):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.
@@ -88,9 +79,9 @@ class RemoteDatasetHandle(DatasetHandle):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        if offset == 0 and limit == -1:
+        if offset == 0 and limit == None:
             return InMemDatasetReader(self.rows)
-        elif limit > 0:
+        elif limit is not None:
             return InMemDatasetReader(self.rows[offset:offset+limit])
         else:
             return InMemDatasetReader(self.rows[offset:])

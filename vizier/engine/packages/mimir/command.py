@@ -21,36 +21,6 @@ import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as mimir
 
 
-def mimir_domain(dataset_name, column, materialize_input=False, validate=False):
-    """Create instance of missing value lens command.
-
-    Parameters
-    ----------
-    dataset_name: string
-        Name of the dataset
-    column: string or int
-        Name or index for column
-    materialize_input: bool, optional
-        Flag indicating whether input should be materialized
-    validate: bool, optional
-        Validate the created command specification (if true)
-
-    Returns
-    -------
-    vizier.viztrail.module.ModuleCommand
-    """
-    return md.ModuleCommand(
-        mimir.PACKAGE_MIMIR,
-        mimir.MIMIR_DOMAIN,
-        arguments =[
-            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
-            md.ARG(id=pckg.PARA_COLUMN, value=column),
-            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
-        ],
-        packages=PACKAGE(validate=validate)
-    )
-
-
 def mimir_geocode(
     dataset_name, geocoder, house_nr=None, street=None, city=None, state=None,
     materialize_input=False, validate=False

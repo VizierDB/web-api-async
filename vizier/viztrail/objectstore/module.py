@@ -328,8 +328,7 @@ class OSModuleHandle(ModuleHandle):
                                 name=col[KEY_COLUMN_NAME],
                                 data_type=col[KEY_COLUMN_TYPE]
                             ) for col in ds[KEY_DATASET_COLUMNS]
-                        ],
-                        row_count=ds[KEY_DATASET_ROWCOUNT]
+                        ]
                     )
                 write_prov[ds[KEY_DATASET_NAME]] = descriptor
         delete_prov = None

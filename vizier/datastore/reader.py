@@ -273,7 +273,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             # offset or limit arguments were given we may select only a subset
             # of the rows in the file.
             ds_rows = json.loads(self.fh.read())[KEY_ROWS]
-            if self.offset > 0 or self.limit > 0:
+            if self.offset > 0 or self.limit is not None:
                 self.rows = list()
                 skip = self.offset
                 for row in ds_rows:
@@ -281,7 +281,7 @@ class DefaultJsonDatasetReader(DatasetReader):
                         skip -= 1
                     else:
                         self.rows.append(row)
-                        if self.limit > 0 and len(self.rows) >= self.limit:
+                        if self.limit is not None and len(self.rows) >= self.limit:
                             break
             else:
                 self.rows = ds_rows

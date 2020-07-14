@@ -20,7 +20,6 @@ a datastore from within a python script.
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
 from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.engine.packages.pycell.client.dataset import DatasetClient

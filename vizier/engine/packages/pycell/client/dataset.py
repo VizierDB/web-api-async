@@ -18,7 +18,6 @@
 """
 
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from bokeh.models.sources import ColumnDataSource
 
 class DatasetClient(object):
@@ -48,7 +47,7 @@ class DatasetClient(object):
             new dataset.
         """
         self.dataset = dataset
-        if not dataset is None:
+        if dataset is not None:
             self.identifier = dataset.identifier
             self.columns = dataset.columns
             # Delay fetching rows and dataset annotations for now
@@ -57,7 +56,7 @@ class DatasetClient(object):
         else:
             self.identifier = None
             self.columns = list()
-            self._annotations = DatasetMetadata()
+            self._annotations = list()
             self._rows = list()
 
     @property
@@ -68,10 +67,6 @@ class DatasetClient(object):
         -------
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
-        if self._annotations is None:
-            self._annotations = DatasetMetadata.from_list(
-                self.dataset.get_annotations()
-            )
         return self._annotations
 
     def column_index(self, column_id):

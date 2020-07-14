@@ -31,7 +31,6 @@ from werkzeug.utils import secure_filename
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config.app import AppConfig
-from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
@@ -666,7 +665,7 @@ def create_dataset(project_id):
     )
     columns = deserialize.DATASET_COLUMNS(obj[labels.COLUMNS])
     rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
-    properties = obj,get(labels.PROPERTIES, dict())
+    properties = obj.get(labels.PROPERTIES, dict())
     try:
         dataset = api.datasets.create_dataset(
             project_id=project_id,
@@ -687,12 +686,23 @@ def get_dataset(project_id, dataset_id):
     curation workflow.
     """
     # Get dataset rows with offset and limit parameters
+    offset = request.args.get(PAGE_OFFSET)
+    if offset is not None:
+        offset = int(offset)
+        if offset < 0:
+            raise srv.InvalidRequest("Invalid Offset {}".format(offset))
+    limit = request.args.get(PAGE_LIMIT)
+    if limit is not None:
+        limit = int(limit)
+        if limit < 0:
+            raise srv.InvalidRequest("Invalid Offset {}".format(limit))
+
     try:
         dataset = api.datasets.get_dataset(
             project_id=project_id,
             dataset_id=dataset_id,
-            offset=request.args.get(PAGE_OFFSET),
-            limit=request.args.get(PAGE_LIMIT)
+            offset=offset,
+            limit=limit
         )
         if not dataset is None:
             return jsonify(dataset)

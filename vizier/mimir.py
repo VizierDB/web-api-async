@@ -85,7 +85,7 @@ def createView(dataset, query, properties = {}):
       "properties" : properties
     }
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['viewName'], resp['dependencies'], resp['schema'])
+    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {
@@ -99,7 +99,7 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = [], properties = {}):
+def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = [], properties = {}, result_name = None):
     req_json ={
       "file": file,
       "format": format,
@@ -112,7 +112,22 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
     if human_readable_name != None:
       req_json["humanReadableName"] = human_readable_name
     resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
-    return resp['name']
+    return (resp['name'], resp['schema'])
+
+def loadDataInline(schema, rows, result_name = None, human_readable_name = None, dependencies = [], properties = {}):
+    req_json ={
+      "schema": schema,
+      "data": rows,
+      "dependencies": dependencies,
+      "properties" : properties,
+    }
+    if human_readable_name is not None:
+      req_json["humanReadableName"] = human_readable_name
+    if result_name is not None:
+      req_json["resultName"] = result_name
+    resp = readResponse(requests.post(_mimir_url + 'dataSource/inlined', json=req_json))
+    return (resp['name'], resp['schema'])
+
     
 def unloadDataSource(dataset_name, abspath, format='csv', backend_options = []):
     req_json ={
@@ -182,10 +197,14 @@ def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit
     if columns is not None:
       req_json["columns"] = columns
     if offset is not None:
+      if offset < 0:
+        raise Exception("Invalid offset {}".format(offset))
       req_json["offset"] = offset
     if offset_to_rowid is not None:
       req_json["offset_to_rowid"] = offset_to_rowid
     if limit is not None:
+      if limit < 0:
+        raise Exception("Invalid offset {}".format(limit))
       req_json["limit"] = limit
     if include_uncertainty is not None:
       req_json["includeUncertainty"] = include_uncertainty
@@ -217,6 +236,13 @@ def evalR(inputs, source):
     resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
+def getTableInfo(table):
+    req_json = {
+      "table": table
+    }
+    resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
+    return (resp['schema'], resp['properties'])
+
 def getSchema(query):
     req_json = {
       "query": query
@@ -238,7 +264,7 @@ def tableExists(tableName):
         return False
 
 
-def createSample(inputds, mode_config, seed = None, properties = {}):
+def createSample(inputds, mode_config, seed = None, result_name = None, properties = {}):
   """
     Create a sample of dataset input according to the sampling mode
     configuration given in modejs.  See Mimir's mimir.algebra.sampling
@@ -261,10 +287,11 @@ def createSample(inputds, mode_config, seed = None, properties = {}):
     "source" : inputds,
     "samplingMode" : mode_config,
     "seed" : seed, 
-    "properties" : properties
+    "properties" : properties,
+    "resultName" : result_name
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
-  return resp['viewName']
+  return (resp['name'], resp['schema'])
 
 def vizualScript(inputds, script, script_needs_compile = False, properties = {}):
   """

@@ -70,6 +70,8 @@ class ClassLoader(object):
         object
         """
         module = importlib.import_module(self.module_name)
+        # print(module.__dict__['__file__'])
+        # print(set(module.__dict__))
         if not properties is None:
             return getattr(module, self.class_name)(properties=properties, **kwargs)
         elif not self.properties is None:

@@ -30,7 +30,7 @@ LINKS = 'links'
 REL = 'rel'
 
 # Datasets
-ANNOTATIONS = 'annotations'
+PROPERTIES = 'properties'
 COLUMN = 'column'
 COLUMNS = 'columns'
 DATATYPE = 'type'

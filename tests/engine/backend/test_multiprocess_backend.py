@@ -5,12 +5,14 @@ import shutil
 import time
 import unittest
 
+
+
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
+from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.engine.project.base import ProjectHandle
@@ -77,7 +79,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend = MultiProcessBackend(
             processors={
                 PACKAGE_PYTHON: PyCellTaskProcessor(),
-                PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi()),
+                PACKAGE_VIZUAL:  MimirTaskProcessor(api=DefaultVizualApi()),
                 'error': FakeTaskProcessor()
             },
             projects=projects

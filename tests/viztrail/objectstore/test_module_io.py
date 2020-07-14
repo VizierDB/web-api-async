@@ -27,8 +27,7 @@ DATASETS = {
         columns=[
             DatasetColumn(identifier=0, name='ABC', data_type='int'),
             DatasetColumn(identifier=1, name='xyz', data_type='real')
-        ],
-        row_count=100
+        ]
     )
 }
 

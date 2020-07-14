@@ -64,9 +64,9 @@ class DatastoreClientUrlFactory(object):
         string
         """
         url = self.urls.get_dataset(self.project_id, dataset_id)
-        return url + '?' + PAGE_LIMIT + '=-1'
+        return url
 
-    def get_dataset_caveats(self, dataset_id):
+    def get_dataset_caveats(self, dataset_id, column_id=None, row_id=None):
         """Url to retrieve dataset annotations.
 
         Parameters
@@ -78,7 +78,7 @@ class DatastoreClientUrlFactory(object):
         -------
         string
         """
-        return self.urls.get_dataset_caveats(self.project_id, dataset_id)
+        return self.urls.get_dataset_caveats(self.project_id, dataset_id, column_id, row_id)
 
     def get_dataset_descriptor(self, dataset_id):
         """Url to retrieve a dataset descriptor.

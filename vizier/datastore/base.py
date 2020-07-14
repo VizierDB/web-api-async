@@ -31,7 +31,7 @@ METADATA_FILE = 'annotations.json'
 class Datastore(object):
     """Abstract API to store and retireve datasets."""
     @abstractmethod
-    def create_dataset(self, columns, rows, properties=None):
+    def create_dataset(self, columns, rows, properties={}):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -48,7 +48,7 @@ class Datastore(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        properties: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        properties: dict(string, any), optional
             Annotations for dataset components
 
         Returns
@@ -89,7 +89,7 @@ class Datastore(object):
 
         Returns
         -------
-        vizier.datastore.annotation.dataset.DatasetMetadata
+        dict(string, any)
         """
         raise NotImplementedError
     

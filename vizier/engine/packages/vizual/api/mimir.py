@@ -69,17 +69,7 @@ class MimirVizualApi(VizualApi):
             "column" : col_index
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        # Delete column from schema
-        del schema[col_index]
-        view_name = response["name"]
-        # Store updated dataset information with new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=schema,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def delete_row(self, identifier, row_index, datastore):
         """Delete a row in a given dataset.
@@ -114,15 +104,7 @@ class MimirVizualApi(VizualApi):
             "row" : int(row_index)
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-        # Store updated dataset information with new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=dataset.columns,
-            row_counter=dataset.row_counter-1,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def filter_columns(self, identifier, columns, names, datastore):
         """Dataset projection operator. Returns a copy of the dataset with the
@@ -183,16 +165,7 @@ class MimirVizualApi(VizualApi):
             "columns" : column_mapping
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=schema,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations.filter(
-                columns=columns
-            )
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def insert_column(self, identifier, position, name, datastore):
         """Insert column with given name at given position in dataset.
@@ -238,15 +211,7 @@ class MimirVizualApi(VizualApi):
             "column" : position
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-        # Store updated dataset information with new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=schema,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def insert_row(self, identifier, position, datastore):
         """Insert row at given position in a dataset.
@@ -282,16 +247,7 @@ class MimirVizualApi(VizualApi):
             "position" : position
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-
-        # Store updated dataset information with new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=dataset.columns,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def load_dataset(
         self, datastore, filestore, file_id=None, url=None, detect_headers=True,
@@ -381,13 +337,6 @@ class MimirVizualApi(VizualApi):
         else:
             raise ValueError('no source identifier given for load')
         
-        if dataset is not None:
-            # Check to see if table exists
-            if not mimir.tableExists(dataset.table_name):
-                dataset = None
-                if file_id is not None: 
-                    f_handle = filestore.get_file(file_id)
-            
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
         if dataset is None:
@@ -438,30 +387,20 @@ class MimirVizualApi(VizualApi):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
-        source = "SELECT {}".format(", ".join(
-                        default_val + " AS " + col_name
-                        for default_val, col_name in initial_columns
-                    ))
-        view_name, dependencies, schema = mimir.createView(
-            dict(),
-            source
+        ds = datastore.create_dataset(
+            columns = [
+                MimirDatasetColumn(col, "varchar")
+                for default, col in initial_columns
+            ],
+            rows = [
+                [ default for default, col in initial_columns ]
+            ],
+            human_readable_name = "Empty Table",
         )
 
-        columns = [
-            MimirDatasetColumn(
-                identifier=col_id,
-                name_in_dataset=col_defn[1]
-            )
-            for col_defn, col_id in zip(initial_columns, range(len(initial_columns)))
-        ]
-
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=columns,
-            row_counter=1
+        return VizualApiResult(
+            dataset = ds
         )
-        return ds
-
 
     def unload_dataset(
         self, dataset, datastore, filestore, unload_format='csv', options=[], resources=None
@@ -548,18 +487,7 @@ class MimirVizualApi(VizualApi):
                 "position" : position
             }
             response = mimir.vizualScript(dataset.table_name, command)
-            view_name = response["name"]
-            schema = list(dataset.columns)
-            schema.insert(position, schema.pop(source_idx))
-
-            # Store updated dataset to get new identifier
-            ds = datastore.register_dataset(
-                table_name=dataset.table_name,
-                columns=schema,
-                row_counter=dataset.row_counter,
-                annotations=dataset.annotations
-            )
-            return VizualApiResult(ds)
+            return VizualApiResult.from_mimir(response)
         else:
             return VizualApiResult(dataset)
 
@@ -601,16 +529,7 @@ class MimirVizualApi(VizualApi):
             "position" : position
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-
-        # Store updated dataset to get new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=dataset.columns,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def rename_column(self, identifier, column_id, name, datastore):
         """Rename column in a given dataset.
@@ -642,42 +561,14 @@ class MimirVizualApi(VizualApi):
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Get the specified column that is to be renamed and set the column name
         # to the new name
-        columns = list()
-        schema = list(dataset.columns)
         target_col_index = get_index_for_column(dataset, column_id)
-        for (col, col_index) in zip(schema, range(0, len(schema))):
-            if col_index == target_col_index:
-                col = MimirDatasetColumn(
-                    identifier=col_index,
-                    name_in_dataset=name,
-                )
-            else:
-                col = MimirDatasetColumn(
-                    identifier=col_index,
-                    name_in_dataset=col.name,
-                    name_in_rdb=col.name_in_rdb
-                )
-            columns.append(col)
-
         command = {
             "id" : "renameColumn",
             "column" : target_col_index,
             "name" : name
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-
-
-        # There are no changes to the underlying database. We only need to
-        # change the column information in the dataset schema.
-        # Store updated dataset to get new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=columns,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)
 
     def sort_dataset(self, identifier, columns, reversed, datastore):
         """Sort the dataset with the given identifier according to the order by
@@ -722,14 +613,8 @@ class MimirVizualApi(VizualApi):
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM '+dataset.table_name+' ORDER BY '
         sql += ','.join(order_by_clause) 
-        view_name, dependencies, schema = mimir.createView(dataset.table_name, sql)
-        
-        # Register new dataset with only a modified list of row identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=dataset.columns,
-            annotations=dataset.annotations
-        )
+        view_name, dependencies, schema, properties = mimir.createView(dataset.table_name, sql)
+        ds = MimirDatasetHandle.from_mimir_response(view_name, schema, properties)
         return VizualApiResult(ds)
 
     def update_cell(self, identifier, column_id, row_id, value, datastore):
@@ -770,13 +655,4 @@ class MimirVizualApi(VizualApi):
             "value" : str(value)
         }
         response = mimir.vizualScript(dataset.table_name, command)
-        view_name = response["name"]
-
-        # Store updated dataset information with new identifier
-        ds = datastore.register_dataset(
-            table_name=view_name,
-            columns=dataset.columns,
-            row_counter=dataset.row_counter,
-            annotations=dataset.annotations
-        )
-        return VizualApiResult(ds)
+        return VizualApiResult.from_mimir(response)

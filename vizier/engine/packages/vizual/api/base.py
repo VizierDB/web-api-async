@@ -55,6 +55,15 @@ class VizualApiResult(object):
         self.dataset = dataset
         self.resources = resources
 
+    @staticmethod
+    def from_mimir(response):
+        ds = MimirDatasetHandle.from_mimir_response(
+            response["name"], 
+            response["schema"], 
+            response["properties"]
+        )
+
+
 
 class VizualApi(object):
     """Abstract interface to Vizual engine that allows manipulation of datasets

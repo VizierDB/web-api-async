@@ -28,7 +28,6 @@ PACKAGE_MIMIR = 'mimir'
 CATEGORY_MIMIR = "data_m"
 
 #Identifier for Mimir lenses.
-MIMIR_DOMAIN          = 'domain'
 MIMIR_GEOCODE         = 'geocode'
 MIMIR_KEY_REPAIR      = 'repair_key'
 MIMIR_MISSING_KEY     = 'missing_key'
@@ -93,22 +92,6 @@ MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
     category=CATEGORY_MIMIR,
     commands=[
-        # pckg.command_declaration(
-        #     identifier=MIMIR_DOMAIN,
-        #     name='Domain Lens',
-        #     parameters=[
-        #         pckg.para_dataset(0),
-        #         pckg.para_column(1),
-        #         para_materialize_input(2)
-        #     ],
-        #     format=[
-        #         pckg.constant_format('DOMAIN'),
-        #         pckg.constant_format('FOR'),
-        #         pckg.variable_format(pckg.PARA_COLUMN),
-        #         pckg.constant_format('IN'),
-        #         pckg.variable_format(pckg.PARA_DATASET)
-        #     ]
-        # ),
         pckg.command_declaration(
             identifier=MIMIR_GEOCODE,
             name='Geocode',

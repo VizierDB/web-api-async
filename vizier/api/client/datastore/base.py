@@ -108,12 +108,11 @@ class DatastoreClient(Datastore):
         return RemoteDatasetHandle(
             identifier=ds.identifier,
             columns=ds.columns,
-            row_count=ds.row_count,
             rows=[deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]],
             store=self
         )
 
-    def get_caveats(self, identifier):
+    def get_caveats(self, identifier, column_id=None, row_id=None):
         """Get all dataset annotations.
 
         Parameters
@@ -125,15 +124,14 @@ class DatastoreClient(Datastore):
         -------
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
-        url = self.urls.get_dataset_caveats(identifier)
+        url = self.urls.get_dataset_caveats(identifier, column_id, row_id)
         r = requests.get(url)
         if r.status_code == 404:
             return None
         elif r.status_code != 200:
             r.raise_for_status()
         # The result is the workflow handle
-        obj = json.loads(r.text)
-        return deserialize.DATASET_ANNOTATIONS(obj)
+        return [deserialize.DATASET_CAVEAT(obj) for obj in json.loads(r.text)]
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the

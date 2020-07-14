@@ -26,7 +26,6 @@ from vizier.engine.packages.mimir.processor import print_dataset_schema
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.api.webservice import server
 
 import vizier.config.base as config
 import vizier.engine.packages.sql.base as cmd
@@ -92,31 +91,18 @@ class SQLTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         try:
             # Create the view from the SQL source
-            view_name, dependencies, mimirSchema = mimir.createView(
+            view_name, dependencies, mimirSchema, properties = mimir.createView(
                 mimir_table_names,
                 source
             )
+            ds = MimirDatasetHandle.from_mimir_response(view_name, mimirSchema, properties)
+
             print(mimirSchema)
-            columns = [
-                MimirDatasetColumn(
-                    identifier=col_id,
-                    name_in_dataset=col['name'],
-                    data_type=col['type']
-                )
-                for (col_id, col) in enumerate(mimirSchema)
-            ]
-            row_count = mimir.countRows(view_name)
             
-            provenance = None
             if ds_name is None or ds_name == '':
                 ds_name = "TEMPORARY_RESULT"
 
-            
-            ds = context.datastore.register_dataset(
-                table_name=view_name,
-                columns=columns,
-                row_counter=row_count
-            )
+            from vizier.api.webservice import server
             ds_output = server.api.datasets.get_dataset(
                 project_id=context.project_id,
                 dataset_id=ds.identifier,
@@ -124,6 +110,7 @@ class SQLTaskProcessor(TaskProcessor):
                 limit=10
             )
             ds_output['name'] = ds_name
+            outputs.stdout.append(DatasetOutput(ds_output))
 
             dependencies = dict(
                 (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
@@ -131,7 +118,6 @@ class SQLTaskProcessor(TaskProcessor):
             )
             # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
 
-            outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={
                     ds_name: DatasetDescriptor(

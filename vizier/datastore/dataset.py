@@ -97,7 +97,7 @@ class DatasetDescriptor(object):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, name=None):
+    def __init__(self, identifier, columns=None, name=None):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -111,7 +111,6 @@ class DatasetDescriptor(object):
         """
         self.identifier = identifier
         self.columns = columns if not columns is None else list()
-        self.row_count = row_count if not row_count is None else 0
         self.name = name
 
     def column_by_id(self, identifier):
@@ -285,7 +284,7 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, properties=None, name=None):
+    def __init__(self, identifier, columns=None, name=None):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -306,12 +305,19 @@ class DatasetHandle(DatasetDescriptor):
         super(DatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_count,
             name=name
-        )
-        self.properties = properties
+        )    
 
-    def fetch_rows(self, offset=0, limit=-1):
+    @abstractmethod
+    def get_row_count(self):
+        raise NotImplementedError
+
+    @property
+    def row_count(self):
+        return self.get_row_count()
+    
+
+    def fetch_rows(self, offset=0, limit=None):
         """Get list of dataset rows. The offset and limit parameters are
         intended for pagination.
 
@@ -327,8 +333,10 @@ class DatasetHandle(DatasetDescriptor):
         list(vizier.dataset.base.DatasetRow)
         """
         # Return empty list for special case that limit is 0
-        if limit == 0:
-            return list()
+        if offset < 0:
+            raise Exception("Invalid Offset: {}".format(offset))
+        if limit is not None and limit < 0:
+            raise Exception("Invalid Limit: {}".format(limit))
         # Collect rows in result list. Skip first rows if offset is greater than
         # zero
         rows = list()
@@ -370,7 +378,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def reader(self, offset=0, limit=-1):
+    def reader(self, offset=0, limit=None):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.
