@@ -64,3 +64,4 @@ resources/config/dev-config.yaml
 vizier_downloads/*
 
 /web-ui
+/last_test_*.txt

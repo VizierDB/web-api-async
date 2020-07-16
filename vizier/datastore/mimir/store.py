@@ -30,8 +30,6 @@ from vizier.core.util import dump_json, load_json
 from vizier.core.util import get_unique_identifier, min_max
 from vizier.core.timestamp import  get_current_time
 from vizier.filestore.base import FileHandle
-# from vizier.datastore.object.dataobject import DataObjectMetadata
-from vizier.datastore.object.base import DataObject
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
@@ -152,137 +150,52 @@ class MimirDatastore(DefaultDatastore):
         # any existing uncertainty annotations for the cell.
         return self.get_dataset(identifier).get_caveats(column_id,row_id)
     
-    # def get_objects(self, identifier=None, obj_type=None, key=None):
-    #     """Get list of data objects for a resources of a given dataset. If only
-    #     the column id is provided annotations for the identifier column will be
-    #     returned. If only the row identifier is given all annotations for the
-    #     specified row are returned. Otherwise, all annotations for the specified
-    #     cell are returned. If both identifier are None all annotations for the
-    #     dataset are returned.
+    def get_object(self, identifier, expected_type=None):
+        """Get list of data objects for a resources of a given dataset. 
 
-    #     Parameters
-    #     ----------
-    #     identifier: string, optional
-    #         Unique object identifier
-    #     obj_type: string, optional
-    #         object type
-    #     key: string, optional
-    #         object key
+        Parameters
+        ----------
+        identifier: string
+            Unique object identifier
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
             
-    #     Returns
-    #     -------
-    #     vizier.datastore.object.dataset.DataObjectMetadata
-    #     """
-    #     if identifier is not None and obj_type is None and key is None:
-    #         data_object_file = self.get_data_object_file(identifier)
-    #         if not os.path.isfile(data_object_file):
-    #             return DataObjectMetadata()
-    #         else:
-    #             return DataObjectMetadata.from_file(
-    #             data_object_file
-    #         )
-        
-    #     dsdirs = filter(lambda x: os.path.isdir(x) and 
-    #                     os.path.exists(os.path.join(x,DATA_OBJECT_FILE)), 
-    #                     [os.path.join(self.base_path, o) for o in os.listdir(self.base_path)])
-    #     dsoids = [os.path.basename(os.path.normpath(o)) for o in dsdirs]
-    #     dsofiles = [os.path.join(os.path.join(self.base_path,dsoid), 
-    #                              DATA_OBJECT_FILE) for dsoid in dsoids]
-    #     if identifier is None and obj_type is None and key is None:
-    #         return DataObjectMetadata(objects=[ object for objects in 
-    #                                            [DataObjectMetadata.from_file( dsofile ).objects 
-    #                                             for dsofile in dsofiles] for object in objects])
-    #     elif identifier is None and obj_type is not None and key is None:
-    #         return DataObjectMetadata(objects=[ object for objects in 
-    #                                            [DataObjectMetadata.from_file( dsofile ).for_type(obj_type) 
-    #                                             for dsofile in dsofiles] for object in objects])
-    #     elif identifier is None and obj_type is None and key is not None:
-    #         return DataObjectMetadata(objects=[ object for objects in 
-    #                                            [DataObjectMetadata.from_file( dsofile ).for_key(key) 
-    #                                             for dsofile in dsofiles] for object in objects])
-    #     else:
-    #         raise ValueError("specify only one of: identifier, obj_type or key")
-    
+        Returns
+        -------
+        bytes
+        """
+        return mimir.getBlob(identifier, expected_type = obj_type).encode
        
-    # def update_object(
-    #     self, identifier, key, old_value=None, new_value=None, obj_type=None
-    # ):
-    #     """Update the annotations for a component of the datasets with the given
-    #     identifier. Returns the updated annotations or None if the dataset
-    #     does not exist.
+    def create_object(
+        self, value, obj_type="text/plain"
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
 
-    #     The distinction between old value and new value is necessary since
-    #     annotations have no unique identifier. We use the key,value pair to
-    #     identify an existing annotation for update. When creating a new
-    #     annotation th old value is None.
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
 
-    #     Parameters
-    #     ----------
-    #     identifier : string
-    #         Unique object identifier
-    #     key: string, optional
-    #         object key
-    #     old_value: string, optional
-    #         Previous value when updating an existing annotation.
-    #     new_value: string, optional
-    #         Updated value
-    #     Returns
-    #     -------
-    #     bool
-    #     """
-    #     # Raise ValueError if column id and row id are both None
-    #     if identifier is None or key is None or obj_type is None:
-    #         raise ValueError('invalid resource identifier')
-    #     # Return None if the dataset is unknown
-        
-    #     dataobj_dir = self.get_dataobject_dir(identifier)
-    #     data_object_filename = self.get_data_object_file(identifier)
-    #     data_objects = None
-    #     if not os.path.isdir(dataobj_dir):
-    #         #it's a new object so create it
-    #         os.makedirs(dataobj_dir)
-    #         data_objects = DataObjectMetadata()
-    #     else:
-    #         # Read objects from file, Evaluate update statement and write result
-    #         # back to file.
-    #         data_objects = DataObjectMetadata.from_file(data_object_filename)
-    #     # Get object annotations
-    #     elements = data_objects.objects
-    #     # Identify the type of operation: INSERT, DELETE or UPDATE
-    #     if old_value is None and not new_value is None:
-    #         elements.append(
-    #             DataObject(
-    #                 key=key,
-    #                 value=new_value,
-    #                 identifier=identifier,
-    #                 obj_type=obj_type
-    #             )
-    #         )
-    #     elif not old_value is None and new_value is None:
-    #         del_index = None
-    #         for i in range(len(elements)):
-    #             a = elements[i]
-    #             if a.identifier == identifier and a.value == old_value:
-    #                 del_index = i
-    #                 break
-    #         if del_index is None:
-    #             return False
-    #         del elements[del_index]
-    #     elif not old_value is None and not new_value is None:
-    #         obj = None
-    #         for a in elements:
-    #             if a.identifier == identifier and a.value == old_value:
-    #                 obj = a
-    #                 break
-    #         if obj is None:
-    #             return False
-    #         obj.value = new_value
-    #     else:
-    #         raise ValueError('invalid modification operation')
-    #     # Write modified annotations to file
-    #     data_objects.to_file(data_object_filename)
-    #     return True   
-    
+        Parameters
+        ----------
+        key: string, optional
+            object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        identifier
+        """
+        return mimir.createBlob(
+            identifier = "{}_{}".format(obj_type, get_unique_identifier()), 
+            blob_type = obj_type, 
+            data = value.decode
+        )
+
     def download_dataset(
         self, url, username=None, password=None, filestore=None, detect_headers=True, 
         infer_types=True, load_format='csv', options=[], human_readable_name=None

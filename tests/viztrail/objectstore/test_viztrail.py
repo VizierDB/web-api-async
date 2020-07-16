@@ -88,7 +88,6 @@ class TestOSViztrail(unittest.TestCase):
                 outputs=ModuleOutputs(),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(),
-                datasets=dict(),
                 module_folder=vt.modules_folder,
             ).identifier
             modules.append(identifier)
@@ -136,7 +135,6 @@ class TestOSViztrail(unittest.TestCase):
                 outputs=ModuleOutputs(),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(),
-                datasets=dict(),
                 module_folder=vt.modules_folder,
             )
             modules.append(m.identifier)

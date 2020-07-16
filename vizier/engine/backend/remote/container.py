@@ -59,7 +59,7 @@ class ContainerBackend(VizierBackend):
             # Send cancel request to project API
             project.cancel_task(task_id)
 
-    def execute_async(self, task, command, context, resources=None):
+    def execute_async(self, task, command, artifacts, resources=None):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
@@ -76,7 +76,7 @@ class ContainerBackend(VizierBackend):
             workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict
+        artifacts: dict
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
         resources: dict, optional
@@ -90,7 +90,7 @@ class ContainerBackend(VizierBackend):
         project.execute_task(
             task_id=task.task_id,
             command=command,
-            context=context,
+            artifacts=artifacts,
             resources=resources
         )
         # Keep track of the project that is associated with the task

@@ -94,26 +94,19 @@ class Datastore(object):
         raise NotImplementedError
     
     @abstractmethod
-    def get_objects(self, identifier=None, obj_type=None, key=None):
-        """Get list of data objects for a resources of a given dataset. If only
-        the column id is provided annotations for the identifier column will be
-        returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+    def get_object(self, identifier, expected_type=None):
+        """Get an object (artifact) from the datastore
 
         Parameters
         ----------
-        identifier: string, optional
+        identifier: string
             Unique object identifier
-        obj_type: string, optional
-            object type
-        key: string, optional
-            object key
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
             
         Returns
         -------
-        vizier.datastore.object.dataset.DataObjectMetadata
+        bytes
         """
         raise NotImplementedError
 
@@ -184,8 +177,8 @@ class Datastore(object):
         raise NotImplementedError
     
     @abstractmethod
-    def update_object(
-        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    def create_object(
+        self, value, obj_type="untyped"
     ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
@@ -198,8 +191,6 @@ class Datastore(object):
 
         Parameters
         ----------
-        identifier : string
-            Unique object identifier
         key: string, optional
             object key
         old_value: string, optional
@@ -208,7 +199,7 @@ class Datastore(object):
             Updated value
         Returns
         -------
-        bool
+        identifier
         """
         raise NotImplementedError
 
@@ -255,27 +246,46 @@ class DefaultDatastore(Datastore):
         # Test if a subfolder for the given dataset identifier exists. If not
         # return None.
         return []
-            
-    def get_objects(self, identifier=None, obj_type=None, key=None):
-        """Get list of data objects for a resources of a given dataset. If only
-        the column id is provided annotations for the identifier column will be
-        returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+
+    def create_object(
+        self, value, obj_type="text/plain"
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
 
         Parameters
         ----------
-        identifier: string, optional
-            Unique object identifier
-        obj_type: string, optional
-            object type
         key: string, optional
             object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        identifier
+        """
+        raise NotImplementedError
+
+    def get_object(self, identifier, expected_type=None):
+        """Get list of data objects for a resources of a given dataset. 
+
+        Parameters
+        ----------
+        identifier: string
+            Unique object identifier
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
             
         Returns
         -------
-        vizier.datastore.object.dataset.DataObjectMetadata
+        bytes
         """
         raise NotImplementedError
 
@@ -284,22 +294,6 @@ class DefaultDatastore(Datastore):
         """Get the base directory for a dataset with given identifier. Having a
         separate method makes it easier to change the folder structure used to
         store datasets.
-
-        Parameters
-        ----------
-        identifier: string
-            Unique dataset identifier
-
-        Returns
-        -------
-        string
-        """
-        return os.path.join(self.base_path, identifier)
-    
-    def get_dataobject_dir(self, identifier):
-        """Get the base directory for a dataobject with given identifier. Having a
-        separate method makes it easier to change the folder structure used to
-        store dataobjects.
 
         Parameters
         ----------

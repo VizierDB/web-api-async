@@ -15,7 +15,7 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.engine.packages.plot.command import create_plot
 from vizier.engine.packages.pycell.command import python_cell
-
+from vizier.engine.base import compute_context
 
 MODULE_DIR = './.temp'
 
@@ -44,56 +44,6 @@ class TestOSModuleIO(unittest.TestCase):
         """Delete directory.
         """
         shutil.rmtree(MODULE_DIR)
-
-    def test_datasets(self):
-        """Test reading and writing modules with dataset information."""
-        mod0 = OSModuleHandle.create_module(
-            command=python_cell(source='print 2+2'),
-            external_form='TEST MODULE',
-            state=MODULE_PENDING,
-            outputs=ModuleOutputs(),
-            provenance=ModuleProvenance(write=DATASETS),
-            timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
-        )
-        m = OSModuleHandle.load_module(
-            identifier=mod0.identifier,
-            module_path=mod0.module_path,
-            prev_state=dict()
-        )
-        self.assertEqual(len(m.datasets), 0)
-        mod0 = OSModuleHandle.create_module(
-            command=python_cell(source='print 2+2'),
-            external_form='TEST MODULE',
-            state=MODULE_SUCCESS,
-            outputs=ModuleOutputs(),
-            provenance=ModuleProvenance(write=DATASETS),
-            timestamp=ModuleTimestamp(),
-            module_folder=MODULE_DIR,
-            datasets=DATASETS
-        )
-        m = OSModuleHandle.load_module(
-            identifier=mod0.identifier,
-            module_path=mod0.module_path,
-            prev_state=dict()
-        )
-        self.assertEqual(len(m.datasets), 2)
-        self.assertEqual(m.datasets['DS1'].identifier, 'ID1')
-        self.assertEqual(len(m.datasets['DS1'].columns), 0)
-        self.assertEqual(m.datasets['DS1'].row_count, 0)
-        ds2 = m.datasets['DS2']
-        self.assertEqual(ds2.identifier, 'ID2')
-        self.assertEqual(len(ds2.columns), 2)
-        col0 = ds2.columns[0]
-        self.assertEqual(col0.identifier, 0)
-        self.assertEqual(col0.name, 'ABC')
-        self.assertEqual(col0.data_type, 'int')
-        col1 = ds2.columns[1]
-        self.assertEqual(col1.identifier, 1)
-        self.assertEqual(col1.name, 'xyz')
-        self.assertEqual(col1.data_type, 'real')
-        self.assertEqual(ds2.row_count, 100)
 
     def test_outputs(self):
         """Test reading and writing modules with output information."""
@@ -180,7 +130,6 @@ class TestOSModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,
@@ -338,7 +287,6 @@ class TestOSModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR,
-            datasets=DATASETS
         )
         m = OSModuleHandle.load_module(
             identifier=mod0.identifier,

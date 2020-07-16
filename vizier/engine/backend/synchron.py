@@ -67,7 +67,7 @@ class SynchronousTaskEngine(TaskExecEngine):
         cmd = command.command_id
         return pckg in self.commands and cmd in self.commands[pckg]
 
-    def execute(self, task, command, context, resources=None):
+    def execute(self, task, command, artifacts, resources=None):
         """Execute a given command. The command will be executed immediately if
         the backend supports synchronous excution, i.e., if the .can_excute()
         method returns True. The result is the execution result returned by the
@@ -83,7 +83,7 @@ class SynchronousTaskEngine(TaskExecEngine):
             workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict
+        artifacts: dict
             Dictionary of available resource in the database state. The key is
             the resource name. Values are resource identifiers.
         resources: dict, optional
@@ -108,9 +108,8 @@ class SynchronousTaskEngine(TaskExecEngine):
                             project_id=task.project_id,
                             datastore=project.datastore,
                             filestore=project.filestore,
-                            datasets=context[labels.CONTEXT_DATASETS],
-                            resources=resources,
-                            dataobjects=context[labels.CONTEXT_DATAOBJECTS]
+                            artifacts=artifacts,
+                            resources=resources
                         )
                     )
                 except Exception as ex:

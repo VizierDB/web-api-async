@@ -195,7 +195,6 @@ class OSBranchHandle(BranchHandle):
                     external_form=pm.external_form,
                     state=pm.state,
                     timestamp=pm.timestamp,
-                    datasets=pm.datasets,
                     outputs=pm.outputs,
                     provenance=pm.provenance,
                     module_folder=self.modules_folder,
@@ -561,7 +560,6 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
     list(vizier.viztrail.objectstore.module.OSModuleHandle)
     """
     modules = list()
-    database_state = dict()
     for module_id in modules_list:
         module_path=get_module_path(
             modules_folder=modules_folder,
@@ -571,10 +569,8 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
         m = OSModuleHandle.load_module(
             identifier=module_id,
             module_path=module_path,
-            prev_state=database_state,
             object_store=object_store
         )
-        database_state = m.datasets
         modules.append(m)
     return modules
 

@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 """This module contains helper methods for the webservice that are used to
 serialize workflow resources.
@@ -146,18 +145,15 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 include_self=(not read_only)
             )
         )
-        for name in m.datasets:
-            ds = m.datasets[name]
-            if not ds.identifier in datasets:
+        for artifact in m.artifacts:
+            if artifact.is_dataset:
                 datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
                     dataset=ds,
                     project=project,
                     urls=urls
                 )
-        for name in m.dataobjects:
-            ds = m.dataobjects[name]
-            if not ds.identifier in dataobjects:
-                dataobjects[ds.identifier] = serialds.DATAOBJECT_DESCRIPTOR(
+            else:
+                dataobjects[ds.identifier] = serialds.ARTIFACT_DESCRIPTOR(
                     dataobject=ds,
                     project=project,
                     urls=urls

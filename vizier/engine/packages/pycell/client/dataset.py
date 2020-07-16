@@ -51,23 +51,23 @@ class DatasetClient(object):
             self.identifier = dataset.identifier
             self.columns = dataset.columns
             # Delay fetching rows and dataset annotations for now
-            self._annotations = None
+            self._properties = None
             self._rows = None
         else:
             self.identifier = None
             self.columns = list()
-            self._annotations = list()
+            self._properties = {}
             self._rows = list()
 
     @property
-    def annotations(self):
-        """Get all dataset annotations.
+    def properties(self):
+        """Get all dataset properties
 
         Returns
         -------
-        vizier.datastore.annotation.dataset.DatasetMetadata
+        dict(string:any)
         """
-        return self._annotations
+        return self._properties or {}
 
     def column_index(self, column_id):
         """Get position of a given column in the dataset schema. The given

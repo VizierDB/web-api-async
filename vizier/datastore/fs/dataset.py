@@ -82,7 +82,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             identifier=identifier,
             columns=columns
         )
-        self.row_count=row_count
+        self._row_count=row_count
         self.properties = properties
         self.data_file = data_file
         if max_row_id is None:
@@ -133,7 +133,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             json.dump(self.properties, f)
 
     def get_row_count(self):
-        return self.row_count
+        return self._row_count
 
     def get_properties(self):
         """Get all annotations for a given dataset resource. If both identifier

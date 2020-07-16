@@ -113,8 +113,7 @@ class FileSystemDatastore(DefaultDatastore):
         # Return handle for new dataset
         return DatasetDescriptor(
             identifier=dataset.identifier,
-            columns=dataset.columns,
-            row_count=dataset.row_count
+            columns=dataset.columns
         )
 
     def get_properties(self, identifier):
@@ -283,6 +282,78 @@ class FileSystemDatastore(DefaultDatastore):
         )
         return dataset
 
+    def create_object(
+        self, value, obj_type="text/plain"
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        value: bytes
+            The value of the object
+        obj_type: string, optional
+            The type of the object
+        Returns
+        -------
+        identifier
+        """
+        data_object_filename = None
+        identifier = None
+        while data_object_filename is None:
+            identifier = "OBJ_"+get_unique_identifier()
+            data_object_filename = self.get_data_object_file(identifier)
+            if os.path.exists(data_object_filename):
+                data_object_filename = None
+
+        with open(data_object_filename, "wb") as f:
+            f.write(value)
+        with open(data_object_filename+".mime", "w") as f:
+            f.write(obj_type)
+
+        return identifier
+
+    def get_object(self, identifier, expected_type=None):
+        """Get list of data objects for a resources of a given dataset. 
+
+        Parameters
+        ----------
+        identifier: string
+            Unique object identifier
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
+            
+        Returns
+        -------
+        bytes
+        """
+        data_object_filename = self.get_data_object_file(identifier)
+        if expected_type is not None:
+            with open(data_object_filename+".mime") as f:
+                actual_type = f.read()
+                if actual_type != expected_type:
+                    raise Exception("Object {} is of type {}, but of type {}".format(identifier, actual_type, expected_type))
+        with open(data_object_filename, 'rb') as f:
+            f.read()
+
+    def get_data_object_file(self, identifier):
+        """Get the absolute path of the file that maintains the dataset metadata
+        such as the order of row id's and column information.
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
 # ------------------------------------------------------------------------------
 # Helper Methods

@@ -23,7 +23,6 @@ provenance object allows to carry state from previous executions for a module.
 """
 
 import os
-from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 def debug(message):
     if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
@@ -68,10 +67,10 @@ class ModuleProvenance(object):
         ----------
         read: dict(string:string), optional
             Dictionary of datasets that the module used as input. The key is the
-            dataset name and the value the dataset identifier.  None as the value
+            dataset name and the value is the dataset descriptor.  None as the value
             indicates that the prior version of the specified dataset is unknown
             (i.e., will force re-execution always).
-        write: dict(string:vizier.datastore.dataset.DatasetDescriptor), optional
+        write: dict(string:vizier.datastore.artifact.ArtifactDescriptor), optional
             Dictionary of datasets that the module modified. The key is the
             dataset name and the value the dataset identifier.  None as the value
             indicates a failed attempt at writing (i.e., will force re-execution
@@ -103,13 +102,13 @@ class ModuleProvenance(object):
 
         Parameters
         ----------
-        prev_state: dict(vizier.datastore.dataset.DatasetDescriptor)
+        prev_state: dict(string:vizier.datastore.dataset.DatasetDescriptor)
             Dataset descriptors in previous state keyed by the user-provided
             name
 
         Returns
         -------
-        dict(vizier.datastore.dataset.DatasetDescriptor)
+        dict(string:vizier.datastore.dataset.DatasetDescriptor)
         """
         next_state = dict(prev_state)
         # Remove deleted datasets
@@ -123,6 +122,7 @@ class ModuleProvenance(object):
                 ds = self.write[name]
                 if not ds is None:
                     next_state[name] = ds
+        # print("{} + {} - {} -> {}".format(prev_state, self.write, self.delete, next_state))
         return next_state
 
     def requires_exec(self, datasets):

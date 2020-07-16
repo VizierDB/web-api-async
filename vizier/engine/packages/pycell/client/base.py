@@ -20,8 +20,7 @@ a datastore from within a python script.
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
-from vizier.datastore.object.dataobject import DataObjectMetadata
+from vizier.datastore.artifact import ARTIFACT_TYPE_PYTHON
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
 from os.path import normpath, basename
 from os import path
@@ -56,7 +55,7 @@ class VizierDBClient(object):
         # Keep track of datasets that are read and written, deleted and renamed.
         self.read = set()
         self.write = set()
-        self.delete = None
+        self.delete = set()
 
     def export_module_decorator(self, original_func):
         def wrapper(*args, **kwargs):
@@ -84,17 +83,12 @@ class VizierDBClient(object):
         analyzer = Analyzer(exp_name)
         analyzer.visit(src_ast)
         src = analyzer.get_Source()
-        if exp_name in self.dataobjects.keys():
-            src_identifier = self.dataobjects[exp_name]
-        else:
-            src_identifier = get_unique_identifier()
         
-        self.datastore.update_object(identifier=src_identifier,
-                                     key=exp_name,
-                                     new_value=src,
-                                     obj_type=PYTHON_EXPORT_TYPE)
-        self.set_dataobject_identifier(exp_name, src_identifier)
-        self.descriptors[src_identifier] = self.datastore.get_objects(identifier=src_identifier).objects[0]
+        identifier = self.datastore.create_object(value=src,
+                                                  obj_type=ARTIFACT_TYPE_PYTHON)
+
+        self.set_dataobject_identifier(exp_name, identifier)
+        self.descriptors[src_identifier] = ArtifactDescriptor(identifier, ARTIFACT_TYPE_PYTHON)
         
     def get_dataobject_identifier(self, name):
         """Returns the unique identifier for the dataset with the given name.
@@ -188,6 +182,7 @@ class VizierDBClient(object):
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
+        self.write.add(name.lower())
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
 
     def drop_dataset(self, name):
@@ -208,7 +203,7 @@ class VizierDBClient(object):
         # a ValueError if dataset does not exist
         if self.delete is None:
             self.delete = set()
-        self.delete.add(name)
+        self.delete.add(name.lower())
         self.remove_dataset_identifier(name)
 
     def get_dataset(self, name):
@@ -256,7 +251,7 @@ class VizierDBClient(object):
         key = name.lower()
         if not key in self.datasets:
             raise ValueError('unknown dataset \'' + name + '\'')
-        return self.datasets[key]
+        return self.datasets[key].identifier
 
     def has_dataset_identifier(self, name):
         """Test whether a mapping for the dataset with the given name exists.
@@ -370,7 +365,6 @@ class VizierDBClient(object):
             self.read.add(name.lower())
             raise ValueError('unknown dataset \'' + identifier + '\'')
         column_counter = source_dataset.max_column_id() + 1
-        row_counter = source_dataset.max_row_id() + 1
         # Update column and row identifier
         columns = dataset.columns
         rows = dataset.rows
@@ -379,12 +373,6 @@ class VizierDBClient(object):
             if col.identifier < 0:
                 col.identifier = column_counter
                 column_counter += 1
-        # Ensure that all rows have positive identifier
-        #for row in rows:
-        #    if row.identifier < 0:
-        #        row.identifier = row_counter
-        #        row_counter += 1
-        # Write dataset to datastore and add new dataset to context
         
         #gather up the read dependencies so that we can pass them to mimir 
         # so that we can at least track coarse grained provenance.
@@ -396,15 +384,16 @@ class VizierDBClient(object):
                 raise RuntimeError('invalid read name')
             dept_id = self.get_dataset_identifier(dept_name)
             dept_dataset = self.datastore.get_dataset(dept_id)
-            read_dep.append(dept_dataset.table_name)
+            read_dep.append(dept_dataset.identifier)
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations,
+            properties=dataset.properties,
             dependencies=read_dep
         )
         self.set_dataset_identifier(name, ds.identifier)
         self.descriptors[ds.identifier] = ds
+        self.write.add(name.lower())
         return DatasetClient(dataset=self.datastore.get_dataset(ds.identifier))
     
 class Analyzer(ast.NodeVisitor):

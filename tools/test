@@ -1,0 +1,27 @@
+#!/bin/bash
+
+TESTS=$(find tests -name '*.py')
+LAST_TEST_FILE=last_test_results.txt
+LAST_FAILURES_FILE=last_test_failure.txt
+EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
+
+if [ "$1" = "all" -o "$1" = "fail" ] ; then 
+  if [ -f $LAST_TEST_FILE ] ; then 
+    head $LAST_TEST_FILE -n 1
+  else 
+    echo "------ no prior results ------"
+  fi
+  if [ "$1" = "fail" ] ; then
+    TESTS=$(cat $LAST_FAILURES_FILE | uniq) 
+  fi
+  python3 -m unittest $TESTS 2>&1 | tee $LAST_TEST_FILE | head -n 50
+  grep ERROR $LAST_TEST_FILE  | sed $EXTRACT_FAILING_UNIT_CLASSES | uniq > $LAST_FAILURES_FILE
+elif [ "$1" = "last" ] ; then 
+  if [ "$(head -n 1 $LAST_FAILURES_FILE)" ] ; then
+    python3 -m unittest "$(head -n 1 $LAST_FAILURES_FILE)"
+  fi
+elif [ "$*" ] ; then
+  python3 -m unittest $*
+else 
+  python3 -m unittest $TESTS
+fi

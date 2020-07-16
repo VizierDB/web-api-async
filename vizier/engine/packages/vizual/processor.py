@@ -457,8 +457,7 @@ class VizualTaskProcessor(TaskProcessor):
         #    context.filestore.delete_file(file_id)
         ds = DatasetDescriptor(
             identifier=result.dataset.identifier,
-            columns=result.dataset.columns,
-            row_count=result.dataset.row_count
+            columns=result.dataset.columns
         )
         from vizier.api.webservice import server
         ds_output = server.api.datasets.get_dataset(

@@ -470,7 +470,7 @@ class UrlFactory(object):
         -------
         string
         """
-        args = [(labels.COLUMN, column_id), (labels.ROW, column_id)]
+        args = [(labels.COLUMN, column_id), (labels.ROW, row_id)]
         args = "&".join(
             "{}={}".format(arg, value) 
             for arg, value in args

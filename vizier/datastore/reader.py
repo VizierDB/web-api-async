@@ -24,6 +24,7 @@ from abc import abstractmethod
 import csv
 import gzip
 import json
+from io import TextIOWrapper
 
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 
@@ -172,6 +173,7 @@ class DelimitedFileReader(DatasetReader):
         if not self.is_open:
             if self.compressed:
                 self.fh = gzip.open(self.filename, 'rb')
+                self.fh = TextIOWrapper(self.fh)
             else:
                 self.fh = open(self.filename, 'r')
             self.reader = csv.reader(

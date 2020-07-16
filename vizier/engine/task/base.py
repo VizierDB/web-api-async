@@ -43,7 +43,7 @@ class TaskContext(object):
     filestore: vizier.filestore.Filestore
         Filestore for the project that executes the task
     """
-    def __init__(self, project_id, datastore, filestore, datasets=None, resources=None, dataobjects=None):
+    def __init__(self, project_id, datastore, filestore, artifacts, resources=None):
         """Initialize the components of the task context.
 
         Parameters
@@ -64,9 +64,9 @@ class TaskContext(object):
         self.project_id = project_id
         self.datastore = datastore
         self.filestore = filestore
-        self.datasets = datasets if not datasets is None else dict()
+        self.datasets = { name: artifacts[name] for name in artifacts if artifacts[name].is_dataset }
         self.resources = resources
-        self.dataobjects = dataobjects if not dataobjects is None else dict()
+        self.dataobjects = { name: artifacts[name] for name in artifacts if not artifacts[name].is_dataset }
 
     def get_dataset(self, name):
         """Get the handle for the dataset with the given name. Raises ValueError
@@ -101,7 +101,7 @@ class TaskContext(object):
         vizier.datastore.dataset.DatasetHandle
         """
         if name in self.dataobjects:
-            dataobj = next(iter(self.datastore.get_objects(self.dataobjects[name])), None)
+            dataobj = self.datastore.get_object(self.dataobjects[name])
             if not dataobj is None:
                 return dataobj
         raise ValueError('unknown data object \'' + str(name) + '\'')

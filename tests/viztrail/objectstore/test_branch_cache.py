@@ -51,7 +51,6 @@ class TestOSBranchCache(unittest.TestCase):
             timestamp=ModuleTimestamp(
                 created_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -73,7 +72,6 @@ class TestOSBranchCache(unittest.TestCase):
                     started_at=get_current_time(),
                     finished_at=get_current_time()
                 ),
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput('4')]),
                 provenance=ModuleProvenance(),
                 module_folder=vt.modules_folder,
@@ -95,7 +93,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -123,7 +120,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -160,7 +156,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -182,7 +177,6 @@ class TestOSBranchCache(unittest.TestCase):
                     started_at=get_current_time(),
                     finished_at=get_current_time()
                 ),
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput('4')]),
                 provenance=ModuleProvenance(),
                 module_folder=vt.modules_folder,
@@ -204,7 +198,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,

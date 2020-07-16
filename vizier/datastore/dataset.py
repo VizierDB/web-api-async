@@ -20,6 +20,7 @@ workflows.
 """
 
 from abc import abstractmethod
+from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -84,7 +85,7 @@ class DatasetColumn(object):
         return name
 
 
-class DatasetDescriptor(object):
+class DatasetDescriptor(ArtifactDescriptor):
     """The descriptor maintains the dataset schema and basic information
     including the dataset identifier and row count.
 
@@ -109,6 +110,10 @@ class DatasetDescriptor(object):
         row_count: int, optional
             Number of rows in the dataset
         """
+        super(DatasetDescriptor, self).__init__(
+            identifier=identifier,
+            artifact_type=ARTIFACT_TYPE_DATASET,
+        )    
         self.identifier = identifier
         self.columns = columns if not columns is None else list()
         self.name = name
