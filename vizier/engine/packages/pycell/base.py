@@ -17,7 +17,7 @@
 """Specification of parameters for Python cells."""
 
 import vizier.engine.packages.base as pckg
-
+from vizier.viztrail.module.output import OUTPUT_TEXT 
 
 """Global constants."""
 
@@ -29,6 +29,9 @@ PYTHON_CODE = 'code'
 
 # Python source code parameter
 PYTHON_SOURCE = 'source'
+
+# Format
+OUTPUT_FORMAT = 'format'
 
 
 """Define the python cell command structure."""
@@ -45,6 +48,15 @@ PYTHON_COMMANDS = pckg.package_declaration(
                     data_type=pckg.DT_CODE,
                     language='python',
                     index=0
+                ),
+                pckg.parameter_declaration(
+                    identifier=OUTPUT_FORMAT,
+                    name='Output Format',
+                    data_type=pckg.DT_STRING,
+                    index=1,
+                    default_value=OUTPUT_TEXT,
+                    hidden=True,
+                    required=False
                 )
             ],
             format=[
