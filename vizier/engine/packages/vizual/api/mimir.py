@@ -68,7 +68,7 @@ class MimirVizualApi(VizualApi):
             "id" : "deleteColumn",
             "column" : col_index
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def delete_row(self, identifier, row_index, datastore):
@@ -103,7 +103,7 @@ class MimirVizualApi(VizualApi):
             "id" : "deleteRow",
             "row" : int(row_index)
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def filter_columns(self, identifier, columns, names, datastore):
@@ -164,7 +164,7 @@ class MimirVizualApi(VizualApi):
             "id" : "projection",
             "columns" : column_mapping
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def insert_column(self, identifier, position, name, datastore):
@@ -210,7 +210,7 @@ class MimirVizualApi(VizualApi):
             "name" : name,
             "column" : position
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def insert_row(self, identifier, position, datastore):
@@ -246,7 +246,7 @@ class MimirVizualApi(VizualApi):
             "id" : "insertRow",
             "position" : position
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def load_dataset(
@@ -436,7 +436,7 @@ class MimirVizualApi(VizualApi):
         if dataset is not None:
             f_handles = datastore.unload_dataset(
                 filepath=filestore.get_file_dir(get_unique_identifier() ) ,
-                dataset_name=dataset.table_name,
+                dataset_name=dataset.identifier,
                 format=unload_format,
                 options=options
             )
@@ -486,7 +486,7 @@ class MimirVizualApi(VizualApi):
                 "column" : source_idx,
                 "position" : position
             }
-            response = mimir.vizualScript(dataset.table_name, command)
+            response = mimir.vizualScript(dataset.identifier, command)
             return VizualApiResult.from_mimir(response)
         else:
             return VizualApiResult(dataset)
@@ -528,7 +528,7 @@ class MimirVizualApi(VizualApi):
             "row" : row_id,
             "position" : position
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def rename_column(self, identifier, column_id, name, datastore):
@@ -567,7 +567,7 @@ class MimirVizualApi(VizualApi):
             "column" : target_col_index,
             "name" : name
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
     def sort_dataset(self, identifier, columns, reversed, datastore):
@@ -611,9 +611,9 @@ class MimirVizualApi(VizualApi):
             if reversed[i]:
                 stmt += ' DESC'
             order_by_clause.append(stmt)
-        sql = 'SELECT * FROM '+dataset.table_name+' ORDER BY '
+        sql = 'SELECT * FROM '+dataset.identifier+' ORDER BY '
         sql += ','.join(order_by_clause) 
-        view_name, dependencies, schema, properties = mimir.createView(dataset.table_name, sql)
+        view_name, dependencies, schema, properties = mimir.createView(dataset.identifier, sql)
         ds = MimirDatasetHandle.from_mimir_response(view_name, schema, properties)
         return VizualApiResult(ds)
 
@@ -654,5 +654,5 @@ class MimirVizualApi(VizualApi):
             "row" : int(row_id),
             "value" : str(value)
         }
-        response = mimir.vizualScript(dataset.table_name, command)
+        response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)

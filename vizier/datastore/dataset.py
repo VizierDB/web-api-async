@@ -29,6 +29,8 @@ distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
 DATATYPE_DATE = 'date'
 DATATYPE_DATETIME = 'datetime'
 DATATYPE_INT = 'int'
+DATATYPE_SHORT = 'short'
+DATATYPE_LONG = 'long'
 DATATYPE_REAL = 'real'
 DATATYPE_VARCHAR = 'varchar'
 
@@ -36,6 +38,8 @@ COLUMN_DATATYPES = [
     DATATYPE_DATE,
     DATATYPE_DATETIME,
     DATATYPE_INT,
+    DATATYPE_SHORT,
+    DATATYPE_LONG,
     DATATYPE_REAL,
     DATATYPE_VARCHAR
 ]

@@ -148,7 +148,7 @@ class DatasetClient(object):
                 return col
         return None
 
-    def insert_column(self, name, position=None):
+    def insert_column(self, name, data_type = None, position=None):
         """Add a new column to the dataset schema.
 
         Parameters
@@ -162,7 +162,7 @@ class DatasetClient(object):
         Returns
         DatasetColumn
         """
-        column = DatasetColumn(name=name)
+        column = DatasetColumn(name=name, data_type = data_type)
         self.columns = list(self.columns)
         if not position is None:
             self.columns.insert(position, column)

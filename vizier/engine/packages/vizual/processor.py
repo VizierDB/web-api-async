@@ -466,9 +466,16 @@ class VizualTaskProcessor(TaskProcessor):
             offset=0,
             limit=10
         )
-        ds_output['name'] = ds_name 
+
+        outputs = ModuleOutputs()
+        if ds_output is not None:
+            ds_output['name'] = ds_name 
+            outputs.stdout.append(DatasetOutput(ds_output))
+        else:
+            outputs.stderr.append(TextOutput("Error displaying dataset"))
+
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            outputs=outputs,
             provenance=ModuleProvenance(
                 read=dict(), # need to explicitly declare a lack of dependencies
                 write={ds_name: ds},
@@ -505,8 +512,7 @@ class VizualTaskProcessor(TaskProcessor):
                 write={
                     ds_name: DatasetDescriptor(
                         identifier=result.identifier,
-                        columns=result.columns,
-                        row_count=1
+                        columns=result.columns
                     )
                 },
                 read=dict() # Need to explicitly declare a lack of dependencies.
@@ -764,8 +770,7 @@ class VizualTaskProcessor(TaskProcessor):
                 write={
                     new_name: DatasetDescriptor(
                         identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
+                        columns=ds.columns
                     )
                 },
                 delete=[ds_name]
@@ -813,12 +818,9 @@ class VizualTaskProcessor(TaskProcessor):
             dataset_name=ds_name,
             input_dataset=ds,
             output_dataset=result.dataset,
-            stdout=[str(result.dataset.row_count) + ' row(s) sorted'],
+            stdout=['dataset sorted'],
             database_state=context.datasets
         )
-
-        vizierdb.set_dataset_identifier(ds_name, ds_id)
-        outputs.stdout(content=PLAIN_TEXT(str(count) + ' row(s) sorted'))
 
     def compute_update_cell(self, args, context):
         """Execute update cell command.
@@ -857,7 +859,7 @@ class VizualTaskProcessor(TaskProcessor):
             dataset_name=ds_name,
             input_dataset=ds,
             output_dataset=result.dataset,
-            stdout=['1 row updated'],
+            stdout=['row(s) updated'],
             database_state=context.datasets
         )
 
@@ -894,8 +896,7 @@ class VizualTaskProcessor(TaskProcessor):
         if not output_dataset is None:
             ds = DatasetDescriptor(
                 identifier=output_dataset.identifier,
-                columns=output_dataset.columns,
-                row_count=output_dataset.row_count
+                columns=output_dataset.columns
             )
         else:
             ds = None

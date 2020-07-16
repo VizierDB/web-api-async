@@ -24,7 +24,6 @@ from vizier.datastore.artifact import ARTIFACT_TYPE_PYTHON
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
 from vizier.viztrail.module.output import OutputObject, DatasetOutput, ChartOutput, HtmlOutput, MarkdownOutput, TextOutput
 from vizier.viztrail.module.output import OUTPUT_TEXT, OUTPUT_HTML
-from vizier.api.webservice import server
 from os.path import normpath, basename
 from os import path
 import os
@@ -178,7 +177,7 @@ class VizierDBClient(object):
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations,
+            properties=dataset.properties,
             human_readable_name=name.upper(),
             backend_options=backend_options
         )
@@ -420,6 +419,7 @@ class VizierDBClient(object):
             elif type(value) is str:
                 value = TextOutput(value = value)
             elif type(value) is DatasetClient:
+                from vizier.api.webservice import server
                 ds_handle = server.api.datasets.get_dataset(
                                 project_id=self.project_id,
                                 dataset_id=value.dataset.identifier,

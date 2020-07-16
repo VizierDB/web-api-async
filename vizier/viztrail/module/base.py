@@ -203,6 +203,29 @@ class ModuleHandle(ModuleState):
             return {}
         return list(v for k, v in self.provenance.writes)
     
+    @property
+    def state_string(self):
+        if self.state ==   MODULE_PENDING:
+            return "PENDING"
+        elif self.state == MODULE_RUNNING:
+            return "RUNNING"
+        elif self.state == MODULE_CANCELED:
+            return "CANCELED"
+        elif self.state == MODULE_ERROR:
+            return "ERROR"
+        elif self.state == MODULE_SUCCESS:
+            return "SUCCESS"
+        else:
+            return "UNKNOWN ({})".format(self.state)
+    
+    def __repr__(self):
+        return "{}.{} @ {} is {}".format(
+            self.command.package_id,
+            self.command.command_id,
+            self.identifier,
+            self.state_string
+        )+("\n"+str(self.outputs) if self.outputs is not None else "")
+
 
     @abstractmethod
     def set_canceled(self, finished_at=None, outputs=None):

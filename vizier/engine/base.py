@@ -524,7 +524,7 @@ class VizierEngine(WorkflowController):
                 state=state,
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=datasets
+                    datasets=[ context[name] for name in context if context[name].is_dataset ]
                 )
             )
             # Create list of pending modules for the new workflow.
@@ -598,7 +598,7 @@ class VizierEngine(WorkflowController):
             if module_index is None:
                 return None
 
-            context = compute_context(modules[0, module_index])
+            context = compute_context(modules[0:module_index])
 
             replaced_module = ModuleHandle(
                 command=command,

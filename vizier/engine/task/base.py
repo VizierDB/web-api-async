@@ -82,7 +82,7 @@ class TaskContext(object):
         vizier.datastore.dataset.DatasetHandle
         """
         if name in self.datasets:
-            dataset = self.datastore.get_dataset(self.datasets[name])
+            dataset = self.datastore.get_dataset(self.datasets[name].identifier)
             if not dataset is None:
                 return dataset
         raise ValueError('unknown dataset \'' + str(name) + '\'')
@@ -101,7 +101,7 @@ class TaskContext(object):
         vizier.datastore.dataset.DatasetHandle
         """
         if name in self.dataobjects:
-            dataobj = self.datastore.get_object(self.dataobjects[name])
+            dataobj = self.datastore.get_object(self.dataobjects[name].identifier)
             if not dataobj is None:
                 return dataobj
         raise ValueError('unknown data object \'' + str(name) + '\'')

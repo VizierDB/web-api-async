@@ -113,10 +113,10 @@ class SynchronousTaskEngine(TaskExecEngine):
                         )
                     )
                 except Exception as ex:
-                    template = "{0}:{1!r}"
-                    message = template.format(type(ex).__name__, ex.args)
+                    outputs = ModuleOutputs()
+                    outputs.error(ex)
                     return ExecResult(
                         is_success=False,
-                        outputs=ModuleOutputs(stderr=[TextOutput(message)])
+                        outputs=outputs
                     )
         raise ValueError('cannot execute given command')
