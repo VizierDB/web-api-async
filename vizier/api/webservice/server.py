@@ -427,18 +427,21 @@ def append_branch_head(project_id, branch_id):
     # contain the expected elements.
     cmd = srv.validate_json_request(
         request,
-        required=['packageId', 'commandId', 'arguments']
+        required=['packageId', 'commandId', 'arguments', 'suggest']
     )
     # Extend and execute workflow. This will throw a ValueError if the command
     # cannot be parsed.
     try:
+        print("munaf", project_id, branch_id, cmd)
+
         # Result is None if project or branch are not found
         module = api.workflows.append_workflow_module(
             project_id=project_id,
             branch_id=branch_id,
             package_id=cmd['packageId'],
             command_id=cmd['commandId'],
-            arguments=cmd['arguments']
+            arguments=cmd['arguments'],
+            suggest=cmd['suggest']
         )
         if not module is None:
             return jsonify(module)

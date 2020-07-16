@@ -53,7 +53,8 @@
                     }
                 ], 
                 "id": "load", 
-                "name": "Load Dataset", 
+                "name": "Load Dataset",
+                "suggest": true,
                 "parameter": [
                     {
                         "datatype": "string", 
@@ -213,7 +214,8 @@
                     }
                 ], 
                 "id": "empty", 
-                "name": "Empty Dataset", 
+                "name": "Empty Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "string", 
@@ -259,7 +261,8 @@
                     }
                 ], 
                 "id": "clone", 
-                "name": "Clone Dataset", 
+                "name": "Clone Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -307,7 +310,8 @@
                     }
                 ], 
                 "id": "unload", 
-                "name": "Unload Dataset", 
+                "name": "Unload Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
