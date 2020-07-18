@@ -427,7 +427,7 @@ def append_branch_head(project_id, branch_id):
     # contain the expected elements.
     cmd = srv.validate_json_request(
         request,
-        required=['packageId', 'commandId', 'arguments', 'suggest']
+        required=['packageId', 'commandId', 'arguments']
     )
     # Extend and execute workflow. This will throw a ValueError if the command
     # cannot be parsed.
@@ -441,7 +441,6 @@ def append_branch_head(project_id, branch_id):
             package_id=cmd['packageId'],
             command_id=cmd['commandId'],
             arguments=cmd['arguments'],
-            suggest=cmd['suggest']
         )
         if not module is None:
             return jsonify(module)
