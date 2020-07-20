@@ -432,7 +432,6 @@ def append_branch_head(project_id, branch_id):
     # Extend and execute workflow. This will throw a ValueError if the command
     # cannot be parsed.
     try:
-        print("munaf", project_id, branch_id, cmd)
 
         # Result is None if project or branch are not found
         module = api.workflows.append_workflow_module(

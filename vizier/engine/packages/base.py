@@ -45,6 +45,7 @@ LABEL_ID = 'id'
 LABEL_LANGUAGE = 'language'
 LABEL_LEFTSPACE = 'lspace'
 LABEL_NAME = 'name'
+LABEL_SUGGEST = 'suggest'
 LABEL_CATEGORY = 'category'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
@@ -61,6 +62,7 @@ PACKAGE_SCHEMA = {
     'properties': {
         LABEL_ID: {'type': 'string'},
         LABEL_NAME: {'type': 'string'},
+        LABEL_SUGGEST: {'type': 'boolean'},
         LABEL_DESCRIPTION: {'type': 'string'},
         LABEL_COMMAND: {
             'type': 'array',
@@ -250,7 +252,7 @@ def validate_package(pckg_declaration):
 # Command Declaration
 # ------------------------------------------------------------------------------
 
-def command_declaration(identifier, name=None, description=None, group_id=None, parameters=None, format=None):
+def command_declaration(identifier, name=None, suggest=False, description=None, group_id=None, parameters=None, format=None):
     """Create a dictionary containing a package command declaration.
 
     Parameters
@@ -288,6 +290,7 @@ def command_declaration(identifier, name=None, description=None, group_id=None, 
         obj[LABEL_PARAMETER] = list()
     if not format is None:
         obj[LABEL_FORMAT] = format
+    obj[LABEL_SUGGEST] = suggest
     return obj
 
 
@@ -639,7 +642,7 @@ class CommandDeclaration(object):
     """Command declaration contains an index of command parameter declarations
     and the command format declaration.
     """
-    def __init__(self, identifier, name, suggest, paramaters, format, description=None):
+    def __init__(self, identifier, name, paramaters, format, suggest=False, description=None):
         """Initialize the index from a given list of paramater declarations.
 
         Parameters

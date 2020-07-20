@@ -11,7 +11,8 @@
                     }
                 ], 
                 "id": "code", 
-                "name": "Markdown Code", 
+                "name": "Markdown Code",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "code", 

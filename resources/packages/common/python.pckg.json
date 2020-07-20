@@ -10,8 +10,9 @@
                         "value": "source"
                     }
                 ],
-                "id": "code",
+                "id": "code", 
                 "name": "Python Script",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "code",
