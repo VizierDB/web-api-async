@@ -281,5 +281,5 @@ def DATASET_ROW(row):
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,
-        labels.ROWANNOTATIONFLAGS: row.annotations
+        labels.ROWCAVEATFLAGS: row.caveats
     }

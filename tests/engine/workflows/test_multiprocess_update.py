@@ -86,6 +86,7 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
             raise Exception("Expected to see dataset {}, but only had [{}]".format(DATASET_NAME, ", ".join(datasets)))
         ds = project.datastore.get_dataset(datasets[DATASET_NAME].identifier)
         rows = ds.fetch_rows()
+        print(rows)
         self.assertEqual(rows[0].values[1], value)
 
     def create_workflow(self, project):
@@ -111,8 +112,11 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
                 command=cmd
             )
         while project.viztrail.default_branch.head.is_active:
-            # print("Waiting...")
             time.sleep(0.1)
+        for module in project.viztrail.default_branch.head.modules:
+            if not module.is_success:
+                print(module.outputs)
+            self.assertTrue(module.is_success)
         return branch_id
 
     def test_delete(self):
@@ -121,13 +125,6 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         branch_id = self.create_workflow(project)
         wf = project.viztrail.default_branch.head
         # Keep track of datasets in the completed workflow
-        for m in wf.modules:
-            print(m)
-            print(m.provenance.write)
-            for o in m.outputs.stdout:
-                print("out: {}".format(o.value))
-            for o in m.outputs.stderr:
-                print("err: {}".format(o.value))
         datasets = compute_context(wf.modules)
         datasets = [ datasets[name] for name in datasets if datasets[name].is_dataset]
         # Insert in the middle

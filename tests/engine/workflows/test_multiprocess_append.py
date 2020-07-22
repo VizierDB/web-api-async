@@ -26,7 +26,7 @@ DATASET_NAME = 'people'
 
 PY_ADD_ONE_ERROR = """ds = vizierdb.get_dataset('""" + DATASET_NAME + """')
 age = int(ds.rows[0].get_value('Age'))
-ds.rows[0].set_value('Age', age + 1)
+ds.rows[0].set_value('Age', age + 'foo')
 vizierdb.update_dataset('""" + DATASET_NAME + """', ds)
 """
 

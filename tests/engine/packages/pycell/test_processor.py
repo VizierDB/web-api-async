@@ -18,7 +18,7 @@ from vizier.filestore.fs.base import FileSystemFilestore
 SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/engine/packages/pycell/.files/dataset.csv'
 
 DATASET_NAME = 'people'
 
@@ -28,27 +28,27 @@ ds.insert_column('Name')
 ds.insert_column('Age')
 ds.insert_row(['Alice', 23])
 ds.insert_row(['Bob', 34])
-ds = vizierdb.create_dataset('people', ds)
+ds.save('people')
 for row in ds.rows:
-    print row.get_value('Name')
+    print(row.get_value('Name'))
 """
 
 PRINT_DATASET_PY = """
 for row in vizierdb.get_dataset('people').rows:
-    print row.get_value('Name')
+    print(row.get_value('Name'))
 """
 
 PRINT_UNKNOWN_DATASET_PY = """
 for row in vizierdb.get_dataset('employees').rows:
-    print row.get_value('Name')
+    print(row.get_value('Name'))
 """
 
 PRINT_UNKNOWN_DATASET_PY_WITH_TRY_CATCH = """
 try:
     for row in vizierdb.get_dataset('employees').rows:
-        print row.get_value('Name')
+        print(row.get_value('Name'))
 except ValueError as ex:
-    print str(ex)
+    print(str(ex))
 """
 
 class TestDefaultPyCellProcessor(unittest.TestCase):
@@ -79,7 +79,9 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             arguments=cmd.arguments,
             context=TaskContext(
                 datastore=self.datastore,
-                filestore=self.filestore
+                filestore=self.filestore,
+                project_id=6,
+                artifacts={}
             )
         )
         self.assertTrue(result.is_success)
@@ -105,9 +107,10 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=6,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={'people': ds.identifier}
+                artifacts={'people': ds}
             )
         )
         self.assertTrue(result.is_success)
@@ -124,7 +127,7 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
     def test_simple_script(self):
         """Test running the simple python script."""
         cmd = python_cell(
-            source='print 2+2',
+            source='print(2+2)',
             validate=True
         )
         result = PyCellTaskProcessor().compute(
@@ -133,7 +136,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets=dict()
+                project_id=6,
+                artifacts={}
             )
         )
         self.assertTrue(result.is_success)
@@ -153,7 +157,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={'people': ds.identifier}
+                project_id=6,
+                artifacts={'people': ds}
             )
         )
         self.assertFalse(result.is_success)
@@ -174,7 +179,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             context=TaskContext(
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={'people': ds.identifier}
+                project_id=6,
+                artifacts={'people': ds}
             )
         )
         self.assertTrue(result.is_success)

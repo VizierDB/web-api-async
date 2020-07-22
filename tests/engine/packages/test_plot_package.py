@@ -64,7 +64,7 @@ class TestPlotCommandValidation(unittest.TestCase):
         # validation fails
         index = -1
         for i in range(len(obj)):
-            if obj[i][ARG_ID] == pckg.PARA_NAME:
+            if obj[i][ARG_ID] == plot.PARA_SERIES:
                 index = i
                 break
         del obj[i]

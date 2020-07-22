@@ -39,7 +39,7 @@ ROW = 'row'
 ROWS = 'rows'
 ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
-ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
+ROWCAVEATFLAGS = 'rowAnnotationFlags'
 CAVEATS = 'caveats'
 
 # Dataobjects

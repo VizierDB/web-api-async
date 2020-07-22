@@ -15,7 +15,7 @@ SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
 
-LOAD_FILE = './.files/w49k-mmkh.tsv'
+LOAD_FILE = './tests/engine/packages/plot/.files/w49k-mmkh.tsv'
 
 DATASET_NAME = 'abc'
 
@@ -54,7 +54,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(1, range_start=25, range_end=30)
         view.add_series(0, range_start=25, range_end=30)
         view.add_series(3, range_start=25, range_end=30)
-        data = ChartQuery().exec_query(dataset=ds, view=view)
+        data = ChartQuery().exec_query(dataset=ds, view=view)[0]
         self.assertEqual(len(data), 6)
         for row in data:
             self.assertEqual(len(row), 3)
@@ -66,7 +66,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(1, range_start=25, range_end=30)
         view.add_series(0, range_start=25)
         view.add_series(3, range_start=25, range_end=30)
-        data = ChartQuery().exec_query(dataset=ds, view=view)
+        data = ChartQuery().exec_query(dataset=ds, view=view)[0]
         self.assertEqual(len(data), 29)
         self.assertIsNone(data[28][0])
         self.assertIsNotNone(data[28][1])
@@ -79,7 +79,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(1, range_end=30)
         view.add_series(0, range_start=25)
         view.add_series(3, range_start=25, range_end=30)
-        data = ChartQuery().exec_query(dataset=ds, view=view)
+        data = ChartQuery().exec_query(dataset=ds, view=view)[0]
         self.assertEqual(len(data), 31)
         self.assertEqual(self.count_non_null_values(data, 0), 31)
         self.assertEqual(self.count_non_null_values(data, 1), 29)
@@ -91,7 +91,7 @@ class TestDefaultVizualProcessor(unittest.TestCase):
         view.add_series(1, label='A')
         view.add_series(0, label='B')
         view.add_series(3)
-        data = ChartQuery().exec_query(dataset=ds, view=view)
+        data = ChartQuery().exec_query(dataset=ds, view=view)[0]
         self.assertEqual(len(data), 54)
 
 

@@ -105,7 +105,7 @@ class SamplingProcessor(TaskProcessor):
             raise Exception("Unknown sampling command: {}".format(command_id))
 
         table_name, schema = mimir.createSample(
-            input_dataset.table_name,
+            input_dataset.identifier,
             sample_mode,
             resultName = "SAMPLE_"+get_unique_identifier()
         )

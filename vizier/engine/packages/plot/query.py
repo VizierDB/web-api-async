@@ -86,7 +86,7 @@ class DataStreamConsumer(object):
                         except ValueError:
                             pass
             self.values.append(val)
-            self.values_caveats.append(row.annotations[self.column_index])    
+        self.values_caveats.append(row.caveats[self.column_index])    
 
 class ChartQuery(object):
     """Query processor for simple chart queries."""

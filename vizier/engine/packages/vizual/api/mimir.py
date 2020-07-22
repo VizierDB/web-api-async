@@ -23,7 +23,7 @@ import json
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.base import get_index_for_column
 from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.dataset import MimirDatasetColumn, MIMIR_ROWID_COL
+from vizier.datastore.mimir.dataset import MimirDatasetColumn, MIMIR_ROWID_COL, MimirDatasetHandle
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 from vizier.datastore.mimir.base import sanitize_column_name
 
@@ -208,7 +208,7 @@ class MimirVizualApi(VizualApi):
         command = {
             "id" : "insertColumn",
             "name" : name,
-            "column" : position
+            "position" : position
         }
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
@@ -236,11 +236,6 @@ class MimirVizualApi(VizualApi):
         dataset = datastore.get_dataset(identifier)
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
-        # Make sure that position is a valid row index in the new dataset
-        if position < 0 or position >= dataset.row_counter:
-            raise ValueError('invalid row index \'' + str(position) + '\'')
-        # Get unique id for new row
-        dataset.row_counter += 1
 
         command = {
             "id" : "insertRow",
@@ -516,12 +511,6 @@ class MimirVizualApi(VizualApi):
         dataset = datastore.get_dataset(identifier)
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
-        # Make sure that row is within dataset bounds
-        if row_index < 0 or row_index >= dataset.row_count:
-            raise ValueError('invalid source row \'' + str(row_index) + '\'')
-        # Make sure that position is a valid row index in the new dataset
-        if position < 0 or position > dataset.row_count:
-            raise ValueError('invalid target position \'' + str(position) + '\'')
 
         command = {
             "id" : "moveRow",
@@ -614,7 +603,7 @@ class MimirVizualApi(VizualApi):
         sql = 'SELECT * FROM '+dataset.identifier+' ORDER BY '
         sql += ','.join(order_by_clause) 
         view_name, dependencies, schema, properties = mimir.createView(dataset.identifier, sql)
-        ds = MimirDatasetHandle.from_mimir_response(view_name, schema, properties)
+        ds = MimirDatasetHandle.from_mimir_result(view_name, schema, properties)
         return VizualApiResult(ds)
 
     def update_cell(self, identifier, column_id, row_id, value, datastore):
@@ -651,8 +640,8 @@ class MimirVizualApi(VizualApi):
         command = {
             "id" : "updateCell",
             "column" : col_index,
-            "row" : int(row_id),
-            "value" : str(value)
+            "row" : row_id,
+            "value" : str(value) if value is not None else None
         }
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)

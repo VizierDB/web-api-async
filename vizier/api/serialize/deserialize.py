@@ -93,7 +93,7 @@ def DATASET_ROW(obj):
     -------
     vizier.datastore.dataset.DatasetRow
     """
-    return DatasetRow(identifier=obj[labels.ID], values=obj[labels.ROWVALUES])
+    return DatasetRow(identifier=obj[labels.ID], values=obj[labels.ROWVALUES], caveats=obj[labels.ROWCAVEATFLAGS])
 
 
 def HATEOAS(links):

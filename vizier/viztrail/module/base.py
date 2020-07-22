@@ -219,11 +219,13 @@ class ModuleHandle(ModuleState):
             return "UNKNOWN ({})".format(self.state)
     
     def __repr__(self):
-        return "{}.{} @ {} is {}".format(
+        return "{}.{} @ {} is {}\n{}\n{}".format(
             self.command.package_id,
             self.command.command_id,
             self.identifier,
-            self.state_string
+            self.state_string,
+            "\n".join(self.command.arguments.to_yaml_lines("  ")),
+            self.outputs
         )+("\n"+str(self.outputs) if self.outputs is not None else "")
 
 

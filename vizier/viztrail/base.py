@@ -78,7 +78,7 @@ class NamedObject(object):
         name: string
             Human-readable name for the viztrail
         """
-        self.properties[key] = str(value)
+        self.properties[PROPERTY_NAME] = str(value)
 
 
 # ------------------------------------------------------------------------------

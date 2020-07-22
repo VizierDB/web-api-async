@@ -60,7 +60,7 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, properties=None):
+    def create_dataset(self, columns, rows, properties=None, human_readable_name=None, backend_options=None, dependencies=None):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -87,6 +87,17 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
+        identifiers = set(row.identifier for row in rows if row.identifier >= 0)
+        identifiers.add(0)
+        max_row_id = max(identifiers)
+        rows = [
+            DatasetRow(
+                identifier = row.identifier if row.identifier >= 0 else idx + max_row_id,
+                values = row.values,
+                caveats = row.caveats
+            )
+            for idx, row in enumerate(rows)
+        ]
         _, max_row_id = validate_dataset(columns=columns, rows=rows)
         # Get new identifier and create directory for new dataset
         identifier = get_unique_identifier()

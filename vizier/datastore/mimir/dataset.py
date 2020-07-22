@@ -82,6 +82,13 @@ class MimirDatasetColumn(DatasetColumn):
         else:
             self.name_in_rdb = name_in_dataset.upper()
 
+    def __repr__(self):
+        ret = self.name
+        if self.name != self.name_in_rdb:
+            ret += "[{}]".format(self.name_in_rdb)
+        ret += "({}):{}".format(self.identifier, self.data_type)
+        return ret
+
     @staticmethod
     def from_dict(doc):
         """Create dataset column object from dictionary serialization.
@@ -213,8 +220,6 @@ class MimirDatasetHandle(DatasetHandle):
         columns: list(vizier.datastore.mimir.MimirDatasetColumn)
             List of column names in the dataset schema and their corresponding
             names in the relational database table or view.
-        table_name: string
-            Reference to relational database table containing the dataset.
         row_counter: int
             Counter for unique row ids
         properties: dict(string, any)
@@ -320,16 +325,6 @@ class MimirDatasetHandle(DatasetHandle):
                             )
                         )
             return annotations
-
-    def max_row_id(self):
-        """Get maximum identifier for all rows in the dataset. If the dataset
-        is empty the result is -1.
-
-        Returns
-        -------
-        int
-        """
-        return self.row_counter
 
     def reader(self, offset=0, limit=None, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional

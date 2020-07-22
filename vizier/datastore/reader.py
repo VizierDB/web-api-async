@@ -195,7 +195,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             ]
         }
     """
-    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=-1):
+    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=None):
         """Initialize information about the Json file.
 
         Parameters

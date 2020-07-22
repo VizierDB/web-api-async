@@ -21,6 +21,7 @@ and folders in an object store.
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.module import get_module_path
@@ -319,7 +320,11 @@ class OSBranchHandle(BranchHandle):
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,
-            properties=properties,
+            properties=PersistentAnnotationSet(
+                object_path=object_store.join(base_path, OBJ_PROPERTIES),
+                object_store=object_store,
+                properties=properties
+            ),
             workflows=workflows,
             head=head,
             object_store=object_store
@@ -469,7 +474,10 @@ class OSBranchHandle(BranchHandle):
             base_path=base_path,
             modules_folder=modules_folder,
             provenance=provenance,
-            properties={},
+            properties=PersistentAnnotationSet(
+                object_path=object_store.join(base_path, OBJ_PROPERTIES),
+                object_store=object_store
+            ),
             workflows=workflows,
             head=head,
             object_store=object_store

@@ -21,10 +21,10 @@ and folders in an object store.
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
 from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH
-
 
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
@@ -196,7 +196,11 @@ class OSViztrailHandle(ViztrailHandle):
         # Return handle for new viztrail
         return OSViztrailHandle(
             identifier=identifier,
-            properties=properties,
+            properties=PersistentAnnotationSet(
+                object_path=object_store.join(base_path, OBJ_PROPERTIES),
+                object_store=object_store,
+                properties=properties
+            ),
             branches=[default_branch],
             default_branch=default_branch,
             created_at=created_at,
@@ -292,7 +296,10 @@ class OSViztrailHandle(ViztrailHandle):
         # Return handle for new viztrail
         return OSViztrailHandle(
             identifier=identifier,
-            properties={},
+            properties=PersistentAnnotationSet(
+                object_path=object_store.join(base_path, OBJ_PROPERTIES),
+                object_store=object_store
+            ),
             branches=branches,
             default_branch=default_branch,
             created_at=created_at,

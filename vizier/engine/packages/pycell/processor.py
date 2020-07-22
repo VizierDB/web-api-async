@@ -181,8 +181,8 @@ class PyCellTaskProcessor(TaskProcessor):
                     read[name] = context.datasets[name].identifier
                     if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in read mapping dictionary: {} (expecting str)'.format(read[name]))
-                elif name in dataobjects:
-                    read[name] = dataobjects[name].identifier
+                elif name in context.dataobjects:
+                    read[name] = context.dataobjects[name].identifier
                     if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in read mapping dictionary: {} (expecting str)'.format(read[name]))
                 else:
@@ -193,21 +193,17 @@ class PyCellTaskProcessor(TaskProcessor):
                     raise RuntimeError('invalid key for mapping dictionary')
                 
                 if name in client.datasets:
-                    wr_id = client.datasets[name]
-                    if not isinstance(wr_id, str):
+                    write_descriptor = client.datasets[name]
+                    if not isinstance(write_descriptor, ArtifactDescriptor):
                         raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(wr_id))
-                    elif wr_id in client.descriptors:
-                        write[name] = client.descriptors[wr_id]
                     else:
-                        raise RuntimeError('dataset write without an associated descriptor {} <- {}'.format(name, wr_id))
+                        write[name] = write_descriptor
                 elif name in client.dataobjects:
                     wr_id = client.dataobjects[name]
-                    if not isinstance(wr_id, str):
+                    if not isinstance(write_descriptor, ArtifactDescriptor):
                         raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(wr_id))
-                    elif wr_id in client.descriptors:
-                        write[name] = client.descriptors[wr_id]
                     else:
-                        raise RuntimeError('object write without an associated descriptor {} <- {}'.format(name, wr_id))
+                        write[name] = write_descriptor
                 else:
                     write[name] = None
             print("Pycell Execution Finished")

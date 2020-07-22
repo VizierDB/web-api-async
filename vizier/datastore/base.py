@@ -513,22 +513,6 @@ def max_object_id(objects):
             max_id = obj.identifier
     return max_id
 
-
-def max_row_id(rows):
-    """Return maximum identifier for a list of rows.
-
-    Parameters
-    ----------
-    rows: list(vizier.datastore.base.DataseRow)
-        List of dataset rows
-
-    Returns
-    -------
-    int
-    """
-    return max_object_id(rows)
-
-
 def validate_schema(columns, rows):
     """Validate that the given set of rows contains exactly one value for each
     column in a dataset schema.

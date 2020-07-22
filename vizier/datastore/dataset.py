@@ -241,17 +241,6 @@ class DatasetDescriptor(ArtifactDescriptor):
         else:
             return max([col.identifier for col in self.columns])
 
-    @abstractmethod
-    def max_row_id(self):
-        """Get maximum identifier for all rows in the dataset. If the dataset
-        is empty the result is -1.
-
-        Returns
-        -------
-        int
-        """
-        raise NotImplementedError
-
     def print_schema(self, name):
         """Print dataset schema as a list of lines.
 
@@ -415,10 +404,10 @@ class DatasetRow(object):
         Unique row identifier
     values : list(string)
         List of column values in the row
-    annotations: list(bool), optional
+    caveats: list(bool), optional
         Optional flags indicating whether row cells are annotated
     """
-    def __init__(self, identifier=None, values=None, annotations=None):
+    def __init__(self, identifier=None, values=None, caveats=None):
         """Initialize the row object.
 
         Parameters
@@ -427,12 +416,15 @@ class DatasetRow(object):
             Unique row identifier
         values : list(string)
             List of column values in the row
-        annotations: list(bool), optional
+        caveats: list(bool), optional
             Optional flags indicating whether row cells are annotated
         """
         self.identifier = identifier if not identifier is None else -1
         self.values = values if not values is None else list()
-        self.annotations = annotations if not values is None else list()
+        self.caveats = caveats if not caveats is None else [ False for v in self.values ]
+
+    def __repr__(self):
+        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
 
 
 # ------------------------------------------------------------------------------
