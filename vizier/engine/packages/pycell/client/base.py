@@ -31,6 +31,13 @@ import re
 import ast
 import astor
 import inspect
+from minio import Minio
+from minio.error import ResponseError
+from minio.select.options import SelectObjectOptions, InputSerialization,\
+    CSVInput, OutputSerialization, CSVOutput, RequestProgress
+from minio.select.errors import SelectCRCValidationError
+
+        
     
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
@@ -399,7 +406,54 @@ class VizierDBClient(object):
             client = self,
             existing_name = name.lower()
         )
-
+        
+    def dataset_from_s3(self, bucket, folder, file, line_extracter = lambda rematch, line: ('col0', line), additional_col_gen = None, delimeter = ",", line_delimeter = "\n"):
+        client = Minio(os.environ.get('S3A_ENDPOINT', 's3.vizier.app'),
+               access_key=os.environ.get('AWS_ACCESS_KEY_ID', "----------------------"),
+               secret_key=os.environ.get('AWS_SECRET_ACCESS_KEY', "---------------------------"))
+        
+        try:
+            import io
+            
+            ds = self.new_dataset()
+            objects = client.list_objects_v2(bucket, prefix=folder, recursive=True)
+            
+            subObjs = [] 
+            for obj in objects:
+                subObjs.append(obj)
+                   
+            for logObj in subObjs:
+                log = logObj.object_name 
+                result = re.match(file, log)
+                # Check file name suffix is .log
+                if result: 
+                    data = client.get_object(bucket, log)
+                    rdat = io.StringIO()
+                    for d in data.stream(100*1024):
+                        rdat.write(str(d.decode('utf-8')))
+                    lines = rdat.getvalue().split(line_delimeter)
+                    
+                    entry = {}
+                    if additional_col_gen is not None:
+                        entry = dict({ additional_col_gen(result, line) for line  in lines })
+                    line_entries =  dict({ line_extracter(result,line) for line  in lines })
+                    entry = {**entry , **line_entries}
+                    entry.pop(None, None)
+                    
+                    # Append the dictionary to the list
+                    if len(ds.columns) == 0:
+                        {ds.insert_column(attr) for attr in entry.keys()}
+                    
+                    ds.insert_row(values=entry.values())
+        
+            return ds
+                    
+        except SelectCRCValidationError as err:
+            pass
+        except ResponseError as err:
+            pass
+        
+      
     def set_output_format(self, mime_type):
         self.output_format = mime_type
 

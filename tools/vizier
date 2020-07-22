@@ -164,7 +164,7 @@ if [ "$MIMIR_DEV" == "true" ]
     cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
     cd ../web-api-async
   else
-    ${APP_RESOURCES_DIR}mimir/mimir-api --dataDirectory "$USER_DATA_DIR" -X localSpark &
+    ${APP_RESOURCES_DIR}mimir/mimir-api --data-dir "$USER_DATA_DIR" &
 fi
 if [ "$UI_DEV" == "true" ]
   then

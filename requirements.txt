@@ -14,3 +14,4 @@ geopandas
 bokeh
 shapely
 astor
+minio
