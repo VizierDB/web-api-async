@@ -32,7 +32,6 @@ from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.dataset import DatasetHandle, DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
 
@@ -61,7 +60,7 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, annotations=None):
+    def create_dataset(self, columns, rows, properties=None, human_readable_name=None, backend_options=None, dependencies=None):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -78,8 +77,8 @@ class FileSystemDatastore(DefaultDatastore):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
-            Annotations for dataset components
+        properties: dict(string, ANY), optional
+            Properties for dataset components
 
         Returns
         -------
@@ -88,6 +87,17 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
+        identifiers = set(row.identifier for row in rows if row.identifier >= 0)
+        identifiers.add(0)
+        max_row_id = max(identifiers)
+        rows = [
+            DatasetRow(
+                identifier = row.identifier if row.identifier >= 0 else idx + max_row_id,
+                values = row.values,
+                caveats = row.caveats
+            )
+            for idx, row in enumerate(rows)
+        ]
         _, max_row_id = validate_dataset(columns=columns, rows=rows)
         # Get new identifier and create directory for new dataset
         identifier = get_unique_identifier()
@@ -96,12 +106,6 @@ class FileSystemDatastore(DefaultDatastore):
         # Write rows to data file
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
-        # Filter annotations for non-existing resources
-        if not annotations is None:
-            annotations = annotations.filter(
-                columns=[c.identifier for c in columns],
-                rows=[r.identifier for r in rows]
-            )
         # Create dataset an write dataset file
         dataset = FileSystemDatasetHandle(
             identifier=identifier,
@@ -109,22 +113,27 @@ class FileSystemDatastore(DefaultDatastore):
             data_file=data_file,
             row_count=len(rows),
             max_row_id=max_row_id,
-            annotations=annotations
+            properties=properties
         )
         dataset.to_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         # Write metadata file if annotations are given
-        if not annotations is None:
-            dataset.annotations.to_file(
-                self.get_metadata_filename(identifier)
-            )
+        if properties is not None:
+            dataset.write_properties_to_file(self.get_properties_filename(identifier))
         # Return handle for new dataset
         return DatasetDescriptor(
             identifier=dataset.identifier,
-            columns=dataset.columns,
-            row_count=dataset.row_count
+            columns=dataset.columns
         )
+
+    def get_properties(self, identifier):
+        properties_filename = self.get_properties_filename(identifier)
+        if os.path.isfile(properties_filename):
+            with open(properties_filename, 'r') as f:
+                return json.loads(f.read())
+        else:
+            return {}
 
     def delete_dataset(self, identifier):
         """Delete dataset with given identifier. Returns True if dataset existed
@@ -186,10 +195,7 @@ class FileSystemDatastore(DefaultDatastore):
                 response = urllib.request.urlopen(url)
                 filename = get_download_filename(url, response.info())
                 download_file = os.path.join(temp_dir, filename)
-                mode = 'w'
-                if filename.endswith('.gz'):
-                    mode += 'b'
-                with open(download_file, mode) as f:
+                with open(download_file, 'wb') as f:
                     f.write(response.read())
                 fh = FileHandle(
                     identifier=filename,
@@ -227,9 +233,7 @@ class FileSystemDatastore(DefaultDatastore):
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
             data_file=os.path.join(dataset_dir, DATA_FILE),
-            annotations=DatasetMetadata.from_file(
-                self.get_metadata_filename(identifier)
-            )
+            properties_filename=self.get_properties_filename(identifier)
         )
 
     def load_dataset(self, f_handle):
@@ -289,6 +293,78 @@ class FileSystemDatastore(DefaultDatastore):
         )
         return dataset
 
+    def create_object(
+        self, value, obj_type="text/plain"
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
+
+        Parameters
+        ----------
+        value: bytes
+            The value of the object
+        obj_type: string, optional
+            The type of the object
+        Returns
+        -------
+        identifier
+        """
+        data_object_filename = None
+        identifier = None
+        while data_object_filename is None:
+            identifier = "OBJ_"+get_unique_identifier()
+            data_object_filename = self.get_data_object_file(identifier)
+            if os.path.exists(data_object_filename):
+                data_object_filename = None
+
+        with open(data_object_filename, "wb") as f:
+            f.write(value)
+        with open(data_object_filename+".mime", "w") as f:
+            f.write(obj_type)
+
+        return identifier
+
+    def get_object(self, identifier, expected_type=None):
+        """Get list of data objects for a resources of a given dataset. 
+
+        Parameters
+        ----------
+        identifier: string
+            Unique object identifier
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
+            
+        Returns
+        -------
+        bytes
+        """
+        data_object_filename = self.get_data_object_file(identifier)
+        if expected_type is not None:
+            with open(data_object_filename+".mime") as f:
+                actual_type = f.read()
+                if actual_type != expected_type:
+                    raise Exception("Object {} is of type {}, but of type {}".format(identifier, actual_type, expected_type))
+        with open(data_object_filename, 'rb') as f:
+            f.read()
+
+    def get_data_object_file(self, identifier):
+        """Get the absolute path of the file that maintains the dataset metadata
+        such as the order of row id's and column information.
+        Parameters
+        ----------
+        identifier: string
+            Unique dataset identifier
+        Returns
+        -------
+        string
+        """
+        return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
 # ------------------------------------------------------------------------------
 # Helper Methods

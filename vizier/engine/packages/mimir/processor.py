@@ -22,13 +22,11 @@ import re
 
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
-from vizier.datastore.mimir.dataset import MimirDatasetColumn
+from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.store import create_missing_key_view
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.api.webservice import server
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.engine.packages.base as pckg
@@ -36,7 +34,6 @@ import vizier.engine.packages.mimir.base as cmd
 import vizier.mimir as mimir
 
 LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES = set([
-    cmd.MIMIR_SCHEMA_MATCHING, 
     cmd.MIMIR_TYPE_INFERENCE, 
     cmd.MIMIR_SHAPE_DETECTOR
 ])
@@ -86,14 +83,11 @@ class MimirProcessor(TaskProcessor):
         # Get dataset. Raise exception if dataset is unknown.
         ds_name = arguments.get_value(pckg.PARA_DATASET).lower()
         dataset = context.get_dataset(ds_name)
-        mimir_table_name = dataset.table_name
+        mimir_table_name = dataset.identifier
         # Keep track of the name of the input dataset for the provenance
         # information.
         input_ds_name = ds_name
-        if command_id == cmd.MIMIR_DOMAIN:
-            column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
-            params = [column.name_in_rdb]
-        elif command_id == cmd.MIMIR_GEOCODE:
+        if command_id == cmd.MIMIR_GEOCODE:
             geocoder = arguments.get_value(cmd.PARA_GEOCODER)
             # Add columns for LATITUDE and LONGITUDE
             column_counter = dataset.max_column_id() + 1
@@ -175,19 +169,6 @@ class MimirProcessor(TaskProcessor):
                 "inputs" : inputs,
                 "output" : output
             }
-        elif command_id == cmd.MIMIR_SCHEMA_MATCHING:
-            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
-            if store_as_dataset in context.datasets:
-                raise ValueError('dataset \'' + store_as_dataset + '\' exists')
-            if not is_valid_name(store_as_dataset):
-                raise ValueError('invalid dataset name \'' + store_as_dataset + '\'')
-            column_names = list()
-            params = ['\'' + ROW_ID + ' int\'']
-            for col in arguments.get_value(cmd.PARA_SCHEMA):
-                c_name = col.get_value(pckg.PARA_COLUMN)
-                c_type = col.get_value(cmd.PARA_TYPE)
-                params.append('\'' + c_name + ' ' + c_type + '\'')
-                column_names.append(c_name)
         elif command_id == cmd.MIMIR_TYPE_INFERENCE:
             params = [str(arguments.get_value(cmd.PARA_PERCENT_CONFORM))]
         elif command_id == cmd.MIMIR_SHAPE_DETECTOR:
@@ -310,28 +291,16 @@ class MimirProcessor(TaskProcessor):
             arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
             human_readable_name = ds_name.upper()
         )
-        lens_name = mimir_lens_response['lensName']
+        lens_name = mimir_lens_response['name']
         lens_schema = mimir_lens_response['schema']
+        lens_properties = mimir_lens_response['properties']
 
-        columns = [
-            MimirDatasetColumn(
-                identifier = col_id,
-                name_in_dataset = col["name"],
-                data_type = col["type"]
-            )
-            for (col, col_id) in zip(lens_schema, range(0, len(lens_schema)))
-        ]
-        ds = context.datastore.register_dataset(
-            table_name=lens_name,
-            columns=columns,
-            annotations=dataset.annotations
-        )
-        if store_as_dataset is not None:
-            ds_name = store_as_dataset
+        ds = MimirDatasetHandle.from_mimir_result(lens_name, lens_schema, lens_properties)
 
         if command_id in LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES:
-            print_dataset_schema(outputs, ds_name, columns)
+            print_dataset_schema(outputs, ds_name, ds.columns)
         else:
+            from vizier.api.webservice import server
             ds_output = server.api.datasets.get_dataset(
                 project_id=context.project_id,
                 dataset_id=ds.identifier,
@@ -340,21 +309,15 @@ class MimirProcessor(TaskProcessor):
             )
             outputs.stdout.append(DatasetOutput(ds_output))
         
-        dsd = DatasetDescriptor(
-                identifier=ds.identifier,
-                columns=ds.columns,
-                row_count=ds.row_count
-            )
-        result_resources = dict()
-        result_resources[base.RESOURCE_DATASET] = ds.identifier
-                
         # Return task result
         return ExecResult(
             outputs=outputs,
             provenance=ModuleProvenance(
                 read={input_ds_name: dataset.identifier},
-                write={ds_name: dsd},
-                resources=result_resources
+                write={ds_name: DatasetDescriptor(
+                    identifier=ds.identifier,
+                    columns=ds.columns
+                )}
             )
         )
 

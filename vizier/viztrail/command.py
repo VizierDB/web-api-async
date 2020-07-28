@@ -80,6 +80,23 @@ class ModuleArguments(object):
                     value = elements
             self.arguments[identifier] = value
 
+    def __repr__(self):
+        return "\n".join(self.to_yaml_lines(""))
+
+    def to_yaml_lines(self, prefix = ""):
+        def wrap(key, arg): 
+            rest = []
+            if isinstance(arg, ModuleArguments):
+                rest = arg.to_yaml_lines(prefix+"  ")
+                arg = ""
+            return ["{}{}: {}".format(prefix, key, arg)]+rest
+
+        return [
+            line 
+            for key in self.arguments
+            for line in wrap(key, self.arguments[key])
+        ]
+
     def get(self, name):
         """Get the value for the parameter with the given name.
 
@@ -387,6 +404,9 @@ class ModuleCommand(object):
             # an exception if any of the given arguments is invalid or if a
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
+
+    def __repr__(self):
+        "\n".join(["{}.{} <- ("]+self.arguments.to_yaml_lines("  ")+")")
 
     @staticmethod
     def from_dict(doc):

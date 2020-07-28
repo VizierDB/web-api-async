@@ -19,7 +19,7 @@ import vizier.engine.packages.base as pckg
 SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/engine/packages/vizual/.files/dataset.csv'
 
 DATASET_NAME = 'abc'
 
@@ -66,14 +66,16 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
-                filestore=self.filestore
+                filestore=self.filestore,
+                artifacts={}
             )
         )
         self.assertIsNotNone(result.provenance.write)
         self.assertTrue(DATASET_NAME in result.provenance.write)
         dataset_id = result.provenance.write[DATASET_NAME].identifier
-        self.assertIsNone(result.provenance.read)
+        self.assertTrue(result.provenance.read is None or len(result.provenance.read) == 0)
         self.assertIsNotNone(result.provenance.resources)
         self.assertEqual(result.provenance.resources[RESOURCE_DATASET], dataset_id)
 
@@ -89,8 +91,10 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
-                filestore=self.filestore
+                filestore=self.filestore,
+                artifacts={}
             )
         )
         return result.provenance.write
@@ -120,14 +124,15 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             validate=True
         )
         datasets = self.load_dataset()
-        dataset_id = datasets[DATASET_NAME].identifier
+        dataset_id = datasets[DATASET_NAME]
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={DATASET_NAME: dataset_id}
+                artifacts={DATASET_NAME: dataset_id}
             )
         )
         self.assertFalse(DATASET_NAME in result.provenance.read)
@@ -180,14 +185,16 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
-                filestore=self.filestore
+                filestore=self.filestore,
+                artifacts={}
             )
         )
         self.assertIsNotNone(result.provenance.write)
         self.assertTrue('abc' in result.provenance.write)
         dataset_id = result.provenance.write['abc'].identifier
-        self.assertIsNone(result.provenance.read)
+        self.assertTrue(result.provenance.read is None or len(result.provenance.read) == 0)
         self.assertIsNotNone(result.provenance.resources)
         self.assertEqual(result.provenance.resources[RESOURCE_DATASET], dataset_id)
         # Running load again will not change the dataset identifier
@@ -195,8 +202,10 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
                 filestore=self.filestore,
+                artifacts={},
                 resources=result.provenance.resources
             )
         )
@@ -241,14 +250,15 @@ class TestDefaultVizualProcessor(unittest.TestCase):
             validate=True
         )
         datasets = self.load_dataset()
-        dataset_id = datasets[DATASET_NAME].identifier
+        dataset_id = datasets[DATASET_NAME]
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={DATASET_NAME: dataset_id}
+                artifacts={DATASET_NAME: dataset_id}
             )
         )
         self.assertFalse(DATASET_NAME in result.provenance.write)
@@ -272,39 +282,46 @@ class TestDefaultVizualProcessor(unittest.TestCase):
     def test_update_cell(self):
         """Test functionality to update a dataset cell."""
         # Create a new dataset
+        datasets = self.load_dataset()
+        dataset = self.datastore.get_dataset(datasets[DATASET_NAME].identifier)
+        row_ids = [row.identifier for row in dataset.fetch_rows()]
         cmd = vizual.update_cell(
             dataset_name=DATASET_NAME,
             column=1,
-            row=0,
+            row=row_ids[0],
             value=9,
             validate=True
         )
-        self.validate_command(cmd)
+        self.validate_command(cmd, dataset = dataset)
 
-    def validate_command(self, cmd):
+    def validate_command(self, cmd, dataset = None):
         """Validate execution of the given command."""
-        datasets = self.load_dataset()
-        dataset_id = datasets[DATASET_NAME].identifier
+        if dataset is None:
+            datasets = self.load_dataset()
+            dataset = datasets[DATASET_NAME]
         result = self.processor.compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=5,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={DATASET_NAME: dataset_id}
+                artifacts={DATASET_NAME: dataset}
             )
         )
-        self.assertNotEqual(result.provenance.write[DATASET_NAME].identifier, dataset_id)
+        self.assertNotEqual(result.provenance.write[DATASET_NAME].identifier, dataset.identifier)
         self.assertIsNotNone(result.provenance.read)
-        self.assertEqual(result.provenance.read[DATASET_NAME], dataset_id)
+        self.assertEqual(result.provenance.read[DATASET_NAME], dataset.identifier)
         self.assertIsNotNone(result.provenance.write)
         with self.assertRaises(ValueError):
             result = self.processor.compute(
                 command_id=cmd.command_id,
                 arguments=cmd.arguments,
                 context=TaskContext(
+                    project_id=5,
                     datastore=self.datastore,
-                    filestore=self.filestore
+                    filestore=self.filestore,
+                    artifacts={}
                 )
             )
 

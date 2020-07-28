@@ -19,7 +19,6 @@ the datastores that are associated with vizier projects.
 """
 
 from vizier.core.util import is_scalar
-from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.serialize.dataset as serialize
 
@@ -44,9 +43,9 @@ class VizierDatastoreApi(object):
         self.urls = urls
         self.defaults = defaults
 
-    def create_dataset(self, project_id, columns, rows, annotations=None):
+    def create_dataset(self, project_id, columns, rows, properties=None):
         """Create a new dataset in the datastore for the given project. Expects
-        a` list of columns and rows for the dataset. The dataset annotations
+        a` list of columns and rows for the dataset. The dataset properties
         are optional.
 
         Returns the serialized descriptor for the new dataset. The result is
@@ -67,7 +66,7 @@ class VizierDatastoreApi(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        properties: dict(string, Any), optional
             Annotations for dataset components
 
         Returns
@@ -81,7 +80,7 @@ class VizierDatastoreApi(object):
         dataset = project.datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=annotations
+            properties=properties
         )
         return serialize.DATASET_DESCRIPTOR(
             project=project,
@@ -89,7 +88,7 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_annotations(self, project_id, dataset_id, column_id=None, row_id=None):
+    def get_caveats(self, project_id, dataset_id, column_id=None, row_id=None):
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
@@ -112,26 +111,21 @@ class VizierDatastoreApi(object):
 
         Returns
         -------
-        dict
+        list(dict (serialized caveat))
         """
         # Retrieve the dataset. The result is None if the dataset or the project
         # do not exist.
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
             return None
-        annos = DatasetMetadata.from_list(
-                    project.datastore.get_annotations(
-                        identifier=dataset_id,
-                        column_id=column_id,
-                        row_id=row_id
-                    )
-                )
-        return serialize.DATASET_ANNOTATIONS(
-            project=project,
-            dataset=dataset,
-            annotations=annos,
-            urls=self.urls
-        )
+        return [
+            serialize.CAVEAT(caveat)
+            for caveat in project.datastore.get_caveats(
+                identifier=dataset_id,
+                column_id=column_id,
+                row_id=row_id
+            )
+        ]
 
     def get_dataset(self, project_id, dataset_id, offset=None, limit=None):
         """Get dataset with given identifier. The result is None if no dataset
@@ -164,6 +158,8 @@ class VizierDatastoreApi(object):
             offset = 0
         if not limit is None:
             result_size = int(limit)
+            if(result_size < 0):
+                raise Exception("Invalid Result Size: {}".format(result_size))
         else:
             result_size = self.defaults.row_limit
         if result_size < 0 and self.defaults.max_row_limit > 0:
@@ -235,56 +231,3 @@ class VizierDatastoreApi(object):
             return None, None
         return project, project.datastore.get_dataset(dataset_id)
 
-    def update_annotation(
-        self, project_id, dataset_id, column_id=None, row_id=None, key=None,
-        old_value=None, new_value=None
-    ):
-        """Update the annotations for a component of the datasets with the given
-        identifier. Returns the modified object annotations or None if the
-        dataset does not exist.
-
-        Parameters
-        ----------
-        project_id : string
-            Unique project identifier
-        dataset_id : string
-            Unique dataset identifier
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
-        anno_id: int
-            Unique annotation identifier
-        key: string, optional
-            Annotation key
-        value: string, optional
-            Annotation value
-
-        Returns
-        -------
-        dict
-        """
-        # Retrieve the project and dataset from the repository to ensure that
-        # it exists.
-        project = self.projects.get_project(project_id)
-        if project is None:
-            return None
-        # Update annotations using that datastore that is associated with the
-        # project. The result will be None if the dataset does not exist.
-        result = project.datastore.update_annotation(
-            identifier=dataset_id,
-            column_id=column_id,
-            row_id=row_id,
-            key=key,
-            old_value=old_value,
-            new_value=new_value
-        )
-        if result is None:
-            return None
-        # Return updated annotations.
-        return self.get_annotations(
-            project_id=project_id,
-            dataset_id=dataset_id,
-            column_id=column_id,
-            row_id=row_id
-        )

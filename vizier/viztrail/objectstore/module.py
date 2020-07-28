@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.datastore.object.base import DataObject
 
 """Implementation for module handles that are maintained as an objects in an
 object store.
@@ -28,7 +27,6 @@ from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 import vizier.viztrail.module.base as mstate
 
@@ -88,20 +86,6 @@ class OSModuleHandle(ModuleHandle):
       - createdAt
       - startedAt
       - finishedAt
-    - datasets: [
-        - id: ...
-        - name: ...
-        - columns: [
-          - id: ...
-          - name: ...
-        ]
-      ]
-      dataobjects: [
-        - id: ...
-        - name: ...
-        - obj_type: ...
-        ]
-      ]
     - outputs
       - stderr: [
           - type: ...
@@ -126,8 +110,8 @@ class OSModuleHandle(ModuleHandle):
     """
     def __init__(
         self, identifier, command, external_form, module_path,
-        state=None, timestamp=None, datasets=None, outputs=None,
-        provenance=None, object_store=None, dataobjects=None
+        state=None, timestamp=None, outputs=None,
+        provenance=None, object_store=None
     ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
@@ -146,9 +130,6 @@ class OSModuleHandle(ModuleHandle):
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp, optional
             Module timestamp
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting datasets. Dataset descriptors are keyed by
-            the user-specified dataset name.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
@@ -156,8 +137,6 @@ class OSModuleHandle(ModuleHandle):
             previous execution of the module.
         object_store: vizier.core.io.base.ObjectStore, optional
             Object store implementation to access and maintain resources
-        dataobjects: dict(vizier.datastore.object.base.DataObject)
-            Dictionary of resulting dataobjects. The user-specified name is the key.
         """
         super(OSModuleHandle, self).__init__(
             identifier=identifier,
@@ -165,10 +144,8 @@ class OSModuleHandle(ModuleHandle):
             external_form=external_form,
             state=state if not state is None else mstate.MODULE_PENDING,
             timestamp=timestamp,
-            datasets=datasets,
             outputs= outputs,
             provenance=provenance,
-            dataobjects=dataobjects
         )
         self.module_path = module_path
         self.object_store = object_store if not object_store is None else DefaultObjectStore()
@@ -176,7 +153,7 @@ class OSModuleHandle(ModuleHandle):
     @staticmethod
     def create_module(
         command, external_form, state, timestamp, outputs, provenance,
-        module_folder, datasets=None, object_store=None
+        module_folder, object_store=None
     ):
         """Create a new materialized module instance for the given values.
 
@@ -231,7 +208,6 @@ class OSModuleHandle(ModuleHandle):
             module_path=object_store.join(module_folder, identifier),
             state=state,
             timestamp=timestamp,
-            datasets=datasets if not datasets is None else dict(),
             outputs=outputs,
             provenance=provenance,
             object_store=object_store
@@ -315,7 +291,7 @@ class OSModuleHandle(ModuleHandle):
             write_prov = dict()
             for ds in obj[KEY_PROVENANCE][KEY_PROVENANCE_WRITE]:
                 if KEY_DATAOBJECT_TYPE in ds:
-                    descriptor = DataObjectDescriptor(
+                    descriptor = ArtifactDescriptor(
                         identifier=ds[KEY_DATAOBJECT_ID],
                         key=ds[KEY_DATAOBJECT_NAME],
                         obj_type=ds[KEY_DATAOBJECT_TYPE])
@@ -328,8 +304,7 @@ class OSModuleHandle(ModuleHandle):
                                 name=col[KEY_COLUMN_NAME],
                                 data_type=col[KEY_COLUMN_TYPE]
                             ) for col in ds[KEY_DATASET_COLUMNS]
-                        ],
-                        row_count=ds[KEY_DATASET_ROWCOUNT]
+                        ]
                     )
                 write_prov[ds[KEY_DATASET_NAME]] = descriptor
         delete_prov = None
@@ -351,15 +326,6 @@ class OSModuleHandle(ModuleHandle):
             resources=res_prov,
             charts=charts_prov
         )
-        # Create dictionary of dataset descriptors only if previous state is
-        # given and the module is in SUCCESS state. Otherwise, the database
-        # state is empty.
-        if obj[KEY_STATE] == mstate.MODULE_SUCCESS and not prev_state is None:
-            dsanddo = provenance.get_database_state(prev_state)
-            datasets, dataobjects = provenance.split_context(dsanddo)
-        else:
-            datasets = dict()
-            dataobjects = dict()
         # Return module handle
         return OSModuleHandle(
             identifier=identifier,
@@ -368,11 +334,9 @@ class OSModuleHandle(ModuleHandle):
             module_path=module_path,
             state=obj[KEY_STATE],
             timestamp=timestamp,
-            datasets=datasets,
             outputs=outputs,
             provenance=provenance,
             object_store=object_store,
-            dataobjects=dataobjects
         )
 
     def set_canceled(self, finished_at=None, outputs=None):
@@ -392,7 +356,6 @@ class OSModuleHandle(ModuleHandle):
         self.state = mstate.MODULE_CANCELED
         self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.datasets = dict()
         # Materialize module state
         self.write_safe()
 
@@ -413,7 +376,6 @@ class OSModuleHandle(ModuleHandle):
         self.state = mstate.MODULE_ERROR
         self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.datasets = dict()
         # Materialize module state
         self.write_safe()
 
@@ -435,11 +397,10 @@ class OSModuleHandle(ModuleHandle):
         self.state = mstate.MODULE_RUNNING
         self.timestamp.started_at = started_at if not started_at is None else get_current_time()
         self.outputs = ModuleOutputs()
-        self.datasets = dict()
         # Materialize module state
         self.write_safe()
 
-    def set_success(self, finished_at=None, datasets=None, outputs=None, provenance=None, dataobjects=None):
+    def set_success(self, finished_at=None, outputs=None, provenance=None):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -451,9 +412,6 @@ class OSModuleHandle(ModuleHandle):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting datasets. The user-specified name is the key
-            for the dataset descriptor.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
@@ -469,8 +427,6 @@ class OSModuleHandle(ModuleHandle):
         if self.timestamp.started_at is None:
             self.timestamp.started_at = self.timestamp.finished_at
         self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.datasets = datasets if not datasets is None else dict()
-        self.dataobjects = dataobjects if not dataobjects is None else dict()
         self.provenance = provenance if not provenance is None else ModuleProvenance()
         # Materialize module state
         self.write_safe()
@@ -514,7 +470,6 @@ class OSModuleHandle(ModuleHandle):
             self.state = mstate.MODULE_ERROR
             #TODO: make this work like elsewhere for error message and debug
             self.outputs = ModuleOutputs(stderr=[TextOutput(str(ex))])
-            self.datasets = dict()
 
 
 # ------------------------------------------------------------------------------
@@ -609,13 +564,7 @@ def serialize_module(command, external_form, state, timestamp, outputs, provenan
         prov[KEY_PROVENANCE_WRITE] = list()
         for ds_name in provenance.write:
             dsoo = provenance.write[ds_name]
-            if isinstance(dsoo, DataObject) or isinstance(dsoo, DataObjectDescriptor):
-                prov[KEY_PROVENANCE_WRITE].append({
-                    KEY_DATAOBJECT_NAME: dsoo.key,
-                    KEY_DATAOBJECT_ID: dsoo.identifier,
-                    KEY_DATAOBJECT_TYPE: dsoo.obj_type
-                })
-            else:
+            if dsoo.is_dataset:
                 prov[KEY_PROVENANCE_WRITE].append({
                     KEY_DATASET_NAME: ds_name,
                     KEY_DATASET_ID: dsoo.identifier,
@@ -623,8 +572,13 @@ def serialize_module(command, external_form, state, timestamp, outputs, provenan
                         KEY_COLUMN_ID: col.identifier,
                         KEY_COLUMN_NAME: col.name,
                         KEY_COLUMN_TYPE: col.data_type
-                    } for col in dsoo.columns],
-                    KEY_DATASET_ROWCOUNT: dsoo.row_count
+                    } for col in dsoo.columns]
+                })
+            else:
+                prov[KEY_PROVENANCE_WRITE].append({
+                    KEY_DATAOBJECT_NAME: dsoo.key,
+                    KEY_DATAOBJECT_ID: dsoo.identifier,
+                    KEY_DATAOBJECT_TYPE: dsoo.obj_type
                 })
     if not provenance.delete is None:
         prov[KEY_PROVENANCE_DELETE] = list(provenance.delete)

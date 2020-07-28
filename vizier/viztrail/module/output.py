@@ -90,6 +90,13 @@ class ModuleOutputs(object):
         self.stdout = stdout if not stdout is None else list()
         self.stderr = stderr if not stderr is None else list()
 
+    def __repr__(self):
+        ret = []
+        if self.stdout is not None and len(self.stdout) > 0:
+            ret = ret + ["----- STDOUT ------"] + [ str(output) for output in self.stdout ]
+        if self.stderr is not None and len(self.stderr) > 0:
+            ret = ret + ["----- STDERR ------"] + [ str(output) for output in self.stderr ]
+        return "\n".join(ret)
 
     def error(self, ex):
         """Add stack trace for execution error to STDERR stream of the output
@@ -170,6 +177,12 @@ class OutputObject(object):
         """
         self.type = type
         self.value = value
+
+    def __repr__(self):
+        if self.is_text:
+            return self.value
+        else:
+            return "< {} >"
 
     @property
     def is_text(self):

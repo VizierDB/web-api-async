@@ -24,61 +24,19 @@ import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
 
-def ANNOTATION(anno):
+def CAVEAT(caveat):
     """Get dictionary serialization for a dataset annotation.
 
     Parameters
     ----------
-    anno: vizier.datastore.annotation.base.DatasetAnnotation
+    caveat: vizier.datastore.annotation.base.DatasetCaveat
         Dataset annotation object
 
     Returns
     -------
     dict
     """
-    obj = {
-        labels.KEY: anno.key,
-        labels.VALUE: anno.value
-    }
-    if not anno.column_id is None:
-        obj['columnId'] = anno.column_id
-    if not anno.row_id is None:
-        obj['rowId'] = anno.row_id
-    return obj
-
-
-def DATASET_ANNOTATIONS(project, dataset, annotations, urls):
-    """Get dictionary serialization for dataset component annotations.
-
-    Parameters
-    ----------
-    project: vizier.engine.project.base.ProjectHandle
-        Handle for project containing the dataset
-    dataset: vizier.datastore.dataset.DatasetDescriptor
-        Dataset descriptor
-    annotations: vizier.datastore.annotation.dataset.DatasetMetadata
-        Set of annotations for dataset components
-    urls: vizier.api.routes.base.UrlFactory, optional
-        Factory for resource urls
-
-    Returns
-    -------
-    dict
-    """
-    obj = {
-        'annotations': [ANNOTATION(a) for a in annotations.annotations],
-        'columns': [ANNOTATION(a) for a in annotations.columns],
-        'rows': [ANNOTATION(a) for a in annotations.rows],
-        'cells': [ANNOTATION(a) for a in annotations.cells]
-    }
-    # Add references to update annotations
-    obj[labels.LINKS] = serialize.HATEOAS({
-        ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
-            project_id=project.identifier,
-            dataset_id=dataset.identifier
-        )
-    })
-    return obj
+    return anno.to_dict()
 
 
 def DATASET_COLUMN(column):
@@ -100,15 +58,13 @@ def DATASET_COLUMN(column):
     }
 
 
-def DATAOBJECT_DESCRIPTOR(dataobject, name=None, project=None, urls=None):
+def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
     """Dictionary serialization for a dataobject descriptor.
 
     Parameters
     ----------
-    dataobject: vizier.datastore.object.base.DataObjectDescriptor
-        Dataset descriptor
-    name : string, optional
-        User-defined dataset name
+    artifact: vizier.datastore.artifact.ArtifactDescriptor
+        Artifact descriptor
     project: vizier.engine.project.base.ProjectHandle, optional
         Handle for project containing the dataset
     urls: vizier.api.routes.base.UrlFactory, optional
@@ -119,13 +75,11 @@ def DATAOBJECT_DESCRIPTOR(dataobject, name=None, project=None, urls=None):
     dict
     """
     obj = {
-        labels.ID: dataobject.identifier,
-        labels.OBJECT_TYPE: dataobject.obj_type
+        labels.ID: artifact.identifier,
+        labels.OBJECT_TYPE: dataobject.artifact_type
     }
     if not name is None:
         obj[labels.NAME] = name
-    elif not dataobject.key is None:
-        obj[labels.NAME] = dataobject.key
     # Add self reference if the project and url factory are given
     if not project is None and not urls is None:
         project_id = project.identifier
@@ -175,11 +129,7 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
                 project_id=project_id,
                 dataset_id=dataset_id
             ),
-            ref.ANNOTATIONS_GET: urls.get_dataset_annotations(
-                project_id=project_id,
-                dataset_id=dataset_id
-            ),
-            ref.ANNOTATIONS_UPDATE: urls.update_dataset_annotations(
+            ref.ANNOTATIONS_GET: urls.get_dataset_caveats(
                 project_id=project_id,
                 dataset_id=dataset_id
             )
@@ -331,5 +281,5 @@ def DATASET_ROW(row):
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,
-        labels.ROWANNOTATIONFLAGS: row.annotations
+        labels.ROWCAVEATFLAGS: row.caveats
     }

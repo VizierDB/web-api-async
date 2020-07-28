@@ -17,11 +17,11 @@ import vizier.engine.packages.base as pckg
 
 
 SERVER_DIR = './.tmp'
-PACKAGES_DIR = './.files/packages'
-PROCESSORS_DIR = './.files/processors/mimir'
-#PROCESSORS_DIR = './.files/processors'
+PACKAGES_DIR = './tests/engine/workflows/.files/packages'
+PROCESSORS_DIR = './tests/engine/workflows/.files/processors/mimir'
+#PROCESSORS_DIR = './tests/engine/workflows/.files/processors'
 
-CSV_FILE = './.files/people.csv'
+CSV_FILE = './tests/engine/workflows/.files/people.csv'
 
 DATASET_PEOPLE = 'people'
 DATASET_FRIENDS = 'friends'
@@ -29,7 +29,7 @@ DATASET_FRIENDS = 'friends'
 CREATE_DATASET_PY = """
 ds = vizierdb.new_dataset()
 ds.insert_column('Name')
-ds.insert_column('Age')
+ds.insert_column('Age', data_type='short')
 ds.insert_row(['Yonder', 23])
 ds.insert_row(['Zoe', 34])
 vizierdb.create_dataset('""" + DATASET_FRIENDS + """', ds)
@@ -74,7 +74,8 @@ class TestMimirBackendWorkflows(unittest.TestCase):
             file={
                 pckg.FILE_ID: fh.identifier,
                 pckg.FILE_NAME: os.path.basename(CSV_FILE)
-            }
+            },
+            infer_types = True
         )
         self.engine.append_workflow_module(
             project_id=project.identifier,
@@ -91,6 +92,7 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         for m in wf.modules:
+            print(m)
             self.assertTrue(m.is_success)
         cmd = python_cell(CREATE_DATASET_PY)
         self.engine.insert_workflow_module(
@@ -103,17 +105,20 @@ class TestMimirBackendWorkflows(unittest.TestCase):
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         for m in wf.modules:
+            print(m)
             self.assertTrue(m.is_success)
-        self.assertTrue(DATASET_FRIENDS in wf.modules[0].datasets)
-        self.assertFalse(DATASET_PEOPLE in wf.modules[0].datasets)
+        datasets = wf.modules[0].provenance.write
+        self.assertTrue(DATASET_FRIENDS in datasets)
+        self.assertFalse(DATASET_PEOPLE in datasets)
         for m in wf.modules[1:]:
-            self.assertTrue(DATASET_FRIENDS in m.datasets)
-            self.assertTrue(DATASET_PEOPLE in m.datasets)
-        ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_PEOPLE].identifier)
+            datasets = m.provenance.get_database_state(datasets)
+            self.assertTrue(DATASET_FRIENDS in datasets)
+            self.assertTrue(DATASET_PEOPLE in datasets)
+        ds = project.datastore.get_dataset(datasets[DATASET_PEOPLE].identifier)
         rows = ds.fetch_rows()
         self.assertEqual(rows[0].values, ['Alice', 24])
         self.assertEqual(rows[1].values, ['Bob', 32])
-        ds = project.datastore.get_dataset(wf.modules[-1].datasets[DATASET_FRIENDS].identifier)
+        ds = project.datastore.get_dataset(datasets[DATASET_FRIENDS].identifier)
         rows = ds.fetch_rows()
         self.assertEqual(rows[0].values, ['Yonder', 23])
         self.assertEqual(rows[1].values, ['Zoe', 34])

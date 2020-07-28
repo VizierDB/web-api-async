@@ -23,22 +23,6 @@ from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 import vizier.api.serialize.labels as labels
 
 
-def ANNOTATIONS(annotations):
-    """Serialize the content of an object annotation set.
-
-    Parameters
-    ----------
-    annotations: vizier.core.annotation.base.ObjectAnnotationSet
-        Set of object annotations
-
-    Returns
-    -------
-    dict()
-    """
-    values = annotations.values()
-    return [{'key': key, 'value': values[key]} for key in values]
-
-
 def HATEOAS(links):
     """Convert a dictionary of key,value pairs into a list of references. Each
     list element is a dictionary that contains a 'rel' and 'href' element.
@@ -68,6 +52,8 @@ def PROPERTIES(properties):
     -------
     list
     """
+    print("PROPS")
+    print(properties)
     result = list()
     for key in properties:
         obj = {labels.KEY: key}

@@ -67,12 +67,12 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
     store. This class is a shortcut to instantiate an object annotation store
     with a persistent annotation store defined in this module.
     """
-    def __init__(self, object_path, object_store=None, annotations=None):
-        """Initialize the file that maintains the annotations. Annotations are
+    def __init__(self, object_path, object_store=None, properties=None):
+        """Initialize the file that maintains the properties. Annotations are
         read from file (if it exists).
 
-        Provides the option to load an initial set of annotations from a given
-        dictionary. If the file exists and the annotations dictionary is not
+        Provides the option to load an initial set of properties from a given
+        dictionary. If the file exists and the properties dictionary is not
         None an exception is thrown.
 
         Parameters
@@ -80,15 +80,15 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
         object_path: string
             Path to resource
         object_store: vizier.core.io.base.ObjectStore, optional
-            Object store to materialize annotations
-        annotations: dict, optional
-            Dictionary with initial set of annotations
+            Object store to materialize properties
+        properties: dict, optional
+            Dictionary with initial set of properties
         """
         # Ensure that the object store is not None
         if object_store is None:
             object_store = DefaultObjectStore()
-        if not annotations is None:
-            # Initialize annotations from the given dictionary. The persistent
+        if not properties is None:
+            # Initialize properties from the given dictionary. The persistent
             # set can only be initialized once.
             if object_store.exists(object_path):
                 raise ValueError('cannot initialize existing annotation set')
@@ -99,8 +99,8 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
                     object_store=object_store
                 )
             )
-            for key in annotations:
-                value = annotations[key]
+            for key in properties:
+                value = properties[key]
                 if isinstance(value, list):
                     for val in value:
                         self.add(key, val, persist=False)
@@ -108,7 +108,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
                     self.add(key, value, persist=False)
             self.writer.store(self.elements)
         else:
-            # Read annotations from disk if the annotation file exists
+            # Read properties from disk if the annotation file exists
             elements = dict()
             if object_store.exists(object_path):
                 obj = object_store.read_object(object_path)

@@ -14,8 +14,8 @@ from vizier.filestore.fs.base import FileSystemFilestore
 SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
-CSV_FILE = './.files/dataset.csv'
-TSV_FILE = './.files/w49k-mmkh.tsv'
+CSV_FILE = './tests/engine/packages/plot/.files/dataset.csv'
+TSV_FILE = './tests/engine/packages/plot/.files/w49k-mmkh.tsv'
 
 DATASET_NAME = 'abc'
 
@@ -53,16 +53,17 @@ class TestDefaultPlotProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=0,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={DATASET_NAME: ds.identifier}
+                artifacts={DATASET_NAME: ds}
             )
         )
         chart = result.outputs.stdout[0].value
         self.assertEqual(chart['data']['data'][0]['label'], 'A')
-        self.assertEqual(chart['data']['data'][1]['label'], 'Series 2')
+        self.assertEqual(chart['data']['data'][1]['label'], 'average_class_size')
         self.assertEqual(chart['result']['series'][0]['label'], 'A')
-        self.assertEqual(chart['result']['series'][1]['label'], 'Series 2')
+        self.assertEqual(chart['result']['series'][1]['label'], 'average_class_size')
         self.assertEqual(len(chart['result']['series'][0]['data']), 6)
         self.assertEqual(len(chart['result']['series'][1]['data']), 6)
 
@@ -80,9 +81,10 @@ class TestDefaultPlotProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=0,
                 datastore=self.datastore,
                 filestore=self.filestore,
-                datasets={DATASET_NAME: ds.identifier}
+                artifacts={DATASET_NAME: ds}
             )
         )
 

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+LAST_TEST_FILE=last_test_results.txt
+LAST_FAILURES_FILE=last_test_failure.txt
+EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
+
+if [ "$1" = "all" ] ; then
+  TESTS=$(find tests -name '*.py')
+elif [ "$1" = "fail" ] ; then
+  TESTS=$(cat $LAST_FAILURES_FILE | uniq) 
+elif [ "$1" = "last" ] ; then 
+  if [ "$(head -n 1 $LAST_FAILURES_FILE)" ] ; then
+    TESTS="$(head -n 1 $LAST_FAILURES_FILE)"
+  else
+    echo "No tests failed in last run"
+    exit
+  fi
+  echo "TESTS:" $TESTS
+  LAST_FAILURES_FILE=/dev/null
+elif [ "$*" ] ; then
+  python3 -m unittest $*
+  LAST_FAILURES_FILE=/dev/null
+else
+  TESTS=$(find tests -name '*.py')
+fi
+
+rm -f $LAST_TEST_FILE
+for CURRENT_TEST in $TESTS; do 
+  echo "------- " $CURRENT_TEST " --------"
+  python3 -m unittest $CURRENT_TEST 2>&1 | tee -a $LAST_TEST_FILE 
+done
+awk '{ if(x) print $0; x=0 } /======================================================================/ { x = 1 }' < last_test_results.txt \
+  | sed $EXTRACT_FAILING_UNIT_CLASSES \
+  | uniq > $LAST_FAILURES_FILE
+if [ "$(cat $LAST_FAILURES_FILE | tr -d '\n')" ] ; then
+  echo
+  echo "==== FAILED TESTS ===="
+  cat $LAST_FAILURES_FILE
+fi

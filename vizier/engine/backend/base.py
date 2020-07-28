@@ -195,7 +195,7 @@ class VizierBackend(object):
         return self.synchronous.execute(
             task=task,
             command=command,
-            context=context,
+            artifacts=context,
             resources=resources
         )
 

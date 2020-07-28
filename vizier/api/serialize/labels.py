@@ -21,7 +21,6 @@ NAME = 'name'
 DATA = 'data'
 
 # Properties
-PROPERTIES = 'properties'
 KEY = 'key'
 VALUE = 'value'
 
@@ -31,7 +30,7 @@ LINKS = 'links'
 REL = 'rel'
 
 # Datasets
-ANNOTATIONS = 'annotations'
+PROPERTIES = 'properties'
 COLUMN = 'column'
 COLUMNS = 'columns'
 DATATYPE = 'type'
@@ -40,7 +39,8 @@ ROW = 'row'
 ROWS = 'rows'
 ROWCOUNT = 'rowCount'
 ROWVALUES = 'values'
-ROWANNOTATIONFLAGS = 'rowAnnotationFlags'
+ROWCAVEATFLAGS = 'rowAnnotationFlags'
+CAVEATS = 'caveats'
 
 # Dataobjects
 OBJECT_TYPE="objType"

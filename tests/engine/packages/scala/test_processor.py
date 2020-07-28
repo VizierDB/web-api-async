@@ -16,15 +16,17 @@ class TestScalaProcessor(unittest.TestCase):
         functionality is there.
         """
         cmd = scala_cell(
-            source='println("Hello, world!")',
+            source='print("Hello, world!")',
             validate=True
         )
         result = ScalaTaskProcessor().compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
+                project_id=4,
                 datastore=None,
-                filestore=None
+                filestore=None,
+                artifacts={}
             )
         )
         self.assertTrue(result.is_success)
