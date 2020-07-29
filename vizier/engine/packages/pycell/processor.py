@@ -84,7 +84,7 @@ class PyCellTaskProcessor(TaskProcessor):
         #get
         objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
         dos = [object for objects in [objects.for_id(doid) for doid in [ value for key, value in context.dataobjects.items()]] for object in objects ]
-        inj_src = ''
+        inj_src = 'show = vizierdb.show\n'
         # Get Python script from user arguments.  It is the source for VizierDBClient
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
         dataobjects = list()
@@ -93,6 +93,7 @@ class PyCellTaskProcessor(TaskProcessor):
             dataobjects.append([obj.key,obj.identifier])
         # Assemble the source to run in the interpreter 
         source = inj_src + cell_src
+        print(" --- Running ---\n{}".format(source))
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
