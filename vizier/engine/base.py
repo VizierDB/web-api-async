@@ -27,6 +27,8 @@ local machine, (b) with a set of celery workers, (c) running each project in
 its own container, etc). The engine that is used by a vizier instance is
 specified in the configuration file and loaded when the instance is started.
 """
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_unique_identifier
@@ -35,7 +37,12 @@ from vizier.engine.task.base import TaskHandle
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.command import ModuleCommand
+from vizier.engine.backend.base import VizierBackend
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.engine.packages.base import PackageIndex
+from vizier.engine.task.processor import ExecResult
 
 import vizier.viztrail.workflow as wf
 import vizier.viztrail.module.base as mstate
@@ -82,7 +89,13 @@ class VizierEngine(WorkflowController):
     should have a descriptive name and version information (for display purposes
     in the front-end).
     """
-    def __init__(self, name, projects, backend, packages):
+    def __init__(
+            self, 
+            name: str, 
+            projects: ProjectCache, 
+            backend: VizierBackend, 
+            packages: Dict[str,PackageIndex]
+        ):
         """Initialize the engine components.
 
         Parameters
@@ -101,9 +114,14 @@ class VizierEngine(WorkflowController):
         self.backend = backend
         self.packages = packages
         # Maintain an internal dictionary of running tasks
-        self.tasks = dict()
+        self.tasks: Dict[str,Any] = dict()
 
-    def append_workflow_module(self, project_id, branch_id, command):
+    def append_workflow_module(
+            self, 
+            project_id: str, 
+            branch_id: str, 
+            command: ModuleCommand
+        ) -> Optional[ModuleHandle]:
         """Append module to the workflow at the head of the given viztrail
         branch. The modified workflow will be executed. The result is the new
         head of the branch.
@@ -234,7 +252,11 @@ class VizierEngine(WorkflowController):
                     )
         return workflow.modules[-1]
 
-    def cancel_exec(self, project_id, branch_id):
+    def cancel_exec(
+            self, 
+            project_id: str, 
+            branch_id: str
+        ) -> Optional[List[ModuleHandle]]:
         """Cancel the execution of all active modules for the head workflow of
         the given branch. Sets the status of all active modules to canceled and
         sends terminate signal to running tasks. The finished_at property is
@@ -671,7 +693,11 @@ class VizierEngine(WorkflowController):
             )
             return workflow.modules[module_index:]
 
-    def set_error(self, task_id, finished_at=None, outputs=None):
+    def set_error(self, 
+            task_id: str, 
+            finished_at: Optional[datetime] = None, 
+            outputs: Optional[ModuleOutputs] = None
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to error. The finished_at property of the timestamp is set
         to the given value or the current time (if None). The module outputs
@@ -718,7 +744,10 @@ class VizierEngine(WorkflowController):
             else:
                 return False
 
-    def set_running(self, task_id, started_at=None):
+    def set_running(self, 
+            task_id: str, 
+            started_at: Optional[datetime] = None
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
@@ -758,7 +787,12 @@ class VizierEngine(WorkflowController):
             else:
                 return False
 
-    def set_success(self, task_id, finished_at=None, outputs=None, provenance=None):
+    def set_success(
+            self, 
+            task_id: str, 
+            finished_at: Optional[datetime]=None, 
+            result: ExecResult = ExecResult()
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
@@ -770,22 +804,6 @@ class VizierEngine(WorkflowController):
 
         Returns True if the state of the workflow was changed and False
         otherwise. The result is None if the project or task did not exist.
-
-        Parameters
-        ----------
-        task_id : string
-            Unique task identifier
-        finished_at: datetime.datetime, optional
-            Timestamp when module started running
-        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
-            Output streams for module
-        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
-            Provenance information about datasets that were read and writen by
-            previous execution of the module.
-
-        Returns
-        -------
-        bool
         """
         with self.backend.lock:
             # Get task handle and remove it from the internal index. The result
@@ -809,14 +827,14 @@ class VizierEngine(WorkflowController):
             dataobjects = workflow.modules[module_index - 1].dataobjects if module_index > 0 else dict()
             dsanddo = datasets.copy()
             dsanddo.update(dataobjects)
-            context_all = provenance.get_database_state(dsanddo)
-            context_ds, context_do = provenance.split_context(context_all)
+            context_all = result.provenance.get_database_state(dsanddo)
+            context_ds, context_do = result.provenance.split_context(context_all)
             
             module.set_success(
                 finished_at=finished_at,
                 datasets=context_ds,
                 outputs=outputs,
-                provenance=provenance,
+                provenance=result.provenance,
                 dataobjects=context_do
             )
             print("Module {} finished at {} / Context: {}".format(

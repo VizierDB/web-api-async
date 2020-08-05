@@ -17,12 +17,13 @@
 """Helper methods to initialize the set of supported packages."""
 
 import os
+from typing import Dict
 
 from vizier.core.io.base import read_object_from_file
 from vizier.engine.packages.base import PackageIndex
 
 
-def load_packages(path):
+def load_packages(path: str) -> Dict[str, PackageIndex]:
     """Load package declarations from directories in the given path. The
     packages path may contain multiple directories separated by ':'. The
     directories in the path are processed in reverse order to ensure that
@@ -33,7 +34,7 @@ def load_packages(path):
     -------
     dict(vizier.engine.package.base.PackageIndex)
     """
-    packages = dict()
+    packages: Dict[str, PackageIndex] = dict()
     for dir_name in path.split(':')[::-1]:
         for filename in os.listdir(dir_name):
             filename = os.path.join(dir_name, filename)

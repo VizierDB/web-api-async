@@ -24,10 +24,12 @@ contain the parameter id and value as dictionary elements. The structure of the
 va;ue element is dependent on the parameter type.
 """
 
+from typing import List, Dict, Any, Optional
 from vizier.core.util import is_scalar
 
 import vizier.engine.packages.base as pckg
-
+from vizier.engine.packages.base import PackageIndex, CommandDeclaration
+from vizier.datastore.dataset import DatasetDescriptor
 
 """Element labels for dictionaries that represent command arguments."""
 ARG_ID = 'id'
@@ -41,7 +43,9 @@ UNKNOWN_ID = 'unknown'
 
 class ModuleArguments(object):
     """Nested dictionary of module command arguments."""
-    def __init__(self, arguments=[], parent=None):
+    def __init__(self, 
+            arguments:List[Dict[str,Any]] = [], 
+            parent:Optional[str] = None):
         """Initialize the arguments from a given list of dictionaries that are
         (id,value)-pairs. Values can be lists in which case a nested argument
         structure is assumed.
@@ -277,7 +281,9 @@ class ModuleArguments(object):
             result.append({ARG_ID: arg_id, ARG_VALUE: arg_val})
         return result
 
-    def validate(self, parameters):
+    def validate(self, 
+            parameters: CommandDeclaration
+        ) -> None:
         """Validate the module arguments against the given command parameter
         declarations.
 
@@ -356,7 +362,12 @@ class ModuleCommand(object):
     arguments: vizier.viztrail.command.ModuleArguments
         Nested structure of arguments for the specified command
     """
-    def __init__(self, package_id, command_id, arguments=[], packages=None):
+    def __init__(self, 
+            package_id: str, 
+            command_id: str, 
+            arguments: List[Dict[str,Any]], 
+            packages: Dict[str, PackageIndex]
+        ):
         """Initialize the package and command identifier as well as the command
         arguments.
 
@@ -420,7 +431,9 @@ class ModuleCommand(object):
             'arguments': self.arguments.to_list()
         }
 
-    def to_external_form(self, command, datasets=None):
+    def to_external_form(self, 
+            command: CommandDeclaration, 
+            datasets: Dict[str, DatasetDescriptor] = dict()):
         """Get a string representation for the command based on the current
         arguments.
 

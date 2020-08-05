@@ -193,7 +193,7 @@ class MimirDatasetColumn(DatasetColumn):
         return '\'' + str(value) + '\''
 
 
-MIMIR_ROWID_COL= MimirDatasetColumn( name_in_dataset='', data_type='rowid')
+MIMIR_ROWID_COL= MimirDatasetColumn( name_in_dataset='', data_type='rowid') #type: ignore[no-untyped-call]
 
 
 class MimirDatasetHandle(DatasetHandle):

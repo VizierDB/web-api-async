@@ -19,6 +19,7 @@ write resources as Json objects.
 """
 
 from abc import abstractmethod
+from typing import Dict, Any
 
 import json
 import os
@@ -453,7 +454,7 @@ class DefaultObjectStore(ObjectStore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def read_object_from_file(filename):
+def read_object_from_file(filename: str) -> Dict[str, Any]:
     """Read dictionary serialization from file. The file format is expected to
     by Yaml unless the filename ends with .json.
 

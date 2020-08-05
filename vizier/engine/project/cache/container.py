@@ -18,7 +18,7 @@
 container.
 """
 
-import docker
+import docker # type: ignore[import]
 import requests
 
 from vizier.api.routes.container import ContainerApiUrlFactory

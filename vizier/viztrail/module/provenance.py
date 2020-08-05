@@ -23,6 +23,8 @@ provenance object allows to carry state from previous executions for a module.
 """
 
 import os
+from typing import Dict, Set, List, Any, Tuple
+from vizier.view.chart import ChartViewHandle
 from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 def debug(message):
@@ -60,7 +62,13 @@ class ModuleProvenance(object):
     the provenance dictionaries and lists are None. In that case the module
     will always require execution.
     """
-    def __init__(self, read=None, write=None, delete=None, resources=None, charts=None):
+    def __init__(self, 
+            read: Dict[str,str] = dict(), 
+            write: Dict[str,str] = dict(), 
+            delete: Set[str] = set(), 
+            resources: Dict[str,Any] = dict(), 
+            charts: List[Tuple[str, ChartViewHandle]] = []
+        ):
         """Initialize the datasets that were read and written by a previous
         module execution.
 

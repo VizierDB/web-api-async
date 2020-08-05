@@ -23,7 +23,7 @@ import logging
 import os
 
 from flask import Flask, jsonify, make_response, redirect
-from flask_cors import CORS
+from flask_cors import CORS # type: ignore[import]
 from logging.handlers import RotatingFileHandler
 
 from vizier.config.app import AppConfig

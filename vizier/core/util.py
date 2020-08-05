@@ -16,6 +16,8 @@
 
 """Collection of helper methods."""
 
+from typing import Any
+
 import json
 import os
 import uuid
@@ -148,7 +150,7 @@ def init_value(value, default_value):
     return value if not value is None else default_value
 
 
-def is_scalar(value):
+def is_scalar(value: Any) -> bool:
     """Test if a given value is a string, integer or float.
 
     Parameters

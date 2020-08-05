@@ -24,9 +24,11 @@ to define the front-end forms that are rendered in notebook cells to gather
 user input.
 """
 
+from typing import List, Dict, Any, Optional
+
 import json
 import yaml
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError # type: ignore[import]
 
 
 # ------------------------------------------------------------------------------
@@ -216,7 +218,7 @@ def package_declaration(identifier, commands, name=None, category=None, descript
     return obj
 
 
-def validate_package(pckg_declaration):
+def validate_package(pckg_declaration: Dict[str, Any]) -> None:
     """Validate a given package declaration. Includes validating declarations
     for package commands. Raises a ValueError if an invalid package
     declaration is given.
@@ -333,7 +335,7 @@ def parameter_declaration(
 
     Parameters
     ----------
-    identifier: string
+    identifier: string`
         Unique parameter identifier
     name: string
         Printable parameter name
@@ -576,7 +578,7 @@ class PackageIndex(object):
     """Index of package command declarations. Maintains a dictionary that can be
     used to instantiate objects of the associated package task engine.
     """
-    def __init__(self, package):
+    def __init__(self, package: Dict[str, Any]):
         """Initialize the index from a package declaration.
 
         Validates the given package declaration. Raises ValueError if an
@@ -614,7 +616,9 @@ class PackageIndex(object):
                 format=cmd[LABEL_FORMAT] if LABEL_FORMAT in cmd else list()
             )
 
-    def get(self, command_id):
+    def get(self, 
+            command_id: str
+        ) -> CommandDeclaration:
         """Get the parameter declarations for the given command.
 
         Raises ValueError if no command with the given identifier exists.
@@ -637,7 +641,12 @@ class CommandDeclaration(object):
     """Command declaration contains an index of command parameter declarations
     and the command format declaration.
     """
-    def __init__(self, identifier, name, paramaters, format, description=None):
+    def __init__(self, 
+            identifier: str, 
+            name: str, 
+            paramaters: List[Dict[str,Any]], 
+            format: List[Dict[str,Any]], 
+            description: Optional[str] = None):
         """Initialize the index from a given list of paramater declarations.
 
         Parameters
@@ -662,7 +671,9 @@ class CommandDeclaration(object):
             self.parameters[para[LABEL_ID]] = para
         self.format = format
 
-    def get(self, parameter_id):
+    def get(self, 
+            parameter_id: str
+        ) -> Dict[str, Any]:
         """Get declaration for parameter with given identifier.
 
         Raises ValueError if no parameter with the given identifier exists.
@@ -680,7 +691,9 @@ class CommandDeclaration(object):
             raise ValueError('unknown parameter \'' + str(parameter_id) + '\'')
         return self.parameters[parameter_id]
 
-    def mandatory(self, parent=None):
+    def mandatory(self, 
+            parent: str = None
+        ) -> List[str]:
         """Get a list of parameter names that are mandatory. The optional parent
         parameter allows to request mandatory parameter for nested components.
 

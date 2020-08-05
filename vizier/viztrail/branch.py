@@ -20,10 +20,11 @@ that represent the history of the branch.
 """
 
 from abc import abstractmethod
+from typing import Optional
 
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.base import NamedObject
-
+from vizier.viztrail.workflow import WorkflowHandle
 
 """Initial name for the default branch."""
 DEFAULT_BRANCH = 'Default'
@@ -151,7 +152,7 @@ class BranchHandle(NamedObject):
         """
         return self.provenance.created_at
 
-    def get_head(self):
+    def get_head(self) -> WorkflowHandle:
         """Shortcut the get the workflow at the head of the branch. The result
         is None if the branch is empty.
 
@@ -172,7 +173,7 @@ class BranchHandle(NamedObject):
         raise NotImplementedError
 
     @abstractmethod
-    def get_workflow(self, workflow_id=None):
+    def get_workflow(self, workflow_id: Optional[str] = None) -> WorkflowHandle:
         """Get the workflow with the given identifier. If the identifier is
         none the head of the branch is returned. The result is None if the
         branch is empty.

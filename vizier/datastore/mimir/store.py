@@ -22,7 +22,7 @@ import csv
 import gzip
 import json
 import os
-import unicodecsv
+import unicodecsv # type: ignore[import]
 
 from io import StringIO
 

@@ -28,6 +28,7 @@ store, data store, viztrail repository and the workflow execution engine.
 
 import os
 import io
+from typing import Dict
 
 from vizier.api.webservice.branch import VizierBranchApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
@@ -38,19 +39,24 @@ from vizier.api.webservice.view import VizierDatasetViewApi
 from vizier.api.webservice.workflow import VizierWorkflowApi
 from vizier.api.routes.base import UrlFactory
 from vizier.api.routes.container import ContainerEngineUrlFactory
+from vizier.config.app import AppConfig
 from vizier.config.celery import config_routes
 from vizier.core import VERSION_INFO
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_short_identifier, get_unique_identifier
+from vizier.datastore.factory import DatastoreFactory
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.datastore.mimir.factory import MimirDatastoreFactory
+from vizier.engine.backend.base import VizierBackend
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.backend.remote.celery.base import CeleryBackend
 from vizier.engine.backend.remote.container import ContainerBackend
 from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.base import VizierEngine
 from vizier.engine.packages.load import load_packages
+from vizier.engine.task.processor import TaskProcessor
+from vizier.engine.project.cache.base import ProjectCache
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.engine.project.cache.container import ContainerProjectCache
 from vizier.engine.task.processor import load_processors
@@ -185,7 +191,7 @@ class DotDict(dict):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_engine(config):
+def get_engine(config: AppConfig) -> VizierEngine:
     """Create instance of the default vizual engine using the default datastore,
     filestore and viztrails factories.  The default engine may use a
     multi-process backend or a celery backend.
@@ -230,12 +236,13 @@ def get_engine(config):
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
         filestore_factory=FileSystemFilestoreFactory(filestores_dir)
         datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
+        datastore_factory: DatastoreFactory
         if config.engine.identifier == base.DEV_ENGINE:
             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
         else:
             datastore_factory = MimirDatastoreFactory(datastores_dir)
         # The default engine uses a common project cache.
-        projects = CommonProjectCache(
+        projects: ProjectCache = CommonProjectCache(
             datastores=datastore_factory,
             filestores=filestore_factory,
             viztrails=viztrails
@@ -246,7 +253,7 @@ def get_engine(config):
         synchronous = None
         sync_commands_list = config.engine.sync_commands
         if not sync_commands_list is None:
-            commands = dict()
+            commands:Dict[str,Dict[str,TaskProcessor]] = dict()
             for el in sync_commands_list.split(':'):
                 package_id, command_id = el.split('.')
                 if not package_id in commands:
@@ -257,6 +264,7 @@ def get_engine(config):
                 projects=projects
             )
         # Create the backend
+        backend: VizierBackend
         if backend_id == base.BACKEND_MULTIPROCESS:
             backend = MultiProcessBackend(
                 processors=processors,

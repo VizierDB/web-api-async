@@ -20,12 +20,14 @@ standard output and one for error messages.
 
 import sys
 import os
+from typing import List
 import traceback
 import vizier.config.base as config
 from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
 from vizier import debug_is_on
+
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -77,7 +79,7 @@ class ModuleOutputs(object):
     stdout: list(vizier.viztrail.module.OutputObject)
         Standard output stream
     """
-    def __init__(self, stdout=None, stderr=None):
+    def __init__(self, stdout: List[OutputObject]=None, stderr: List[OutputObject]=None):
         """Initialize the standard output and error stream.
 
         Parameters

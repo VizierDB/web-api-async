@@ -22,6 +22,10 @@ their mapping to workflow modules.
 """
 
 from abc import abstractmethod
+from typing import Optional
+from datetime import datetime
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.engine.task.processor import ExecResult
 
 
 class WorkflowController(object):
@@ -34,7 +38,11 @@ class WorkflowController(object):
     the user and not the backend.
     """
     @abstractmethod
-    def set_error(self, task_id, finished_at=None, outputs=None):
+    def set_error(self, 
+            task_id: str, 
+            finished_at: Optional[datetime] = None, 
+            outputs: Optional[ModuleOutputs] = None
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to error. The finished_at property of the timestamp is set
         to the given value or the current time (if None). The module outputs
@@ -62,7 +70,10 @@ class WorkflowController(object):
         raise NotImplementedError
 
     @abstractmethod
-    def set_running(self, task_id, started_at=None):
+    def set_running(self, 
+            task_id: str, 
+            started_at: Optional[datetime] = None
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
         set to the given value or the current time (if None).
@@ -84,7 +95,12 @@ class WorkflowController(object):
         raise NotImplementedError
 
     @abstractmethod
-    def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
+    def set_success(
+            self, 
+            task_id: str, 
+            finished_at: Optional[datetime], 
+            result: ExecResult
+        ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to success. The finished_at property of the timestamp
         is set to the given value or the current time (if None).
