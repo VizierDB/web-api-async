@@ -9,7 +9,7 @@ from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 
 
 SERVER_DIR = './.tmp'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/filestore/.files/dataset.csv'
 
 
 class TestFileSystemFilestoreFactory(unittest.TestCase):

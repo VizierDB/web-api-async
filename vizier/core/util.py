@@ -16,7 +16,7 @@
 
 """Collection of helper methods."""
 
-from typing import Any
+from typing import Any, TypeVar, Optional
 
 import json
 import os
@@ -113,7 +113,7 @@ def encode_values(values):
     return result
 
 
-def get_unique_identifier():
+def get_unique_identifier() -> str:
     """Create a new unique identifier.
 
     Returns
@@ -134,7 +134,9 @@ def get_short_identifier():
     return get_unique_identifier()[:8]
 
 
-def init_value(value, default_value):
+T = TypeVar('T')
+
+def init_value(value: Optional[T], default_value: T) -> T:
     """Returns the value if it is not None. Otherwise, returns the default
     value.
 

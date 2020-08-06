@@ -17,11 +17,13 @@
 """Implementation for branch handles that maintain all resources as objects
 and folders in an object store.
 """
+from typing import cast, Optional, Dict, Any, List
 
-from vizier.core.annotation.persistent import PersistentAnnotationSet
-from vizier.core.io.base import DefaultObjectStore
+from vizier.core.io.base import ObjectStore, DefaultObjectStore
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.core.annotation.base import ObjectAnnotationSet
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.module import get_module_path
@@ -29,7 +31,7 @@ from vizier.viztrail.module.base import MODULE_PENDING, MODULE_RUNNING
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
 from vizier.viztrail.workflow import ACTION_CREATE, ACTION_INSERT
-
+from vizier.viztrail.module.base import ModuleHandle
 
 """Resource identifier"""
 OBJ_METADATA = 'branch'
@@ -91,33 +93,19 @@ class OSBranchHandle(BranchHandle):
                     positive integer and the order of identifiers reflects
                     the order of workflows in the branch history.
     """
-    def __init__(
-        self, identifier, is_default, base_path, modules_folder, provenance,
-        properties, workflows=None, head=None, object_store=None,
-        cache_size=None
+    def __init__(self, 
+            identifier: str, 
+            is_default: bool, 
+            base_path: str, 
+            modules_folder: str, 
+            provenance: BranchProvenance,
+            properties: ObjectAnnotationSet, 
+            workflows: List[WorkflowDescriptor] = list(), 
+            head: Optional[WorkflowHandle] = None, 
+            object_store: Optional[ObjectStore] = None,
+            cache_size: int = DEFAULT_CACHE_SIZE
     ):
         """Initialize the branch handle.
-
-        Parameters
-        ----------
-        identifier: string
-            Unique branch identifier
-        is_default: bool
-            True if this is the default branch for its viztrail
-        base_path: string
-            Path to branch resources folder
-        modules_folder: string
-            Path to module resources folder
-        provenance: vizier.viztrail.branch.BranchProvenance
-            Branch provenance information
-        properties: vizier.core.annotation.base.ObjectAnnotationSet
-            Branch property set
-        workflows: list(vizier.viztrail.workflow.WorkflowDescriptor), optional
-            List of descriptors for workflows in branch history
-        head: vizier.viztrail.workflow.WorkflowHandle, optional
-            Current at the head of the branch
-        object_store: vizier.core.io.base.ObjectStore, optional
-            Object store implementation to access and maintain resources
         """
         super(OSBranchHandle, self).__init__(
             identifier=identifier,
@@ -131,9 +119,9 @@ class OSBranchHandle(BranchHandle):
         self.workflows = init_value(workflows, list())
         self.head = head
         self.cache_size = cache_size if not cache_size is None else DEFAULT_CACHE_SIZE
-        self.cache = list()
+        self.cache: List[WorkflowHandle] = list()
 
-    def add_to_cache(self, workflow):
+    def add_to_cache(self, workflow: WorkflowHandle):
         """Add the given workflow the the internal cache. Returns the given
         handle for convenience.
 
@@ -196,7 +184,6 @@ class OSBranchHandle(BranchHandle):
                     external_form=pm.external_form,
                     state=pm.state,
                     timestamp=pm.timestamp,
-                    datasets=pm.datasets,
                     outputs=pm.outputs,
                     provenance=pm.provenance,
                     module_folder=self.modules_folder,
@@ -230,7 +217,7 @@ class OSBranchHandle(BranchHandle):
     @staticmethod
     def create_branch(
         identifier, base_path, modules_folder, is_default=False, provenance=None,
-        properties=None, created_at=None, modules=None, object_store=None
+        properties={}, created_at=None, modules=None, object_store=None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -324,7 +311,7 @@ class OSBranchHandle(BranchHandle):
             properties=PersistentAnnotationSet(
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store,
-                annotations=properties
+                properties=properties
             ),
             workflows=workflows,
             head=head,
@@ -392,7 +379,13 @@ class OSBranchHandle(BranchHandle):
         return None
 
     @staticmethod
-    def load_branch(identifier, is_default, base_path, modules_folder, object_store=None):
+    def load_branch(
+            identifier: str, 
+            is_default: bool, 
+            base_path: str, 
+            modules_folder: str, 
+            object_store: Optional[ObjectStore] = None
+        ):
         """Load branch from disk. Reads the branch provenance information and
         descriptors for all workflows in the branch history. If the branch
         history is not empty the modules for the workflow at the branch head
@@ -421,9 +414,9 @@ class OSBranchHandle(BranchHandle):
         # Load branch provenance. The object will contain the created_at
         # timestamp and optionally the three entries that define the branch
         # point.
-        doc = object_store.read_object(
+        doc = cast(Dict[str, Any], object_store.read_object(
             object_store.join(base_path, OBJ_METADATA)
-        )
+        ))
         created_at = to_datetime(doc[KEY_CREATED_AT])
         if len(doc) == 4:
             provenance = BranchProvenance(
@@ -441,7 +434,7 @@ class OSBranchHandle(BranchHandle):
         for resource in object_store.list_objects(base_path):
             if not resource in [OBJ_METADATA, OBJ_PROPERTIES]:
                 resource_path = object_store.join(base_path, resource)
-                obj = object_store.read_object(resource_path)
+                obj = cast(Dict[str, Any], object_store.read_object(resource_path))
                 desc = obj[KEY_WORKFLOW_DESCRIPTOR]
                 workflows.append(
                     WorkflowDescriptor(
@@ -505,7 +498,13 @@ def get_workflow_id(identifier):
     return hex(identifier)[2:].zfill(8).upper()
 
 
-def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder, object_store):
+def read_workflow(
+        branch_id: str, 
+        workflow_descriptor: WorkflowDescriptor, 
+        workflow_path: str, 
+        modules_folder: str, 
+        object_store: ObjectStore
+    ) -> WorkflowHandle:
     """Read workflow from object store.
 
     If a module is encountered that is in an active state it will be set to
@@ -533,7 +532,7 @@ def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder,
     vizier.viztrail.workflow.WorkflowHandle
     """
     # Read the workflow handle and workflow modules
-    obj = object_store.read_object(workflow_path)
+    obj = cast(Dict[str, Any], object_store.read_object(workflow_path))
     modules = read_workflow_modules(
         modules_list=obj[KEY_WORKFLOW_MODULES],
         modules_folder=modules_folder,
@@ -542,6 +541,7 @@ def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder,
     # If any of the modules is active we set the module state to canceled
     for m in modules:
         if m.is_active:
+            assert isinstance(m, OSModuleHandle)
             m.set_canceled()
     # Return workflow handle
     return WorkflowHandle(
@@ -552,7 +552,11 @@ def read_workflow(branch_id, workflow_descriptor, workflow_path, modules_folder,
     )
 
 
-def read_workflow_modules(modules_list, modules_folder, object_store):
+def read_workflow_modules(
+        modules_list: List[str], 
+        modules_folder: str, 
+        object_store: ObjectStore
+    ) -> List[ModuleHandle]:
     """Read workflow modules from object store.
 
     Parameters
@@ -568,8 +572,7 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
     -------
     list(vizier.viztrail.objectstore.module.OSModuleHandle)
     """
-    modules = list()
-    database_state = dict()
+    modules: List[ModuleHandle] = list()
     for module_id in modules_list:
         module_path=get_module_path(
             modules_folder=modules_folder,
@@ -579,10 +582,8 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
         m = OSModuleHandle.load_module(
             identifier=module_id,
             module_path=module_path,
-            prev_state=database_state,
             object_store=object_store
         )
-        database_state = m.datasets
         modules.append(m)
     return modules
 

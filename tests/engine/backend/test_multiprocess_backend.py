@@ -5,12 +5,14 @@ import shutil
 import time
 import unittest
 
+
+
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
-from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
+from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
 from vizier.engine.project.base import ProjectHandle
@@ -31,7 +33,7 @@ SERVER_DIR = './.tmp'
 DATASTORES_DIR = SERVER_DIR + '/ds'
 FILESTORES_DIR = SERVER_DIR + '/fs'
 VIZTRAILS_DIR = SERVER_DIR + '/vt'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/engine/backend/.files/dataset.csv'
 
 PROJECT_ID = '111'
 
@@ -77,7 +79,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend = MultiProcessBackend(
             processors={
                 PACKAGE_PYTHON: PyCellTaskProcessor(),
-                PACKAGE_VIZUAL:  VizualTaskProcessor(api=DefaultVizualApi()),
+                PACKAGE_VIZUAL:  VizualTaskProcessor(api=MimirVizualApi()),
                 'error': FakeTaskProcessor()
             },
             projects=projects
@@ -104,7 +106,7 @@ class TestMultiprocessBackend(unittest.TestCase):
                 controller=controller
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         time.sleep(1)
         self.backend.cancel_task('000')
@@ -126,7 +128,7 @@ class TestMultiprocessBackend(unittest.TestCase):
                 controller=controller
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         time.sleep(2)
         self.assertEqual(controller.task_id, '000')
@@ -138,7 +140,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         """Test executing a sequence of supported commands."""
         context = dict()
         cmd = pycell.python_cell(
-            source='print 2+2',
+            source='print(2+2)',
             validate=True
         )
         controller = FakeWorkflowController()
@@ -149,7 +151,7 @@ class TestMultiprocessBackend(unittest.TestCase):
                 controller=controller
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         time.sleep(3)
         self.assertEqual(controller.task_id, '000')

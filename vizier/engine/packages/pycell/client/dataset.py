@@ -18,7 +18,6 @@
 """
 
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from bokeh.models.sources import ColumnDataSource
 
 class DatasetClient(object):
@@ -54,16 +53,16 @@ class DatasetClient(object):
         self.dataset = dataset
         self.client = client
         self.existing_name = existing_name
-        if not dataset is None:
+        if dataset is not None:
             self.identifier = dataset.identifier
             self.columns = dataset.columns
             # Delay fetching rows and dataset annotations for now
-            self._annotations = None
+            self._properties = None
             self._rows = None
         else:
             self.identifier = None
             self.columns = list()
-            self._annotations = DatasetMetadata()
+            self._properties = {}
             self._rows = list()
 
     def __getitem__(self, key):
@@ -80,18 +79,14 @@ class DatasetClient(object):
             self.client.create_dataset(name = name, dataset = self)
 
     @property
-    def annotations(self):
-        """Get all dataset annotations.
+    def properties(self):
+        """Get all dataset properties
 
         Returns
         -------
-        vizier.datastore.annotation.dataset.DatasetMetadata
+        dict(string:any)
         """
-        if self._annotations is None:
-            self._annotations = DatasetMetadata.from_list(
-                self.dataset.get_annotations()
-            )
-        return self._annotations
+        return self._properties or {}
 
     def column_index(self, column_id):
         """Get position of a given column in the dataset schema. The given
@@ -153,7 +148,7 @@ class DatasetClient(object):
                 return col
         return None
 
-    def insert_column(self, name, position=None):
+    def insert_column(self, name, data_type = None, position=None):
         """Add a new column to the dataset schema.
 
         Parameters
@@ -167,7 +162,7 @@ class DatasetClient(object):
         Returns
         DatasetColumn
         """
-        column = DatasetColumn(name=name)
+        column = DatasetColumn(name=name, data_type = data_type)
         self.columns = list(self.columns)
         if not position is None:
             self.columns.insert(position, column)

@@ -24,20 +24,29 @@ or virtual environment.
 
 from functools import partial
 from multiprocessing import Lock, Pool
+from multiprocessing.pool import Pool as PoolType
+from typing import Dict, Tuple
 
 from vizier.core.loader import ClassLoader
 from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import VizierBackend, exec_command
 from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING
-
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.engine.backend.base import TaskExecEngine, NonSynchronousEngine
+from vizier.engine.task.processor import TaskProcessor
+from vizier.engine.task.base import TaskHandle
 
 class MultiProcessBackend(VizierBackend):
     """The multi-process backend lauches a single-process pool for each task
     that is being executed. There is no limit on the number of tasks that are
     executed in parallel.
     """
-    def __init__(self, projects, processors, synchronous=None):
+    def __init__(self, 
+            projects: ProjectCache, 
+            processors: Dict[str, TaskProcessor], 
+            synchronous: TaskExecEngine = NonSynchronousEngine()
+        ):
         """Initialize the index of package processors. Accepts an optional
         dictionary of commands that will be executed synchronously instead of
         forking a new process for execution. The optional properties dictionary
@@ -77,7 +86,7 @@ class MultiProcessBackend(VizierBackend):
         # the index is the unique task identifier. This dictionary is used to
         # cancel tasks and to update the controller when task execution
         # is complete.
-        self.tasks = dict()
+        self.tasks: Dict[str, Tuple[TaskHandle, PoolType]] = dict()
 
     def cancel_task(self, task_id):
         """Request to cancel execution of the given task.
@@ -97,7 +106,9 @@ class MultiProcessBackend(VizierBackend):
         except KeyError:
             pass
 
-    def execute_async(self, task, command, context, resources=None):
+    def execute_async(self, 
+            task: TaskHandle, 
+            command, artifacts, resources=None):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
@@ -115,7 +126,7 @@ class MultiProcessBackend(VizierBackend):
             workflow engine
         command : vizier.viztrail.command.ModuleCommand
             Specification of the command that is to be executed
-        context: dict
+        artifacts: dict
             Dictionary of available resources in the database state. The key is
             the resource name. Values are resource identifiers.
         resources: dict, optional
@@ -150,9 +161,8 @@ class MultiProcessBackend(VizierBackend):
                     project_id=task.project_id,
                     datastore=project.datastore,
                     filestore=project.filestore,
-                    datasets=context[labels.CONTEXT_DATASETS],
                     resources=resources,
-                    dataobjects=context[labels.CONTEXT_DATAOBJECTS]
+                    artifacts=artifacts
                 ),
                 processor,
             ),

@@ -20,10 +20,15 @@ processors) is defined in the processor module.
 """
 
 import os
+from typing import Optional, Dict, Any
+
 
 from vizier.core.io.base import read_object_from_file
 from vizier.core.loader import ClassLoader
-
+from vizier.engine.controller import WorkflowController
+from vizier.datastore.base import Datastore
+from vizier.filestore.base import Filestore
+from vizier.datastore.artifact import ArtifactDescriptor
 
 class TaskContext(object):
     """The task context contains references to the datastore and filestore that
@@ -43,7 +48,12 @@ class TaskContext(object):
     filestore: vizier.filestore.Filestore
         Filestore for the project that executes the task
     """
-    def __init__(self, project_id, datastore, filestore, datasets=None, resources=None, dataobjects=None):
+    def __init__(self, 
+            project_id: str,
+            datastore: Datastore, 
+            filestore: Filestore, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any] = dict()):
         """Initialize the components of the task context.
 
         Parameters
@@ -64,9 +74,9 @@ class TaskContext(object):
         self.project_id = project_id
         self.datastore = datastore
         self.filestore = filestore
-        self.datasets = datasets if not datasets is None else dict()
+        self.datasets = { name: artifacts[name] for name in artifacts if artifacts[name].is_dataset }
         self.resources = resources
-        self.dataobjects = dataobjects if not dataobjects is None else dict()
+        self.dataobjects = { name: artifacts[name] for name in artifacts if not artifacts[name].is_dataset }
 
     def get_dataset(self, name):
         """Get the handle for the dataset with the given name. Raises ValueError
@@ -82,7 +92,7 @@ class TaskContext(object):
         vizier.datastore.dataset.DatasetHandle
         """
         if name in self.datasets:
-            dataset = self.datastore.get_dataset(self.datasets[name])
+            dataset = self.datastore.get_dataset(self.datasets[name].identifier)
             if not dataset is None:
                 return dataset
         raise ValueError('unknown dataset \'' + str(name) + '\'')
@@ -101,7 +111,7 @@ class TaskContext(object):
         vizier.datastore.dataset.DatasetHandle
         """
         if name in self.dataobjects:
-            dataobj = next(iter(self.datastore.get_objects(self.dataobjects[name])), None)
+            dataobj = self.datastore.get_object(self.dataobjects[name].identifier)
             if not dataobj is None:
                 return dataobj
         raise ValueError('unknown data object \'' + str(name) + '\'')
@@ -115,7 +125,10 @@ class TaskHandle(object):
     The given controller is used to signal state changes to the controlling
     workflow engine.
     """
-    def __init__(self, task_id, project_id, controller=None):
+    def __init__(self, 
+            task_id: str, 
+            project_id: str, 
+            controller: Optional[WorkflowController]=None):
         """Initialize the components of the task handle.
 
         Parameters

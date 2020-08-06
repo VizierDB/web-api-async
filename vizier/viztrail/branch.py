@@ -20,11 +20,14 @@ that represent the history of the branch.
 """
 
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.base import NamedObject
 from vizier.viztrail.workflow import WorkflowHandle
+from vizier.viztrail.module.base import ModuleHandle, ModuleCommand
+from vizier.core.annotation.base import ObjectAnnotationSet
 
 """Initial name for the default branch."""
 DEFAULT_BRANCH = 'Default'
@@ -54,7 +57,12 @@ class BranchProvenance(object):
         Identifier of source workflow
 
     """
-    def __init__(self, source_branch=None, workflow_id=None, module_id=None, created_at=None):
+    def __init__(self, 
+            source_branch: Optional[str] = None, 
+            workflow_id: Optional[str] = None, 
+            module_id: Optional[str] = None, 
+            created_at: Optional[datetime] = None
+        ):
         """Initialize the provenance object.
 
         Raises ValueError if at least one but not all arguments are None.
@@ -101,7 +109,11 @@ class BranchHandle(NamedObject):
     provenance: vizier.viztrail.base.BranchProvenance
         Provenance information for this branch
     """
-    def __init__(self, identifier, properties, provenance):
+    def __init__(self, 
+            identifier: str, 
+            properties: ObjectAnnotationSet, 
+            provenance: BranchProvenance
+        ):
         """Initialize the viztrail branch.
 
         Parameters
@@ -118,7 +130,12 @@ class BranchHandle(NamedObject):
         self.provenance = provenance
 
     @abstractmethod
-    def append_workflow(self, modules, action, command, pending_modules=None):
+    def append_workflow(self, 
+            modules: List[ModuleHandle], 
+            action: str, 
+            command: ModuleCommand, 
+            pending_modules: Optional[List[ModuleHandle]]=None
+        ) -> WorkflowHandle:
         """Append a workflow as the new head of the branch. The new workflow may
         contain modules that have not been persisted prevoiusly (pending
         modules). These modules are persisted as part of the workflow being

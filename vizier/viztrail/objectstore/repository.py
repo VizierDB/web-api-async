@@ -23,13 +23,14 @@ the resources as documents in a document store.
 """
 
 import os
+from typing import Optional
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.loader import ClassLoader
 from vizier.core.util import init_value
 from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.repository import ViztrailRepository
-
+from vizier.core.io.base import ObjectStore
 
 """Resource identifier"""
 OBJ_VIZTRAILINDEX = 'viztrails'
@@ -49,7 +50,9 @@ class OSViztrailRepository(ViztrailRepository):
     viztrails        : List of active viztrails
     <vt-identifier>/ : Folder with resources for individual viztrail
     """
-    def __init__(self, base_path, object_store=None):
+    def __init__(self, 
+            base_path: str, 
+            object_store: Optional[ObjectStore] = None):
         """Initialize the repository from a configuration dictionary. Expects
         a dictionary that contains at least the base path for the repository.
         The definition of the object store is optional. If none is given the
@@ -72,8 +75,8 @@ class OSViztrailRepository(ViztrailRepository):
             os.makedirs(self.base_path)
         # The object store element is optional. If not given the default object
         # store is used.
-        if not object_store is None:
-            self.object_store = object_store
+        if object_store is not None:
+            self.object_store: ObjectStore = object_store
         else:
             self.object_store = DefaultObjectStore()
         # Initialize the viztrails index. Create the index file if it does not
@@ -98,7 +101,7 @@ class OSViztrailRepository(ViztrailRepository):
             )
             self.viztrails[vt.identifier] = vt
 
-    def create_viztrail(self, properties=None):
+    def create_viztrail(self, properties={}):
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
         be scalar values or a list of scalar values.

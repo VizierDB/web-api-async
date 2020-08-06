@@ -39,7 +39,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -51,7 +51,6 @@ class TestOSWorkflow(unittest.TestCase):
                 command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -99,7 +98,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -115,8 +114,7 @@ class TestOSWorkflow(unittest.TestCase):
                 provenance=ModuleProvenance(
                     write={'DS' + str(i): DatasetDescriptor(
                         identifier=str(i),
-                        columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)],
-                        row_count=i
+                        columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)]
                     )}
                 ),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -135,13 +133,15 @@ class TestOSWorkflow(unittest.TestCase):
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
         self.assertEqual(len(workflow.modules), 5)
+        datasets = {}
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEqual(len(module.datasets), i + 1)
+            datasets = module.provenance.get_database_state(datasets)
+            self.assertEqual(len(datasets), i + 1)
             for j in range(i):
                 key = 'DS' + str(j)
-                self.assertTrue(key in module.datasets)
-                self.assertEqual(len(module.datasets[key].columns), j)
+                self.assertTrue(key in datasets)
+                self.assertEqual(len(datasets[key].columns), j)
 
     def test_load_with_dataset_delete(self):
         """Test loading workflows where each module creates a new dataset and
@@ -151,7 +151,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -171,7 +171,6 @@ class TestOSWorkflow(unittest.TestCase):
                     write={'DS' + str(i): DatasetDescriptor(
                         identifier=str(i),
                         columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)],
-                        row_count=i
                     )},
                     delete=deleted_datasets
                 ),
@@ -191,12 +190,14 @@ class TestOSWorkflow(unittest.TestCase):
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
         self.assertEqual(len(workflow.modules), 5)
+        datasets = {}
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEqual(len(module.datasets), 1)
+            datasets = module.provenance.get_database_state(datasets)
+            self.assertEqual(len(datasets), 1)
             key = 'DS' + str(i)
-            self.assertTrue(key in module.datasets)
-            self.assertEqual(len(module.datasets[key].columns), i)
+            self.assertTrue(key in datasets)
+            self.assertEqual(len(datasets[key].columns), i)
 
     def test_load_with_dataset_replace(self):
         """Test loading workflows where each module modifies a single dataset.
@@ -205,7 +206,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -225,7 +226,6 @@ class TestOSWorkflow(unittest.TestCase):
                     write={'DS': DatasetDescriptor(
                         identifier=str(i),
                         columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)],
-                        row_count=i
                     )}
                 ),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -244,11 +244,13 @@ class TestOSWorkflow(unittest.TestCase):
         vt = OSViztrailHandle.load_viztrail(base_path)
         workflow = vt.get_default_branch().get_head()
         self.assertEqual(len(workflow.modules), 5)
+        datasets = {}
         for i in range(5):
             module = workflow.modules[i]
-            self.assertEqual(len(module.datasets), 1)
-            self.assertTrue('DS' in module.datasets)
-            self.assertEqual(len(module.datasets['DS'].columns), i)
+            datasets = module.provenance.get_database_state(datasets)
+            self.assertEqual(len(datasets), 1)
+            self.assertTrue('DS' in datasets)
+            self.assertEqual(len(datasets['DS'].columns), i)
 
     def test_load_with_missing_modules(self):
         """Test loading workflows with active modules."""
@@ -256,7 +258,7 @@ class TestOSWorkflow(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -268,7 +270,6 @@ class TestOSWorkflow(unittest.TestCase):
                 command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),

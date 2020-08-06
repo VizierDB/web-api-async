@@ -21,7 +21,7 @@ timestamps.
 import datetime
 import time
 
-def get_current_time():
+def get_current_time() -> datetime.datetime:
     """Return timestamp for current system time in UTC time zone.
 
     Returns
@@ -32,7 +32,7 @@ def get_current_time():
     return datetime.datetime.utcnow()
 
 
-def to_datetime(timestamp):
+def to_datetime(timestamp: str) -> datetime.datetime:
     """Converts a timestamp string in ISO format into a datatime object.
 
     Parameters

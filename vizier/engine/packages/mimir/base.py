@@ -28,18 +28,16 @@ PACKAGE_MIMIR = 'mimir'
 CATEGORY_MIMIR = "data_m"
 
 #Identifier for Mimir lenses.
-MIMIR_DOMAIN          = 'domain'
-MIMIR_GEOCODE         = 'geocode'
-MIMIR_KEY_REPAIR      = 'repair_key'
-MIMIR_MISSING_KEY     = 'missing_key'
-MIMIR_MISSING_VALUE   = 'missing_value'
-MIMIR_PICKER          = 'picker'
-MIMIR_SCHEMA_MATCHING = 'schema_matching'
-MIMIR_TYPE_INFERENCE  = 'type_inference'
-MIMIR_SHAPE_DETECTOR  = 'shape_watcher'
-MIMIR_COMMENT         = 'comment'
-MIMIR_PIVOT           = 'pivot'
-MIMIR_SHRED           = 'shred'
+MIMIR_GEOCODE         = 'GEOCODE'
+MIMIR_KEY_REPAIR      = 'REPAIR_KEY'
+MIMIR_MISSING_KEY     = 'MISSING_KEY'
+MIMIR_MISSING_VALUE   = 'MISSING_VALUE'
+MIMIR_PICKER          = 'PICKER'
+MIMIR_TYPE_INFERENCE  = 'TYPE_INFERENCE'
+MIMIR_SHAPE_DETECTOR  = 'SHAPE_WATCHER'
+MIMIR_COMMENT         = 'COMMENT'
+MIMIR_PIVOT           = 'PIVOT'
+MIMIR_SHRED           = 'SHRED'
 
 # Command arguments
 PARA_CITY               = 'city'
@@ -93,22 +91,6 @@ MIMIR_LENSES = pckg.package_declaration(
     identifier=PACKAGE_MIMIR,
     category=CATEGORY_MIMIR,
     commands=[
-        # pckg.command_declaration(
-        #     identifier=MIMIR_DOMAIN,
-        #     name='Domain Lens',
-        #     parameters=[
-        #         pckg.para_dataset(0),
-        #         pckg.para_column(1),
-        #         para_materialize_input(2)
-        #     ],
-        #     format=[
-        #         pckg.constant_format('DOMAIN'),
-        #         pckg.constant_format('FOR'),
-        #         pckg.variable_format(pckg.PARA_COLUMN),
-        #         pckg.constant_format('IN'),
-        #         pckg.variable_format(pckg.PARA_DATASET)
-        #     ]
-        # ),
         pckg.command_declaration(
             identifier=MIMIR_GEOCODE,
             name='Geocode',
@@ -280,60 +262,6 @@ MIMIR_LENSES = pckg.package_declaration(
                 pckg.optional_format(PARA_PICKAS, prefix='AS '),
                 pckg.constant_format('IN'),
                 pckg.variable_format(pckg.PARA_DATASET)
-            ]
-        ),
-        pckg.command_declaration(
-            identifier=MIMIR_SCHEMA_MATCHING,
-            name='Match Target Schema',
-            parameters=[
-                pckg.para_dataset(0),
-                pckg.parameter_declaration(
-                    identifier=PARA_SCHEMA,
-                    name='Schema',
-                    data_type=pckg.DT_LIST,
-                    index=1
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_COLUMN_NAME,
-                    name='Column Name',
-                    data_type=pckg.DT_STRING,
-                    index=2,
-                    parent=PARA_SCHEMA
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_TYPE,
-                    name='Data Type',
-                    data_type=pckg.DT_STRING,
-                    index=3,
-                    values=[
-                        pckg.enum_value(value='int', is_default=True),
-                        pckg.enum_value(value='varchar')
-                    ],
-                    parent=PARA_SCHEMA
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_RESULT_DATASET,
-                    name='Store Result As ...',
-                    data_type=pckg.DT_STRING,
-                    index=4
-                ),
-                para_materialize_input(5)
-            ],
-            format=[
-                pckg.constant_format('SCHEMA'),
-                pckg.constant_format('MATCHING'),
-                pckg.variable_format(pckg.PARA_DATASET),
-                pckg.constant_format('(', rspace=False),
-                pckg.group_format(
-                    PARA_SCHEMA,
-                    format=[
-                        pckg.variable_format(pckg.PARA_COLUMN),
-                        pckg.variable_format(PARA_TYPE)
-                    ]
-                ),
-                pckg.constant_format(')', lspace=False),
-                pckg.constant_format('AS'),
-                pckg.variable_format(PARA_RESULT_DATASET)
             ]
         ),
         pckg.command_declaration(

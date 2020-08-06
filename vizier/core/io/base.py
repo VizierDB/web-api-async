@@ -19,7 +19,7 @@ write resources as Json objects.
 """
 
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Callable, Union, List
 
 import json
 import os
@@ -66,7 +66,11 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def create_object(self, parent_folder, identifier=None, content=None):
+    def create_object(self, 
+            parent_folder: str, 
+            identifier: Optional[str] = None, 
+            content: Union[List[Any], Dict[str,Any], None] = None
+        ) -> str:
         """Create a new object in the given parent folder. The object path is
         either given as the identifier argument or a new unique identifier is
         created if the argument is None. Returns the path for the created
@@ -115,7 +119,7 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def exists(self, resource_path):
+    def exists(self, resource_path: str) -> str:
         """Returns True if a resource at the given path exists.
 
         Parameters
@@ -130,7 +134,7 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def join(self, parent_folder, identifier):
+    def join(self, parent_folder: str, identifier: str) -> str:
         """Concatenate the identifier for a given folder and a folder resource.
 
         Parameters
@@ -166,7 +170,7 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def list_objects(self, folder_path):
+    def list_objects(self, folder_path: str) -> List[str]:
         """Get a list of all objects in the given folder. Returns a list of
         resource names.
 
@@ -182,24 +186,20 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def read_object(self, object_path):
+    def read_object(self, 
+            object_path: str
+        ) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
         """Read Json document from given path.
 
         Raises ValueError if no object with given path exists.
-
-        Parameters
-        ----------
-        object_path: string
-            Path identifier for a resource object
-
-        Returns
-        -------
-        dict or list
         """
         raise NotImplementedError
 
     @abstractmethod
-    def write_object(self, object_path, content):
+    def write_object(self, 
+            object_path: str, 
+            content: Union[Dict[str, Any], List[Dict[str, Any]], None]
+        ) -> None:
         """Write content as Json document to given path.
 
         Parameters
@@ -218,7 +218,11 @@ class DefaultObjectStore(ObjectStore):
     flag allows to switch between scenarios where we want to keep the full
     history of any resource that was ever created.
     """
-    def __init__(self, properties=None, identifier_factory=None, keep_deleted_files=False):
+    def __init__(self, 
+            properties: Optional[Dict[str, Any]] = None, 
+            identifier_factory: Optional[Callable[[], str]] = None, 
+            keep_deleted_files: bool = False
+        ):
         """Initialize the identifier_factory and keep_deleted_files flag. By
         default the get_unique_identifier function is used to generate new
         folder and resource identifier.

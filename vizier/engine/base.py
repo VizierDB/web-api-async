@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from vizier.api.serialize import labels
-from vizier.datastore.object.base import DataObject, DataObjectDescriptor
 
 """The vizier engine defines the interface that is used by the API for creating,
 deleting, and manipulating projects as well as for the orchestration of workflow
@@ -27,11 +26,13 @@ local machine, (b) with a set of celery workers, (c) running each project in
 its own container, etc). The engine that is used by a vizier instance is
 specified in the configuration file and loaded when the instance is started.
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, cast, Tuple
 from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.core.util import get_unique_identifier
+from vizier.datastore.dataset import DatasetDescriptor
+from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.engine.controller import WorkflowController
 from vizier.engine.task.base import TaskHandle
 from vizier.viztrail.module.base import ModuleHandle
@@ -43,6 +44,7 @@ from vizier.engine.backend.base import VizierBackend
 from vizier.engine.project.cache.base import ProjectCache
 from vizier.engine.packages.base import PackageIndex
 from vizier.engine.task.processor import ExecResult
+from vizier.viztrail.workflow import WorkflowHandle
 
 import vizier.viztrail.workflow as wf
 import vizier.viztrail.module.base as mstate
@@ -55,7 +57,12 @@ class ExtendedTaskHandle(TaskHandle):
     Adds branch and module identifier to the task handle as well as the
     external representation of the executed command.
     """
-    def __init__(self, project_id, branch_id, module_id, controller):
+    def __init__(self, 
+            project_id: str, 
+            branch_id: str, 
+            module_id: Optional[str], 
+            controller: VizierEngine
+        ):
         """Initialize the components of the extended task handle. Generates a
         unique identifier for the task.
 
@@ -152,22 +159,23 @@ class VizierEngine(WorkflowController):
             # branch head. At the same time we retrieve the list of modules for
             # the current head of the branch.
             head = branch.get_head()
-            if not head is None and len(head.modules) > 0:
-                datasets = head.modules[-1].datasets
-                dataobjects = head.modules[-1].dataobjects
+            if head is not None and len(head.modules) > 0:
                 modules = head.modules
                 is_active = head.is_active
                 is_error = head.modules[-1].is_error or head.modules[-1].is_canceled
             else:
-                datasets = dict()
-                dataobjects = dict()
                 modules = list()
                 is_active = False
                 is_error = False
+            context = compute_context(modules)
             # Get the external representation for the command
             external_form = command.to_external_form(
                 command=self.packages[command.package_id].get(command.command_id),
-                datasets=datasets
+                datasets=dict(
+                    (name, cast(DatasetDescriptor, context[name]))
+                    for name in context 
+                    if context[name].is_dataset 
+                )
             )
             # If the workflow is not active and the command can be executed
             # synchronously we run the command immediately and return the
@@ -181,7 +189,7 @@ class VizierEngine(WorkflowController):
                         controller=self
                     ),
                     command=command,
-                    context=task_context(datasets, dataobjects)
+                    artifacts=context
                 )
                 ts = ModuleTimestamp(
                     created_at=ts_start,
@@ -191,17 +199,11 @@ class VizierEngine(WorkflowController):
                 # Depending on the execution outcome create a handle for the
                 # executed module
                 if result.is_success:
-                    dsanddo = modules[-1].datasets if len(modules) > 0 else dict().copy()
-                    dsanddo.update(modules[-1].dataobjects if len(modules) > 0 else dict())
-                    context_all = result.provenance.get_database_state(dsanddo)
-                    context_ds, context_do = result.provenance.split_context(context_all)
                     module = ModuleHandle(
                         state=mstate.MODULE_SUCCESS,
                         command=command,
                         external_form=external_form,
                         timestamp=ts,
-                        datasets=context_ds,
-                        dataobjects=context_do,
                         outputs=result.outputs,
                         provenance=result.provenance
                     )
@@ -247,8 +249,7 @@ class VizierEngine(WorkflowController):
                         project_id=project_id,
                         branch_id=branch_id,
                         module=workflow.modules[-1],
-                        datasets=datasets,
-                        dataobjects=dataobjects
+                        artifacts=context
                     )
         return workflow.modules[-1]
 
@@ -282,7 +283,7 @@ class VizierEngine(WorkflowController):
             branch = self.projects.get_branch(project_id=project_id, branch_id=branch_id)
             if branch is None:
                 return None
-            workflow = branch.head
+            workflow = branch.get_head()
             if workflow is None:
                 raise ValueError('empty workflow at branch head')
             # Set the state of all active modules to canceled
@@ -355,16 +356,12 @@ class VizierEngine(WorkflowController):
             if module_count > 0 and module_index < module_count:
                 # Get the context for the first module that requires
                 #  re-execution
-                if module_index > 0:
-                    datasets = modules[module_index - 1].datasets
-                    dataobjects = modules[module_index - 1].dataobjects
-                else:
-                    datasets = dict()
-                    dataobjects = dict()
+                context = compute_context(modules[0:module_index])
+                print("Context at deleted node {}: {}".format(module_index, context))
                 # Keep track of the first remaining module that was affected
                 # by the delete
                 first_remaining_module = module_index
-                while not modules[module_index].provenance.requires_exec(datasets):
+                while not modules[module_index].provenance.requires_exec(context):
                     if module_index == module_count - 1:
                         # Update the counter before we exit the loop. Otherwise
                         # the last module would be executed.
@@ -373,9 +370,7 @@ class VizierEngine(WorkflowController):
                         break
                     else:
                         m = modules[module_index]
-                        datasets = m.provenance.get_database_state(datasets)
-                        m.datasets = datasets
-                        m.dataobjects = dataobjects
+                        context = m.provenance.get_database_state(context)
                         module_index += 1
                 if module_index < module_count:
                     # The module that module_index points to has to be executed.
@@ -385,7 +380,7 @@ class VizierEngine(WorkflowController):
                     command = modules[module_index].command
                     external_form = command.to_external_form(
                         command=self.packages[command.package_id].get(command.command_id),
-                        datasets=datasets
+                        datasets=[ context[name] for name in context if context[name].is_dataset ]
                     )
                     # Replace original modules with pending modules for those
                     # that need to be executed. The state of the first module
@@ -405,8 +400,6 @@ class VizierEngine(WorkflowController):
                             ModuleHandle(
                                 command=m.command,
                                 external_form=m.external_form,
-                                datasets=m.datasets,
-                                dataobjects=m.dataobjects,
                                 outputs=m.outputs,
                                 provenance=m.provenance
                             )
@@ -421,8 +414,7 @@ class VizierEngine(WorkflowController):
                         project_id=project_id,
                         branch_id=branch_id,
                         module=workflow.modules[module_index],
-                        datasets=datasets,
-                        dataobjects=dataobjects
+                        artifacts=context
                     )
                     return workflow.modules[first_remaining_module:]
                 else:
@@ -441,7 +433,12 @@ class VizierEngine(WorkflowController):
                 )
             return list()
 
-    def execute_module(self, project_id, branch_id, module, datasets, dataobjects):
+    def execute_module(self, 
+            project_id: str, 
+            branch_id: str, 
+            module: ModuleHandle, 
+            artifacts: Dict[str, ArtifactDescriptor]
+        ) -> None:
         """Create a new task for the given module and execute the module in
         asynchronous mode.
 
@@ -453,8 +450,9 @@ class VizierEngine(WorkflowController):
             Unique branch identifier
         module: vizier.viztrail.module.ModuleHandle
             handle for executed module
-        datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
-            Index of datasets in the a database state
+        artifacts: dict(string:vizier.datastore.dataset.DatasetDescriptor)
+            Index of artifacts, identified by user-facing name, at the point of the module
+            in the current workflow.
         """
         task = ExtendedTaskHandle(
             project_id=project_id,
@@ -463,14 +461,17 @@ class VizierEngine(WorkflowController):
             controller=self
         )
         self.tasks[task.task_id] = task
+        # print("Starting execution of {} with artifacts: [{}]".format(module.command.command_id, artifacts))
         self.backend.execute_async(
             task=task,
             command=module.command,
-            context=task_context(datasets,dataobjects),
+            artifacts=artifacts,
             resources=module.provenance.resources
         )
 
-    def get_task_module(self, task):
+    def get_task_module(self, 
+            task: ExtendedTaskHandle
+        ) -> Tuple[Optional[WorkflowHandle], int]:
         """Get the workflow and module index for the given task. Returns None
         and -1 if the workflow or module is undefined.
 
@@ -552,12 +553,7 @@ class VizierEngine(WorkflowController):
                 return None
             
             # Get handle for the inserted module
-            if module_index > 0:
-                datasets = modules[module_index - 1].datasets
-                dataobjects = modules[module_index - 1].dataobjects
-            else:
-                datasets = dict()
-                dataobjects = dict()
+            context = compute_context(modules[0:module_index])
             # Create handle for the inserted module. The state of the module
             # depends on the state of the backend.
             if head.is_active:
@@ -569,7 +565,7 @@ class VizierEngine(WorkflowController):
                 state=state,
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=datasets
+                    datasets=[ context[name] for name in context if context[name].is_dataset ]
                 )
             )
             # Create list of pending modules for the new workflow.
@@ -579,8 +575,6 @@ class VizierEngine(WorkflowController):
                     ModuleHandle(
                         command=m.command,
                         external_form=m.external_form,
-                        datasets=m.datasets,
-                        dataobjects=m.dataobjects,
                         outputs=m.outputs,
                         provenance=m.provenance
                     )
@@ -596,8 +590,7 @@ class VizierEngine(WorkflowController):
                     project_id=project_id,
                     branch_id=branch_id,
                     module=workflow.modules[module_index],
-                    datasets=datasets,
-                    dataobjects=dataobjects
+                    artifacts=context,
                 )
             return workflow.modules[module_index:]
 
@@ -645,21 +638,15 @@ class VizierEngine(WorkflowController):
                     break
             if module_index is None:
                 return None
-            # Get handle for the replaced module. Keep any resource information
-            # from the provenance object of the previous module execution. The
-            # state of the module depends on the state of the backend.
-            if module_index > 0:
-                datasets = modules[module_index - 1].datasets
-                dataobjects = modules[module_index - 1].dataobjects
-            else:
-                datasets = dict()
-                dataobjects = dict()
+
+            context = compute_context(modules[0:module_index])
+
             replaced_module = ModuleHandle(
                 command=command,
                 state=self.backend.next_task_state(),
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=datasets
+                    datasets=[ context[name] for name in context if context[name].is_dataset ]
                 ),
                 provenance=ModuleProvenance(
                     resources=modules[module_index].provenance.resources
@@ -672,8 +659,6 @@ class VizierEngine(WorkflowController):
                     ModuleHandle(
                         command=m.command,
                         external_form=m.external_form,
-                        datasets=m.datasets,
-                        dataobjects=m.dataobjects,
                         outputs=m.outputs,
                         provenance=m.provenance
                     )
@@ -688,8 +673,7 @@ class VizierEngine(WorkflowController):
                 project_id=project_id,
                 branch_id=branch_id,
                 module=workflow.modules[module_index],
-                datasets=datasets,
-                dataobjects=dataobjects
+                artifacts=context
             )
             return workflow.modules[module_index:]
 
@@ -822,41 +806,34 @@ class VizierEngine(WorkflowController):
             if not module.is_running:
                 # The result is false if the state of the module did not change
                 return False
-            # Adjust the module context
-            datasets = workflow.modules[module_index - 1].datasets if module_index > 0 else dict()
-            dataobjects = workflow.modules[module_index - 1].dataobjects if module_index > 0 else dict()
-            dsanddo = datasets.copy()
-            dsanddo.update(dataobjects)
-            context_all = result.provenance.get_database_state(dsanddo)
-            context_ds, context_do = result.provenance.split_context(context_all)
-            
             module.set_success(
                 finished_at=finished_at,
-                datasets=context_ds,
-                outputs=outputs,
+                outputs=result.outputs,
                 provenance=result.provenance,
-                dataobjects=context_do
             )
-            print("Module {} finished at {} / Context: {}".format(
+            context = compute_context(workflow.modules[0:module_index])
+            context = result.provenance.get_database_state(context)
+            print("Module {} finished at {} / Context: {} / Reads: [{}] / Writes: [{}]".format(
                 module.external_form, 
                 finished_at,
-                context_ds
+                context,
+                ",".join(result.provenance.read) if result.provenance.read is not None else "",
+                ",".join(result.provenance.write) if result.provenance.write is not None else "",
             ))
+
+
             for next_module in workflow.modules[module_index+1:]:
                 if not next_module.is_pending:
                     # This case can only happen if we allow parallel execution
                     # of modules in the future. At this point it should not
                     # occur.
                     raise RuntimeError('invalid workflow state')
-                elif not next_module.provenance.requires_exec(context_all):
-                    context_all = next_module.provenance.get_database_state(context_all)
-                    context_ds, context_do = next_module.provenance.split_context(context_all)
+                elif not next_module.provenance.requires_exec(context):
+                    context = next_module.provenance.get_database_state(context)
                     next_module.set_success(
                         finished_at=finished_at,
-                        datasets=context_ds,
                         outputs=next_module.outputs,
                         provenance=next_module.provenance,
-                        dataobjects=context_do
                     )
                 else:
                     command = next_module.command
@@ -864,7 +841,7 @@ class VizierEngine(WorkflowController):
                     command_id = command.command_id
                     external_form = command.to_external_form(
                         command=self.packages[package_id].get(command_id),
-                        datasets=context_ds
+                        datasets=[ context[name] for name in context if context[name].is_dataset ]
                     )
                     # If the backend is going to run the task immediately we
                     # need to adjust the module state
@@ -882,8 +859,7 @@ class VizierEngine(WorkflowController):
                         project_id=task.project_id,
                         branch_id=workflow.branch_id,
                         module=next_module,
-                        datasets=context_ds,
-                        dataobjects=context_do
+                        artifacts=context
                     )
                     break
             return True
@@ -893,7 +869,7 @@ class VizierEngine(WorkflowController):
 # Helper Methods
 # ------------------------------------------------------------------------------
     
-def pop_task(tasks, task_id):
+def pop_task(tasks, task_id: str) -> Optional[ExtendedTaskHandle]:
     """Remove task with given identifier and return the task handle. The result
     is None if no task with the given identifier exists.
 
@@ -917,19 +893,21 @@ def pop_task(tasks, task_id):
     return task
 
 
-def task_context(datasets, dataobjects):
-    """Convert a database state into a task context. The database state is a
-    dictionary where dataset descriptors are indexed by the user defined name.
-    The task context is a dictionary where dataset identifier are indexed by
-    the user-defined name.
+def compute_context(modules: List[ModuleHandle]) -> Dict[str, ArtifactDescriptor]:
+    """Compute the state of the database after executing the specified sequence
+    of modules
 
     Parameters
     ----------
-    datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
-        Index of datasets in the a database state
+    modules: list(vizier.viztrail.module.ModuleHandle)
 
     Returns
     -------
-    dict()
+    dict(string:vizier.datastore.artifact.ArtifactHandle)
     """
-    return {labels.CONTEXT_DATASETS:{name: datasets[name].identifier for name in datasets}, labels.CONTEXT_DATAOBJECTS:{name: dataobjects[name].identifier for name in dataobjects}}
+    context: Dict[str, ArtifactDescriptor] = {}
+    for m in modules:
+        context = m.provenance.get_database_state(context)
+    return context
+
+

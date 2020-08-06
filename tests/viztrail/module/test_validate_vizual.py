@@ -29,7 +29,7 @@ DATASETS = {
 PACKAGE = pckg.PackageIndex(vizual.VIZUAL_COMMANDS)
 
 SERVER_DIR = './.tmp'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/viztrail/module/.files/dataset.csv'
 
 
 class TestValidateVizual(unittest.TestCase):

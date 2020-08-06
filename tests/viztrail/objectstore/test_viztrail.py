@@ -40,7 +40,7 @@ class TestOSViztrail(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         self.assertEqual(len(vt.branches), 1)
@@ -88,7 +88,6 @@ class TestOSViztrail(unittest.TestCase):
                 outputs=ModuleOutputs(),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(),
-                datasets=dict(),
                 module_folder=vt.modules_folder,
             ).identifier
             modules.append(identifier)
@@ -136,7 +135,6 @@ class TestOSViztrail(unittest.TestCase):
                 outputs=ModuleOutputs(),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(),
-                datasets=dict(),
                 module_folder=vt.modules_folder,
             )
             modules.append(m.identifier)
@@ -155,7 +153,7 @@ class TestOSViztrail(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         self.assertEqual(vt.identifier, 'ABC')
@@ -197,7 +195,7 @@ class TestOSViztrail(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         self.assertEqual(len(vt.branches), 1)

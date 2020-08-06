@@ -17,17 +17,17 @@ import vizier.engine.packages.base as pckg
 
 
 SERVER_DIR = './.tmp'
-PACKAGES_DIR = './.files/packages'
-PROCESSORS_DIR = './.files/processors'
+PACKAGES_DIR = './tests/engine/workflows/.files/packages'
+PROCESSORS_DIR = './tests/engine/workflows/.files/processors'
 
-CSV_FILE = './.files/people.csv'
+CSV_FILE = './tests/engine/workflows/.files/people.csv'
 
 DATASET_NAME = 'people'
 
 PY_ADD_ONE_ERROR = """ds = vizierdb.get_dataset('""" + DATASET_NAME + """')
 age = int(ds.rows[0].get_value('Age'))
-ds.rows[0].set_value('Age', age + 1)
-vizierdb.update_dataset('""" + DATASET_NAME + """, ds')
+ds.rows[0].set_value('Age', age + 'foo')
+vizierdb.update_dataset('""" + DATASET_NAME + """', ds)
 """
 
 class TestMultiprocessBackendAppend(unittest.TestCase):
@@ -43,6 +43,7 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         os.environ[app.VIZIERENGINE_DATA_DIR] = SERVER_DIR
         os.environ[app.VIZIERSERVER_PACKAGE_PATH] = PACKAGES_DIR
         os.environ[app.VIZIERSERVER_PROCESSOR_PATH] = PROCESSORS_DIR
+        os.environ[app.VIZIERENGINE_BACKEND] = 'MULTIPROCESS'
         self.engine = get_engine(AppConfig())
 
     def tearDown(self):
@@ -56,7 +57,7 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         project = self.engine.projects.create_project()
         branch_id = project.get_default_branch().identifier
         for i in range(10):
-            cmd = command=python_cell('import time\ntime.sleep(' + str(i) + ')\nprint \'DONE\'')
+            cmd = command=python_cell('import time\ntime.sleep(' + str(i) + ')\nprint(\'DONE\')')
             self.engine.append_workflow_module(
                 project_id=project.identifier,
                 branch_id=branch_id,
@@ -88,7 +89,7 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         branch_id = project.get_default_branch().identifier
         for i in range(10):
             if i != 5:
-                cmd = command=python_cell('import time\ntime.sleep(' + str(i) + ')\nprint \'DONE\'')
+                cmd = command=python_cell('import time\ntime.sleep(' + str(i) + ')\nprint(\'DONE\')')
             else:
                 cmd = command=python_cell('a += 1')
             self.engine.append_workflow_module(
@@ -157,7 +158,7 @@ class TestMultiprocessBackendAppend(unittest.TestCase):
         self.assertIsNone(project.viztrail.default_branch.head)
         branch_id = project.get_default_branch().identifier
         for i in range(10):
-            cmd = command=python_cell('print ' + str(i) + ' + ' + str(i))
+            cmd = command=python_cell('print(' + str(i) + ' + ' + str(i) + ")")
             self.engine.append_workflow_module(
                 project_id=project.identifier,
                 branch_id=branch_id,

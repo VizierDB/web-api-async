@@ -24,7 +24,7 @@ contain the parameter id and value as dictionary elements. The structure of the
 va;ue element is dependent on the parameter type.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union, cast
 from vizier.core.util import is_scalar
 
 import vizier.engine.packages.base as pckg
@@ -84,7 +84,24 @@ class ModuleArguments(object):
                     value = elements
             self.arguments[identifier] = value
 
-    def get(self, name):
+    def __repr__(self):
+        return "\n".join(self.to_yaml_lines(""))
+
+    def to_yaml_lines(self, prefix = ""):
+        def wrap(key, arg): 
+            rest = []
+            if isinstance(arg, ModuleArguments):
+                rest = arg.to_yaml_lines(prefix+"  ")
+                arg = ""
+            return ["{}{}: {}".format(prefix, key, arg)]+rest
+
+        return [
+            line 
+            for key in self.arguments
+            for line in wrap(key, self.arguments[key])
+        ]
+
+    def get(self, name: str) -> Any:
         """Get the value for the parameter with the given name.
 
         Parameters
@@ -97,7 +114,9 @@ class ModuleArguments(object):
         """
         return self.arguments[name]
 
-    def get_dataset(self, command):
+    def get_dataset(self, 
+            command: CommandDeclaration
+        ) -> Optional[str]:
         """Return the value of the first arument of type DATASET_ID or None.
 
         Parameters
@@ -156,7 +175,7 @@ class ModuleArguments(object):
                 pass
         return val
 
-    def has(self, name):
+    def has(self, name: str) -> bool:
         """Test if a value for the parameter with the given name has been
         provided.
 
@@ -171,7 +190,11 @@ class ModuleArguments(object):
         """
         return name in self.arguments
 
-    def to_external_form(self, command, datasets=None, format=None, parent_ds_name=None):
+    def to_external_form(self, 
+            command: CommandDeclaration, 
+            datasets: Dict[str, DatasetDescriptor] = dict(), 
+            format: Optional[List[Dict[str,Any]]] = None, 
+            parent_ds_name: Optional[str] = None):
         """Get a string representation for the command based on the internal
         values for the module arguments.
         values.
@@ -188,13 +211,13 @@ class ModuleArguments(object):
         string
         """
         # Set the dataset name if the command has a dataset parameter
-        ds_name = self.get_dataset(command)
+        ds_name: Optional[str] = self.get_dataset(command)
         if ds_name is None:
             ds_name = parent_ds_name
         # Set the format specification if not given
         if format is None:
             format = command.format
-        tokens = list()
+        tokens: List[Union[str, bool]] = list()
         for element in format:
             token = None
             var = None
@@ -208,11 +231,15 @@ class ModuleArguments(object):
                     if self.has(arg):
                         value = self.get(arg)
                         if var[pckg.LABEL_DATATYPE] == pckg.DT_COLUMN_ID:
-                            token = get_column_name(
-                                ds_name=ds_name.lower(),
-                                column_id=value,
-                                datasets=datasets
-                            )
+                            if ds_name is None:
+                                token = "??? no column, dataset undefined ???"
+                            else:
+                                assert isinstance(ds_name, str)
+                                token = get_column_name(
+                                    ds_name=ds_name.lower(),
+                                    column_id=value,
+                                    datasets=datasets
+                                )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
                             if pckg.FILE_URL in value and value[pckg.FILE_URL] != None:
                                 token = value[pckg.FILE_URL]
@@ -261,7 +288,7 @@ class ModuleArguments(object):
                 )
         return concat_tokens(tokens)
 
-    def to_list(self):
+    def to_list(self) -> List[Dict[str, Any]]:
         """Get list serialization of the arguments listing.
 
         Returns
@@ -399,6 +426,9 @@ class ModuleCommand(object):
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
 
+    def __repr__(self):
+        "\n".join(["{}.{} <- ("]+self.arguments.to_yaml_lines("  ")+")")
+
     @staticmethod
     def from_dict(doc):
         """Create module command instance from dictionary serialization.
@@ -475,7 +505,11 @@ def ARG(id, value):
     return {ARG_ID: id, ARG_VALUE: value}
 
 
-def append_token(tokens, token, lspace=True, rspace=True):
+def append_token(
+        tokens: List[Union[str, bool]], 
+        token: str, 
+        lspace: bool = True, 
+        rspace: bool = True) -> None:
     """Append the token to the given output token list. Tokens are separated by
     boolean values that indicate whether there is a space between consecutive
     tokens or not.
@@ -497,7 +531,7 @@ def append_token(tokens, token, lspace=True, rspace=True):
     tokens.append(rspace)
 
 
-def concat_tokens(tokens):
+def concat_tokens(tokens: List[Union[str, bool]]) -> str:
     """Concatenate the tokens in the output list.
 
     Parameters
@@ -510,19 +544,19 @@ def concat_tokens(tokens):
     string
     """
     if len(tokens) > 0:
-        result = tokens[0]
+        result = cast(str, tokens[0])
         index = 1
         while index < len(tokens) - 1:
-            if tokens[index]:
+            if cast(bool, tokens[index]):
                 result += ' '
             index += 1
-            result += tokens[index]
+            result += cast(str, tokens[index])
             index += 1
         return result
     else:
         return ''
 
-def format_str(value, default_value='?'):
+def format_str(value: Optional[str], default_value: str = '?') -> str:
     """Format an output string. Simply puts single quotes around the value if
     it contains a space character. If the given argument is none the default
     value is returned
@@ -546,7 +580,11 @@ def format_str(value, default_value='?'):
         return str(value)
 
 
-def get_column_name(ds_name, column_id, datasets):
+def get_column_name(
+        ds_name: str, 
+        column_id: Optional[int], 
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> str:
     """Get the name of a column with given id in the dataset with ds_name from
     the current context. Returns col_id if the respective column is not found.
 
@@ -567,9 +605,10 @@ def get_column_name(ds_name, column_id, datasets):
         try:
             # Get descriptor for dataset with given name
             if ds_name in datasets:
-                col = datasets[ds_name].column_by_id(int(column_id))
-                if not col is None:
-                    return format_str(col.name)
+                if column_id is not None:
+                    col = datasets[ds_name].column_by_id(int(column_id))
+                    if not col is None:
+                        return format_str(col.name)
         except Exception:
             pass
     return 'ID=' + str(column_id)

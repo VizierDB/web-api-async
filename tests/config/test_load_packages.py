@@ -10,8 +10,10 @@ from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 import vizier.config.app as env
 
 
-PACKAGES_DIR = './.files'
-
+PACKAGES_DIR = ":".join([
+  './resources/packages/common',
+  './resources/packages/mimir'
+])
 
 class TestLoadPackages(unittest.TestCase):
 

@@ -25,7 +25,7 @@ provenance object allows to carry state from previous executions for a module.
 import os
 from typing import Dict, Set, List, Any, Tuple
 from vizier.view.chart import ChartViewHandle
-from vizier.datastore.object.base import DataObject, DataObjectDescriptor
+from vizier.datastore.artifact import ArtifactDescriptor
 
 def debug(message):
     if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
@@ -64,7 +64,7 @@ class ModuleProvenance(object):
     """
     def __init__(self, 
             read: Dict[str,str] = dict(), 
-            write: Dict[str,str] = dict(), 
+            write: Dict[str,ArtifactDescriptor] = dict(), 
             delete: Set[str] = set(), 
             resources: Dict[str,Any] = dict(), 
             charts: List[Tuple[str, ChartViewHandle]] = []
@@ -76,10 +76,10 @@ class ModuleProvenance(object):
         ----------
         read: dict(string:string), optional
             Dictionary of datasets that the module used as input. The key is the
-            dataset name and the value the dataset identifier.  None as the value
+            dataset name and the value is the dataset descriptor.  None as the value
             indicates that the prior version of the specified dataset is unknown
             (i.e., will force re-execution always).
-        write: dict(string:vizier.datastore.dataset.DatasetDescriptor), optional
+        write: dict(string:vizier.datastore.artifact.ArtifactDescriptor), optional
             Dictionary of datasets that the module modified. The key is the
             dataset name and the value the dataset identifier.  None as the value
             indicates a failed attempt at writing (i.e., will force re-execution
@@ -97,7 +97,9 @@ class ModuleProvenance(object):
         self.resources = resources
         self.charts = charts
 
-    def get_database_state(self, prev_state):
+    def get_database_state(self, 
+            prev_state: Dict[str, ArtifactDescriptor]
+        ) -> Dict[str, ArtifactDescriptor]:
         """Adjust the database state after module execution. The dictionary of
         datasets contains names and identifier of datasets in the previous state
         of the database. To avoid reading descriptors for unchanged datasets
@@ -111,13 +113,13 @@ class ModuleProvenance(object):
 
         Parameters
         ----------
-        prev_state: dict(vizier.datastore.dataset.DatasetDescriptor)
+        prev_state: dict(string:vizier.datastore.dataset.DatasetDescriptor)
             Dataset descriptors in previous state keyed by the user-provided
             name
 
         Returns
         -------
-        dict(vizier.datastore.dataset.DatasetDescriptor)
+        dict(string:vizier.datastore.dataset.DatasetDescriptor)
         """
         next_state = dict(prev_state)
         # Remove deleted datasets
@@ -131,6 +133,7 @@ class ModuleProvenance(object):
                 ds = self.write[name]
                 if not ds is None:
                     next_state[name] = ds
+        # print("{} + {} - {} -> {}".format(prev_state, self.write, self.delete, next_state))
         return next_state
 
     def requires_exec(self, datasets):

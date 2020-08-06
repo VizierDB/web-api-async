@@ -61,18 +61,19 @@ def readResponse(resp):
         pass
     return json_object
 
-def createLens(dataset, params, type, materialize, human_readable_name = None):
+def createLens(dataset, params, type, materialize, human_readable_name = None, properties = {}):
     req_json = {
       "input": dataset,
       "params": params,
       "type": type,
       "materialize": materialize,
-      "humanReadableName": human_readable_name
+      "humanReadableName": human_readable_name,
+      "properties" : properties
     }
     resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
     return resp
 
-def createView(dataset, query):
+def createView(dataset, query, properties = {}):
     depts = None
     if isinstance(dataset, dict):
         depts = dataset
@@ -80,10 +81,11 @@ def createView(dataset, query):
         depts = {dataset:dataset}
     req_json = {
       "input": depts,
-      "query": query
+      "query": query,
+      "properties" : properties
     }
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['viewName'], resp['dependencies'], resp['schema'])
+    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {
@@ -97,19 +99,35 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = []):
+def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = [], properties = {}, result_name = None):
     req_json ={
       "file": file,
       "format": format,
       "inferTypes": infer_types,
       "detectHeaders": detect_headers,
       "backendOption": backend_options,
-      "dependencies": dependencies
+      "dependencies": dependencies,
+      "properties" : properties
     }
     if human_readable_name != None:
       req_json["humanReadableName"] = human_readable_name
     resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
-    return resp['name']
+    return (resp['name'], resp['schema'])
+
+def loadDataInline(schema, rows, result_name = None, human_readable_name = None, dependencies = [], properties = {}):
+    req_json ={
+      "schema": schema,
+      "data": rows,
+      "dependencies": dependencies,
+      "properties" : properties,
+    }
+    if human_readable_name is not None:
+      req_json["humanReadableName"] = human_readable_name
+    if result_name is not None:
+      req_json["resultName"] = result_name
+    resp = readResponse(requests.post(_mimir_url + 'dataSource/inlined', json=req_json))
+    return (resp['name'], resp['schema'])
+
     
 def unloadDataSource(dataset_name, abspath, format='csv', backend_options = []):
     req_json ={
@@ -179,10 +197,14 @@ def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit
     if columns is not None:
       req_json["columns"] = columns
     if offset is not None:
+      if offset < 0:
+        raise Exception("Invalid offset {}".format(offset))
       req_json["offset"] = offset
     if offset_to_rowid is not None:
       req_json["offset_to_rowid"] = offset_to_rowid
     if limit is not None:
+      if limit < 0:
+        raise Exception("Invalid offset {}".format(limit))
       req_json["limit"] = limit
     if include_uncertainty is not None:
       req_json["includeUncertainty"] = include_uncertainty
@@ -214,6 +236,13 @@ def evalR(inputs, source):
     resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
+def getTableInfo(table):
+    req_json = {
+      "table": table
+    }
+    resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
+    return (resp['schema'], resp['properties'])
+
 def getSchema(query):
     req_json = {
       "query": query
@@ -235,7 +264,7 @@ def tableExists(tableName):
         return False
 
 
-def createSample(inputds, mode_config, seed = None):
+def createSample(inputds, mode_config, seed = None, result_name = None, properties = {}):
   """
     Create a sample of dataset input according to the sampling mode
     configuration given in modejs.  See Mimir's mimir.algebra.sampling
@@ -257,12 +286,14 @@ def createSample(inputds, mode_config, seed = None):
   req_json = { 
     "source" : inputds,
     "samplingMode" : mode_config,
-    "seed" : seed
+    "seed" : seed, 
+    "properties" : properties,
+    "resultName" : result_name
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
-  return resp['viewName']
+  return (resp['name'], resp['schema'])
 
-def vizualScript(inputds, script, script_needs_compile = False):
+def vizualScript(inputds, script, script_needs_compile = False, properties = {}):
   """
     Create a view that implements a sequence of vizual commands over a fixed input table
 
@@ -294,18 +325,38 @@ def vizualScript(inputds, script, script_needs_compile = False):
     "input" : inputds,
     "script" : script,
     # "resultName": Option[String],
-    "compile": script_needs_compile
+    "compile": script_needs_compile, 
+    "properties" : properties
   }
-  print(_mimir_url + "vizual/create")
-  print(json.dumps(req_json))
+  # print(_mimir_url + "vizual/create")
+  # print(json.dumps(req_json))
   resp = readResponse(requests.post(_mimir_url + 'vizual/create', json=req_json))
   assert("name" in resp)
   assert("script" in resp)
   return resp
 
+def getBlob(identifier, expected_type = None):
+  resp = requests.get(_mimir_url + 'blob/{}'.format(identifier))
+  if resp.status_code != 200:
+    raise MimirException(
+      "Blob {} does not exist".format(identifier)
+    )
+  if expected_type is not None:
+    actual_type = resp.headers.get('Content-Type', "text/plain")
+    if expected_type != actual_type:
+      raise MimirException(
+        "Blob {} is of type {} and not {}".format(identifier, actual_type, expected_type)
+      )
+  return resp.content
 
+def createBlob(identifier, blob_type, data):
+  route = "blob"
+  if identifier is not None:
+    route += "/{}".format(identifier)
+  resp = readResponse(requests.put(_mimir_url + route+'?type={}'.format(blob_type), data = data))
+  return resp["name"]
   
-def getAvailableLansTypes():
+def getAvailableLensTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']
     
 def getAvailableAdaptiveSchemas():

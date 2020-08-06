@@ -1,0 +1,3 @@
+#!/bin/bash
+mypy --disallow-any-unimported --show-error-codes --disallow-untyped-calls $(dirname $0)/../vizier/api/webservice/base.py
+

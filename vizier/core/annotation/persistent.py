@@ -17,9 +17,11 @@
 """Implementation for an object properties set that is maintained using an
 object store.
 """
+from typing import cast, Dict, Any, Optional, List
+
 
 from vizier.core.annotation.base import AnnotationStore, DefaultAnnotationSet
-from vizier.core.io.base import DefaultObjectStore
+from vizier.core.io.base import ObjectStore, DefaultObjectStore
 from vizier.core.util import init_value
 
 
@@ -27,7 +29,9 @@ class PersistentAnnotationStore(AnnotationStore):
     """Persistent store for object annotations. Materializes object annotations
     using a given object store.
     """
-    def __init__(self, object_path, object_store=None):
+    def __init__(self, 
+            object_path: str, 
+            object_store: Optional[ObjectStore] = None):
         """Initialize the path to the resource in the object store. By default
         annotation stes are persisted as files on the locak file system.
 
@@ -61,18 +65,29 @@ class PersistentAnnotationStore(AnnotationStore):
             ]
         )
 
+    def values(self) -> Dict[str, Any]:
+        return dict(
+            (obj, self.object_store.read_object(
+                        self.object_store.join(self.object_path, obj)))
+            for obj in self.object_store.list_objects(self.object_path)
+        )
+
 
 class PersistentAnnotationSet(DefaultAnnotationSet):
     """Object annotation set that is associated with a persistent annotation
     store. This class is a shortcut to instantiate an object annotation store
     with a persistent annotation store defined in this module.
     """
-    def __init__(self, object_path, object_store=None, annotations=None):
-        """Initialize the file that maintains the annotations. Annotations are
+    def __init__(self, 
+            object_path: str, 
+            object_store: Optional[ObjectStore] =None, 
+            properties: Dict[str, Any] = None
+        ):
+        """Initialize the file that maintains the properties. Annotations are
         read from file (if it exists).
 
-        Provides the option to load an initial set of annotations from a given
-        dictionary. If the file exists and the annotations dictionary is not
+        Provides the option to load an initial set of properties from a given
+        dictionary. If the file exists and the properties dictionary is not
         None an exception is thrown.
 
         Parameters
@@ -80,15 +95,15 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
         object_path: string
             Path to resource
         object_store: vizier.core.io.base.ObjectStore, optional
-            Object store to materialize annotations
-        annotations: dict, optional
-            Dictionary with initial set of annotations
+            Object store to materialize properties
+        properties: dict, optional
+            Dictionary with initial set of properties
         """
         # Ensure that the object store is not None
         if object_store is None:
             object_store = DefaultObjectStore()
-        if not annotations is None:
-            # Initialize annotations from the given dictionary. The persistent
+        if not properties is None:
+            # Initialize properties from the given dictionary. The persistent
             # set can only be initialized once.
             if object_store.exists(object_path):
                 raise ValueError('cannot initialize existing annotation set')
@@ -99,19 +114,19 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
                     object_store=object_store
                 )
             )
-            for key in annotations:
-                value = annotations[key]
+            for key in properties:
+                value = properties[key]
                 if isinstance(value, list):
                     for val in value:
                         self.add(key, val, persist=False)
                 else:
                     self.add(key, value, persist=False)
-            self.writer.store(self.elements)
+            cast(AnnotationStore, self.writer).store(self.elements)
         else:
-            # Read annotations from disk if the annotation file exists
+            # Read properties from disk if the annotation file exists
             elements = dict()
             if object_store.exists(object_path):
-                obj = object_store.read_object(object_path)
+                obj = cast(List[Dict[str,Any]], object_store.read_object(object_path))
                 for anno in obj:
                     elements[anno['key']] = anno['value']
             # Initialize the default object annotation set

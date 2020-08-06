@@ -104,18 +104,12 @@ class SamplingProcessor(TaskProcessor):
         else:
             raise Exception("Unknown sampling command: {}".format(command_id))
 
-        sample_view_id = mimir.createSample(
-            input_dataset.table_name,
-            sample_mode
+        table_name, schema = mimir.createSample(
+            input_dataset.identifier,
+            sample_mode,
+            resultName = "SAMPLE_"+get_unique_identifier()
         )
-        row_count = mimir.countRows(sample_view_id)
-        
-        ## Register the view with Vizier
-        ds = context.datastore.register_dataset(
-            table_name=sample_view_id,
-            columns=input_dataset.columns,
-            row_counter=row_count
-        )
+        ds = MimirDatasetHandle.from_mimir_result(table_name, schema, properties = {})
 
         ## And start rendering some output
         outputs = ModuleOutputs()

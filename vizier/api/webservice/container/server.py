@@ -245,7 +245,7 @@ def get_dataset(dataset_id):
 
 
 @app.route('/datasets/<string:dataset_id>/annotations')
-def get_dataset_annotations(dataset_id):
+def get_dataset_caveats(dataset_id):
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier
@@ -253,7 +253,7 @@ def get_dataset_annotations(dataset_id):
     row_id = request.args.get(labels.ROW, type=int)
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.
-    annotations = api.datasets.get_annotations(
+    annotations = api.datasets.get_caveats(
         project_id=config.project_id,
         dataset_id=dataset_id,
         column_id=column_id,
@@ -277,52 +277,6 @@ def get_dataset_descriptor(dataset_id):
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
-
-
-@app.route('/datasets/<string:dataset_id>/annotations', methods=['POST'])
-def update_dataset_annotation(dataset_id):
-    """Update an annotation that is associated with a component of the given
-    dataset.
-
-    Request
-    -------
-    {
-      "columnId": 0,
-      "rowId": 0,
-      "key": "string",
-      "oldValue": "string", or "int", or "float"
-      "newValue": "string", or "int", or "float"
-    }
-    """
-    # Validate the request
-    obj = srv.validate_json_request(
-        request,
-        required=['key'],
-        optional=['columnId', 'rowId', 'key', 'oldValue', 'newValue']
-    )
-    # Create update statement and execute. The result is None if no dataset with
-    # given identifier exists.
-    key = obj[labels.KEY] if labels.KEY in obj else None
-    column_id = obj[labels.COLUMN_ID] if labels.COLUMN_ID in obj else None
-    row_id = obj[labels.ROW_ID] if labels.ROW_ID in obj else None
-    old_value = obj[labels.OLD_VALUE] if labels.OLD_VALUE in obj else None
-    new_value = obj[labels.NEW_VALUE] if labels.NEW_VALUE in obj else None
-    try:
-        annotations = api.datasets.update_annotation(
-            project_id=config.project_id,
-            dataset_id=dataset_id,
-            key=key,
-            column_id=column_id,
-            row_id=row_id,
-            old_value=old_value,
-            new_value=new_value
-        )
-        if not annotations is None:
-            return jsonify(annotations)
-    except ValueError as ex:
-        raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown dataset \'' + dataset_id + '\'')
-
 
 @app.route('/datasets/<string:dataset_id>/csv')
 def download_dataset(dataset_id):

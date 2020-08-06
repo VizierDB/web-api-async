@@ -20,13 +20,16 @@ standard output and one for error messages.
 
 import sys
 import os
-from typing import List
+from typing import List, Any, Iterable
+from vizier.view.chart import ChartViewHandle
+
 import traceback
 import vizier.config.base as config
 from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
 from vizier import debug_is_on
+from vizier.datastore.dataset import DatasetHandle
 
 
 """Predefined output types."""
@@ -36,12 +39,12 @@ OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
 OUTPUT_DATASET = 'dataset/view'
 
-def format_stack_trace(ex):
-    trace = traceback.extract_tb(ex.__traceback__, limit = 30)
+def format_stack_trace(ex: Exception) -> str:
+    trace_frames: Iterable[traceback.FrameSummary] = traceback.extract_tb(ex.__traceback__, limit = 30)
     # print("{}".format(trace))
     if not debug_is_on():
-        trace = itertools.dropwhile(lambda x: x[0] != "<string>", trace)
-    trace = list([
+        trace_frames = itertools.dropwhile(lambda x: x[0] != "<string>", trace_frames)
+    trace_text = list([
         "{} {} line {}{}".format(
             # Function Name
             "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)", 
@@ -55,17 +58,17 @@ def format_stack_trace(ex):
             # Line Content
             "\n    "+element[3] if element[3] != "" else ""  
         )
-        for element in trace
+        for element in trace_frames
     ])
-    if len(trace) > 0:
-        trace.reverse()
-        trace = (
-            ["  ... caused by "+trace[0]]+
-            ["  ... called by "+line for line in trace[1:]]
+    if len(trace_text) > 0:
+        trace_text.reverse()
+        trace_text = (
+            ["  ... caused by "+trace_text[0]]+
+            ["  ... called by "+line for line in trace_text[1:]]
         )
     else:
         return "INTERNAL ERROR\n{}".format(ex)
-    return "{}".format("\n".join(trace))
+    return "{}".format("\n".join(trace_text))
 
 
 class ModuleOutputs(object):
@@ -79,7 +82,9 @@ class ModuleOutputs(object):
     stdout: list(vizier.viztrail.module.OutputObject)
         Standard output stream
     """
-    def __init__(self, stdout: List[OutputObject]=None, stderr: List[OutputObject]=None):
+    def __init__(self, 
+            stdout: List[OutputObject]=[], 
+            stderr: List[OutputObject]=[]):
         """Initialize the standard output and error stream.
 
         Parameters
@@ -89,11 +94,18 @@ class ModuleOutputs(object):
         stdout: list(vizier.viztrail.module.OutputObject)
             Standard output stream
         """
-        self.stdout = stdout if not stdout is None else list()
-        self.stderr = stderr if not stderr is None else list()
+        self.stdout = stdout
+        self.stderr = stderr
 
+    def __repr__(self) -> str:
+        ret: List[str] = []
+        if self.stdout is not None and len(self.stdout) > 0:
+            ret = ret + ["----- STDOUT ------"] + [ str(output) for output in self.stdout ]
+        if self.stderr is not None and len(self.stderr) > 0:
+            ret = ret + ["----- STDERR ------"] + [ str(output) for output in self.stderr ]
+        return "\n".join(ret)
 
-    def error(self, ex):
+    def error(self, ex: Exception) -> ModuleOutputs:
         """Add stack trace for execution error to STDERR stream of the output
         object.
 
@@ -160,7 +172,7 @@ class OutputObject(object):
     value: any
         Type-specific value
     """
-    def __init__(self, type, value):
+    def __init__(self, type: str, value: Any):
         """Initialize the object components.
 
         Parameters
@@ -172,6 +184,12 @@ class OutputObject(object):
         """
         self.type = type
         self.value = value
+
+    def __repr__(self):
+        if self.is_text:
+            return self.value
+        else:
+            return "< {} >"
 
     @property
     def is_text(self):
@@ -186,7 +204,7 @@ class OutputObject(object):
 
 class DatasetOutput(OutputObject):
     """Output object where the value is a dataset handle."""
-    def __init__(self, value):
+    def __init__(self, value: DatasetHandle):
         """Initialize the output dataset.
 
         Parameters
@@ -199,7 +217,11 @@ class DatasetOutput(OutputObject):
 
 class ChartOutput(OutputObject):
     """Output object where the value is a string."""
-    def __init__(self, view, rows, caveats):
+    def __init__(self, 
+            view: ChartViewHandle, 
+            rows: List[List[Any]], 
+            caveats: List[List[bool]]
+        ):
         """Initialize the output object.
 
         Parameters
@@ -215,15 +237,15 @@ class ChartOutput(OutputObject):
         super(ChartOutput, self).__init__(
             type=OUTPUT_CHART,
             value={
-                'data': view.to_dict(),
-                'result': CHART_VIEW_DATA(view=view, rows=rows, caveats=caveats)
+                'data': view.to_dict(), # type: ignore[no-untyped-call]
+                'result': CHART_VIEW_DATA(view=view, rows=rows, caveats=caveats) # type: ignore[no-untyped-call]
             }
         )
 
 
 class HtmlOutput(OutputObject):
     """Output object where the value is a Html string."""
-    def __init__(self, value):
+    def __init__(self, value: str):
         """Initialize the output string.
 
         Parameters
@@ -236,7 +258,7 @@ class HtmlOutput(OutputObject):
 
 class MarkdownOutput(OutputObject):
     """Output object where the value is a Markdown string."""
-    def __init__(self, value):
+    def __init__(self, value: str):
         """Initialize the output string.
 
         Parameters
@@ -249,7 +271,7 @@ class MarkdownOutput(OutputObject):
 
 class TextOutput(OutputObject):
     """Output object where the value is a string."""
-    def __init__(self, value):
+    def __init__(self, value: str):
         """Initialize the output string.
 
         Parameters
