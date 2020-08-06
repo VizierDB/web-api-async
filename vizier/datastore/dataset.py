@@ -23,6 +23,8 @@ from abc import abstractmethod
 from typing import Optional, List, Any, Dict
 
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
+from vizier.datastore.annotation.base import DatasetCaveat
+from vizier.datastore.reader import DatasetReader
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -78,7 +80,7 @@ class DatasetColumn(object):
             String representation of the column data type.
         """
         self.identifier = identifier
-        self.name = name
+        self.name = name if name is not None else "col_{}".format(abs(identifier))
         self.data_type = data_type
 
     def __str__(self):
@@ -294,7 +296,11 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, name=None):
+    def __init__(self, 
+            identifier: str, 
+            columns: List[DatasetColumn] = list(), 
+            name: Optional[str] = None
+        ):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -322,6 +328,9 @@ class DatasetHandle(DatasetDescriptor):
     def row_count(self):
         return self.get_row_count()
     
+    @abstractmethod
+    def get_row_count(self) -> int:
+        raise NotImplementedError
 
     def fetch_rows(self, 
             offset: int = 0, 
@@ -358,7 +367,7 @@ class DatasetHandle(DatasetDescriptor):
     def get_caveats(self, 
             column_id: Optional[int] = None, 
             row_id: Optional[str] = None
-        ) -> List[DatasetAnnotation]:
+        ) -> List[DatasetCaveat]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -390,7 +399,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def reader(self, offset=0, limit=None):
+    def reader(self, offset: int = 0, limit: Optional[int] = None) -> DatasetReader:
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.

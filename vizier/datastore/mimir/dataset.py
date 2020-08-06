@@ -16,10 +16,12 @@
 
 import json
 import re
+from typing import Optional, List, Dict, Any
 
 from vizier.core.util import dump_json, load_json
-from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow, DATATYPE_VARCHAR
 from vizier.datastore.mimir.reader import MimirDatasetReader
+from vizier.datastore.annotation.base import DatasetCaveat
 
 import vizier.mimir as mimir
 
@@ -57,7 +59,12 @@ class MimirDatasetColumn(DatasetColumn):
         following data_type values are expected: date (format yyyy-MM-dd), int,
         varchar, real, and datetime (format yyyy-MM-dd hh:mm:ss:zzzz).
     """
-    def __init__(self, identifier=None, name_in_dataset=None, name_in_rdb=None, data_type=None):
+    def __init__(self, 
+            identifier: int, 
+            name_in_dataset: str, 
+            name_in_rdb: Optional[str] = None, 
+            data_type: str = DATATYPE_VARCHAR
+        ):
         """Initialize the dataset column.
 
         Parameters
@@ -198,7 +205,7 @@ class MimirDatasetColumn(DatasetColumn):
         return '\'' + str(value) + '\''
 
 
-MIMIR_ROWID_COL= MimirDatasetColumn( name_in_dataset='', data_type='rowid') #type: ignore[no-untyped-call]
+MIMIR_ROWID_COL= MimirDatasetColumn( identifier = -1, name_in_dataset='', data_type='rowid') #type: ignore[no-untyped-call]
 
 
 class MimirDatasetHandle(DatasetHandle):
@@ -207,10 +214,12 @@ class MimirDatasetHandle(DatasetHandle):
     in a relational and a reference to the table or view that contains the
     dataset.
     """
-    def __init__(
-        self, identifier, columns, properties, 
-        row_count=None, name=None
-    ):
+    def __init__(self, 
+            identifier: str, 
+            columns: List[MimirDatasetColumn], 
+            properties: Dict[str, Any], 
+            name: Optional[str] = None
+        ):
         """Initialize the descriptor.
 
         Parameters
@@ -227,14 +236,18 @@ class MimirDatasetHandle(DatasetHandle):
         """
         super(MimirDatasetHandle, self).__init__(
             identifier=identifier,
-            columns=columns,
+            columns=list(columns), # list(...) to make the typechecker happy; see http://mypy.readthedocs.io/en/latest/common_issues.html#variance
             name=name
         )
         self._properties = properties
-        self._row_count = row_count
 
     @staticmethod
-    def from_mimir_result(table_name, schema, properties, row_count = None, name = None):
+    def from_mimir_result(
+            table_name: str, 
+            schema: List[Dict[str,str]], 
+            properties: Dict[str, Any],
+            name = None
+        ):
         columns = [
             MimirDatasetColumn(
                 identifier=identifier,
@@ -248,8 +261,7 @@ class MimirDatasetHandle(DatasetHandle):
             identifier = table_name,
             columns = columns,
             properties = properties,
-            row_count = row_count,
-            name = name, 
+            name = name
         )
 
     def get_row_count(self):
@@ -264,7 +276,10 @@ class MimirDatasetHandle(DatasetHandle):
         if self.properties != {}:
             raise Exception("MIMIR SHOULD NOT BE SAVING PROPERTIES LOCALLY")
 
-    def get_caveats(self, column_id=None, row_id=None):
+    def get_caveats(self, 
+            column_id: Optional[int]=None, 
+            row_id: Optional[str]=None
+        ) -> List[DatasetCaveat]:
         """Get list of annotations for a dataset component. If both identifier
         equal -1 all annotations for a dataset are returned.
 
@@ -284,47 +299,20 @@ class MimirDatasetHandle(DatasetHandle):
             # all dataset cells we should add those annotations here. By now
             # this command will only return user-defined annotations for the
             # dataset.
-            annotations = []
             sql = 'SELECT * '
             sql += 'FROM ' + self.identifier + ' '
-            annoList = mimir.explainEverythingJson(sql)
-            for anno in annoList:
-                annotations.append(
-                    DatasetAnnotation(
-                        key=ANNO_UNCERTAIN,
-                        value=anno
-                    )
-                )
-            #return [item for sublist in map(lambda (i,x): self.annotations.for_column(i).values(), enumerate(self.columns)) for item in sublist]
-            #return self.annotations.values
-            return annotations
-        elif row_id is None:
-            return self.annotations.for_column(column_id)
-        elif column_id is None:
-            return self.annotations.for_row(row_id)
+            return mimir.explainEverythingJson(sql)
+        elif row_id is None and column_id is not None:
+            raise ValueError("Can't get caveats for just one column")
+        elif column_id is None and row_id is not None:
+            raise ValueError("Can't get caveats for just one row")
         else:
-            annotations = self.annotations.for_cell(
-                column_id=column_id,
-                row_id=row_id
-            )
+            assert column_id is not None
             column = self.column_by_id(column_id)
+            assert isinstance(column, MimirDatasetColumn)
             sql = 'SELECT * '
             sql += 'FROM ' + self.identifier + ' '
-            buffer = mimir.explainCell(sql, column.name_in_rdb, str(row_id))
-            has_reasons = len(buffer) > 0
-            if has_reasons:
-                for value in buffer:
-                    value = value['message']
-                    if value != '':
-                        annotations.append(
-                            DatasetAnnotation(
-                                key=ANNO_UNCERTAIN,
-                                value=value,
-                                column_id=column_id,
-                                row_id=row_id
-                            )
-                        )
-            return annotations
+            return mimir.explainCell(sql, column.name_in_rdb, str(row_id))
 
     def reader(self, offset=0, limit=None, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional

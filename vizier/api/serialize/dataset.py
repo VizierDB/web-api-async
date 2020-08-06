@@ -17,14 +17,18 @@
 """This module contains helper methods for the webservice that are used to
 serialize datasets.
 """
+from typing import Dict, Any, Optional
 
 import vizier.api.serialize.base as serialize
 import vizier.api.routes.base as routes
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor
+from vizier.datastore.annotation.base import DatasetCaveat
+from vizier.engine.project.base import ProjectHandle
+from vizier.api.routes.base import UrlFactory
 
-
-def CAVEAT(caveat):
+def CAVEAT(caveat: DatasetCaveat) -> Dict[str, Any]:
     """Get dictionary serialization for a dataset annotation.
 
     Parameters
@@ -36,10 +40,10 @@ def CAVEAT(caveat):
     -------
     dict
     """
-    return anno.to_dict()
+    return caveat.to_dict()
 
 
-def DATASET_COLUMN(column):
+def DATASET_COLUMN(column: DatasetColumn) -> Dict[str, Any]:
     """Dictionary serialization for a dataset column.
 
     Parameters
@@ -88,7 +92,12 @@ def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
         obj[labels.LINKS] = {}
     return obj
 
-def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
+def DATASET_DESCRIPTOR(
+        dataset: DatasetDescriptor, 
+        name: Optional[str] = None, 
+        project: Optional[ProjectHandle] = None, 
+        urls: Optional[UrlFactory] = None
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a dataset descriptor.
 
     Parameters
@@ -266,7 +275,7 @@ def DATASET_IDENTIFIER(identifier, name):
     }
 
 
-def DATASET_ROW(row):
+def DATASET_ROW(row: DatasetRow) -> Dict[str, Any]:
     """Dictionary serialization for a dataset row.
 
     Parameters

@@ -17,11 +17,14 @@
 """Initialize the Python gateway to the JVM for access to Mimir datastore and
 lenses.
 """
+from typing import cast, Optional, List, Dict, Any, Tuple
 
 import requests
 import json
 import os
 from requests.exceptions import HTTPError
+from requests import Response
+from vizier.datastore.annotation.base import DatasetCaveat
 
 _mimir_url = os.environ.get('MIMIR_URL', 'http://127.0.0.1:8089/api/v2/')
 
@@ -35,7 +38,7 @@ PASSTHROUGH_ERRORS = set([
   "org.mimirdb.api.FormattedError"
 ])
 
-def readResponse(resp):
+def readResponse(resp: Response) -> Dict[str, Any]:
     json_object = None
     try:
         resp.raise_for_status()
@@ -114,8 +117,15 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
     resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
     return (resp['name'], resp['schema'])
 
-def loadDataInline(schema, rows, result_name = None, human_readable_name = None, dependencies = [], properties = {}):
-    req_json ={
+def loadDataInline(
+      schema: Optional[List[Dict[str, str]]], 
+      rows: List[List[Any]], 
+      result_name: Optional[str] = None, 
+      human_readable_name: Optional[str] = None, 
+      dependencies: List[str] = [], 
+      properties: Dict[str, Any] = {}
+    ) -> Tuple[str, List[Dict[str, str]]]:
+    req_json: Dict[str, Any] ={
       "schema": schema,
       "data": rows,
       "dependencies": dependencies,
@@ -157,31 +167,40 @@ def feedback(reasons, idx, ack, rvalue):
     #resp = requests.post(_mimir_url + '', json=req_json)
     #return resp.json()
     
-def explainRow(query, rowProv):  
+def explainRow(query: str, rowProv: Optional[str]) -> List[DatasetCaveat]: 
     req_json = {
       "query": query,
       "row": rowProv,
       "col": 0
     }
     resp = readResponse(requests.post(_mimir_url + 'annotations/cell', json=req_json))
-    return resp['reasons']
+    return [
+      DatasetCaveat.from_dict(caveat)
+      for caveat in resp['reasons']
+    ]
     
-def explainCell(query, col, rowProv): 
+def explainCell(query: str, col: Optional[str], rowProv: Optional[str]) -> List[DatasetCaveat]: 
     req_json = {
       "query": query,
       "row": rowProv,
       "col": col
     }
     resp = readResponse(requests.post(_mimir_url + 'annotations/cell', json=req_json))
-    return resp['reasons']
+    return [
+      DatasetCaveat.from_dict(caveat)
+      for caveat in resp['reasons']
+    ]
 
-def explainEverythingJson(query):
+def explainEverythingJson(query: str) -> List[DatasetCaveat]:
     req_json = {
       "query": query
     }
     resp = readResponse(requests.post(_mimir_url + 'annotations/all', json=req_json))
-    return resp['reasons']     
-    
+    return [
+      DatasetCaveat.from_dict(caveat)
+      for caveat in resp['reasons']
+    ]
+
 def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input = ''): 
     req_json = {
       "input": input,
@@ -236,12 +255,15 @@ def evalR(inputs, source):
     resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
-def getTableInfo(table):
+def getTableInfo(table: str) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
     req_json = {
       "table": table
     }
     resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
-    return (resp['schema'], resp['properties'])
+    return (
+      cast(List[Dict[str,str]], resp['schema']), 
+      cast(Dict[str,Any], resp['properties'])
+    )
 
 def getSchema(query):
     req_json = {

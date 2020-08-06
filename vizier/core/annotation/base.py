@@ -27,12 +27,14 @@ for an individual object in a persistent manner.
 
 from abc import abstractmethod
 from typing import Dict, Optional, Any, List
-
+import vizier.api.serialize.labels as labels
 
 class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
+
+    { labels.KEY : "key", labels.VALUE : "value" }
     """
     @abstractmethod
     def add(self, key, value, replace=False):
@@ -343,12 +345,6 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         else:
             # Unknown key. Return default value
             return default_value
-
-    def __setitem__(self, key: str, value: Any):
-        self.update({key: value})
-
-    def __getitem__(self, key: str) -> Any:
-        return self.get(key)
 
     def get(self, 
             key: str, 

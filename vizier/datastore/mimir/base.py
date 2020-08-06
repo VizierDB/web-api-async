@@ -205,6 +205,6 @@ def mimir_value_to_python(encoded, column):
         return encoded
 
 
-def sanitize_column_name(name):
+def sanitize_column_name(name: str) -> str:
     return BAD_COL_NAMES.get(name, name)
 

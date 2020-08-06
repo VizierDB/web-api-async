@@ -43,7 +43,7 @@ class DatastoreClientUrlFactory(object):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, dataset_id):
+    def get_dataset(self, dataset_id: str) -> str:
         """Url to retrieve dataset rows.
 
         Parameters

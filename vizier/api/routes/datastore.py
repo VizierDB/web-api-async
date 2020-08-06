@@ -17,6 +17,7 @@
 """Url factory for clients that access the datasore of a viztrail project. The
 factory os a wrapper around a UrlFactory.
 """
+from typing import Optional 
 
 from vizier.api.routes.base import PAGE_LIMIT, UrlFactory
 
@@ -41,7 +42,7 @@ class DatastoreClientUrlFactory(object):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def create_dataset(self):
+    def create_dataset(self) -> str:
         """Url to create a new dataset.
 
         Returns
@@ -50,7 +51,7 @@ class DatastoreClientUrlFactory(object):
         """
         return self.urls.create_dataset(self.project_id)
 
-    def get_dataset(self, dataset_id):
+    def get_dataset(self, dataset_id: str) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -65,7 +66,11 @@ class DatastoreClientUrlFactory(object):
         url = self.urls.get_dataset(self.project_id, dataset_id)
         return url
 
-    def get_dataset_caveats(self, dataset_id, column_id=None, row_id=None):
+    def get_dataset_caveats(self, 
+            dataset_id: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> str:
         """Url to retrieve dataset annotations.
 
         Parameters

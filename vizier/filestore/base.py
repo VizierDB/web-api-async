@@ -17,6 +17,7 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
+from typing import Optional
 
 import gzip
 import mimetypes
@@ -35,7 +36,12 @@ ENCODING_GZIP = 'gzip'
 
 class FileHandle(object):
     """File handle for an uploaded file."""
-    def __init__(self, identifier, filepath, file_name, mimetype=None, encoding=None):
+    def __init__(self, 
+            identifier: str, 
+            filepath: str, 
+            file_name: str, 
+            mimetype: Optional[str] = None, 
+            encoding: Optional[str] = None):
         """Initialize the file identifier, the (full) file path, the file
         format, and the file encoding (for compressed files).
 

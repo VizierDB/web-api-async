@@ -23,6 +23,7 @@ import gzip
 import json
 import os
 import unicodecsv # type: ignore[import]
+from typing import List, Dict, Any, Optional, Tuple
 
 from io import StringIO
 
@@ -31,6 +32,8 @@ from vizier.core.util import get_unique_identifier, min_max
 from vizier.core.timestamp import  get_current_time
 from vizier.filestore.base import FileHandle
 from vizier.datastore.base import DefaultDatastore
+from vizier.datastore.dataset import DatasetRow, DatasetColumn
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
 import vizier.mimir as mimir
@@ -70,7 +73,14 @@ class MimirDatastore(DefaultDatastore):
         """
         super(MimirDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, human_readable_name = None, properties={},backend_options = [], dependencies = []):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Dict[str, Any] = {},
+            human_readable_name: Optional[str] = None, 
+            backend_options: List[Tuple[str, str]] = [], 
+            dependencies: List[str] = []
+        ) -> MimirDatasetHandle:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -90,6 +100,14 @@ class MimirDatastore(DefaultDatastore):
         """
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
+        columns = [
+            col if isinstance(col, MimirDatasetColumn) else MimirDatasetColumn(
+                    identifier = col.identifier,
+                    name_in_dataset = col.name,
+                    data_type = col.data_type
+                )
+            for col in columns
+        ]
 
         table_name, schema = mimir.loadDataInline(
             schema = [
@@ -110,9 +128,14 @@ class MimirDatastore(DefaultDatastore):
         )
 
         # Insert the new dataset metadata information into the datastore
-        return MimirDatasetHandle.from_mimir_result(table_name, schema, properties, None, human_readable_name)
+        return MimirDatasetHandle.from_mimir_result(
+            table_name = table_name, 
+            schema = schema, 
+            properties = properties, 
+            name = human_readable_name
+        )
 
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier: str) -> MimirDatasetHandle:
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -129,7 +152,11 @@ class MimirDatastore(DefaultDatastore):
         schema, properties = mimir.getTableInfo(identifier)
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties)
 
-    def get_caveats(self, identifier, column_id=-1, row_id='-1'):
+    def get_caveats(self, 
+            identifier: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get list of annotations for a dataset component. Expects at least one
         of the given identifier to be a valid identifier (>= 0).
 

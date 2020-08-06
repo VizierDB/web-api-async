@@ -245,7 +245,7 @@ def get_dataset(dataset_id):
 
 
 @app.route('/datasets/<string:dataset_id>/annotations')
-def get_dataset_caveats(dataset_id):
+def get_dataset_caveats(dataset_id: str) -> str:
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier

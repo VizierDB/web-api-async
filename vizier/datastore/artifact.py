@@ -19,6 +19,8 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
+from typing import Optional
+
 ARTIFACT_TYPE_DATASET = "application/dataset"
 ARTIFACT_TYPE_PYTHON  = "application/python"
 ARTIFACT_TYPE_TEXT    = "text/plain"

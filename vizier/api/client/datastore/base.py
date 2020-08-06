@@ -25,7 +25,8 @@ import requests
 
 from vizier.api.client.datastore.dataset import RemoteDatasetHandle
 from vizier.datastore.base import Datastore
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle, DatasetDescriptor
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.api.routes.datastore import DatastoreClientUrlFactory
 
 import vizier.api.serialize.dataset as serialize
@@ -51,7 +52,8 @@ class DatastoreClient(Datastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Optional[Dict[str, Any]] =None):
+            properties: Optional[Dict[str, Any]] =None
+        ) -> DatasetDescriptor:
         """Create a new dataset in the project datastore using the API. Expects
         a list of columns and the rows for the dataset. All columns and rows
         should have unique non-negative identifier (although this may not
@@ -118,7 +120,11 @@ class DatastoreClient(Datastore):
             store=self
         )
 
-    def get_caveats(self, identifier, column_id=None, row_id=None):
+    def get_caveats(self, 
+            identifier: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get all dataset annotations.
 
         Parameters
@@ -133,11 +139,11 @@ class DatastoreClient(Datastore):
         url = self.urls.get_dataset_caveats(identifier, column_id, row_id)
         r = requests.get(url)
         if r.status_code == 404:
-            return None
+            return list()
         elif r.status_code != 200:
             r.raise_for_status()
         # The result is the workflow handle
-        return [deserialize.DATASET_CAVEAT(obj) for obj in json.loads(r.text)]
+        return [deserialize.CAVEAT(obj) for obj in json.loads(r.text)]
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the

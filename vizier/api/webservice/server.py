@@ -712,7 +712,7 @@ def get_dataset(project_id, dataset_id):
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
-def get_dataset_caveats(project_id, dataset_id):
+def get_dataset_caveats(project_id: str, dataset_id: str) -> str:
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier

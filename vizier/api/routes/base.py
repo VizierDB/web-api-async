@@ -459,7 +459,7 @@ class UrlFactory(object):
         """
         return self.get_project(project_id) + '/datasets/' + dataset_id
 
-    def get_dataset_caveats(self, project_id: str, dataset_id: str, column_id: Optional[str] = None, row_id: Optional[str]=None) -> str:
+    def get_dataset_caveats(self, project_id: str, dataset_id: str, column_id: Optional[int] = None, row_id: Optional[str]=None) -> str:
         """Url to retrieve dataset annotations.
 
         Parameters

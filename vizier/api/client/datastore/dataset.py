@@ -14,10 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from vizier.datastore.dataset import DatasetHandle
 from vizier.datastore.reader import InMemDatasetReader
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetRow, DatasetColumn
 from vizier.api.client.datastore.base import DatastoreClient
 
@@ -54,7 +55,10 @@ class RemoteDatasetHandle(DatasetHandle):
         self.store = store
         self.properties = properties
 
-    def get_caveats(self, column_id=None, row_id=None):
+    def get_caveats(self, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -97,3 +101,6 @@ class RemoteDatasetHandle(DatasetHandle):
 
     def get_properties(self) -> Dict[str, Any]:
         return self.properties
+
+    def get_row_count(self) -> int:
+        return len(self.rows)

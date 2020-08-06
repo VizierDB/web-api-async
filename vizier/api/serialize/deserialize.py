@@ -18,6 +18,7 @@
 created by the serializers back into instances of the respective Python
 classes.
 """
+from typing import Dict, Any, List
 
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
@@ -27,7 +28,7 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.api.serialize.labels as labels
 
 
-def CAVEAT(obj):
+def CAVEAT(obj: Dict[str, Any]) -> DatasetCaveat:
     """Convert dictionary containing serialization for a dataset annotation into
     an instance of that class.
 
@@ -40,10 +41,10 @@ def CAVEAT(obj):
     -------
     vizier.datastore.annotation.base.DatasetAnnotation
     """
-    return DatasetCaveat.fromDict(obj)
+    return DatasetCaveat.from_dict(obj)
 
 
-def DATASET_DESCRIPTOR(obj):
+def DATASET_DESCRIPTOR(obj: Dict[str, Any]) -> DatasetDescriptor:
     """Convert a dictionary into a dataset descriptor.
 
     Parameters
@@ -62,7 +63,7 @@ def DATASET_DESCRIPTOR(obj):
     )
 
 
-def DATASET_COLUMNS(obj):
+def DATASET_COLUMNS(obj: List[Dict[str, Any]]) -> List[DatasetColumn]:
     """Convert a list of dictionaries into a list of dataset columns.
 
     Parameters
@@ -79,10 +80,12 @@ def DATASET_COLUMNS(obj):
             identifier=col[labels.ID],
             name=col[labels.NAME],
             data_type=col[labels.DATATYPE]
-        ) for col in obj]
+        )
+        for col in obj
+    ]
 
 
-def DATASET_ROW(obj):
+def DATASET_ROW(obj: Dict[str, Any]) -> DatasetRow:
     """Convert dictionary into a dataset row object.
 
     Parameters
@@ -94,7 +97,11 @@ def DATASET_ROW(obj):
     -------
     vizier.datastore.dataset.DatasetRow
     """
-    return DatasetRow(identifier=obj[labels.ID], values=obj[labels.ROWVALUES], caveats=obj[labels.ROWCAVEATFLAGS])
+    return DatasetRow(
+        identifier=obj[labels.ID], 
+        values=obj[labels.ROWVALUES], 
+        caveats=obj[labels.ROWCAVEATFLAGS]
+    )
 
 
 def HATEOAS(links):
