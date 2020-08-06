@@ -18,16 +18,23 @@
 the datastores that are associated with vizier projects.
 """
 
-from vizier.core.util import is_scalar
+from typing import Any
 
+from vizier.core.util import is_scalar
 import vizier.api.serialize.dataset as serialize
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.api.routes.base import UrlFactory
 
 
 class VizierDatastoreApi(object):
     """The Vizier datastore API implements the methods that correspond to
     requests that access and manipulate datasets and their annotations.
     """
-    def __init__(self, projects, urls, defaults):
+    def __init__(self, 
+            projects: ProjectCache, 
+            urls: UrlFactory, 
+            defaults: Any # vizier.config.base.ConfigObject w/ dynamic attributes
+        ):
         """Initialize the API components.
 
         Parameters

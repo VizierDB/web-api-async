@@ -125,7 +125,7 @@ class TaskProcessor(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def load_processors(path):
+def load_processors(path: str) -> Dict[str, TaskProcessor]:
     """Load task processors for packages from directories in the given
     path. The path may contain multiple directories separated by ':'. The
     directories in the path are processed in reverse order to ensure that

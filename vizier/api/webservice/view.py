@@ -20,13 +20,18 @@ from vizier.engine.packages.plot.query import ChartQuery
 from vizier.viztrail.module.output import CHART_VIEW_DATA
 
 import vizier.api.serialize.view as serialize
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.api.routes.base import UrlFactory
 
 
 class VizierDatasetViewApi(object):
     """The vizier dataset view API implements the methods that query a vizier
     workflow module state to get the results for a dataset chart view.
     """
-    def __init__(self, projects, urls):
+    def __init__(self, 
+            projects: ProjectCache, 
+            urls: UrlFactory
+        ):
         """Initialize the API components.
 
         Parameters

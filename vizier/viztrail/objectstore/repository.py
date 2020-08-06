@@ -23,7 +23,7 @@ the resources as documents in a document store.
 """
 
 import os
-from typing import Optional
+from typing import cast, Optional, List, Dict, Any
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.loader import ClassLoader
@@ -94,11 +94,14 @@ class OSViztrailRepository(ViztrailRepository):
         # Load viztrails and intialize the remaining instance variables by
         # calling the constructor of the super class
         self.viztrails = dict()
-        for identifier in self.object_store.read_object(self.viztrails_index):
+        for identifier in cast(Dict[str, Any], self.object_store.read_object(self.viztrails_index)):
             vt = OSViztrailHandle.load_viztrail(
                 base_path=self.object_store.join(self.base_path, identifier),
                 object_store=self.object_store
             )
+            # We just got the identifier from the repository... the loaded
+            # viztrail had better exist.
+            assert vt is not None
             self.viztrails[vt.identifier] = vt
 
     def create_viztrail(self, properties={}):

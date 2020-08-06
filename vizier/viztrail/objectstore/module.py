@@ -364,22 +364,15 @@ class OSModuleHandle(ModuleHandle):
         timestamp is set to the given value or the current time (if None). The
         module outputs are set to the given value. If no outputs are given the
         module output streams will be empty.
-
-        Parameters
-        ----------
-        finished_at: datetime.datetime, optional
-            Timestamp when module started running
-        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
-            Output streams for module
         """
-        # Update state, timestamp and output information. Clear database state.
-        self.state = mstate.MODULE_CANCELED
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        super().set_canceled(finished_at, outputs)
         # Materialize module state
         self.write_safe()
 
-    def set_error(self, finished_at=None, outputs=None):
+    def set_error(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ):
         """Set status of the module to error. The finished_at property of the
         timestamp is set to the given value or the current time (if None). The
         module outputs are adjusted to the given value. the output streams are
@@ -392,14 +385,14 @@ class OSModuleHandle(ModuleHandle):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        # Update state, timestamp and output information. Clear database state.
-        self.state = mstate.MODULE_ERROR
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        super().set_error(finished_at, outputs)
         # Materialize module state
         self.write_safe()
 
-    def set_running(self, started_at=None, external_form=None):
+    def set_running(self, 
+            started_at: datetime = get_current_time(), 
+            external_form: Optional[str] = None
+        ):
         """Set status of the module to running. The started_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -410,17 +403,15 @@ class OSModuleHandle(ModuleHandle):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        # Update state and timestamp information. Clear outputs and, database
-        # state,
-        if not external_form is None:
-            self.external_form = external_form
-        self.state = mstate.MODULE_RUNNING
-        self.timestamp.started_at = started_at if not started_at is None else get_current_time()
-        self.outputs = ModuleOutputs()
+        super().set_running(started_at, external_form)
         # Materialize module state
         self.write_safe()
 
-    def set_success(self, finished_at=None, outputs=None, provenance=None):
+    def set_success(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance()
+        ):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -440,18 +431,13 @@ class OSModuleHandle(ModuleHandle):
         """
         # Update state, timestamp, database state, outputs and provenance
         # information.
-        self.state = mstate.MODULE_SUCCESS
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        # If the module is set to success straight from pending state the
-        # started_at timestamp may not have been set.
-        if self.timestamp.started_at is None:
-            self.timestamp.started_at = self.timestamp.finished_at
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.provenance = provenance if not provenance is None else ModuleProvenance()
+        super().set_success(finished_at, outputs, provenance)
         # Materialize module state
         self.write_safe()
 
-    def update_property(self, external_form):
+    def update_property(self, 
+            external_form: Optional[str] = None
+        ) -> None:
         """Update the value for the external command representation
 
         Parameters
@@ -459,7 +445,9 @@ class OSModuleHandle(ModuleHandle):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        self.external_form = external_form
+        super().update_property(
+            external_form = external_form
+        )
         self.write_safe()
 
     def write_module(self) -> None:
@@ -549,7 +537,7 @@ def get_output_stream(items: List[Dict[str, Any]]) -> List[OutputObject]:
 
 def serialize_module(
         command: ModuleCommand, 
-        external_form: str, 
+        external_form: Optional[str], 
         state: int, 
         timestamp: ModuleTimestamp, 
         outputs: ModuleOutputs, 

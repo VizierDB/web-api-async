@@ -21,6 +21,7 @@ the project is instantiated.
 
 from abc import abstractmethod
 
+from vizier.datastore.base import Datastore
 
 class DatastoreFactory(object):
     """Create and delete datastore instances that are associated with vizier
@@ -40,7 +41,7 @@ class DatastoreFactory(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_datastore(self, identifier):
+    def get_datastore(self, identifier: str) -> Datastore:
         """Get the datastore instance for the project with the given identifier.
 
         Paramaters

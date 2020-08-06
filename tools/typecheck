@@ -1,3 +1,35 @@
 #!/bin/bash
-mypy --disallow-any-unimported --show-error-codes --disallow-untyped-calls $(dirname $0)/../vizier/api/webservice/base.py
+
+DIR=$(dirname $0)/..
+cd $DIR
+
+if [ "$*" ] ; then
+  ENTRYPOINTS=$*
+else
+  ENTRYPOINTS="
+    vizier/api/webservice/base.py
+    $(find tests -name '*.py')
+  "
+fi
+
+FLAGS="
+  --disallow-any-unimported 
+  --show-error-codes 
+  --disallow-untyped-calls
+"
+
+if [ "$(which mypy)" ] ; then
+  for i in $ENTRYPOINTS; do 
+    echo Checking $i
+    if mypy $FLAGS $i ; then 
+      true
+    else
+      exit -1
+    fi
+  done
+else
+  echo "mypy is not installed"
+  echo
+  echo "$> pip3 install --user mypy"
+fi
 

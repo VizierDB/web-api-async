@@ -23,13 +23,13 @@ from vizier.core.timestamp import to_datetime
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.viztrail.module.base as states
-
+from vizier.engine.base import VizierEngine
 
 class VizierTaskApi(object):
     """The Vizier task API implements the methods that interact with active
     task for vizier projects.
     """
-    def __init__(self, engine):
+    def __init__(self, engine: VizierEngine):
         """Initialize the API components.
 
         Parameters

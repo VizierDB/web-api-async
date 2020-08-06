@@ -17,15 +17,19 @@
 """Url factories for web services when running a configuration in which each
 project wrapped inside an individual container.
 """
+from typing import Optional
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, UrlFactory
+from vizier.engine.project.cache.container import ContainerProjectCache
 
 
 class ContainerApiUrlFactory(object):
     """Factory to create urls for all routes that are supported by a vizier
     API running in a separate container serving a single project.
     """
-    def __init__(self, base_url=None, api_doc_url=None):
+    def __init__(self, 
+            base_url: str, 
+            api_doc_url: Optional[str] = None):
         """Intialize the base url for the web service. A ValueError is raised
         if the base url is None.
 
@@ -38,9 +42,6 @@ class ContainerApiUrlFactory(object):
         """
         self.base_url = base_url
         self.api_doc_url = api_doc_url
-        # Raise ValueError if the base url is not set
-        if self.base_url is None:
-            raise ValueError("missing base url argument")
         # Ensure that base_url does not end with a slash
         while len(self.base_url) > 0:
             if self.base_url[-1] == '/':
@@ -100,7 +101,7 @@ class ContainerApiUrlFactory(object):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, project_id, dataset_id):
+    def get_dataset(self, project_id: str, dataset_id: str) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -156,7 +157,7 @@ class ContainerApiUrlFactory(object):
             query += '&' + PAGE_LIMIT + '=' + str(limit)
         return self.get_dataset(project_id, dataset_id) + '?' + query
 
-    def download_dataset(self, project_id, dataset_id):
+    def download_dataset(self, project_id: str, dataset_id: str) -> str:
         """Url to download a dataset in csv format.
 
         Parameters
@@ -207,7 +208,7 @@ class ContainerApiUrlFactory(object):
         """
         return self.base_url + '/files/' + file_id
 
-    def upload_file(self, project_id):
+    def upload_file(self, project_id: str) -> str:
         """File upload url for the given project.
 
         Parameters
@@ -228,7 +229,10 @@ class ContainerEngineUrlFactory(UrlFactory):
     that create urls for resoures that are accessible directly via the project
     container API.
     """
-    def __init__(self, base_url, projects, api_doc_url=None):
+    def __init__(self, 
+            base_url: str, 
+            projects: ContainerProjectCache, 
+            api_doc_url: Optional[str] = None):
         """Intialize the base url for the web service and the cache for
         projects. Each project is expected to maintain a separate factory for
         resources that are accessible via the project container API.
@@ -251,7 +255,7 @@ class ContainerEngineUrlFactory(UrlFactory):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, project_id, dataset_id):
+    def get_dataset(self, project_id: str, dataset_id: str) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -271,7 +275,7 @@ class ContainerEngineUrlFactory(UrlFactory):
     # --------------------------------------------------------------------------
     # Files
     # --------------------------------------------------------------------------
-    def upload_file(self, project_id):
+    def upload_file(self, project_id: str) -> str:
         """File upload url for the given project.
 
         Parameters

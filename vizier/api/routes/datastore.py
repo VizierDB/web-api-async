@@ -18,15 +18,14 @@
 factory os a wrapper around a UrlFactory.
 """
 
-from vizier.api.routes.base import PAGE_LIMIT
-
+from vizier.api.routes.base import PAGE_LIMIT, UrlFactory
 
 class DatastoreClientUrlFactory(object):
     """Url factory for API client datastores that access and manipulate datasets
     for a vizier project. This class is a wrapper around a UrlFactory and the
     project identifier.
     """
-    def __init__(self, urls, project_id):
+    def __init__(self, urls: UrlFactory, project_id: str):
         """Intialize the url factory and the project identifier.
 
         Parameters

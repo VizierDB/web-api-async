@@ -20,7 +20,7 @@ workflows.
 """
 
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
 
@@ -316,16 +316,15 @@ class DatasetHandle(DatasetDescriptor):
             name=name
         )    
 
-    @abstractmethod
-    def get_row_count(self):
-        raise NotImplementedError
-
     @property
     def row_count(self):
         return self.get_row_count()
     
 
-    def fetch_rows(self, offset=0, limit=None):
+    def fetch_rows(self, 
+            offset: int = 0, 
+            limit: Optional[int] = None
+        ) -> List[DatasetRow]:
         """Get list of dataset rows. The offset and limit parameters are
         intended for pagination.
 
@@ -347,14 +346,17 @@ class DatasetHandle(DatasetDescriptor):
             raise Exception("Invalid Limit: {}".format(limit))
         # Collect rows in result list. Skip first rows if offset is greater than
         # zero
-        rows = list()
+        rows:List[DatasetRow] = list()
         with self.reader(offset=offset, limit=limit) as reader:
             for row in reader:
                 rows.append(row)
         return rows
 
     @abstractmethod
-    def get_caveats(self, column_id=None, row_id=None):
+    def get_caveats(self, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetAnnotation]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -372,7 +374,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def get_properties(self):
+    def get_properties(self) -> Dict[str, Any]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -417,7 +419,10 @@ class DatasetRow(object):
     caveats: list(bool), optional
         Optional flags indicating whether row cells are annotated
     """
-    def __init__(self, identifier=None, values=None, caveats=None):
+    def __init__(self, 
+            identifier: int = -1, 
+            values: Optional[List[Any]] = None, 
+            caveats: Optional[List[bool]] = None):
         """Initialize the row object.
 
         Parameters
@@ -429,9 +434,9 @@ class DatasetRow(object):
         caveats: list(bool), optional
             Optional flags indicating whether row cells are annotated
         """
-        self.identifier = identifier if not identifier is None else -1
-        self.values = values if not values is None else list()
-        self.caveats = caveats if not caveats is None else [ False for v in self.values ]
+        self.identifier = identifier
+        self.values: List[Any] = values if not values is None else list()
+        self.caveats: List[bool] = caveats if not caveats is None else [ False for v in self.values ]
 
     def __repr__(self):
         return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))

@@ -27,7 +27,7 @@ from typing import Dict, Set, List, Any, Tuple
 from vizier.view.chart import ChartViewHandle
 from vizier.datastore.artifact import ArtifactDescriptor
 
-def debug(message):
+def debug(message: str):
     if str(os.environ.get('VIZIERSERVER_DEBUG', "False")) == "True":
         print("PROVENANCE: {}".format(message))
 
@@ -136,7 +136,9 @@ class ModuleProvenance(object):
         # print("{} + {} - {} -> {}".format(prev_state, self.write, self.delete, next_state))
         return next_state
 
-    def requires_exec(self, datasets):
+    def requires_exec(self, 
+            datasets: Dict[str, ArtifactDescriptor]
+        ) -> bool:
         """Test if a module requires execution based on the provenance
         information and a given database state. If True, the module needs to be
         re-executes. Otherwise, the write dependencies can be copied to the new

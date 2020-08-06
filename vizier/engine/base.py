@@ -679,8 +679,8 @@ class VizierEngine(WorkflowController):
 
     def set_error(self, 
             task_id: str, 
-            finished_at: Optional[datetime] = None, 
-            outputs: Optional[ModuleOutputs] = None
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to error. The finished_at property of the timestamp is set
@@ -730,7 +730,7 @@ class VizierEngine(WorkflowController):
 
     def set_running(self, 
             task_id: str, 
-            started_at: Optional[datetime] = None
+            started_at: datetime = get_current_time()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
@@ -774,7 +774,7 @@ class VizierEngine(WorkflowController):
     def set_success(
             self, 
             task_id: str, 
-            finished_at: Optional[datetime]=None, 
+            finished_at: datetime = get_current_time(), 
             result: ExecResult = ExecResult()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
@@ -841,7 +841,11 @@ class VizierEngine(WorkflowController):
                     command_id = command.command_id
                     external_form = command.to_external_form(
                         command=self.packages[package_id].get(command_id),
-                        datasets=[ context[name] for name in context if context[name].is_dataset ]
+                        datasets=dict( 
+                            (name, cast(DatasetDescriptor, context[name]))
+                            for name in context 
+                            if context[name].is_dataset 
+                        )
                     )
                     # If the backend is going to run the task immediately we
                     # need to adjust the module state

@@ -119,7 +119,7 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def exists(self, resource_path: str) -> str:
+    def exists(self, resource_path: str) -> bool:
         """Returns True if a resource at the given path exists.
 
         Parameters
@@ -321,7 +321,10 @@ class DefaultObjectStore(ObjectStore):
                 pass
         return identifier
 
-    def delete_folder(self, folder_path, force_delete=False):
+    def delete_folder(self, 
+            folder_path: str, 
+            force_delete: bool = False
+        ):
         """Delete the folder with the given path and all of its files and
         subfolders.
 
@@ -335,7 +338,10 @@ class DefaultObjectStore(ObjectStore):
         if force_delete or not self.keep_deleted_files:
             shutil.rmtree(folder_path)
 
-    def delete_object(self, object_path, force_delete=False):
+    def delete_object(self, 
+            object_path: str, 
+            force_delete: bool = False
+        ):
         """Delete the object with the given path.
 
         Parameters
@@ -348,7 +354,9 @@ class DefaultObjectStore(ObjectStore):
         if force_delete or not self.keep_deleted_files:
             os.remove(object_path)
 
-    def exists(self, resource_path):
+    def exists(self, 
+            resource_path: str
+        ) -> bool:
         """Returns True if a resource at the given path exists.
 
         Parameters
@@ -422,7 +430,9 @@ class DefaultObjectStore(ObjectStore):
                     result.append(filename)
         return result
 
-    def read_object(self, object_path):
+    def read_object(self, 
+            object_path: str
+        ) -> Union[List[Dict[str, Any]], Dict[str, Any], None]:
         """Read Json document from given path.
 
         Parameters
@@ -440,7 +450,10 @@ class DefaultObjectStore(ObjectStore):
         except IOError as ex:
             raise ValueError(ex)
 
-    def write_object(self, object_path, content):
+    def write_object(self, 
+            object_path: str, 
+            content: Union[List[Dict[str, Any]], Dict[str, Any], None]
+        ):
         """Write content as Json document to given path.
 
         Parameters

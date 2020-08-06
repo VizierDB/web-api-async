@@ -18,6 +18,7 @@
 
 import os
 import shutil
+from typing import Optional, Dict, Any
 
 from vizier.filestore.factory import FilestoreFactory
 from vizier.filestore.fs.base import FileSystemFilestore, PARA_DIRECTORY
@@ -25,7 +26,10 @@ from vizier.filestore.fs.base import FileSystemFilestore, PARA_DIRECTORY
 
 class FileSystemFilestoreFactory(FilestoreFactory):
     """Filestore factory implementation for the default filestore."""
-    def __init__(self, base_path=None, properties=None):
+    def __init__(self, 
+            base_path: Optional[str] = None, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Initialize the reference to the base directory that contains all
         filestore folders.
 

@@ -17,7 +17,7 @@
 """Classes and helper methods for configration objects."""
 
 import os
-
+from typing import Tuple, List, Optional, Dict, Any
 
 """Default directory for all server resources."""
 ENV_DIRECTORY = './.vizierdb'
@@ -53,7 +53,10 @@ class ConfigObject(object):
     """Object whose attributes contain the values of environment variables that
     are used by vizier for to configure API components.
     """
-    def __init__(self, attributes, default_values=None):
+    def __init__(self, 
+            attributes:List[Tuple[str, Optional[str], str]], 
+            default_values: Optional[Dict[str, Any]] = None
+        ):
         """Initialize the object from a list of 3-tuples containing (1) the
         attribute name, (2) the name of the environment variable that contains
         the attibute value, and (3) the attibute type (string, bool ,float, or
@@ -87,7 +90,12 @@ class ConfigObject(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, default_values=None):
+def get_config_value(
+        env_variable: Optional[str], 
+        attribute_name: Optional[str] = None, 
+        attribute_type: str = STRING, 
+        default_values: Optional[Dict[str, Any]] = None
+    ) -> Any:
     """Get the value for a configuration parameter. The value is expected to be
     set in the given environment variable. If the variable is not set the value
     is taken from the given default settings or the global default settings.
@@ -114,9 +122,10 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
     """
     # Raise an exception if the attribute type is unknown
     if not attribute_type in ATTRIBUTE_TYPES:
-        raise ValueError('unknown attribute type \'' + str(type) + '\' for \'' + attribute_name + '\'')
+        raise ValueError('unknown attribute type \'' + str(attribute_type) + '\' for \'' + str(attribute_name) + '\'')
     # Get the value for the environment variable. If the variable is
     # None or if the variable is not set use the default settings
+    val: Any = None
     if not env_variable is None:
         val = os.getenv(env_variable)
         if val is None or val.strip() == '':
@@ -133,12 +142,12 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
             try:
                 val = float(val)
             except ValueError as ex:
-                raise ValueError('expected float value for \'' + env_variable + '\'')
+                raise ValueError('expected float value for \'' + str(env_variable) + '\'')
         elif attribute_type == INTEGER and not isinstance(val, int):
             try:
                 val = int(val)
             except ValueError as ex:
-                raise ValueError('expected integer value for \'' + env_variable + '\'')
+                raise ValueError('expected integer value for \'' + str(env_variable) + '\'')
         elif attribute_type == LIST and isinstance(val, str):
             int_list = list()
             try:
@@ -150,6 +159,6 @@ def get_config_value(env_variable, attribute_name=None, attribute_type=STRING, d
                     else:
                         int_list.append(int(token))
             except ValueError as ex:
-                raise ValueError('expected integer list for \'' + env_variable + '\'')
+                raise ValueError('expected integer list for \'' + str(env_variable) + '\'')
             val = int_list
     return val

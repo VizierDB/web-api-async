@@ -14,13 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Dict, Any
+
 from vizier.datastore.dataset import DatasetHandle
 from vizier.datastore.reader import InMemDatasetReader
-
+from vizier.datastore.dataset import DatasetRow, DatasetColumn
+from vizier.api.client.datastore.base import DatastoreClient
 
 class RemoteDatasetHandle(DatasetHandle):
     """Handle for dataset that has been downloaded from a (remote) API."""
-    def __init__(self, identifier, columns, rows, store):
+    def __init__(self, 
+            identifier: str, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            store: DatastoreClient, 
+            properties: Dict[str, Any] = dict()):
         """Initialize the dataset handle. The list of rows is a list of
         dictionaries in the default serialization format.
 
@@ -44,6 +52,7 @@ class RemoteDatasetHandle(DatasetHandle):
         )
         self.rows = rows
         self.store = store
+        self.properties = properties
 
     def get_caveats(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier
@@ -85,3 +94,6 @@ class RemoteDatasetHandle(DatasetHandle):
             return InMemDatasetReader(self.rows[offset:offset+limit])
         else:
             return InMemDatasetReader(self.rows[offset:])
+
+    def get_properties(self) -> Dict[str, Any]:
+        return self.properties

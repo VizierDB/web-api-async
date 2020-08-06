@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Client-size apit for a remote vizier instance."""
-
+from typing import Optional, Dict, Any
 import json
 import requests
 import urllib.request, urllib.error, urllib.parse
@@ -25,10 +25,12 @@ from vizier.api.client.resources.notebook import Notebook
 from vizier.api.client.resources.project import ProjectResource
 from vizier.api.client.resources.view import ChartView
 from vizier.api.client.resources.workflow import WorkflowResource
+from vizier.api.routes.base import UrlFactory
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
+from vizier.core.annotation.base import ObjectAnnotationSet
 
 
 """Annotation keys for default values."""
@@ -44,7 +46,7 @@ class VizierApiClient(object):
     """Client-size API to remote vizier instances provides access to resources
     that are available at the instance.
     """
-    def __init__(self, urls, defaults=None):
+    def __init__(self, urls: UrlFactory, defaults: Optional[ObjectAnnotationSet] = None):
         """Initialize the url factory that is used to access and manipulate
         resoures on the vizier instance.
 
@@ -58,15 +60,15 @@ class VizierApiClient(object):
         self.urls = urls
         # We only set the defaults if a value is given. Otherwise, the local
         # variables are not initialized.
-        if not defaults is None:
+        if defaults is not None:
             self.defaults = defaults
             # Set the default project
-            project_id = self.defaults.find_one(KEY_DEFAULT_PROJECT)
+            project_id = self.defaults.get(KEY_DEFAULT_PROJECT)
             if not project_id is None:
                 self.default_project = project_id
             else:
                 self.default_project = None
-            branch_id = self.defaults.find_one(KEY_DEFAULT_BRANCH)
+            branch_id = self.defaults.get(KEY_DEFAULT_BRANCH)
             if not branch_id is None:
                 self.default_branch = branch_id
             else:
@@ -112,7 +114,7 @@ class VizierApiClient(object):
         # The result is the new branch descriptor
         return BranchResource.from_dict(json.loads(r.text))
 
-    def create_project(self, properties):
+    def create_project(self, properties: Dict[str, Any]) -> ProjectResource:
         """Create a new project resource at the server.
 
         Parameters

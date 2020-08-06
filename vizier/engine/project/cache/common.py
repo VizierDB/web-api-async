@@ -20,13 +20,19 @@ viztrails repository to manipulate the cached objects.
 
 from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.base import ProjectCache
-
+from vizier.datastore.factory import DatastoreFactory
+from vizier.filestore.factory import FilestoreFactory
+from vizier.viztrail.repository import ViztrailRepository
 
 class CommonProjectCache(ProjectCache):
     """The common project cache is a simple wrapper around a viztrail
     repository, a datastore factory, and a filestore factory.
     """
-    def __init__(self, datastores, filestores, viztrails):
+    def __init__(self, 
+            datastores: DatastoreFactory, 
+            filestores: FilestoreFactory, 
+            viztrails: ViztrailRepository
+        ):
         """Initialize the cache components and load all projects in the given
         viztrails repository. Maintains all projects in an dictionary keyed by
         their identifier.

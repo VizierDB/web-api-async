@@ -28,7 +28,7 @@ store, data store, viztrail repository and the workflow execution engine.
 
 import os
 import io
-from typing import Dict
+from typing import cast, Dict, Any
 
 from vizier.api.webservice.branch import VizierBranchApi
 from vizier.api.webservice.datastore import VizierDatastoreApi
@@ -48,7 +48,7 @@ from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.datastore.factory import DatastoreFactory
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.datastore.mimir.factory import MimirDatastoreFactory
-from vizier.engine.backend.base import VizierBackend
+from vizier.engine.backend.base import VizierBackend, TaskExecEngine, NonSynchronousEngine
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.backend.remote.celery.base import CeleryBackend
 from vizier.engine.backend.remote.container import ContainerBackend
@@ -68,6 +68,7 @@ import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
 import vizier.config.base as base
+from vizier.config.app import AppConfig
 
 
 class VizierApi(object):
@@ -79,7 +80,10 @@ class VizierApi(object):
     that are necessary for the Web Service, i.e., file store, data store,
     viztrail repository, and workflow execution engine.
     """
-    def __init__(self, config, init=False):
+    def __init__(self, 
+            config: AppConfig, 
+            init: bool = False
+        ):
         """Initialize the API components.
 
         Parameters
@@ -93,20 +97,20 @@ class VizierApi(object):
         # Set the API components to None for now. It is assumed that the .init()
         # method is called before any of the components are accessed for the
         # first time
-        self.engine = None
-        self.branches = None
-        self.datasets = None
-        self.files = None
-        self.projects = None
-        self.tasks = None
-        self.workflows = None
-        self.urls = None
-        self.service_descriptor = None
-        self.views = None
+        self.engine: VizierEngine
+        self.branches: VizierBranchApi
+        self.datasets: VizierDatastoreApi
+        self.files: VizierFilestoreApi
+        self.projects: VizierProjectApi
+        self.tasks: VizierTaskApi
+        self.workflows: VizierWorkflowApi
+        self.urls: UrlFactory
+        self.service_descriptor: Dict[str, Any]
+        self.views: VizierDatasetViewApi
         if init:
             self.init()
 
-    def init(self):
+    def init(self) -> None:
         """Initialize the API before the first request."""
         # Initialize the API compinents
         self.engine = get_engine(self.config)
@@ -146,7 +150,7 @@ class VizierApi(object):
                 pckg_obj['description'] = pckg.description
             pckg_commands = list()
             for cmd in list(pckg.commands.values()):
-                cmd_obj = {'id': cmd.identifier, 'name': cmd.name}
+                cmd_obj: Dict[str, Any] = {'id': cmd.identifier, 'name': cmd.name}
                 if not cmd.description is None:
                     cmd_obj['description'] = cmd.description
                 cmd_obj['parameters'] = list(cmd.parameters.values())
@@ -232,10 +236,10 @@ def get_engine(config: AppConfig) -> VizierEngine:
         base_path=os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR),
         object_store=object_store
     )
+    filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
+    datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
     if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
-        filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
         filestore_factory=FileSystemFilestoreFactory(filestores_dir)
-        datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
         datastore_factory: DatastoreFactory
         if config.engine.identifier == base.DEV_ENGINE:
             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
@@ -250,7 +254,6 @@ def get_engine(config: AppConfig) -> VizierEngine:
         # Get set of task processors for supported packages
         processors = load_processors(config.engine.processor_path)
         # Create an optional task processor for synchronous tasks if given
-        synchronous = None
         sync_commands_list = config.engine.sync_commands
         if not sync_commands_list is None:
             commands:Dict[str,Dict[str,TaskProcessor]] = dict()
@@ -259,10 +262,12 @@ def get_engine(config: AppConfig) -> VizierEngine:
                 if not package_id in commands:
                     commands[package_id] = dict()
                 commands[package_id][command_id] = processors[package_id]
-            synchronous = SynchronousTaskEngine(
+            synchronous: TaskExecEngine = SynchronousTaskEngine(
                 commands=commands,
                 projects=projects
             )
+        else:
+            synchronous = NonSynchronousEngine()
         # Create the backend
         backend: VizierBackend
         if backend_id == base.BACKEND_MULTIPROCESS:
@@ -286,7 +291,9 @@ def get_engine(config: AppConfig) -> VizierEngine:
             projects = ContainerProjectCache(
                 viztrails=viztrails,
                 container_file=os.path.join(base_dir, app.DEFAULT_CONTAINER_FILE),
-                config=config
+                config=config,
+                datastores=MimirDatastoreFactory(datastores_dir),
+                filestores=FileSystemFilestoreFactory(filestores_dir)
             )
             backend = ContainerBackend(projects=projects)
         else:
@@ -302,7 +309,10 @@ def get_engine(config: AppConfig) -> VizierEngine:
     )
 
 
-def get_url_factory(config, projects):
+def get_url_factory(
+        config: AppConfig, 
+        projects: ProjectCache
+    ) -> UrlFactory:
     """Get the url factory for a given configuration. In most cases we use the
     default url factory. Only for the configuration where each project is
     running in a separate container we need a different factory.
@@ -322,7 +332,7 @@ def get_url_factory(config, projects):
         return ContainerEngineUrlFactory(
             base_url=config.app_base_url,
             api_doc_url=config.webservice.doc_url,
-            projects=projects
+            projects=cast(ContainerProjectCache, projects)
         )
     else:
         return UrlFactory(

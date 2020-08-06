@@ -54,10 +54,14 @@ class TestContainerCache(unittest.TestCase):
         )
         # Initialize the project cache
         viztrails = OSViztrailRepository(base_path=VIZTRAILS_DIR)
+        filestores_dir = os.path.join(SERVER_DIR, app.DEFAULT_FILESTORES_DIR)
+        datastores_dir = os.path.join(SERVER_DIR, app.DEFAULT_DATASTORES_DIR)
         projects = ContainerProjectCache(
             viztrails=viztrails,
             container_file=filename,
-            config=AppConfig()
+            config=AppConfig(),
+            datastores=MimirDatastoreFactory(datastores_dir),
+            filestores=FileSystemFilestoreFactory(filestores_dir)
         )
         self.assertEqual(len(projects.list_projects()), 2)
         self.assertEqual(projects.get_project(vt1.identifier).container_api, 'API1')

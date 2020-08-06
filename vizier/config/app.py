@@ -54,6 +54,7 @@ logs:
 """
 
 import os
+from typing import Dict, Any
 
 import vizier.config.base as base
 
@@ -162,7 +163,9 @@ class AppConfig(object):
     """Application configuration object. This object contains all configuration
     settings for the Vizier instance.
     """
-    def __init__(self, default_values=None):
+    def __init__(self, 
+            default_values: Dict[str, Any] = DEFAULT_SETTINGS
+        ):
         """Initialize the configuration object from the respective environment
         variables and the optional default values. The object schema is as
         follows:
@@ -206,7 +209,7 @@ class AppConfig(object):
         if default_values is None:
             default_values = DEFAULT_SETTINGS
         # webservice
-        self.webservice = base.ConfigObject(
+        self.webservice: Any = base.ConfigObject(
             attributes=[
                 ('name', VIZIERSERVER_NAME, base.STRING),
                 ('server_url', VIZIERSERVER_BASE_URL, base.STRING),
@@ -217,7 +220,7 @@ class AppConfig(object):
             ],
             default_values=default_values
         )
-        defaults = base.ConfigObject(
+        defaults: Any = base.ConfigObject(
             attributes=[
                 ('row_limit', VIZIERSERVER_ROW_LIMIT, base.INTEGER),
                 ('max_row_limit', VIZIERSERVER_MAX_ROW_LIMIT, base.INTEGER),
@@ -227,7 +230,7 @@ class AppConfig(object):
         )
         setattr(self.webservice, 'defaults', defaults)
         # engine
-        self.engine = base.ConfigObject(
+        self.engine: Any = base.ConfigObject(
             attributes=[
                 ('identifier', VIZIERSERVER_ENGINE, base.STRING),
                 ('data_dir', VIZIERENGINE_DATA_DIR, base.STRING),
@@ -239,18 +242,18 @@ class AppConfig(object):
             default_values=default_values
         )
         # engine.backend
-        backend = base.ConfigObject(
+        backend: Any = base.ConfigObject(
             attributes=[('identifier', VIZIERENGINE_BACKEND, base.STRING)],
             default_values=default_values
         )
         # engine.backend.celery
-        celery = base.ConfigObject(
+        celery: Any = base.ConfigObject(
             attributes=[('routes', VIZIERENGINE_CELERY_ROUTES, base.STRING)],
             default_values=default_values
         )
         setattr(backend, 'celery', celery)
         # engine.backend.container
-        container = base.ConfigObject(
+        container: Any = base.ConfigObject(
             attributes=[
                 ('ports', VIZIERENGINE_CONTAINER_PORTS, base.LIST),
                 ('image', VIZIERENGINE_CONTAINER_IMAGE, base.STRING)],
@@ -259,12 +262,12 @@ class AppConfig(object):
         setattr(backend, 'container', container)
         setattr(self.engine, 'backend', backend)
         # run
-        self.run = base.ConfigObject(
+        self.run: Any = base.ConfigObject(
             attributes=[('debug', VIZIERSERVER_DEBUG, base.BOOL)],
             default_values=default_values
         )
         # logs
-        self.logs = base.ConfigObject(
+        self.logs: Any = base.ConfigObject(
             attributes=[('server', VIZIERSERVER_LOG_DIR, base.STRING)],
             default_values=default_values
         )

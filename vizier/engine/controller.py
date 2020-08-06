@@ -24,6 +24,8 @@ their mapping to workflow modules.
 from abc import abstractmethod
 from typing import Optional
 from datetime import datetime
+
+from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.engine.task.processor import ExecResult
 
@@ -40,8 +42,8 @@ class WorkflowController(object):
     @abstractmethod
     def set_error(self, 
             task_id: str, 
-            finished_at: Optional[datetime] = None, 
-            outputs: Optional[ModuleOutputs] = None
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to error. The finished_at property of the timestamp is set
@@ -72,7 +74,7 @@ class WorkflowController(object):
     @abstractmethod
     def set_running(self, 
             task_id: str, 
-            started_at: Optional[datetime] = None
+            started_at: datetime = get_current_time()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to running. The started_at property of the timestamp is
@@ -98,8 +100,8 @@ class WorkflowController(object):
     def set_success(
             self, 
             task_id: str, 
-            finished_at: Optional[datetime], 
-            result: ExecResult
+            finished_at: datetime = get_current_time(), 
+            result: ExecResult = ExecResult()
         ) -> Optional[bool]:
         """Set status of the module that is associated with the given task
         identifier to success. The finished_at property of the timestamp

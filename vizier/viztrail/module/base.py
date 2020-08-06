@@ -21,7 +21,9 @@ module outputs, and the module state (datasets).
 
 from abc import abstractmethod
 from typing import Optional
+from datetime import datetime
 
+from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
@@ -163,7 +165,7 @@ class ModuleHandle(ModuleState):
     """
     def __init__(self, 
             command: ModuleCommand, 
-            external_form: str, 
+            external_form: Optional[str], 
             identifier: Optional[str] = None, 
             state: int = MODULE_PENDING,
             timestamp: ModuleTimestamp = ModuleTimestamp(), 
@@ -234,4 +236,111 @@ class ModuleHandle(ModuleState):
             self.outputs
         )+("\n"+str(self.outputs) if self.outputs is not None else "")
 
+    def set_canceled(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ) -> None:
+        """Set status of the module to canceled. The finished_at property of the
+        timestamp is set to the given value or the current time (if None). The
+        module outputs are set to the given value. If no outputs are given the
+        module output streams will be empty.
+        
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
+            Output streams for module
+        """
+        # Update state, timestamp and output information. Clear database state.
+        self.state = MODULE_CANCELED
+        self.timestamp.finished_at = finished_at
+        self.outputs = outputs
 
+    def set_error(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ) -> None:
+        """Set status of the module to error. The finished_at property of the
+        timestamp is set to the given value or the current time (if None). The
+        module outputs are adjusted to the given value. the output streams are
+        empty if no value is given for the outputs parameter.
+
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
+            Output streams for module
+        """
+        # Update state, timestamp and output information. Clear database state.
+        self.state = MODULE_ERROR
+        self.timestamp.finished_at = finished_at
+        self.outputs = outputs
+
+    def set_running(self, 
+            started_at: datetime = get_current_time(), 
+            external_form: Optional[str] = None
+        ) -> None:
+        """Set status of the module to running. The started_at property of the
+        timestamp is set to the given value or the current time (if None).
+
+        Parameters
+        ----------
+        started_at: datetime.datetime, optional
+            Timestamp when module started running
+        external_form: string, optional
+            Adjusted external representation for the module command.
+        """
+        # Update state and timestamp information. Clear outputs and, database
+        # state,
+        if external_form is not None:
+            self.external_form = external_form
+        self.state = MODULE_RUNNING
+        self.timestamp.started_at = started_at
+        self.outputs = ModuleOutputs()
+
+    def set_success(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance()
+        ):
+        """Set status of the module to success. The finished_at property of the
+        timestamp is set to the given value or the current time (if None).
+
+        If case of a successful module execution the database state and module
+        provenance information are also adjusted together with the module
+        output streams.
+
+        Parameters
+        ----------
+        finished_at: datetime.datetime, optional
+            Timestamp when module started running
+        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
+            Output streams for module
+        provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
+            Provenance information about datasets that were read and writen by
+            previous execution of the module.
+        """
+        # Update state, timestamp, database state, outputs and provenance
+        # information.
+        self.state = MODULE_SUCCESS
+        self.timestamp.finished_at = finished_at
+        # If the module is set to success straight from pending state the
+        # started_at timestamp may not have been set.
+        if self.timestamp.started_at is None:
+            self.timestamp.started_at = self.timestamp.finished_at
+        self.outputs = outputs
+        self.provenance = provenance
+
+    def update_property(self, 
+            external_form: Optional[str] = None
+        ) -> None:
+        """Update the value for the external command representation
+
+        Parameters
+        ----------
+        external_form: string, optional
+            Adjusted external representation for the module command.
+        """
+        self.external_form = external_form

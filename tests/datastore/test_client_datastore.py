@@ -7,7 +7,7 @@ from vizier.api.client.datastore.base import DatastoreClient
 from vizier.api.routes.base import UrlFactory
 from vizier.api.routes.datastore import DatastoreClientUrlFactory
 from vizier.datastore.annotation.base import DatasetCaveat
-from vizier.datastore.dataset import DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle
 
 from atexit import register as at_exit
 
@@ -18,7 +18,9 @@ PROJECT_ID = api.create_project({ "name" : "Test Client Datastore"}).identifier
 
 at_exit(api.delete_project, PROJECT_ID)
 
-store = DatastoreClient(
+# We're just doing some unit testing on the fields specific to DatastoreClient, so 
+# ignore complaints about instantiating an abstract class
+store = DatastoreClient( # type: ignore[abstract]
     urls=DatastoreClientUrlFactory(
         urls = URLS,
         project_id=PROJECT_ID
@@ -37,6 +39,7 @@ ds = store.create_dataset(
 # print([col.name for col in ds.columns])
 
 dh = store.get_dataset(ds.identifier)
+assert dh is not None
 for row in dh.fetch_rows():
     print([row.identifier] + row.values)
 

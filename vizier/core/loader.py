@@ -19,7 +19,7 @@ configuration options.
 """
 
 import importlib
-
+from typing import Dict, Any, Optional
 
 class ClassLoader(object):
     """The class loader is used to instantiate an object from a specified class
@@ -31,7 +31,7 @@ class ClassLoader(object):
     of the properties element is passed to the new object as argument when a
     class is instantiated.
     """
-    def __init__(self, values):
+    def __init__(self, values: Dict[str, Any]):
         """Initialize the class loader. Raises ValueError if either of the
         mandatory elements is not present.
 
@@ -55,7 +55,10 @@ class ClassLoader(object):
         else:
             self.properties = None
 
-    def get_instance(self, properties=None, **kwargs):
+    def get_instance(self, 
+            properties: Optional[Dict[str, Any]] = None, 
+            **kwargs
+        ) -> Any:
         """Get an instance of the defined class. If the properties argument is
         not None it overwrites the properties that were extracted from the
         values dictionary. Returns a new instance of the specified class.

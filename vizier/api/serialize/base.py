@@ -18,12 +18,14 @@
 serialize web resources.
 """
 
+from typing import List, Dict, Any, Optional
+
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 
 import vizier.api.serialize.labels as labels
 
 
-def HATEOAS(links):
+def HATEOAS(links: Dict[str, Optional[str]]) -> List[Dict[str, Optional[str]]]:
     """Convert a dictionary of key,value pairs into a list of references. Each
     list element is a dictionary that contains a 'rel' and 'href' element.
 
