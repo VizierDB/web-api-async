@@ -122,6 +122,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     # Create lists of module handles and dataset handles
     modules = list()
     datasets = dict()
+    dataset_names = list()
     dataobjects = dict()
     charts = dict()
     for m in workflow.modules:
@@ -130,9 +131,23 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 charts[c_handle.chart_name.lower()] = c_handle
         available_charts = list()
         # Only include charts for modules that completed successful
+        for artifact in m.artifacts:
+            if artifact.is_dataset:
+                datasets[artifact.identifier] = serialds.DATASET_DESCRIPTOR(
+                    dataset=artifact,
+                    project=project,
+                    urls=urls
+                )
+                dataset_names.append(artifact.name)
+            else:
+                dataobjects[artifact.identifier] = serialds.ARTIFACT_DESCRIPTOR(
+                    artifact=artifact,
+                    project=project,
+                    urls=urls
+                )
         if m.is_success:
             for c_handle in list(charts.values()):
-                if c_handle.dataset_name in m.datasets:
+                if c_handle.dataset_name in dataset_names:
                     available_charts.append(c_handle)
         modules.append(
             serialmd.MODULE_HANDLE(
@@ -145,19 +160,6 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 include_self=(not read_only)
             )
         )
-        for artifact in m.artifacts:
-            if artifact.is_dataset:
-                datasets[ds.identifier] = serialds.DATASET_DESCRIPTOR(
-                    dataset=ds,
-                    project=project,
-                    urls=urls
-                )
-            else:
-                dataobjects[ds.identifier] = serialds.ARTIFACT_DESCRIPTOR(
-                    dataobject=ds,
-                    project=project,
-                    urls=urls
-                )
     handle_links = None
     if workflow.is_active:
         handle_links = {

@@ -23,7 +23,7 @@ ARTIFACT_TYPE_DATASET = "application/dataset"
 ARTIFACT_TYPE_PYTHON  = "application/python"
 ARTIFACT_TYPE_TEXT    = "text/plain"
 
-class ArtifactDescriptor(object):
+class ArtifactDescriptor(dict):
     """The descriptor identifies an artifact read or written by a cell.  An Artifact may be an 
     opaque Object, or a transparent Dataset (in which case it should be identified by 
     vizier.datastore.dataset.DatasetDescriptor instead)
@@ -35,7 +35,7 @@ class ArtifactDescriptor(object):
     artifact_type: string
         The type of the artifact.  Typically either a MIME type, or "application/dataset"
     """
-    def __init__(self, identifier, artifact_type):
+    def __init__(self, identifier, name, artifact_type):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -45,7 +45,11 @@ class ArtifactDescriptor(object):
         artifact_type: string
             The type of the artifact.  Typically either a MIME type, or "application/dataset"
         """
+        dict.__init__(self, identifier=identifier, name=name, artifact_type=artifact_type)
+        self.key = identifier
+        self.name = name
         self.identifier = identifier
+        self.obj_type = artifact_type
         self.artifact_type = artifact_type
 
     @property

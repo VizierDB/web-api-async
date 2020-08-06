@@ -28,16 +28,16 @@ PACKAGE_MIMIR = 'mimir'
 CATEGORY_MIMIR = "data_m"
 
 #Identifier for Mimir lenses.
-MIMIR_GEOCODE         = 'GEOCODE'
-MIMIR_KEY_REPAIR      = 'REPAIR_KEY'
-MIMIR_MISSING_KEY     = 'MISSING_KEY'
-MIMIR_MISSING_VALUE   = 'MISSING_VALUE'
-MIMIR_PICKER          = 'PICKER'
-MIMIR_TYPE_INFERENCE  = 'TYPE_INFERENCE'
-MIMIR_SHAPE_DETECTOR  = 'SHAPE_WATCHER'
-MIMIR_COMMENT         = 'COMMENT'
-MIMIR_PIVOT           = 'PIVOT'
-MIMIR_SHRED           = 'SHRED'
+MIMIR_GEOCODE         = 'geocode'
+MIMIR_KEY_REPAIR      = 'repair_key'
+MIMIR_MISSING_KEY     = 'missing_key'
+MIMIR_MISSING_VALUE   = 'missing_value'
+MIMIR_PICKER          = 'picker'
+MIMIR_TYPE_INFERENCE  = 'type_inference'
+MIMIR_SHAPE_DETECTOR  = 'shape_watcher'
+MIMIR_COMMENT         = 'comment'
+MIMIR_PIVOT           = 'pivot'
+MIMIR_SHRED           = 'shred'
 
 # Command arguments
 PARA_CITY               = 'city'

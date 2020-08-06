@@ -457,6 +457,7 @@ class VizualTaskProcessor(TaskProcessor):
         #    context.filestore.delete_file(file_id)
         ds = DatasetDescriptor(
             identifier=result.dataset.identifier,
+            name=ds_name,
             columns=result.dataset.columns
         )
         from vizier.api.webservice import server
@@ -512,6 +513,7 @@ class VizualTaskProcessor(TaskProcessor):
                 write={
                     ds_name: DatasetDescriptor(
                         identifier=result.identifier,
+                        name=ds_name,
                         columns=result.columns
                     )
                 },
@@ -770,6 +772,7 @@ class VizualTaskProcessor(TaskProcessor):
                 write={
                     new_name: DatasetDescriptor(
                         identifier=ds.identifier,
+                        name=new_name,
                         columns=ds.columns
                     )
                 },
@@ -896,6 +899,7 @@ class VizualTaskProcessor(TaskProcessor):
         if not output_dataset is None:
             ds = DatasetDescriptor(
                 identifier=output_dataset.identifier,
+                name=dataset_name,
                 columns=output_dataset.columns
             )
         else:

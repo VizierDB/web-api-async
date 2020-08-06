@@ -121,4 +121,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
                     object_path=object_path,
                     object_store=object_store
                 )
-            )
+            ) 
+        list.__init__(self, [ {'key':k, 'value':v} for k, v in self.elements.items() ])
+        
+        

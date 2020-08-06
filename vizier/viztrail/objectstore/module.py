@@ -21,6 +21,7 @@ object store.
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.view.chart import ChartViewHandle
 from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
 from vizier.viztrail.module.base import ModuleHandle
@@ -293,11 +294,12 @@ class OSModuleHandle(ModuleHandle):
                 if KEY_DATAOBJECT_TYPE in ds:
                     descriptor = ArtifactDescriptor(
                         identifier=ds[KEY_DATAOBJECT_ID],
-                        key=ds[KEY_DATAOBJECT_NAME],
-                        obj_type=ds[KEY_DATAOBJECT_TYPE])
+                        name=ds[KEY_DATAOBJECT_NAME],
+                        artifact_type=ds[KEY_DATAOBJECT_TYPE])
                 else: 
                     descriptor = DatasetDescriptor(
                         identifier=ds[KEY_DATASET_ID],
+                        name=ds[KEY_DATASET_NAME],
                         columns=[
                             DatasetColumn(
                                 identifier=col[KEY_COLUMN_ID],

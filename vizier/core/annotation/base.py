@@ -28,7 +28,7 @@ for an individual object in a persistent manner.
 from abc import abstractmethod
 
 
-class ObjectAnnotationSet(object):
+class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
@@ -190,6 +190,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         """
         self.elements = elements if not elements is None else dict()
         self.writer = writer
+        
 
     def add(self, key, value, replace=False, persist=True):
         """Associate the given key with the given value. If the replace flag is

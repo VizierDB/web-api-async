@@ -75,15 +75,16 @@ def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
     dict
     """
     obj = {
+        labels.KEY: artifact.identifier,
         labels.ID: artifact.identifier,
-        labels.OBJECT_TYPE: dataobject.artifact_type
+        labels.OBJECT_TYPE: artifact.artifact_type
     }
-    if not name is None:
-        obj[labels.NAME] = name
+    #if not name is None:
+     #   obj[labels.NAME] = name
     # Add self reference if the project and url factory are given
     if not project is None and not urls is None:
         project_id = project.identifier
-        dataobj_id = dataobject.identifier
+        dataobj_id = artifact.identifier
         obj[labels.LINKS] = {}
     return obj
 
@@ -107,8 +108,8 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     """
     obj = {
         labels.ID: dataset.identifier,
-        labels.COLUMNS: [DATASET_COLUMN(col) for col in dataset.columns],
-        labels.ROWCOUNT: dataset.row_count
+        labels.COLUMNS: [DATASET_COLUMN(col) for col in dataset.columns]#,
+        #labels.ROWCOUNT: dataset.row_count
     }
     if not name is None:
         obj[labels.NAME] = name

@@ -102,7 +102,7 @@ class DatasetDescriptor(ArtifactDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, name=None):
+    def __init__(self, identifier, name, columns=None):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -116,6 +116,7 @@ class DatasetDescriptor(ArtifactDescriptor):
         """
         super(DatasetDescriptor, self).__init__(
             identifier=identifier,
+            name=name,
             artifact_type=ARTIFACT_TYPE_DATASET,
         )    
         self.identifier = identifier

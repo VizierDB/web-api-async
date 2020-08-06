@@ -287,7 +287,7 @@ class MimirProcessor(TaskProcessor):
         mimir_lens_response = mimir.createLens(
             mimir_table_name,
             params,
-            command_id.upper(),
+            command_id,
             arguments.get_value(cmd.PARA_MATERIALIZE_INPUT, default_value=True),
             human_readable_name = ds_name.upper()
         )
@@ -316,6 +316,7 @@ class MimirProcessor(TaskProcessor):
                 read={input_ds_name: dataset.identifier},
                 write={ds_name: DatasetDescriptor(
                     identifier=ds.identifier,
+                    name=ds_name,
                     columns=ds.columns
                 )}
             )

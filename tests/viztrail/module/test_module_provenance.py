@@ -14,16 +14,16 @@ class TestModuleProvenance(unittest.TestCase):
         """Test adjusting state for modules that do not require execution."""
         # Current database state
         datasets = {
-            'A': DatasetDescriptor(identifier='123'),
-            'B': DatasetDescriptor(identifier='345'),
-            'C': DatasetDescriptor(identifier='567')
+            'A': DatasetDescriptor(identifier='123', name='A'),
+            'B': DatasetDescriptor(identifier='345', name='B'),
+            'C': DatasetDescriptor(identifier='567', name='C')
         }
         # Read 'A', write 'B', delete 'C' and create new dataset 'D'
         prov = ModuleProvenance(
             read={'A':'123', 'B': '345'},
             write={
-                'B': DatasetDescriptor(identifier='666'),
-                'D': DatasetDescriptor(identifier='999')
+                'B': DatasetDescriptor(identifier='666', name='B'),
+                'D': DatasetDescriptor(identifier='999', name='D')
             },
             delete=['C']
         )
@@ -41,34 +41,34 @@ class TestModuleProvenance(unittest.TestCase):
         """Test .requires_exec() method for the module provenance object."""
         # Current database state
         datasets = {
-            'A': DatasetDescriptor(identifier='123'),
-            'B': DatasetDescriptor(identifier='345'),
-            'C': DatasetDescriptor(identifier='567')
+            'A': DatasetDescriptor(identifier='123', name='A'),
+            'B': DatasetDescriptor(identifier='345', name='B'),
+            'C': DatasetDescriptor(identifier='567', name='C')
         }
         # For an empty read or write set the .requires_exec() method should
         # always return True
         self.assertTrue(ModuleProvenance().requires_exec(datasets))
         self.assertTrue(ModuleProvenance(read={'A':'123'}).requires_exec(datasets))
-        self.assertTrue(ModuleProvenance(write={'A':DatasetDescriptor(identifier='789')}, delete=['A']).requires_exec(datasets))
+        self.assertTrue(ModuleProvenance(write={'A':DatasetDescriptor(identifier='789', name='A')}, delete=['A']).requires_exec(datasets))
         # If the module modifies a dataset that it doesn't read but that does
         # exist the result is True
-        prov = ModuleProvenance(read={'A':'123'}, write={'C':DatasetDescriptor(identifier='567')}, delete=['A'])
+        prov = ModuleProvenance(read={'A':'123'}, write={'C':DatasetDescriptor(identifier='567', name='C')}, delete=['A'])
         self.assertTrue(prov.requires_exec(datasets))
         # If the input data has changed the module needs to execute
-        prov = ModuleProvenance(read={'A':'abc'}, write={'A':DatasetDescriptor(identifier='123')})
+        prov = ModuleProvenance(read={'A':'abc'}, write={'A':DatasetDescriptor(identifier='123', name='A')})
         self.assertTrue(prov.requires_exec(datasets))
         # No execution needed if all input data is present and in the expected
         # state
-        prov = ModuleProvenance(read={'A':'123'}, write={'A':DatasetDescriptor(identifier='abc')}, delete=['A'])
+        prov = ModuleProvenance(read={'A':'123'}, write={'A':DatasetDescriptor(identifier='abc', name='A')}, delete=['A'])
         self.assertFalse(prov.requires_exec(datasets))
-        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B':DatasetDescriptor(identifier='abc')})
+        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B':DatasetDescriptor(identifier='abc', name='B')})
         self.assertFalse(prov.requires_exec(datasets))
         prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={})
         self.assertFalse(prov.requires_exec(datasets))
         # Re-execute if a dataset is being deleted that does not exist
-        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B': DatasetDescriptor(identifier='345')})
+        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B': DatasetDescriptor(identifier='345', name='B')})
         self.assertFalse(prov.requires_exec(datasets))
-        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B': DatasetDescriptor(identifier='345')}, delete=['D'])
+        prov = ModuleProvenance(read={'B':'345', 'C':'567'}, write={'B': DatasetDescriptor(identifier='345', name='B')}, delete=['D'])
         self.assertTrue(prov.requires_exec(datasets))
 
 

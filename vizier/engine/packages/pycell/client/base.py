@@ -20,7 +20,7 @@ a datastore from within a python script.
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.artifact import ARTIFACT_TYPE_PYTHON
+from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
 from vizier.viztrail.module.output import OutputObject, DatasetOutput, ChartOutput, HtmlOutput, MarkdownOutput, TextOutput
 from vizier.viztrail.module.output import OUTPUT_TEXT, OUTPUT_HTML
@@ -105,7 +105,7 @@ class VizierDBClient(object):
         
         identifier = self.datastore.create_object(value=src,
                                                   obj_type=ARTIFACT_TYPE_PYTHON)
-        descriptor = ArtifactDescriptor(identifier, ARTIFACT_TYPE_PYTHON)
+        descriptor = ArtifactDescriptor(identifier, exp_name, ARTIFACT_TYPE_PYTHON)
         self.dataobjects[exp_name] = descriptor
         self.write.add(exp_name)
         
@@ -188,7 +188,7 @@ class VizierDBClient(object):
             columns=columns,
             rows=rows,
             properties=dataset.properties,
-            human_readable_name=name.upper(),
+            human_readable_name=name,
             backend_options=backend_options
         )
         self.datasets[name.lower()] = ds
@@ -397,6 +397,7 @@ class VizierDBClient(object):
             columns=columns,
             rows=rows,
             properties=dataset.properties,
+            human_readable_name=name,
             dependencies=read_dep
         )
         self.datasets[name.lower()] = ds

@@ -57,6 +57,7 @@ def DATASET_DESCRIPTOR(obj):
     """
     return DatasetDescriptor(
         identifier=obj[labels.ID],
+        name=obj[labels.NAME],
         columns=DATASET_COLUMNS(obj[labels.COLUMNS])
     )
 

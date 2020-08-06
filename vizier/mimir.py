@@ -338,13 +338,13 @@ def vizualScript(inputds, script, script_needs_compile = False, properties = {})
 def getBlob(identifier, expected_type = None):
   resp = requests.get(_mimir_url + 'blob/{}'.format(identifier))
   if resp.status_code != 200:
-    raise MimirException(
+    raise MimirError(
       "Blob {} does not exist".format(identifier)
     )
   if expected_type is not None:
     actual_type = resp.headers.get('Content-Type', "text/plain")
     if expected_type != actual_type:
-      raise MimirException(
+      raise MimirError(
         "Blob {} is of type {} and not {}".format(identifier, actual_type, expected_type)
       )
   return resp.content
@@ -354,7 +354,7 @@ def createBlob(identifier, blob_type, data):
   if identifier is not None:
     route += "/{}".format(identifier)
   resp = readResponse(requests.put(_mimir_url + route+'?type={}'.format(blob_type), data = data))
-  return resp["name"]
+  return resp["id"]
   
 def getAvailableLensTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']

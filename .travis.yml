@@ -10,5 +10,5 @@ branches:
   - master
 
 script:
-  - python3 -m unittest
+  - ./tools/test all
 

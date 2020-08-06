@@ -88,10 +88,10 @@ class PyCellTaskProcessor(TaskProcessor):
         # prepend python objects exported in previous cells to the source
         injected_source = "\n".join(
             context.datastore.get_object(descriptor.identifier).decode()
-            for name, descriptor in context.dataobjects
+            for name, descriptor in context.dataobjects.items()
             if descriptor.artifact_type == ARTIFACT_TYPE_PYTHON
         )
-        source = injected_source + cell_src
+        source = injected_source + '\n' + cell_src
 
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
@@ -195,13 +195,15 @@ class PyCellTaskProcessor(TaskProcessor):
                 if name in client.datasets:
                     write_descriptor = client.datasets[name]
                     if not isinstance(write_descriptor, ArtifactDescriptor):
-                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(wr_id))
+                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(name))
                     else:
                         write[name] = write_descriptor
                 elif name in client.dataobjects:
-                    wr_id = client.dataobjects[name]
+                    #wr_id = client.dataobjects[name]
+                    write_descriptor = client.dataobjects[name]
+                    #write_descriptor = client.datastore.get_object(identifier=wr_id)
                     if not isinstance(write_descriptor, ArtifactDescriptor):
-                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(wr_id))
+                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(name))
                     else:
                         write[name] = write_descriptor
                 else:
