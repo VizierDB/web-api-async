@@ -124,6 +124,7 @@ class FileSystemDatastore(DefaultDatastore):
         # Return handle for new dataset
         return DatasetDescriptor(
             identifier=dataset.identifier,
+            name=human_readable_name,
             columns=dataset.columns
         )
 

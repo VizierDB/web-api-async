@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Objects representing descriptors and handles for datasets."""
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from vizier.datastore.base import get_column_index
 from vizier.datastore.dataset import DatasetColumn
@@ -30,6 +30,7 @@ class DatasetDescriptor(object):
     """
     def __init__(self, 
             identifier: str, 
+            name: Optional[str],
             columns: List[DatasetColumn], 
             links: Dict[str, Any]
         ):
@@ -46,6 +47,7 @@ class DatasetDescriptor(object):
             Dictionary of HATEOS references for the dataset
         """
         self.identifier = identifier
+        self.name = name
         self.columns = columns
         self.links = links
 
@@ -65,6 +67,7 @@ class DatasetDescriptor(object):
         """
         return DatasetDescriptor(
             identifier=obj[labels.ID],
+            name=obj[labels.NAME],
             columns=[
                 DatasetColumn(
                     identifier=col[labels.ID],

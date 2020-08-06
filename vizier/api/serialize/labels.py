@@ -65,6 +65,7 @@ CHARTS = 'charts'
 DATASETS = 'datasets'
 OUTPUTS = 'outputs'
 PROVENANCE = 'provenance'
+ARTIFACTS = 'artifacts'
 
 # Task state changes
 RESULT = 'result'

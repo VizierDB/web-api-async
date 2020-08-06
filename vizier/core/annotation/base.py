@@ -29,7 +29,7 @@ from abc import abstractmethod
 from typing import Dict, Optional, Any, List
 
 
-class ObjectAnnotationSet(object):
+class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
@@ -193,6 +193,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         """
         self.elements = elements
         self.writer = writer
+        
 
     def add(self, 
             key: str, 

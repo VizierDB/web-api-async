@@ -20,6 +20,7 @@ import vizier.viztrail.command as md
 DATASETS = {
     'ds': DatasetDescriptor(
         identifier='0000',
+        name='ds',
         columns=[
             DatasetColumn(identifier=2, name='Some Name'),
             DatasetColumn(identifier=1, name='Street')

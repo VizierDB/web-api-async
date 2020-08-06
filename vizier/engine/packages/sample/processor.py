@@ -130,6 +130,7 @@ class SamplingProcessor(TaskProcessor):
             write={
                 output_ds_name: DatasetDescriptor(
                     identifier=ds.identifier,
+                    name=output_ds_name,
                     columns=ds.columns,
                     row_count=ds.row_count
                 )

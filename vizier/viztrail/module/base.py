@@ -207,9 +207,9 @@ class ModuleHandle(ModuleState):
     def artifacts(self):
         if self.provenance is None: 
             return []
-        if self.provenance.writes is None:
+        if self.provenance.write is None:
             return {}
-        return list(v for k, v in self.provenance.writes)
+        return [ self.provenance.write[k] for k in self.provenance.write.keys() ]
     
     @property
     def state_string(self):

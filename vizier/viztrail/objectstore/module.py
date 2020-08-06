@@ -308,10 +308,12 @@ class OSModuleHandle(ModuleHandle):
                 if KEY_DATAOBJECT_TYPE in ds:
                     descriptor = ArtifactDescriptor(
                         identifier=ds[KEY_DATAOBJECT_ID],
-                        artifact_type = ds[KEY_DATAOBJECT_TYPE])
+                        name=ds[KEY_DATAOBJECT_NAME],
+                        artifact_type=ds[KEY_DATAOBJECT_TYPE])
                 else: 
                     descriptor = DatasetDescriptor(
                         identifier=ds[KEY_DATASET_ID],
+                        name=ds[KEY_DATASET_NAME],
                         columns=[
                             DatasetColumn(
                                 identifier=col[KEY_COLUMN_ID],

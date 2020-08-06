@@ -13,8 +13,8 @@ from vizier.engine.packages.pycell.command import python_cell
 
 MODULE_DIR = './.temp'
 
-DS1 = DatasetDescriptor(identifier='ID1')
-DS2 = DatasetDescriptor(identifier='ID2')
+DS1 = DatasetDescriptor(identifier='ID1', name='ID1')
+DS2 = DatasetDescriptor(identifier='ID2', name='ID2')
 
 
 class TestModuleState(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')},
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')},
                 resources={'fileid': '0123456789'}
             ),
             timestamp=ModuleTimestamp()
@@ -111,7 +111,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')},
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')},
                 resources={'fileid': '0123456789'}
             ),
             timestamp=ModuleTimestamp()
@@ -182,7 +182,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')},
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')},
                 resources={'fileid': '0123456789'}
             )
         )
@@ -234,7 +234,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')}
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')}
             )
         )
         self.assertTrue(module.is_pending)
@@ -260,7 +260,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')}
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')}
             )
         )
         self.assertTrue(module.is_pending)
@@ -293,7 +293,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('XYZ')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')}
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')}
             )
         )
         self.assertTrue(module.is_success)
@@ -340,7 +340,7 @@ class TestModuleState(unittest.TestCase):
             outputs=ModuleOutputs(stdout=[TextOutput('ABC')]),
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
-                write={'DS1': DatasetDescriptor(identifier='ID2')}
+                write={'DS1': DatasetDescriptor(identifier='ID2', name='ID2')}
             )
         )
         # Pending

@@ -21,9 +21,10 @@ MODULE_DIR = './.temp'
 
 
 DATASETS = {
-    'DS1': DatasetDescriptor(identifier='ID1'),
+    'DS1': DatasetDescriptor(identifier='ID1', name='DS1'),
     'DS2': DatasetDescriptor(
         identifier='ID2',
+        name='DS2',
         columns=[
             DatasetColumn(identifier=0, name='ABC', data_type='int'),
             DatasetColumn(identifier=1, name='xyz', data_type='real')

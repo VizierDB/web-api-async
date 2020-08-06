@@ -109,8 +109,9 @@ class DatasetDescriptor(ArtifactDescriptor):
     """
     def __init__(self, 
             identifier: str, 
-            columns: List[DatasetColumn] = list(), 
-            name: Optional[str] = None):
+            name: Optional[str] = None,
+            columns: List[DatasetColumn] = list()
+        ):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -124,6 +125,7 @@ class DatasetDescriptor(ArtifactDescriptor):
         """
         super(DatasetDescriptor, self).__init__(
             identifier=identifier,
+            name=name,
             artifact_type=ARTIFACT_TYPE_DATASET,
         )    
         self.identifier = identifier

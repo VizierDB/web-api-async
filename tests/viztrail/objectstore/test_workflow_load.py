@@ -114,6 +114,7 @@ class TestOSWorkflow(unittest.TestCase):
                 provenance=ModuleProvenance(
                     write={'DS' + str(i): DatasetDescriptor(
                         identifier=str(i),
+                        name='DS' + str(i),
                         columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)]
                     )}
                 ),
@@ -170,6 +171,7 @@ class TestOSWorkflow(unittest.TestCase):
                 provenance=ModuleProvenance(
                     write={'DS' + str(i): DatasetDescriptor(
                         identifier=str(i),
+                        name='DS' + str(i),
                         columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)],
                     )},
                     delete=deleted_datasets
@@ -225,6 +227,7 @@ class TestOSWorkflow(unittest.TestCase):
                 provenance=ModuleProvenance(
                     write={'DS': DatasetDescriptor(
                         identifier=str(i),
+                        name='DS',
                         columns=[DatasetColumn(identifier=j, name=str(j)) for j in range(i)],
                     )}
                 ),

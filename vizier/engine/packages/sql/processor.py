@@ -127,6 +127,7 @@ class SQLTaskProcessor(TaskProcessor):
                 write={
                     ds_name: DatasetDescriptor(
                         identifier=ds.identifier,
+                        name=ds_name,
                         columns=ds.columns
                     )
                 },

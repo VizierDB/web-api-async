@@ -110,7 +110,7 @@ class MimirDatastore(DefaultDatastore):
         )
 
         # Insert the new dataset metadata information into the datastore
-        return MimirDatasetHandle.from_mimir_result(table_name, schema, properties)
+        return MimirDatasetHandle.from_mimir_result(table_name, schema, properties, None, human_readable_name)
 
     def get_dataset(self, identifier):
         """Read a full dataset from the data store. Returns None if no dataset
@@ -164,7 +164,7 @@ class MimirDatastore(DefaultDatastore):
         -------
         bytes
         """
-        return mimir.getBlob(identifier, expected_type = obj_type).encode
+        return mimir.getBlob(identifier, expected_type = expected_type)#.encode
        
     def create_object(
         self, value, obj_type="text/plain"
@@ -191,9 +191,9 @@ class MimirDatastore(DefaultDatastore):
         identifier
         """
         return mimir.createBlob(
-            identifier = "{}_{}".format(obj_type, get_unique_identifier()), 
+            identifier = "{}".format( get_unique_identifier()), 
             blob_type = obj_type, 
-            data = value.decode
+            data = value
         )
 
     def download_dataset(
