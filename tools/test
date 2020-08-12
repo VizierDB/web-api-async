@@ -3,11 +3,14 @@
 LAST_TEST_FILE=last_test_results.txt
 LAST_FAILURES_FILE=last_test_failure.txt
 EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
+IS_TRAVIS=${TRAVIS:-false}
 
 #start vizier and mimir
 ./tools/vizier test devmimir
 
-trap "kill 0" EXIT
+if [ "$IS_TRAVIS" == "false" ] ; then
+  trap "kill 0" EXIT
+fi
 
 if [ "$1" = "all" ] ; then
   TESTS=$(find tests -name '*.py')
