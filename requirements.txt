@@ -11,7 +11,7 @@ sklearn
 numpy
 pandas
 geopandas
-bokeh
+bokeh==2.0.1
 shapely
 astor
 minio

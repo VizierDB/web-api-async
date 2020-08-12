@@ -80,8 +80,8 @@ export VIZIERSERVER_ROW_LIMIT
 # Maximum row limit for requests that read datasets (DEFAULT: -1 (returns all rows))
 VIZIERSERVER_MAX_ROW_LIMIT="${VIZIERSERVER_MAX_ROW_LIMIT:--1}"
 export VIZIERSERVER_MAX_ROW_LIMIT
-# Maximum size for file uploads in bytes (DEFAULT: 16777216)
-VIZIERSERVER_MAX_UPLOAD_SIZE="${VIZIERSERVER_MAX_UPLOAD_SIZE:-16777216}"
+# Maximum size for file uploads in bytes (DEFAULT: 67108864)
+VIZIERSERVER_MAX_UPLOAD_SIZE="${VIZIERSERVER_MAX_UPLOAD_SIZE:-67108864}"
 export VIZIERSERVER_MAX_UPLOAD_SIZE
 
 #Workflow Execution Engine

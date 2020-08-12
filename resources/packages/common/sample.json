@@ -47,7 +47,8 @@
                     }
                 ], 
                 "id": "basic_sample", 
-                "name": "Basic Sample", 
+                "name": "Basic Sample",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -128,7 +129,8 @@
                     }
                 ], 
                 "id": "manual_stratified_sample", 
-                "name": "Manually Stratified Sample", 
+                "name": "Manually Stratified Sample",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -229,7 +231,8 @@
                     }
                 ], 
                 "id": "automatic_stratified_sample", 
-                "name": "Automatically Stratified Sample", 
+                "name": "Automatically Stratified Sample",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 

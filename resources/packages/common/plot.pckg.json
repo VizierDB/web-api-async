@@ -35,7 +35,8 @@
                     }
                 ], 
                 "id": "chart", 
-                "name": "Simple Chart", 
+                "name": "Simple Chart",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
