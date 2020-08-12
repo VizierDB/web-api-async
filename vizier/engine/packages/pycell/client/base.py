@@ -27,11 +27,11 @@ from vizier.viztrail.module.output import OUTPUT_TEXT
 import os
 import re
 import ast
-import astor
+import astor # type: ignore[import]
 import inspect
-from minio import Minio
-from minio.error import ResponseError
-from minio.select.errors import SelectCRCValidationError
+from minio import Minio # type: ignore[import]
+from minio.error import ResponseError # type: ignore[import]
+from minio.select.errors import SelectCRCValidationError # type: ignore[import]
 
         
     

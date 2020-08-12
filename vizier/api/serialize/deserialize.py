@@ -105,7 +105,7 @@ def DATASET_ROW(obj: Dict[str, Any]) -> DatasetRow:
     )
 
 
-def HATEOAS(links):
+def HATEOAS(links: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Convert a list of references into a dictionary. The reference relation
     is the key for the dictionary and the reference href element the value.
 

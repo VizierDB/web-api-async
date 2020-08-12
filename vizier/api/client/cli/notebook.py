@@ -19,11 +19,12 @@
 from vizier.api.client.cli.command import Command
 from vizier.api.client.cli.packages import parse_command, print_commands
 from vizier.api.client.cli.util import ts
+from vizier.api.client.base import VizierApiClient
 
 
 class NotebookCommands(Command):
     """"Collection of commands that interact with a notebook."""
-    def __init__(self, api):
+    def __init__(self, api: VizierApiClient):
         """Initialize the viztrails API.
 
         Parameters

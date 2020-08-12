@@ -141,7 +141,7 @@ class ViztrailHandle(NamedObject):
         """
         return self.default_branch
 
-    def get_branch(self, branch_id):
+    def get_branch(self, branch_id: str) -> Optional[BranchHandle]:
         """Get handle for the branch with the given identifier. Returns None if
         no branch with the given identifier exists.
 

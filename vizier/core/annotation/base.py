@@ -36,7 +36,11 @@ class ObjectAnnotationSet(list):
     { labels.KEY : "key", labels.VALUE : "value" }
     """
     @abstractmethod
-    def add(self, key, value, replace=False):
+    def add(self, 
+            key: str, 
+            value: Any, 
+            replace: bool = False
+        ) -> None:
         """Associate the given key with the given value. If the replace flag is
         True all other values that are currently associated with the key are
         removed. If the replace flag is False the value will be added to the
@@ -54,7 +58,10 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, key, value=None):
+    def delete(self, 
+            key: str, 
+            value: Optional[Any] = None
+        ) -> bool:
         """Delete the annotations for the given key. If the optional value is
         None all annotated values for the given key are removed. If the value is
         not None only the resulting (key,value) pair will be removed.
@@ -75,7 +82,10 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def find_all(self, key, default_value=[]):
+    def find_all(self, 
+            key: str, 
+            default_value: List[Any] = []
+        ) -> List[Any]:
         """Get the list of values that are associated with the given key. If no
         value is associated with the key the default value is returned.
 
@@ -93,7 +103,11 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, key, default_value=None, raise_error_on_multi_value=True):
+    def get(self, 
+            key: str, 
+            default_value: Optional[Any] = None, 
+            raise_error_on_multi_value: bool = True
+        ) -> Any:
         """Get a single value that is associated with the given key. If no value
         is associated with the key the default value is returned. If multiple
         values are associated with the given key a ValueError is raised unless
@@ -116,7 +130,10 @@ class ObjectAnnotationSet(list):
         """
         raise NotImplementedError
 
-    def replace(self, key, value):
+    def replace(self, 
+            key: str, 
+            value: Any
+        ) -> None:
         """Update the value for the property with the given key. If the value
         is None the property will be deleted.
 
@@ -130,7 +147,9 @@ class ObjectAnnotationSet(list):
         self.add(key=key, value=value, replace=True)
 
     @abstractmethod
-    def update(self, properties):
+    def update(self, 
+            properties: Dict[str, Any]
+        ) -> None:
         """Update the current properties based on the values in the dictionary.
 
         The (key, value)-pairs in the properties dictionary define the update
@@ -346,7 +365,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
 
     def get(self, 
             key: str, 
-            default_value: Any = None, 
+            default_value: Optional[Any] = None, 
             raise_error_on_multi_value: bool = True
         ) -> Any:
         """Get a single value that is associated with the given key. If no value

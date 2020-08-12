@@ -17,7 +17,7 @@
 """Specification of parameters for VizUAL commands."""
 
 import vizier.engine.packages.base as pckg
-
+from typing import Dict, Any
 
 """Global constants."""
 
@@ -71,7 +71,7 @@ SORT_DESC = 'DESC'
 
 
 """VizUAL command specification schema."""
-def para_position(index):
+def para_position(index: int) -> Dict[str, Any]:
     """Return dictionary for position parameter used by some Vizual moduels.
 
     Returns
@@ -86,7 +86,7 @@ def para_position(index):
     )
 
 
-def para_row_id(index):
+def para_row_id(index: int) -> Dict[str, Any]:
     """Return dictionary specifying the a row identifier parameter (currently
     used by the update cell command).
 
@@ -102,7 +102,7 @@ def para_row_id(index):
     )
 
 
-def para_row_index(index):
+def para_row_index(index: int) -> Dict[str, Any]:
     """Return dictionary specifying the default row parameter used by most
     modules.
 

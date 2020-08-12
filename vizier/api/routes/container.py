@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from vizier.engine.project.cache.container import ContainerProjectCache
 
 
-class ContainerApiUrlFactory(object):
+class ContainerApiUrlFactory(UrlFactory):
     """Factory to create urls for all routes that are supported by a vizier
     API running in a separate container serving a single project.
     """
@@ -54,7 +54,7 @@ class ContainerApiUrlFactory(object):
     # Service
     # --------------------------------------------------------------------------
 
-    def service_descriptor(self):
+    def service_descriptor(self) -> str:
         """Base Url for the webservice. Provides access to the service
         descriptor.
 
@@ -64,7 +64,7 @@ class ContainerApiUrlFactory(object):
         """
         return self.base_url
 
-    def api_doc(self):
+    def api_doc(self) -> Optional[str]:
         """Url to the service API documentation.
 
         Returns

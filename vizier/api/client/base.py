@@ -322,7 +322,7 @@ class VizierApiClient(object):
         # Convert result into instance of a workflow resource
         return WorkflowResource.from_dict(data)
 
-    def info(self):
+    def info(self) -> None:
         """Print information about the API (from the API service descriptor)."""
         r = requests.get(self.urls.service_descriptor())
         r.raise_for_status()

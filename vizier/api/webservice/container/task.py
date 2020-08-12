@@ -21,6 +21,7 @@ to run and cancel tasks.
 from vizier.api.routes.task import TaskUrlFactory
 from vizier.engine.backend.remote.controller import RemoteWorkflowController
 from vizier.engine.task.base import TaskHandle
+from vizier.engine.base import VizierEngine
 
 import vizier.api.serialize.labels as labels
 
@@ -29,7 +30,7 @@ class VizierContainerTaskApi(object):
     """The Vizier task API implements the methods that start and cancel tasks
     for the container project.
     """
-    def __init__(self, engine, controller_url):
+    def __init__(self, engine: VizierEngine, controller_url: str):
         """Initialize the API components.
 
         Parameters

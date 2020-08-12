@@ -17,6 +17,6 @@
 VERSION_INFO = '0.1.0'
 
 
-def print_header():
+def print_header() -> None:
     """Print program name and version information."""
     print('Vizier Command Line Interface - Version ' + VERSION_INFO)

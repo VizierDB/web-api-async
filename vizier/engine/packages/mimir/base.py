@@ -17,7 +17,7 @@
 """Declaration of lenses in the Mimir package."""
 
 import vizier.engine.packages.base as pckg
-
+from typing import Dict, Any
 
 """Global constants."""
 
@@ -70,7 +70,7 @@ PARA_INDEX              = 'index'
 PARA_KEEP_ORIGINAL      = 'keepOriginal'
 
 """Mimir lens specification schema."""
-def para_materialize_input(index):
+def para_materialize_input(index: int) -> Dict[str, Any]:
     """Return dictionary for 'materializeInput' parameter of Mimir lenses.
 
     Returns

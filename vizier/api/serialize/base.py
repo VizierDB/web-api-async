@@ -18,7 +18,7 @@
 serialize web resources.
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 import vizier.api.serialize.labels as labels
 
@@ -40,7 +40,7 @@ def HATEOAS(links: Dict[str, Optional[str]]) -> List[Dict[str, Optional[str]]]:
     return [{labels.REL: key, labels.HREF: links[key]} for key in links]
 
 
-def PROPERTIES(properties):
+def PROPERTIES(properties: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Serialize a dictionary of object properties into a list of dictionaries
     as expected by the web service API.
 

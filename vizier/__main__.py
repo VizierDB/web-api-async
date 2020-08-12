@@ -19,6 +19,7 @@
 import json
 import os
 import sys
+from typing import List
 
 from vizier.api.client.cli import print_header
 from vizier.api.client.cli.interpreter import CommandInterpreter
@@ -31,7 +32,7 @@ CONFIG_DIR = '.vizierdb'
 CONFIG_FILE = 'cli.json'
 
 
-def get_base_directory():
+def get_base_directory() -> str:
     """Get the directory that contains the vizier configuration files.
 
     Returns
@@ -41,7 +42,7 @@ def get_base_directory():
     return os.path.abspath(CONFIG_DIR)
 
 
-def main(args):
+def main(args: List[str]) -> None:
     """Read user input from stdin until either quit, exit or CTRL-D is entered.
     """
     # Initialize the url factory and read default values.

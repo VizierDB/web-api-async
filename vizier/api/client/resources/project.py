@@ -17,11 +17,17 @@
 """Resource object representing a project in a remote vizier instance."""
 
 from vizier.core.timestamp import to_datetime
-
+from datetime import datetime
+from typing import Dict, Any, Optional
 
 class ProjectResource(object):
     """A project in a remote vizier instance."""
-    def __init__(self, identifier, name, created_at, last_modified_at, default_branch=None):
+    def __init__(self, 
+            identifier: str, 
+            name: str, 
+            created_at: datetime, 
+            last_modified_at: datetime, 
+            default_branch: Optional[str] = None):
         """Initialize the project attributes."""
         self.identifier = identifier
         self.name = name
@@ -30,7 +36,7 @@ class ProjectResource(object):
         self.default_branch = default_branch
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str, Any]) -> "ProjectResource":
         """Get a project instance from the dictionary representation returned
         by the vizier web service.
 

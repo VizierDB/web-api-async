@@ -20,6 +20,8 @@ project handle and project cache.
 """
 
 from abc import abstractmethod
+from typing import Optional 
+
 from vizier.engine.project.base import ProjectHandle
 from vizier.viztrail.branch import BranchHandle
 
@@ -65,8 +67,7 @@ class ProjectCache(object):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def get_branch(self, project_id: str, branch_id: str) -> BranchHandle:
+    def get_branch(self, project_id: str, branch_id: str) -> Optional[BranchHandle]:
         """Get the branch with the given identifier for the specified project.
         The result is None if the project of branch does not exist.
 
@@ -81,7 +82,7 @@ class ProjectCache(object):
         -------
         vizier.viztrail.branch.BranchHandle
         """
-        raise NotImplementedError
+        return self.get_project(project_id).viztrail.get_branch(branch_id)
 
     @abstractmethod
     def get_project(self, project_id: str) -> ProjectHandle:

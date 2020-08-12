@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from vizier.api.client.resources.workflow import WorkflowResource
 from vizier.api.client.datastore.base import DatastoreClient
 if TYPE_CHECKING:
-    from vizier.datastore.dataset import DatasetDescriptor
+    from vizier.api.client.resources.dataset import DatasetDescriptor
 
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels

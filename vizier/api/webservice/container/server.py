@@ -241,7 +241,7 @@ def get_dataset_caveats(dataset_id: str) -> str:
     """
     # Expects at least a column or row identifier
     column_id = request.args.get(labels.COLUMN, type=int)
-    row_id = request.args.get(labels.ROW, type=int)
+    row_id = request.args.get(labels.ROW, type=str)
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.
     annotations = api.datasets.get_caveats(
