@@ -54,7 +54,7 @@ class CommonProjectCache(ProjectCache):
             )
             self.projects[viztrail.identifier] = project
 
-    def create_project(self, properties=None):
+    def create_project(self, properties={}):
         """Create a new project. Will create a viztrail in the underlying
         viztrail repository. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either

@@ -31,7 +31,6 @@ from werkzeug.utils import secure_filename
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.base import VizierApi
 from vizier.config.app import AppConfig
-from vizier.datastore.annotation.dataset import DatasetMetadata
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
@@ -663,27 +662,17 @@ def create_dataset(project_id):
     obj = srv.validate_json_request(
         request,
         required=[labels.COLUMNS, labels.ROWS],
-        optional=[labels.ANNOTATIONS]
+        optional=[labels.PROPERTIES]
     )
     columns = deserialize.DATASET_COLUMNS(obj[labels.COLUMNS])
     rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
-    annotations = None
-    if labels.ANNOTATIONS in obj:
-        annotations = DatasetMetadata()
-        for anno in obj[labels.ANNOTATIONS]:
-            a = deserialize.ANNOTATION(anno)
-            if a.column_id is None:
-                annotations.rows.append(a)
-            elif a.row_id is None:
-                annotations.columns.append(a)
-            else:
-                annotations.cells.append(a)
+    properties = obj.get(labels.PROPERTIES, dict())
     try:
         dataset = api.datasets.create_dataset(
             project_id=project_id,
             columns=columns,
             rows=rows,
-            annotations=annotations
+            properties=properties
         )
         if not dataset is None:
             return jsonify(dataset)
@@ -698,12 +687,23 @@ def get_dataset(project_id, dataset_id):
     curation workflow.
     """
     # Get dataset rows with offset and limit parameters
+    offset = request.args.get(PAGE_OFFSET)
+    if offset is not None:
+        offset = int(offset)
+        if offset < 0:
+            raise srv.InvalidRequest("Invalid Offset {}".format(offset))
+    limit = request.args.get(PAGE_LIMIT)
+    if limit is not None:
+        limit = int(limit)
+        if limit < 0:
+            raise srv.InvalidRequest("Invalid Offset {}".format(limit))
+
     try:
         dataset = api.datasets.get_dataset(
             project_id=project_id,
             dataset_id=dataset_id,
-            offset=request.args.get(PAGE_OFFSET),
-            limit=request.args.get(PAGE_LIMIT)
+            offset=offset,
+            limit=limit
         )
         if not dataset is None:
             return jsonify(dataset)
@@ -713,7 +713,7 @@ def get_dataset(project_id, dataset_id):
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
-def get_dataset_annotations(project_id, dataset_id):
+def get_dataset_caveats(project_id, dataset_id):
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier
@@ -721,7 +721,7 @@ def get_dataset_annotations(project_id, dataset_id):
     row_id = request.args.get(labels.ROW, type=str)
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.
-    annotations = api.datasets.get_annotations(
+    annotations = api.datasets.get_caveats(
         project_id=project_id,
         dataset_id=dataset_id,
         column_id=column_id,
@@ -745,52 +745,6 @@ def get_dataset_descriptor(project_id, dataset_id):
     except ValueError as ex:
         raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
-
-
-@bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations', methods=['POST'])
-def update_dataset_annotation(project_id, dataset_id):
-    """Update an annotation that is associated with a component of the given
-    dataset.
-
-    Request
-    -------
-    {
-      "columnId": 0,
-      "rowId": 0,
-      "key": "string",
-      "oldValue": "string", or "int", or "float"
-      "newValue": "string", or "int", or "float"
-    }
-    """
-    # Validate the request
-    obj = srv.validate_json_request(
-        request,
-        required=['key'],
-        optional=['columnId', 'rowId', 'key', 'oldValue', 'newValue']
-    )
-    # Create update statement and execute. The result is None if no dataset with
-    # given identifier exists.
-    key = obj[labels.KEY] if labels.KEY in obj else None
-    column_id = obj[labels.COLUMN_ID] if labels.COLUMN_ID in obj else None
-    row_id = obj[labels.ROW_ID] if labels.ROW_ID in obj else None
-    old_value = obj[labels.OLD_VALUE] if labels.OLD_VALUE in obj else None
-    new_value = obj[labels.NEW_VALUE] if labels.NEW_VALUE in obj else None
-    try:
-        annotations = api.datasets.update_annotation(
-            project_id=project_id,
-            dataset_id=dataset_id,
-            key=key,
-            column_id=column_id,
-            row_id=row_id,
-            old_value=old_value,
-            new_value=new_value
-        )
-        if not annotations is None:
-            return jsonify(annotations)
-    except ValueError as ex:
-        raise srv.InvalidRequest(str(ex))
-    raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or dataset \'' + dataset_id + '\'')
-
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/csv')
 def download_dataset(project_id, dataset_id):

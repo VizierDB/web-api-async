@@ -13,13 +13,13 @@ from vizier.filestore.fs.base import FileSystemFilestore
 SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
-CSV_FILE = './.files/dataset.csv'
-SORT_FILE = './.files/dataset_for_sort.csv'
+CSV_FILE = './tests/engine/packages/vizual/.files/dataset.csv'
+SORT_FILE = './tests/engine/packages/vizual/.files/dataset_for_sort.csv'
 
 # Note that some tests access an external resource to test download capabilities.
 # The test will fail if the specified resource is not available. Set the
 # DOWNLOAD_URL to an available resource or to None to skip the download tests
-DOWNLOAD_URL = 'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datasets/w49k-mmkh/rows/download'
+DOWNLOAD_URL = 'https://raw.githubusercontent.com/VizierDB/web-api-async/master/tests/datastore/.files/w49k-mmkh.csv'
 
 
 

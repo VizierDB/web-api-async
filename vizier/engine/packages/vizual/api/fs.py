@@ -70,9 +70,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations.filter(
-                columns=[c.identifier for c in columns]
-            )
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -109,9 +107,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            annotations=dataset.annotations.filter(
-                rows=[r.identifier for r in rows]
-            )
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -175,9 +171,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=schema,
             rows=rows,
-            annotations=dataset.annotations.filter(
-                columns=[c.identifier for c in schema]
-            )
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -230,7 +224,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=columns,
             rows=rows,
-            annotations=dataset.annotations
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -273,7 +267,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            annotations=dataset.annotations
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -342,11 +336,6 @@ class DefaultVizualApi(VizualApi):
                     url=url,
                     username=username,
                     password=password,
-                    detect_headers=detect_headers,
-                    infer_types=infer_types,
-                    load_format=load_format,
-                    options=options,
-                    human_readable_name=human_readable_name
                 )
             result_resources[base.RESOURCE_URL] = url
         else:
@@ -361,11 +350,6 @@ class DefaultVizualApi(VizualApi):
             if dataset is None:
                 dataset = datastore.load_dataset(
                     f_handle=filestore.get_file(file_id),
-                    detect_headers=detect_headers,
-                    infer_types=infer_types,
-                    load_format=load_format,
-                    options=options,
-                    human_readable_name = human_readable_name
                 )
             result_resources[base.RESOURCE_FILEID] = file_id
         # Ensure that the dataset is not None at this point
@@ -411,7 +395,7 @@ class DefaultVizualApi(VizualApi):
         if dataset is not None:
             f_handles = datastore.unload_dataset(
                 filepath=filestore.get_file_dir(get_unique_identifier() ) ,
-                dataset_name=dataset.table_name,
+                dataset_name=dataset.identifier,
                 format=unload_format,
                 options=options
             )
@@ -464,7 +448,7 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=columns,
                 rows=rows,
-                annotations=dataset.annotations
+                properties={}
             )
             return VizualApiResult(ds)
         else:
@@ -509,7 +493,7 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=dataset.columns,
                 rows=rows,
-                annotations=dataset.annotations
+                properties={}
             )
             return VizualApiResult(ds)
         else:
@@ -561,7 +545,7 @@ class DefaultVizualApi(VizualApi):
             ds = datastore.create_dataset(
                 columns=columns,
                 rows=dataset.fetch_rows(),
-                annotations=dataset.annotations
+                properties={}
             )
             return VizualApiResult(ds)
         else:
@@ -608,6 +592,8 @@ class DefaultVizualApi(VizualApi):
             l_idx = len(columns) - (i + 1)
             col_id = columns[l_idx]
             col_idx = dataset.get_index(col_id)
+            # print("SORT: {}".format(col_idx))
+            # print("\n".join(", ".join("'{}':{}".format(v, type(v)) for v in row.values) for row in rows))
             if col_idx is None:
                 raise ValueError('unknown column identifier \'' + str(col_id) + '\'')
             reverse = reversed[l_idx]
@@ -616,7 +602,7 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            annotations=dataset.annotations
+            properties={}
         )
         return VizualApiResult(ds)
 
@@ -655,7 +641,7 @@ class DefaultVizualApi(VizualApi):
         rows = dataset.fetch_rows()
         row_index = -1
         for i in range(len(rows)):
-            if rows[i].identifier == row_id:
+            if int(rows[i].identifier) == int(row_id):
                 row_index = i
                 break
         # Make sure that row refers a valid row in the dataset
@@ -669,6 +655,6 @@ class DefaultVizualApi(VizualApi):
         ds = datastore.create_dataset(
             columns=dataset.columns,
             rows=rows,
-            annotations=dataset.annotations
+            properties={}
         )
         return VizualApiResult(ds)

@@ -11,15 +11,6 @@ import vizier.engine.packages.mimir.command as mimir
 
 class TestMimirCommandValidation(unittest.TestCase):
 
-    def test_mimir_domain(self):
-        """Test validation of the mimir domain command."""
-        mimir.mimir_domain(
-            dataset_name='ABC',
-            column=1,
-            materialize_input=False,
-            validate=True
-        )
-
     def test_mimir_geocode(self):
         """Test validation of the mimir geocode command."""
         # Test minimal options
@@ -98,20 +89,6 @@ class TestMimirCommandValidation(unittest.TestCase):
             dataset_name='ABC',
             schema=schema,
             pick_as='MyCol',
-            materialize_input=False,
-            validate=True
-        )
-
-    def test_mimir_schema_matching(self):
-        """Test validation of the mimir schema matching command."""
-        schema = [
-            {'column': 'MyName', 'type': 'X'},
-            {'column': 'SomeName', 'type': 'Y'}
-        ]
-        mimir.mimir_schema_matching(
-            dataset_name='ABC',
-            schema=schema,
-            result_name='XYZ',
             materialize_input=False,
             validate=True
         )

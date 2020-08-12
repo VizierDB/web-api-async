@@ -39,7 +39,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -50,7 +50,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -94,7 +93,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -106,7 +105,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -141,7 +139,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -152,7 +150,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
                 command=command,
                 external_form='print ' + str(i) + '+' + str(i),
                 state=MODULE_SUCCESS,
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput(str(i + i))]),
                 provenance=ModuleProvenance(),
                 timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),
@@ -208,7 +205,7 @@ class TestOSWorkflowAppend(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -218,7 +215,6 @@ class TestOSWorkflowAppend(unittest.TestCase):
             command=command,
             external_form='print 2+2',
             state=MODULE_SUCCESS,
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             timestamp=ModuleTimestamp(created_at=ts,started_at=ts,finished_at=ts),

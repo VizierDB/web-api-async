@@ -16,11 +16,11 @@ import vizier.filestore.base as fs
 
 SERVER_DIR = './.tmp'
 
-CSV_FILE = './.files/dataset.csv'
-GZIP_CSV_FILE = './.files/dataset.csv.gz'
-TSV_FILE = './.files/dataset.tsv'
-GZIP_TSV_FILE = './.files/dataset.tsv.gz'
-TEXT_FILE = './.files/textfile.txt'
+CSV_FILE = './tests/filestore/.files/dataset.csv'
+GZIP_CSV_FILE = './tests/filestore/.files/dataset.csv.gz'
+TSV_FILE = './tests/filestore/.files/dataset.tsv'
+GZIP_TSV_FILE = './tests/filestore/.files/dataset.tsv.gz'
+TEXT_FILE = './tests/filestore/.files/textfile.txt'
 
 
 class TestFileSystemFilestore(unittest.TestCase):

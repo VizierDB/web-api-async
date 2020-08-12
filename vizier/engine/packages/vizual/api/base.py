@@ -24,6 +24,7 @@ Each vizual command will create a new dataset instance on success.
 from abc import abstractmethod
 
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.datastore.mimir.dataset import MimirDatasetHandle
 
 
 """Labels for resources in a previous download state."""
@@ -54,6 +55,16 @@ class VizualApiResult(object):
         """
         self.dataset = dataset
         self.resources = resources
+
+    @staticmethod
+    def from_mimir(response):
+        ds = MimirDatasetHandle.from_mimir_result(
+            response["name"], 
+            response["schema"], 
+            response["properties"]
+        )
+        return VizualApiResult(ds)
+
 
 
 class VizualApi(object):

@@ -82,7 +82,7 @@ class ScalaTaskProcessor(TaskProcessor):
             dataset = context.datastore.get_dataset(dataset_id)
             if dataset is None:
                 raise ValueError('unknown dataset \'' + ds_name_o + '\'')
-            mimir_table_names[ds_name_o] = dataset.table_name
+            mimir_table_names[ds_name_o] = dataset.identifier
         # Run the scala code
         try:
             evalresp = mimir.evalScala(mimir_table_names, source)

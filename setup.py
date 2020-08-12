@@ -50,13 +50,13 @@ def package_files(directory):
 packages_files = package_files('resources/packages/')
 processors_files = package_files('resources/processors/')
 webui_files = package_files('../web-ui/build/')
-mimir_jar = [('mimir',['../mimir/bin/mimir-api'])]
+mimir_jar = [('mimir',['../mimir-api/bin/mimir-api'])]
 data_files = packages_files + processors_files + webui_files + mimir_jar
 #print(str(data_files))
 
 setup(
     name='vizier-webapi',
-    version='0.7.2',
+    version='0.7.3',
     description='UI, Web API, and Backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
@@ -78,7 +78,8 @@ setup(
         'geopandas',
         'bokeh',
         'shapely',
-        'astor'
+        'astor',
+        'minio'
     ],
     include_package_data=True,
     data_files=data_files,

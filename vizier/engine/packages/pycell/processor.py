@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.datastore.object.base import DataObject
 
 """Implementation of the task processor for the Python cell package."""
 
@@ -30,7 +29,7 @@ from vizier.viztrail.module.output import ModuleOutputs, OutputObject, HtmlOutpu
 from vizier.viztrail.module.provenance import ModuleProvenance
 from os.path import normpath, basename
 from os import path
-from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
+from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as cmd
@@ -81,18 +80,19 @@ class PyCellTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        #get
-        objects = context.datastore.get_objects(obj_type=PYTHON_EXPORT_TYPE)
-        dos = [object for objects in [objects.for_id(doid) for doid in [ value for key, value in context.dataobjects.items()]] for object in objects ]
-        inj_src = ''
+        
+
         # Get Python script from user arguments.  It is the source for VizierDBClient
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
-        dataobjects = list()
-        for obj in dos:
-            inj_src = inj_src + obj.value + "\n\n"
-            dataobjects.append([obj.key,obj.identifier])
-        # Assemble the source to run in the interpreter 
-        source = inj_src + cell_src
+
+        # prepend python objects exported in previous cells to the source
+        injected_source = "\n".join(
+            context.datastore.get_object(descriptor.identifier).decode()
+            for name, descriptor in context.dataobjects.items()
+            if descriptor.artifact_type == ARTIFACT_TYPE_PYTHON
+        )
+        source = injected_source + '\n' + cell_src
+
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
@@ -178,13 +178,13 @@ class PyCellTaskProcessor(TaskProcessor):
                 if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
                 if name in context.datasets:
-                    read[name] = context.datasets[name]
+                    read[name] = context.datasets[name].identifier
                     if not isinstance(read[name], str):
-                        raise RuntimeError('invalid element in mapping dictionary')
-                elif name in dataobjects:
-                    read[name] = dataobjects[name]
+                        raise RuntimeError('invalid element in read mapping dictionary: {} (expecting str)'.format(read[name]))
+                elif name in context.dataobjects:
+                    read[name] = context.dataobjects[name].identifier
                     if not isinstance(read[name], str):
-                        raise RuntimeError('invalid element in mapping dictionary')
+                        raise RuntimeError('invalid element in read mapping dictionary: {} (expecting str)'.format(read[name]))
                 else:
                     read[name] = None
             write = dict()
@@ -193,29 +193,31 @@ class PyCellTaskProcessor(TaskProcessor):
                     raise RuntimeError('invalid key for mapping dictionary')
                 
                 if name in client.datasets:
-                    wr_id = client.datasets[name]
-                    if not isinstance(wr_id, str):
-                        raise RuntimeError('invalid value in mapping dictionary')
-                    elif wr_id in client.descriptors:
-                        write[name] = client.descriptors[wr_id]
+                    write_descriptor = client.datasets[name]
+                    if not isinstance(write_descriptor, ArtifactDescriptor):
+                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(name))
                     else:
-                        write[name] = client.datastore.get_descriptor(wr_id)
+                        write[name] = write_descriptor
                 elif name in client.dataobjects:
-                    wr_id = client.dataobjects[name]
-                    if not isinstance(wr_id, str):
-                        raise RuntimeError('invalid value in mapping dictionary')
-                    elif wr_id in client.descriptors:
-                        write[name] = client.descriptors[wr_id]
+                    #wr_id = client.dataobjects[name]
+                    write_descriptor = client.dataobjects[name]
+                    #write_descriptor = client.datastore.get_object(identifier=wr_id)
+                    if not isinstance(write_descriptor, ArtifactDescriptor):
+                        raise RuntimeError('invalid element in write mapping dictionary: {} (expecting str)'.format(name))
                     else:
-                        write[name] = client.datastore.get_objects(identifier=wr_id).objects[0]
+                        write[name] = write_descriptor
                 else:
                     write[name] = None
+            print("Pycell Execution Finished")
+            print("     read: {}".format(read))
+            print("     write: {}".format(write))
             provenance = ModuleProvenance(
                 read=read,
                 write=write,
                 delete=client.delete
             )
         else:
+            print("ERROR: {}".format(exception))
             outputs.error(exception)
             provenance = ModuleProvenance()
         # Return execution result

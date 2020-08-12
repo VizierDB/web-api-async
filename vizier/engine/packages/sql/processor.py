@@ -21,12 +21,11 @@ import sys
 
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.dataset import MimirDatasetColumn
+from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 from vizier.engine.packages.mimir.processor import print_dataset_schema
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput
+from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.api.webservice import server
 
 import vizier.config.base as config
 import vizier.engine.packages.sql.base as cmd
@@ -83,47 +82,40 @@ class SQLTaskProcessor(TaskProcessor):
         # name in the Mimir backend
         mimir_table_names = dict()
         for ds_name_o in context.datasets:
-            dataset_id = context.datasets[ds_name_o]
+            dataset_id = context.datasets[ds_name_o].identifier
             dataset = context.datastore.get_dataset(dataset_id)
             if dataset is None:
                 raise ValueError('unknown dataset \'' + ds_name_o + '\'')
-            mimir_table_names[ds_name_o] = dataset.table_name
+            mimir_table_names[ds_name_o] = dataset.identifier
         # Module outputs
         outputs = ModuleOutputs()
+        is_success = True
         try:
             # Create the view from the SQL source
-            view_name, dependencies, mimirSchema = mimir.createView(
+            view_name, dependencies, mimirSchema, properties = mimir.createView(
                 mimir_table_names,
                 source
             )
+            ds = MimirDatasetHandle.from_mimir_result(view_name, mimirSchema, properties)
+
             print(mimirSchema)
-            columns = [
-                MimirDatasetColumn(
-                    identifier=col_id,
-                    name_in_dataset=col['name'],
-                    data_type=col['type']
-                )
-                for (col_id, col) in enumerate(mimirSchema)
-            ]
-            row_count = mimir.countRows(view_name)
             
-            provenance = None
             if ds_name is None or ds_name == '':
                 ds_name = "TEMPORARY_RESULT"
 
-            
-            ds = context.datastore.register_dataset(
-                table_name=view_name,
-                columns=columns,
-                row_counter=row_count
-            )
+            from vizier.api.webservice import server
+
             ds_output = server.api.datasets.get_dataset(
                 project_id=context.project_id,
                 dataset_id=ds.identifier,
                 offset=0,
                 limit=10
             )
-            ds_output['name'] = ds_name
+            if ds_output is None:
+                outputs.stderr.append(TextOutput("Error displaying dataset {}".format(ds_name)))
+            else:
+                ds_output['name'] = ds_name
+                outputs.stdout.append(DatasetOutput(ds_output))
 
             dependencies = dict(
                 (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
@@ -131,13 +123,12 @@ class SQLTaskProcessor(TaskProcessor):
             )
             # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
 
-            outputs.stdout.append(DatasetOutput(ds_output))
             provenance = ModuleProvenance(
                 write={
                     ds_name: DatasetDescriptor(
                         identifier=ds.identifier,
-                        columns=ds.columns,
-                        row_count=ds.row_count
+                        name=ds_name,
+                        columns=ds.columns
                     )
                 },
                 read=dependencies
@@ -145,9 +136,10 @@ class SQLTaskProcessor(TaskProcessor):
         except Exception as ex:
             provenance = ModuleProvenance()
             outputs.error(ex)
+            is_success = False
         # Return execution result
         return ExecResult(
-            is_success=(len(outputs.stderr) == 0),
+            is_success=is_success,
             outputs=outputs,
             provenance=provenance
         )

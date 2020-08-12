@@ -23,9 +23,6 @@ from abc import abstractmethod
 
 import os
 
-from vizier.datastore.annotation.base import DatasetAnnotation
-from vizier.datastore.annotation.dataset import DatasetMetadata
-
 
 """Metadata file name for datasets in the the default datastore."""
 METADATA_FILE = 'annotations.json'
@@ -34,7 +31,7 @@ METADATA_FILE = 'annotations.json'
 class Datastore(object):
     """Abstract API to store and retireve datasets."""
     @abstractmethod
-    def create_dataset(self, columns, rows, annotations=None):
+    def create_dataset(self, columns, rows, properties={}):
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -51,7 +48,7 @@ class Datastore(object):
             identifier.
         rows: list(vizier.datastore.dataset.DatasetRow)
             List of dataset rows.
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        properties: dict(string, any), optional
             Annotations for dataset components
 
         Returns
@@ -61,7 +58,7 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_annotations(self, identifier, column_id=None, row_id=None):
+    def get_caveats(self, identifier, column_id=None, row_id=None):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
@@ -81,28 +78,35 @@ class Datastore(object):
         vizier.datastore.annotation.dataset.DatasetMetadata
         """
         raise NotImplementedError
-    
+
     @abstractmethod
-    def get_objects(self, identifier=None, obj_type=None, key=None):
-        """Get list of data objects for a resources of a given dataset. If only
-        the column id is provided annotations for the identifier column will be
-        returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+    def get_properties(self, identifier):
+        """Get list of properties for a resources of a given dataset. 
 
         Parameters
         ----------
-        identifier: string, optional
+        identifier: 
+
+        Returns
+        -------
+        dict(string, any)
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_object(self, identifier, expected_type=None):
+        """Get an object (artifact) from the datastore
+
+        Parameters
+        ----------
+        identifier: string
             Unique object identifier
-        obj_type: string, optional
-            object type
-        key: string, optional
-            object key
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
             
         Returns
         -------
-        vizier.datastore.object.dataset.DataObjectMetadata
+        bytes
         """
         raise NotImplementedError
 
@@ -171,44 +175,10 @@ class Datastore(object):
         vizier.datastore.base.DatasetHandle
         """
         raise NotImplementedError
-
-    @abstractmethod
-    def update_annotation(
-        self, identifier, key, old_value=None, new_value=None, column_id=None,
-        row_id=None
-    ):
-        """Update the annotations for a component of the datasets with the given
-        identifier. Returns the updated annotations or None if the dataset
-        does not exist.
-
-        The distinction between old value and new value is necessary since
-        annotations have no unique identifier. We use the key,value pair to
-        identify an existing annotation for update. When creating a new
-        annotation th old value is None.
-
-        Parameters
-        ----------
-        identifier : string
-            Unique dataset identifier
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
-        key: string, optional
-            Annotation key
-        old_value: string, optional
-            Previous annotation value whan updating an existing annotation.
-        new_value: string, optional
-            Updated annotation value
-        Returns
-        -------
-        bool
-        """
-        raise NotImplementedError
     
     @abstractmethod
-    def update_object(
-        self, identifier, key, old_value=None, new_value=None, obj_type=None
+    def create_object(
+        self, value, obj_type="untyped"
     ):
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
@@ -221,8 +191,6 @@ class Datastore(object):
 
         Parameters
         ----------
-        identifier : string
-            Unique object identifier
         key: string, optional
             object key
         old_value: string, optional
@@ -231,7 +199,7 @@ class Datastore(object):
             Updated value
         Returns
         -------
-        bool
+        identifier
         """
         raise NotImplementedError
 
@@ -256,7 +224,7 @@ class DefaultDatastore(Datastore):
         if not os.path.isdir(self.base_path):
             os.makedirs(self.base_path)
 
-    def get_annotations(self, identifier, column_id=None, row_id=None):
+    def get_caveats(self, identifier, column_id=None, row_id=None):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
@@ -273,50 +241,51 @@ class DefaultDatastore(Datastore):
 
         Returns
         -------
-        vizier.datastore.annotation.dataset.DatasetMetadata
+        list(vizier.datastore.annotation.base.DatasetCaveat)
         """
         # Test if a subfolder for the given dataset identifier exists. If not
         # return None.
-        dataset_dir = self.get_dataset_dir(identifier)
-        if not os.path.isdir(dataset_dir):
-            return None
-        annotations=DatasetMetadata.from_file(
-            self.get_metadata_filename(identifier)
-        )
-        if column_id is None and row_id is None:
-            return annotations
-        elif column_id is None:
-            return DatasetMetadata(rows=annotations.rows).filter(rows=[row_id])
-        elif row_id is None:
-            return DatasetMetadata(columns=annotations.columns).filter(
-                columns=[column_id]
-            )
-        else:
-            return DatasetMetadata(cells=annotations.cells).filter(
-                columns=[column_id],
-                rows=[row_id]
-            )
-            
-    def get_objects(self, identifier=None, obj_type=None, key=None):
-        """Get list of data objects for a resources of a given dataset. If only
-        the column id is provided annotations for the identifier column will be
-        returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        return []
+
+    def create_object(
+        self, value, obj_type="text/plain"
+    ):
+        """Update the annotations for a component of the datasets with the given
+        identifier. Returns the updated annotations or None if the dataset
+        does not exist.
+
+        The distinction between old value and new value is necessary since
+        annotations have no unique identifier. We use the key,value pair to
+        identify an existing annotation for update. When creating a new
+        annotation th old value is None.
 
         Parameters
         ----------
-        identifier: string, optional
-            Unique object identifier
-        obj_type: string, optional
-            object type
         key: string, optional
             object key
+        old_value: string, optional
+            Previous value when updating an existing annotation.
+        new_value: string, optional
+            Updated value
+        Returns
+        -------
+        identifier
+        """
+        raise NotImplementedError
+
+    def get_object(self, identifier, expected_type=None):
+        """Get list of data objects for a resources of a given dataset. 
+
+        Parameters
+        ----------
+        identifier: string
+            Unique object identifier
+        expected_type: string, optional
+            Will raise an error if the type of the object doesn't conform to the expected type.
             
         Returns
         -------
-        vizier.datastore.object.dataset.DataObjectMetadata
+        bytes
         """
         raise NotImplementedError
 
@@ -325,22 +294,6 @@ class DefaultDatastore(Datastore):
         """Get the base directory for a dataset with given identifier. Having a
         separate method makes it easier to change the folder structure used to
         store datasets.
-
-        Parameters
-        ----------
-        identifier: string
-            Unique dataset identifier
-
-        Returns
-        -------
-        string
-        """
-        return os.path.join(self.base_path, identifier)
-    
-    def get_dataobject_dir(self, identifier):
-        """Get the base directory for a dataobject with given identifier. Having a
-        separate method makes it easier to change the folder structure used to
-        store dataobjects.
 
         Parameters
         ----------
@@ -368,7 +321,7 @@ class DefaultDatastore(Datastore):
         """
         return self.get_dataset(identifier)
 
-    def get_metadata_filename(self, identifier):
+    def get_properties_filename(self, identifier):
         """Get filename of meatdata file for the dataset with the given
         identifier.
 
@@ -382,88 +335,6 @@ class DefaultDatastore(Datastore):
         string
         """
         return os.path.join(self.get_dataset_dir(identifier), METADATA_FILE)
-
-    def update_annotation(
-        self, identifier, key, old_value=None, new_value=None, column_id=None,
-        row_id=None
-    ):
-        """Update the annotations for a component of the datasets with the given
-        identifier. Returns the updated annotations or None if the dataset
-        does not exist.
-
-        Parameters
-        ----------
-        identifier : string
-            Unique dataset identifier
-        column_id: int, optional
-            Unique column identifier
-        row_id: int, optional
-            Unique row identifier
-        key: string, optional
-            Annotation key
-        old_value: string, optional
-            Previous annotation value whan updating an existing annotation.
-        new_value: string, optional
-            Updated annotation value
-
-        Returns
-        -------
-        bool
-        """
-        # Raise ValueError if column id and row id are both None
-        if column_id is None and row_id is None:
-            raise ValueError('invalid dataset resource identifier')
-        # Return None if the dataset is unknown
-        dataset_dir = self.get_dataset_dir(identifier)
-        if not os.path.isdir(dataset_dir):
-            return None
-        # Read annotations from file, Evaluate update statement and write result
-        # back to file.
-        metadata_filename = self.get_metadata_filename(identifier)
-        annotations = DatasetMetadata.from_file(metadata_filename)
-        # Get object annotations
-        if column_id is None:
-            elements = annotations.rows
-        elif row_id is None:
-            elements = annotations.columns
-        else:
-            elements = annotations.cells
-        # Identify the type of operation: INSERT, DELETE or UPDATE
-        if old_value is None and not new_value is None:
-            elements.append(
-                DatasetAnnotation(
-                    key=key,
-                    value=new_value,
-                    column_id=column_id,
-                    row_id=row_id
-                )
-            )
-        elif not old_value is None and new_value is None:
-            del_index = None
-            for i in range(len(elements)):
-                a = elements[i]
-                if a.column_id == column_id and a.row_id == row_id:
-                    if a.key == key and a.value == old_value:
-                        del_index = i
-                        break
-            if del_index is None:
-                return False
-            del elements[del_index]
-        elif not old_value is None and not new_value is None:
-            anno = None
-            for a in elements:
-                if a.column_id == column_id and a.row_id == row_id:
-                    if a.key == key and a.value == old_value:
-                        anno = a
-                        break
-            if anno is None:
-                return False
-            anno.value = new_value
-        else:
-            raise ValueError('invalid modification operation')
-        # Write modified annotations to file
-        annotations.to_file(metadata_filename)
-        return True
     
     def update_object(
         self, identifier, key, old_value=None, new_value=None, obj_type=None
@@ -523,32 +394,6 @@ def collabel_2_index(label):
         else:
             return -1
     return num
-
-
-def encode_values(values):
-    """Encode a given list of cell values into utf-8 format.
-
-    Parameters
-    ----------
-    values: list(string)
-
-    Returns
-    -------
-    list(string)
-    """
-    result = list()
-    for val in values:
-        if isinstance(val, str):
-            try:
-                result.append(val)#val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
-                try:
-                    result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
-                    result.append(val.decode('latin1').encode('utf-8'))
-        else:
-            result.append(val)
-    return result
 
 
 def get_column_index(columns, column_id):
@@ -667,22 +512,6 @@ def max_object_id(objects):
         if obj.identifier > max_id:
             max_id = obj.identifier
     return max_id
-
-
-def max_row_id(rows):
-    """Return maximum identifier for a list of rows.
-
-    Parameters
-    ----------
-    rows: list(vizier.datastore.base.DataseRow)
-        List of dataset rows
-
-    Returns
-    -------
-    int
-    """
-    return max_object_id(rows)
-
 
 def validate_schema(columns, rows):
     """Validate that the given set of rows contains exactly one value for each

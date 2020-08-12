@@ -6,11 +6,11 @@ from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.reader import DelimitedFileReader, DefaultJsonDatasetReader
 
 
-CSV_FILE = './.files/dataset.csv'
-GZIP_CSV_FILE = './.files/dataset.csv.gz'
-TSV_FILE = './.files/dataset.tsv'
-GZIP_TSV_FILE = './.files/dataset.tsv.gz'
-JSON_FILE = './.files/dataset.json'
+CSV_FILE = './tests/datastore/.files/dataset.csv'
+GZIP_CSV_FILE = './tests/datastore/.files/dataset.csv.gz'
+TSV_FILE = './tests/datastore/.files/dataset.tsv'
+GZIP_TSV_FILE = './tests/datastore/.files/dataset.tsv.gz'
+JSON_FILE = './tests/datastore/.files/dataset.json'
 
 
 class TestDatasetReader(unittest.TestCase):

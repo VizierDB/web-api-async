@@ -105,10 +105,7 @@ class FileSystemFilestore(Filestore):
         # Write web resource to output file.
         response = urllib.request.urlopen(url)
         filename = get_download_filename(url, response.info())
-        mode = 'w'
-        if filename.endswith('.gz'):
-            mode += 'b'
-        with open(output_file, mode) as f:
+        with open(output_file, 'wb') as f:
             f.write(response.read())
         # Add file to file index
         f_handle = FileHandle(
