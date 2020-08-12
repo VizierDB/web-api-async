@@ -375,8 +375,12 @@ def createBlob(identifier, blob_type, data):
   route = "blob"
   if identifier is not None:
     route += "/{}".format(identifier)
-  resp = readResponse(requests.put(_mimir_url + route+'?type={}'.format(blob_type), data = data))
-  return resp["id"]
+  resp = requests.put(_mimir_url + route+'?type={}'.format(blob_type), data = data)
+  if resp.status_code != 200:
+    raise MimirError(
+      "Blob {} creation failed".format(identifier)
+    )
+  return resp.text
   
 def getAvailableLensTypes():
     return requests.get(_mimir_url + 'lens').json()['lensTypes']

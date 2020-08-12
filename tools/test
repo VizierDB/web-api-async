@@ -5,7 +5,7 @@ LAST_FAILURES_FILE=last_test_failure.txt
 EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
 
 #start vizier and mimir
-vizier test devmimir
+./tools/vizier test devmimir
 
 trap "kill 0" EXIT
 
