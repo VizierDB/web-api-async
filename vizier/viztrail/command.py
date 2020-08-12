@@ -171,7 +171,7 @@ class ModuleArguments(object):
         if as_int:
             try:
                 val = int(val)
-            except ValueError as ex:
+            except ValueError:
                 pass
         return val
 
@@ -241,11 +241,11 @@ class ModuleArguments(object):
                                     datasets=datasets
                                 )
                         elif var[pckg.LABEL_DATATYPE] == pckg.DT_FILE_ID:
-                            if pckg.FILE_URL in value and value[pckg.FILE_URL] != None:
+                            if pckg.FILE_URL in value and value[pckg.FILE_URL] is not None:
                                 token = value[pckg.FILE_URL]
-                            elif pckg.FILE_NAME in value and value[pckg.FILE_NAME] != None:
+                            elif pckg.FILE_NAME in value and value[pckg.FILE_NAME] is not None:
                                 token = format_str(value[pckg.FILE_NAME])
-                            elif pckg.FILE_ID in value and value[pckg.FILE_ID] != None:
+                            elif pckg.FILE_ID in value and value[pckg.FILE_ID] is not None:
                                 token = format_str(value[pckg.FILE_ID])
                             else:
                                 token = '?file?'
@@ -277,7 +277,7 @@ class ModuleArguments(object):
                             token = token + element[pckg.LABEL_SUFFIX]
                     elif element[pckg.LABEL_TYPE] == pckg.FORMAT_VARIABLE:
                         token = arg
-                except ValueError as ex:
+                except ValueError:
                     token = '?' + element[pckg.LABEL_VALUE] + '?'
             if not token is None:
                 append_token(

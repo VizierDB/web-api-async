@@ -158,7 +158,7 @@ def parse_command(tokens, notebook, datasets=dict()):
         elif tokens[0] == 'load' and tokens[2] == 'from' and tokens[3] == 'url':
             return vizual.load_dataset(
                 dataset_name=tokens[1],
-                file={FILE_URI: tokens[4]}
+                file={FILE_URL: tokens[4]}
             )
         elif tokens[0:2] == ['rename', 'dataset'] and tokens[3] == 'to':
             # rename dataset <dataset> to <new-name>

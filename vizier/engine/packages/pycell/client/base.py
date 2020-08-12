@@ -18,14 +18,12 @@
 a datastore from within a python script.
 """
 
-from vizier.core.util import is_valid_name, get_unique_identifier
-from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.core.util import is_valid_name
+from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
 from vizier.engine.packages.pycell.client.dataset import DatasetClient
-from vizier.viztrail.module.output import OutputObject, DatasetOutput, ChartOutput, HtmlOutput, MarkdownOutput, TextOutput
-from vizier.viztrail.module.output import OUTPUT_TEXT, OUTPUT_HTML
-from os.path import normpath, basename
-from os import path
+from vizier.viztrail.module.output import OutputObject, DatasetOutput, HtmlOutput, TextOutput
+from vizier.viztrail.module.output import OUTPUT_TEXT
 import os
 import re
 import ast
@@ -33,8 +31,6 @@ import astor
 import inspect
 from minio import Minio
 from minio.error import ResponseError
-from minio.select.options import SelectObjectOptions, InputSerialization,\
-    CSVInput, OutputSerialization, CSVOutput, RequestProgress
 from minio.select.errors import SelectCRCValidationError
 
         
@@ -449,9 +445,9 @@ class VizierDBClient(object):
         
             return ds
                     
-        except SelectCRCValidationError as err:
+        except SelectCRCValidationError:
             pass
-        except ResponseError as err:
+        except ResponseError:
             pass
         
       
@@ -525,7 +521,7 @@ class Analyzer(ast.NodeVisitor):
     def visit_Name(self, node):
         ctx, g = self.context[-1]
         if node.id == self.name and (ctx == 'global' or node.id in g):
-            print('exported {} at line {}'.format(node.id, node.lineno, self.source))
+            print('exported {} at line {} of {}'.format(node.id, node.lineno, self.source))
             
     def get_Source(self):
         return self.source

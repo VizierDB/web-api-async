@@ -25,7 +25,8 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
-from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
+from vizier.viztrail.base import ViztrailHandle
+from vizier.viztrail.named_object import PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH, BranchHandle
 from vizier.core.io.base import ObjectStore
 """Resource identifier"""
@@ -261,7 +262,7 @@ class OSViztrailHandle(ViztrailHandle):
     def load_viztrail(
             base_path: str, 
             object_store: Optional[ObjectStore] = None
-        ) -> Optional[OSViztrailHandle]:
+        ) -> Optional["OSViztrailHandle"]:
         """Load all viztrail resources from given object store.
 
         Parameters

@@ -16,14 +16,9 @@
 
 """Implementation of commands that interact with a notebook."""
 
-import os
-import requests
-
 from vizier.api.client.cli.command import Command
 from vizier.api.client.cli.packages import parse_command, print_commands
 from vizier.api.client.cli.util import ts
-
-import vizier.api.serialize.hateoas as ref
 
 
 class NotebookCommands(Command):
@@ -316,13 +311,13 @@ class NotebookCommands(Command):
                 print(indent + line)
             if len(module.outputs) > 0:
                 print(indent + '--')
-                for line in module.outputs:
-                    if '\n' in line:
-                        sublines = line.split('\n')
-                        for l in sublines:
-                            print(indent + l)
+                for chunk in module.outputs:
+                    if '\n' in chunk:
+                        lines = chunk.split('\n')
+                        for line in lines:
+                            print(indent + line)
                     else:
-                        print(indent + line)
+                        print(indent + chunk)
             if len(module.datasets) > 0:
                 print(indent + '--')
                 print(indent + 'Datasets: ' + ', '.join(module.datasets))

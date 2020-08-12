@@ -18,7 +18,9 @@
 from typing import Optional, Dict, Any
 import json
 import requests
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 from vizier.api.client.resources.branch import BranchResource
 from vizier.api.client.resources.notebook import Notebook
@@ -324,6 +326,7 @@ class VizierApiClient(object):
         """Print information about the API (from the API service descriptor)."""
         r = requests.get(self.urls.service_descriptor())
         r.raise_for_status()
+        doc = r.json()
         print('Name    : ' + doc['name'])
         print('URL     : ' + deserialize.HATEOAS(doc['links'])['self'])
         print('Engine  : ' + doc['environment']['name'])

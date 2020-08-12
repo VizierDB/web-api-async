@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.api.serialize import labels
 
 """The vizier engine defines the interface that is used by the API for creating,
 deleting, and manipulating projects as well as for the orchestration of workflow
@@ -61,7 +60,7 @@ class ExtendedTaskHandle(TaskHandle):
             project_id: str, 
             branch_id: str, 
             module_id: Optional[str], 
-            controller: VizierEngine
+            controller: "VizierEngine"
         ):
         """Initialize the components of the extended task handle. Generates a
         unique identifier for the task.

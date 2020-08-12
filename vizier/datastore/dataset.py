@@ -20,10 +20,11 @@ workflows.
 """
 
 from abc import abstractmethod
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, TYPE_CHECKING
+if TYPE_CHECKING:
+    from vizier.datastore.annotation.base import DatasetCaveat
 
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
-from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.reader import DatasetReader
 
 """Identifier for column data types. By now the following data types are
@@ -92,7 +93,7 @@ class DatasetColumn(object):
         """
         name = self.name
         if not self.data_type is None:
-             name += '(' + str(self.data_type) + ')'
+            name += '(' + str(self.data_type) + ')'
         return name
 
 
@@ -278,6 +279,41 @@ class DatasetDescriptor(ArtifactDescriptor):
         return output
 
 
+class DatasetRow(object):
+    """Row in a Vizier DB dataset.
+
+    Attributes
+    ----------
+    identifier: int
+        Unique row identifier
+    values : list(string)
+        List of column values in the row
+    caveats: list(bool), optional
+        Optional flags indicating whether row cells are annotated
+    """
+    def __init__(self, 
+            identifier: int = -1, 
+            values: Optional[List[Any]] = None, 
+            caveats: Optional[List[bool]] = None):
+        """Initialize the row object.
+
+        Parameters
+        ----------
+        identifier: int, optional
+            Unique row identifier
+        values : list(string)
+            List of column values in the row
+        caveats: list(bool), optional
+            Optional flags indicating whether row cells are annotated
+        """
+        self.identifier = identifier
+        self.values: List[Any] = values if not values is None else list()
+        self.caveats: List[bool] = caveats if not caveats is None else [ False for v in self.values ]
+
+    def __repr__(self):
+        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
+
+
 class DatasetHandle(DatasetDescriptor):
     """Abstract class to maintain information about a dataset in a Vizier
     datastore. Contains the unique dataset identifier, the lists of
@@ -416,41 +452,6 @@ class DatasetHandle(DatasetDescriptor):
         vizier.datastore.reader.DatasetReader
         """
         raise NotImplementedError
-
-
-class DatasetRow(object):
-    """Row in a Vizier DB dataset.
-
-    Attributes
-    ----------
-    identifier: int
-        Unique row identifier
-    values : list(string)
-        List of column values in the row
-    caveats: list(bool), optional
-        Optional flags indicating whether row cells are annotated
-    """
-    def __init__(self, 
-            identifier: int = -1, 
-            values: Optional[List[Any]] = None, 
-            caveats: Optional[List[bool]] = None):
-        """Initialize the row object.
-
-        Parameters
-        ----------
-        identifier: int, optional
-            Unique row identifier
-        values : list(string)
-            List of column values in the row
-        caveats: list(bool), optional
-            Optional flags indicating whether row cells are annotated
-        """
-        self.identifier = identifier
-        self.values: List[Any] = values if not values is None else list()
-        self.caveats: List[bool] = caveats if not caveats is None else [ False for v in self.values ]
-
-    def __repr__(self):
-        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
 
 
 # ------------------------------------------------------------------------------

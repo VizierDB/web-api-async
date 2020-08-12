@@ -23,7 +23,6 @@ Each vizual command will create a new dataset instance on success.
 
 from abc import abstractmethod
 
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 from vizier.datastore.mimir.dataset import MimirDatasetHandle
 
 

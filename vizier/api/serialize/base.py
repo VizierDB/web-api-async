@@ -18,9 +18,7 @@
 serialize web resources.
 """
 
-from typing import List, Dict, Any, Optional
-
-from vizier.viztrail.module.output import ModuleOutputs, OutputObject
+from typing import List, Dict, Optional
 
 import vizier.api.serialize.labels as labels
 

@@ -167,7 +167,7 @@ def mimir_missing_value(dataset_name, columns, materialize_input=False, validate
 
 
 def mimir_picker(
-    dataset_name,  schema, pick_as=None, materialize_input=False, validate=False
+    dataset_name, schema, pick_as=None, materialize_input=False, validate=False
 ):
     """Create instance of mimir picker lens command.
 
@@ -267,7 +267,11 @@ def mimir_shape_detector(
     )
 
 def mimir_comment(
-    dataset_name, comments, result_columns, materialize_input=False, validate=False
+    dataset_name, 
+    comments, 
+    result_columns, 
+    materialize_input=False, 
+    validate=False
 ):
     """Create instance of mimir comment lens command.
 
@@ -305,8 +309,8 @@ def mimir_comment(
         mimir.MIMIR_COMMENT,
         arguments =[
             md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
-            md.ARG(id=mimir.PARA_COMMENTS, value=elements),
-            md.ARG(id=mimir.PARA_RESULT_COLUMNS, value=result_name),
+            md.ARG(id=mimir.PARA_COMMENTS, value=comments),
+            md.ARG(id=mimir.PARA_RESULT_COLUMNS, value=result_cols),
             md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
         ],
         packages=PACKAGE(validate=validate)

@@ -27,8 +27,6 @@ import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
 from vizier.config.app import AppConfig
-import vizier.mimir as mimir
-from vizier.datastore.mimir.dataset import MimirDatasetColumn
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -244,7 +242,8 @@ class VizualTaskProcessor(TaskProcessor):
         # dictionary of datasets in the context. Will raise exception if the
         # specified dataset does not exist.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        ds = context.get_dataset(ds_name)
+        # verify that the dataset exists
+        context.get_dataset(ds_name)
         datasets = dict(context.datasets)
         del datasets[ds_name]
         return ExecResult(
@@ -433,7 +432,7 @@ class VizualTaskProcessor(TaskProcessor):
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
-                m_opts.append({'name':load_opt_key,  'value':load_opt_val})
+                m_opts.append({'name':load_opt_key, 'value':load_opt_val})
         # Execute load command.
         result = self.api.load_dataset(
             datastore=context.datastore,
@@ -597,7 +596,7 @@ class VizualTaskProcessor(TaskProcessor):
             for option in options:
                 unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
                 unload_opt_val = option.get_value(cmd.PARA_UNLOAD_OPTION_VALUE)
-                m_opts.append({'name':unload_opt_key,  'value':unload_opt_val})
+                m_opts.append({'name':unload_opt_key, 'value':unload_opt_val})
         # Execute load command.
         dataset = context.get_dataset(ds_name)
         result = self.api.unload_dataset(

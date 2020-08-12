@@ -23,11 +23,9 @@ the resources as documents in a document store.
 """
 
 import os
-from typing import cast, Optional, List, Dict, Any
+from typing import cast, Optional, Dict, Any
 
 from vizier.core.io.base import DefaultObjectStore
-from vizier.core.loader import ClassLoader
-from vizier.core.util import init_value
 from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
 from vizier.viztrail.repository import ViztrailRepository
 from vizier.core.io.base import ObjectStore

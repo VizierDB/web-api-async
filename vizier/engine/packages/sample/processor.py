@@ -26,7 +26,8 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.datastore.dataset import DatasetDescriptor
 import vizier.engine.packages.sample.base as cmd
 import vizier.mimir as mimir
-import math
+from vizier.core.util import get_unique_identifier
+from vizier.datastore.mimir.dataset import MimirDatasetHandle
 
 
 class SamplingProcessor(TaskProcessor):
@@ -66,11 +67,11 @@ class SamplingProcessor(TaskProcessor):
             raise ValueError('unknown dataset \'' + input_ds_name + '\'')
 
         output_ds_name = arguments.get_value(cmd.PARA_OUTPUT_DATASET, raise_error=False)
-        if output_ds_name == None or output_ds_name == "":
+        if output_ds_name is None or output_ds_name == "":
             output_ds_name = input_ds_name + "_SAMPLE"
         output_ds_name = output_ds_name.lower()
 
-        ## Load the sampling configuration
+        # Load the sampling configuration
         sample_mode = None
 
         if command_id == cmd.BASIC_SAMPLE:
@@ -111,7 +112,7 @@ class SamplingProcessor(TaskProcessor):
         )
         ds = MimirDatasetHandle.from_mimir_result(table_name, schema, properties = {})
 
-        ## And start rendering some output
+        # And start rendering some output
         outputs = ModuleOutputs()
         ds_output = server.api.datasets.get_dataset(
             project_id=context.project_id,
@@ -122,7 +123,7 @@ class SamplingProcessor(TaskProcessor):
         ds_output['name'] = output_ds_name
         outputs.stdout.append(DatasetOutput(ds_output))
 
-        ## Record Reads and writes
+        # Record Reads and writes
         provenance = ModuleProvenance(
             read={
                 input_ds_name: input_dataset.identifier

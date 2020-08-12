@@ -121,32 +121,32 @@ def get_config_value(
     scalar value
     """
     # Raise an exception if the attribute type is unknown
-    if not attribute_type in ATTRIBUTE_TYPES:
+    if attribute_type not in ATTRIBUTE_TYPES:
         raise ValueError('unknown attribute type \'' + str(attribute_type) + '\' for \'' + str(attribute_name) + '\'')
     # Get the value for the environment variable. If the variable is
     # None or if the variable is not set use the default settings
     val: Any = None
-    if not env_variable is None:
+    if env_variable is not None:
         val = os.getenv(env_variable)
         if val is None or val.strip() == '':
-            if not default_values is None and env_variable in default_values:
+            if default_values is not None and env_variable in default_values:
                 val = default_values[env_variable]
-    elif not default_values is None and attribute_name in default_values:
+    elif default_values is not None and attribute_name in default_values:
         val = default_values[attribute_name]
     else:
         val = None
-    if not val is None:
+    if val is not None:
         if attribute_type == BOOL and not isinstance(val, bool):
             val = val.lower() == 'true'
         elif attribute_type == FLOAT and not isinstance(val, float):
             try:
                 val = float(val)
-            except ValueError as ex:
+            except ValueError:
                 raise ValueError('expected float value for \'' + str(env_variable) + '\'')
         elif attribute_type == INTEGER and not isinstance(val, int):
             try:
                 val = int(val)
-            except ValueError as ex:
+            except ValueError:
                 raise ValueError('expected integer value for \'' + str(env_variable) + '\'')
         elif attribute_type == LIST and isinstance(val, str):
             int_list = list()
@@ -158,7 +158,7 @@ def get_config_value(
                         int_list.extend(list(range(int(start), int(end))))
                     else:
                         int_list.append(int(token))
-            except ValueError as ex:
+            except ValueError:
                 raise ValueError('expected integer list for \'' + str(env_variable) + '\'')
             val = int_list
     return val

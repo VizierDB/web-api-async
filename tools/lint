@@ -1,0 +1,12 @@
+#!/bin/bash
+
+DIR=$(dirname $0)/..
+cd $DIR
+
+if [ "$(which pyflakes)" ] ; then
+  flake8 --config=.flake8 vizier
+else
+  echo "flake8 is not installed"
+  echo
+  echo "$> pip3 install flake8"
+fi

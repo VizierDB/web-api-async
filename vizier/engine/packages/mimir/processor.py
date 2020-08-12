@@ -20,15 +20,12 @@ in the Mimir lenses package.
 
 import re
 
-from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DATATYPE_REAL, DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
-from vizier.datastore.mimir.base import ROW_ID
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput, DatasetOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
-import vizier.engine.packages.vizual.api.base as base
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as cmd
 import vizier.mimir as mimir
@@ -77,9 +74,6 @@ class MimirProcessor(TaskProcessor):
         vizier.engine.task.processor.ExecResult
         """
         outputs = ModuleOutputs()
-        store_as_dataset = None
-        update_rows = False
-        lens_annotations = []
         # Get dataset. Raise exception if dataset is unknown.
         ds_name = arguments.get_value(pckg.PARA_DATASET).lower()
         dataset = context.get_dataset(ds_name)
@@ -125,7 +119,6 @@ class MimirProcessor(TaskProcessor):
         elif command_id == cmd.MIMIR_KEY_REPAIR:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = { "key" : column.name_in_rdb }
-            update_rows = True
         elif command_id == cmd.MIMIR_MISSING_KEY:
             column = dataset.column_by_id(arguments.get_value(pckg.PARA_COLUMN))
             params = column.name_in_rdb
@@ -133,7 +126,6 @@ class MimirProcessor(TaskProcessor):
             #params += ['MISSING_ONLY(FALSE)']
             # Need to run this lens twice in order to generate row ids for
             # any potential new tuple
-            update_rows = True
         elif command_id == cmd.MIMIR_MISSING_VALUE:
             params = list()
             for col in arguments.get_value(cmd.PARA_COLUMNS, default_value=[]):
@@ -150,21 +142,21 @@ class MimirProcessor(TaskProcessor):
                 #param = '\'(' + param + ')\''
                 params.append(param)
         elif command_id == cmd.MIMIR_PICKER:
-            ## Compute the input columns
+            # Compute the input columns
             inputs = []
             for col in arguments.get_value(cmd.PARA_SCHEMA):
                 c_col = col.get_value(cmd.PARA_PICKFROM)
                 column = dataset.column_by_id(c_col)
                 inputs.append(column.name_in_rdb)
 
-            ## Compute the output column
+            # Compute the output column
             output = arguments.get_value(cmd.PARA_PICKAS, default_value = inputs[0])
             if output == "":
                 output = inputs[0]
             else:
                 output = dataset.get_unique_name(output.strip().upper())
 
-            ## Compute the final parameter list
+            # Compute the final parameter list
             params = {
                 "inputs" : inputs,
                 "output" : output
@@ -220,8 +212,7 @@ class MimirProcessor(TaskProcessor):
                 params["keys"].append(col.name_in_rdb)
             if len(params["values"]) < 1:
                 raise ValueError("Need at least one value column")
-            update_rows = True
-            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
+            # store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
         elif command_id == cmd.MIMIR_SHRED:
             params = { 
                 "keepOriginalColumns" : arguments.get_value(cmd.PARA_KEEP_ORIGINAL)
@@ -231,7 +222,7 @@ class MimirProcessor(TaskProcessor):
             for (idx, shred) in enumerate(arguments.get_value(cmd.PARA_COLUMNS)):
                 output_col = shred.get_value(cmd.PARA_OUTPUT_COLUMN)
                 if output_col is None:
-                    output_col = "{}_{}".format(input_col,idx)
+                    output_col = "{}_{}".format(global_input_col,idx)
                 config = {}
                 shred_type = shred.get_value(cmd.PARA_TYPE)
                 expression = shred.get_value(cmd.PARA_EXPRESSION)
@@ -250,10 +241,10 @@ class MimirProcessor(TaskProcessor):
                     range_parts = re.match("([0-9]+)(([+\\-])([0-9]+))?", expression)
                     # print(range_parts)
 
-                    ## Mimir expects ranges to be given from start (inclusive) to end (exclusive)
-                    ## in a zero-based numbering scheme.
+                    # Mimir expects ranges to be given from start (inclusive) to end (exclusive)
+                    # in a zero-based numbering scheme.
 
-                    ## Vizier expects input ranges to be given in a one-based numbering scheme.
+                    # Vizier expects input ranges to be given in a one-based numbering scheme.
 
                     # Convert to this format
 
@@ -279,7 +270,7 @@ class MimirProcessor(TaskProcessor):
                     "output" : output_col,
                 })
             params["shreds"] = shreds
-            store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
+            # store_as_dataset = arguments.get_value(cmd.PARA_RESULT_DATASET)
         else:
             raise ValueError("Unknown Mimir lens '{}'".format(command_id))
         # Create Mimir lens

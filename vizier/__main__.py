@@ -25,7 +25,6 @@ from vizier.api.client.cli.interpreter import CommandInterpreter
 from vizier.api.routes.base import UrlFactory
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import read_object_from_file
-from vizier.core.util import load_json
 
 """Configuration files."""
 CONFIG_DIR = '.vizierdb'

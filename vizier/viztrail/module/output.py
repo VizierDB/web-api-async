@@ -18,19 +18,15 @@
 standard output and one for error messages.
 """
 
-import sys
-import os
 from typing import List, Any, Iterable
 from vizier.view.chart import ChartViewHandle
 
 import traceback
-import vizier.config.base as config
 from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
 from vizier import debug_is_on
 from vizier.datastore.dataset import DatasetHandle
-
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -71,94 +67,6 @@ def format_stack_trace(ex: Exception) -> str:
     return "{}".format("\n".join(trace_text))
 
 
-class ModuleOutputs(object):
-    """Wrapper for module outputs. Contains the standard output and to standard
-    error streams. Each stream is a list of output objects.
-
-    Attributes
-    ----------
-    stderr: list(vizier.viztrail.module.OutputObject)
-        Standard error output stream
-    stdout: list(vizier.viztrail.module.OutputObject)
-        Standard output stream
-    """
-    def __init__(self, 
-            stdout: List[OutputObject]=[], 
-            stderr: List[OutputObject]=[]):
-        """Initialize the standard output and error stream.
-
-        Parameters
-        ----------
-        stderr: list(vizier.viztrail.module.OutputObject)
-            Standard error output stream
-        stdout: list(vizier.viztrail.module.OutputObject)
-            Standard output stream
-        """
-        self.stdout = stdout
-        self.stderr = stderr
-
-    def __repr__(self) -> str:
-        ret: List[str] = []
-        if self.stdout is not None and len(self.stdout) > 0:
-            ret = ret + ["----- STDOUT ------"] + [ str(output) for output in self.stdout ]
-        if self.stderr is not None and len(self.stderr) > 0:
-            ret = ret + ["----- STDERR ------"] + [ str(output) for output in self.stderr ]
-        return "\n".join(ret)
-
-    def error(self, ex: Exception) -> ModuleOutputs:
-        """Add stack trace for execution error to STDERR stream of the output
-        object.
-
-        Parameters
-        ----------
-        ex: Exception
-            Exception that was raised during mudule execution
-
-        Returns
-        -------
-        vizier.viztrail.module.output.ModuleOutputs
-        """
-        message = "ERROR: NO ERROR MESSAGE"
-        try:
-            if type(ex) is MimirError:
-                # message = "MIMIR ERROR"
-                err_data = ex.args[0]
-                message = err_data.get('errorMessage', "An unknown internal error")
-                # if "errorType" in err_data:
-                #     message = err_data["errorType"] + ": " + message
-                if debug_is_on():
-                    message = message + "\nDEBUG IS ON"
-                    if "stackTrace" in err_data:
-                        message = "{}\n{}\n--------".format(message, err_data["stackTrace"])
-                    message = "{}\n{}".format(message, format_stack_trace(ex)) 
-            elif type(ex) is ConnectionError:
-                message = "Couldn't connect to Mimir (Vizier's dataflow layer).  Make sure it's running."
-            elif type(ex) is SyntaxError:
-                context, line, pos, content = ex.args[1]
-                message = "Syntax error (line {}:{})\n{}{}^-- {}".format(
-                              line, pos, 
-                              content,
-                              " " * pos,
-                              ex.args[0]
-                            )
-            elif type(ex) is NameError:
-                message = "{}\n{}".format(
-                                ex.args[0],
-                                format_stack_trace(ex)
-                            )
-            else:
-                message = "{}{}\n{}".format(
-                    type(ex).__name__, 
-                    ( (": " + "; ".join(str(arg) for arg in ex.args)) if ex.args is not None else "" ), 
-                    format_stack_trace(ex)
-                )
-        except Exception as e:
-            message = "{0}:{1!r}".format(type(e).__name__, e.args)
-            if debug_is_on():
-                message += "\n"+format_stack_trace(e)
-
-        self.stderr.append(TextOutput(message))
-        return self
 
 
 class OutputObject(object):
@@ -332,3 +240,93 @@ def CHART_VIEW_DATA(view, rows, caveats):
             'caveats': [row_caveats[s_idx] for row_caveats in caveats]
         })
     return obj
+
+
+class ModuleOutputs(object):
+    """Wrapper for module outputs. Contains the standard output and to standard
+    error streams. Each stream is a list of output objects.
+
+    Attributes
+    ----------
+    stderr: list(vizier.viztrail.module.OutputObject)
+        Standard error output stream
+    stdout: list(vizier.viztrail.module.OutputObject)
+        Standard output stream
+    """
+    def __init__(self, 
+            stdout: List[OutputObject]=[], 
+            stderr: List[OutputObject]=[]):
+        """Initialize the standard output and error stream.
+
+        Parameters
+        ----------
+        stderr: list(vizier.viztrail.module.OutputObject)
+            Standard error output stream
+        stdout: list(vizier.viztrail.module.OutputObject)
+            Standard output stream
+        """
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __repr__(self) -> str:
+        ret: List[str] = []
+        if self.stdout is not None and len(self.stdout) > 0:
+            ret = ret + ["----- STDOUT ------"] + [ str(output) for output in self.stdout ]
+        if self.stderr is not None and len(self.stderr) > 0:
+            ret = ret + ["----- STDERR ------"] + [ str(output) for output in self.stderr ]
+        return "\n".join(ret)
+
+    def error(self, ex: Exception) -> "ModuleOutputs":
+        """Add stack trace for execution error to STDERR stream of the output
+        object.
+
+        Parameters
+        ----------
+        ex: Exception
+            Exception that was raised during mudule execution
+
+        Returns
+        -------
+        vizier.viztrail.module.output.ModuleOutputs
+        """
+        message = "ERROR: NO ERROR MESSAGE"
+        try:
+            if type(ex) is MimirError:
+                # message = "MIMIR ERROR"
+                err_data = ex.args[0]
+                message = err_data.get('errorMessage', "An unknown internal error")
+                # if "errorType" in err_data:
+                #     message = err_data["errorType"] + ": " + message
+                if debug_is_on():
+                    message = message + "\nDEBUG IS ON"
+                    if "stackTrace" in err_data:
+                        message = "{}\n{}\n--------".format(message, err_data["stackTrace"])
+                    message = "{}\n{}".format(message, format_stack_trace(ex)) 
+            elif type(ex) is ConnectionError:
+                message = "Couldn't connect to Mimir (Vizier's dataflow layer).  Make sure it's running."
+            elif type(ex) is SyntaxError:
+                context, line, pos, content = ex.args[1]
+                message = "Syntax error (line {}:{})\n{}{}^-- {}".format(
+                              line, pos, 
+                              content,
+                              " " * pos,
+                              ex.args[0]
+                            )
+            elif type(ex) is NameError:
+                message = "{}\n{}".format(
+                                ex.args[0],
+                                format_stack_trace(ex)
+                            )
+            else:
+                message = "{}{}\n{}".format(
+                    type(ex).__name__, 
+                    ( (": " + "; ".join(str(arg) for arg in ex.args)) if ex.args is not None else "" ), 
+                    format_stack_trace(ex)
+                )
+        except Exception as e:
+            message = "{0}:{1!r}".format(type(e).__name__, e.args)
+            if debug_is_on():
+                message += "\n"+format_stack_trace(e)
+
+        self.stderr.append(TextOutput(message))
+        return self

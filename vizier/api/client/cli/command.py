@@ -63,9 +63,9 @@ class Command(object):
         columns = [0] * len(rows[0])
         for row in rows:
             for col in range(len(columns)):
-                l = len(row[col])
-                if l > columns[col]:
-                    columns[col] = l
+                count = len(row[col])
+                if count > columns[col]:
+                    columns[col] = count
         # Create format string
         format = None
         divider = list()

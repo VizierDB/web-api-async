@@ -62,8 +62,8 @@ class DatasetCaveat(object):
     def __repr__(self):
         return "{}({}) = '{}'".format(
                 self.family if self.family is None else "GENERIC_CAVEAT",
-                ", ".join(key),
-                message
+                ", ".join(self.key),
+                self.message
             )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -82,7 +82,7 @@ class DatasetCaveat(object):
         }
 
     @staticmethod
-    def from_dict(doc: Dict[str, Any]) -> DatasetCaveat:
+    def from_dict(doc: Dict[str, Any]) -> "DatasetCaveat":
         """Create an annotation instance from a dictionary representation.
 
         Parameters

@@ -18,18 +18,10 @@
 storage backend.
 """
 
-import csv
-import gzip
-import json
 import os
-import unicodecsv # type: ignore[import]
 from typing import List, Dict, Any, Optional, Tuple
 
-from io import StringIO
-
-from vizier.core.util import dump_json, load_json
-from vizier.core.util import get_unique_identifier, min_max
-from vizier.core.timestamp import  get_current_time
+from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import FileHandle
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetRow, DatasetColumn
@@ -37,12 +29,9 @@ from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
 import vizier.mimir as mimir
-import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
-from vizier import debug_is_on
 import shutil
-import traceback
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -306,8 +295,8 @@ class MimirDatastore(DefaultDatastore):
         elif not f_handle is None and not url is None:
             raise ValueError('too many load sources given')
         elif url is None:
-             # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
-             abspath = f_handle.filepath
+            # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
+            abspath = f_handle.filepath
         elif not url is None:
             abspath = url
 

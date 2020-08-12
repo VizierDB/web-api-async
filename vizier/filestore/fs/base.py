@@ -18,12 +18,12 @@
 and their metadata on disk.
 """
 
-import gzip
 import json
 import os
 import shutil
-import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import Filestore, FileHandle

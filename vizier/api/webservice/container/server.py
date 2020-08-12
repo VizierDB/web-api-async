@@ -434,6 +434,7 @@ def initialize():
     # Initialize the Mimir gateway if using Mimir engine
     if config.engine.identifier == const.MIMIR_ENGINE:
         import vizier.mimir as mimir
+        print("Using Mimir at {}".format(mimir._mimir_url))
     api.init()
 
 

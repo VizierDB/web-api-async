@@ -27,10 +27,8 @@ from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.module import get_module_path
-from vizier.viztrail.module.base import MODULE_PENDING, MODULE_RUNNING
-from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
-from vizier.viztrail.workflow import ACTION_CREATE, ACTION_INSERT
+from vizier.viztrail.workflow import ACTION_CREATE
 from vizier.viztrail.module.base import ModuleHandle
 
 """Resource identifier"""
@@ -324,7 +322,7 @@ class OSBranchHandle(BranchHandle):
         """
         # Raise an exception if this is the default branch
         if self.is_default:
-                raise RuntimeError('cannot delete default branch')
+            raise RuntimeError('cannot delete default branch')
         self.object_store.delete_folder(self.base_path)
 
     def get_history(self):

@@ -16,8 +16,6 @@
 
 """Implements reader for datasets that are stored in the Mimir backend."""
 
-import json
-
 from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.reader import DatasetReader
 

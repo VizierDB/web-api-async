@@ -170,12 +170,17 @@ else
   trap "kill 0" EXIT
 fi
 
-if [ "$MIMIR_DEV" == "true" ]
+if [ "$NO_MIMIR" == "true" ]
   then
-    cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
-    cd ../web-api-async
+    echo "Asked to not launch Mimir.  Make sure it's running."
   else
-    ${APP_RESOURCES_DIR}mimir/mimir-api --data-dir "$USER_DATA_DIR" &
+    if [ "$MIMIR_DEV" == "true" ]
+      then
+        cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
+        cd ../web-api-async
+      else
+        ${APP_RESOURCES_DIR}mimir/mimir-api --data-dir "$USER_DATA_DIR" &
+    fi
 fi
 if [ "$UI_DEV" == "true" ]
   then

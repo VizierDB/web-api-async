@@ -24,8 +24,6 @@ import mimetypes
 
 from abc import abstractmethod
 
-from vizier.core.util import get_unique_identifier
-
 
 """File format identifier."""
 FORMAT_CSV = 'text/csv'
@@ -93,7 +91,7 @@ class FileHandle(object):
         -------
         string
         """
-        if self.mimetype ==  FORMAT_CSV:
+        if self.mimetype == FORMAT_CSV:
             return ','
         elif self.mimetype == FORMAT_TSV:
             return '\t'

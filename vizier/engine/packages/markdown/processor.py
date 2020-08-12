@@ -20,7 +20,7 @@ import sys
 
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.stream import OutputStream
-from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput, MarkdownOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput, MarkdownOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.markdown.base as cmd

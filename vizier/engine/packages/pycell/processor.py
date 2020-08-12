@@ -20,18 +20,14 @@ import sys
 import requests
 import os
 
-from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
-from vizier.viztrail.module.output import ModuleOutputs, OutputObject, HtmlOutput, TextOutput, OUTPUT_TEXT
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput, OUTPUT_TEXT
 from vizier.viztrail.module.provenance import ModuleProvenance
-from os.path import normpath, basename
-from os import path
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
 
-import vizier.engine.packages.base as pckg
 import vizier.engine.packages.pycell.base as cmd
 
 """Context variable name for Vizier DB Client."""

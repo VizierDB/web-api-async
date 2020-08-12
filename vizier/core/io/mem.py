@@ -41,9 +41,9 @@ class MemObjectStore(ObjectStore):
         """
         self.store = dict()
         self.folders = dict()
-        self.identifier_factory = identifier_factory if not identifier_factory is None else get_unique_identifier
+        self.identifier_factory = identifier_factory if identifier_factory is not None else get_unique_identifier
         self.keep_deleted_files = keep_deleted_files
-        if not properties is None:
+        if properties is not None:
             if PARA_KEEP_DELETED in properties:
                 self.keep_deleted_files = properties[PARA_KEEP_DELETED]
             if PARA_LONG_IDENTIFIER in properties and not properties[PARA_LONG_IDENTIFIER]:
@@ -201,7 +201,7 @@ class MemObjectStore(ObjectStore):
             not exist
         """
         result = list()
-        if not parent_folder in self.folders:
+        if parent_folder not in self.folders:
             # Create the folder if the create flag is True.
             if create:
                 self.folders[parent_folder] = None
@@ -209,7 +209,7 @@ class MemObjectStore(ObjectStore):
             for folder in self.folders:
                 if folder.startswith(parent_folder + '::'):
                     folder_id = folder[len(parent_folder + '::'):]
-                    if not '::' in folder_id:
+                    if '::' not in folder_id:
                         result.append(folder_id)
         return result
 
@@ -230,7 +230,7 @@ class MemObjectStore(ObjectStore):
         for object_path in self.store:
             if object_path.startswith(folder_path + '::'):
                 resource_name = object_path[len(folder_path)+2:]
-                if not '::' in resource_name:
+                if '::' not in resource_name:
                     result.add(resource_name)
 
     def read_object(self, object_path):

@@ -24,7 +24,7 @@ from typing import Dict, Any
 from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.engine.task.base import TaskHandle
 from vizier.engine.task.processor import ExecResult
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.command import ModuleCommand
 
 class NonLock(object):

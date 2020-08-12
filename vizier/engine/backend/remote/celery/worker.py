@@ -17,7 +17,6 @@ from vizier.api.serialize import labels
 
 """Remote Celery worker to execute workflow commands."""
 
-from celery import Task # type: ignore[import]
 from celery.signals import worker_init # type: ignore[import]
 
 from vizier.engine.backend.remote.celery.app import celeryapp

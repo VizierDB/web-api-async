@@ -618,7 +618,7 @@ class PackageIndex(object):
 
     def get(self, 
             command_id: str
-        ) -> CommandDeclaration:
+        ) -> "CommandDeclaration":
         """Get the parameter declarations for the given command.
 
         Raises ValueError if no command with the given identifier exists.

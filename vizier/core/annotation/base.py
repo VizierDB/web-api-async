@@ -27,7 +27,6 @@ for an individual object in a persistent manner.
 
 from abc import abstractmethod
 from typing import Dict, Optional, Any, List
-import vizier.api.serialize.labels as labels
 
 class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
@@ -196,7 +195,6 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         self.elements = elements
         self.writer = writer
         
-
     def add(self, 
             key: str, 
             value: Any, 
@@ -227,7 +225,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             raise ValueError('invalid annotation value type \'' + str(type(value)) + '\'')
         # Set the value if the replace flag is True or no prior annotation for
         # the given key exists
-        if not key in self.elements:
+        if key not in self.elements:
             self.elements[key] = value
         else:
             # Check if any of the annotated values matches the given value. In
@@ -255,7 +253,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                     self.elements[key] = [el, value]
         # The set of annotations was modified. Persist them if a store is
         # defined and the persist flag is True.
-        if not self.writer is None and persist:
+        if self.writer is not None and persist:
             self.writer.store(self.elements)
 
     def delete(self, 
@@ -283,7 +281,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         bool
         """
         if key in self.elements:
-            if not value is None:
+            if value is not None:
                 el = self.elements[key]
                 if isinstance(el, list):
                     # Find the given value in the list of associated values
@@ -310,7 +308,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                 del self.elements[key]
             # This part is only reached if the annotation set has changed. If
             # the annotation store is set we persist the changes
-            if not self.writer is None and persist:
+            if self.writer is not None and persist:
                 self.writer.store(self.elements)
             return True
         return False
@@ -423,7 +421,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             else:
                 self.add(key=key, value=value, replace=True, persist=False)
         # Persist changes
-        if not self.writer is None:
+        if self.writer is not None:
             self.writer.store(self.elements)
 
     def values(self) -> Dict[str, Any]:

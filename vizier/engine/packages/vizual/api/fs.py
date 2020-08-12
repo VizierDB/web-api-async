@@ -60,7 +60,6 @@ class DefaultVizualApi(VizualApi):
         # Delete column from schema. Keep track of the column name for the
         # result output.
         columns = list(dataset.columns)
-        name = columns[col_index].name
         del columns[col_index]
         # Delete all value for the deleted column
         rows = dataset.fetch_rows()
@@ -217,7 +216,7 @@ class DefaultVizualApi(VizualApi):
                 name=name if not name is None else ''
             )
         )
-         # Add a null value to each row for the new column
+        # Add a null value to each row for the new column
         for row in rows:
             row.values.insert(position, None)
         # Store updated dataset to get new identifier

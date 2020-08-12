@@ -3,13 +3,20 @@
 DIR=$(dirname $0)/..
 cd $DIR
 
-if [ "$*" ] ; then
-  ENTRYPOINTS=$*
+DEFAULT_ENTRYPOINTS="vizier"
+TEST_ENTRYPOINTS="$(find tests -name '*.py')"
+
+
+if [ "$*" = "" ] ; then
+  ENTRYPOINTS="$DEFAULT_ENTRYPOINTS"
+elif [ "$1" = "flake" ] ; then
+  exit 0
+elif [ "$1" = "all" ] ; then
+  ENTRYPOINTS="$DEFAULT_ENTRYPOINTS $TEST_ENTRYPOINTS"
+elif [ "$1" = "test" ] ; then
+  ENTRYPOINTS="$TEST_ENTRYPOINTS"
 else
-  ENTRYPOINTS="
-    vizier/api/webservice/base.py
-    $(find tests -name '*.py')
-  "
+  ENTRYPOINTS="$*"
 fi
 
 FLAGS="
@@ -30,6 +37,6 @@ if [ "$(which mypy)" ] ; then
 else
   echo "mypy is not installed"
   echo
-  echo "$> pip3 install --user mypy"
+  echo "$> pip3 install mypy"
 fi
 

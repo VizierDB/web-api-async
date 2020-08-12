@@ -20,11 +20,11 @@ that represent the history of the branch.
 """
 
 from abc import abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
-from vizier.viztrail.base import NamedObject
+from vizier.viztrail.named_object import NamedObject
 from vizier.viztrail.workflow import WorkflowHandle
 from vizier.viztrail.module.base import ModuleHandle, ModuleCommand
 from vizier.core.annotation.base import ObjectAnnotationSet

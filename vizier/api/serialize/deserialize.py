@@ -24,6 +24,7 @@ from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, DatasetRow
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.api.base import InvalidRequest
 
 import vizier.api.serialize.labels as labels
 

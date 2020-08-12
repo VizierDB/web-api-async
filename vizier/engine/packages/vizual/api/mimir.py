@@ -18,14 +18,10 @@
 storage backend.
 """
 
-import json
-
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.base import get_index_for_column
-from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.dataset import MimirDatasetColumn, MIMIR_ROWID_COL, MimirDatasetHandle
+from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
-from vizier.datastore.mimir.base import sanitize_column_name
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.mimir as mimir
@@ -63,7 +59,6 @@ class MimirVizualApi(VizualApi):
         # Confirm that the column actually exists and convert the column_identifier to
         # a position in the schema (usually ==, but not guaranteed)
         col_index = get_index_for_column(dataset, column_id)
-        schema = list(dataset.columns)
         command = {
             "id" : "deleteColumn",
             "column" : col_index

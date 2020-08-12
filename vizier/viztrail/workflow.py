@@ -25,7 +25,7 @@ from typing import Optional, List
 from datetime import datetime
 
 from vizier.core.util import init_value
-from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS, ModuleHandle
 
 """Workflow modification action identifier."""

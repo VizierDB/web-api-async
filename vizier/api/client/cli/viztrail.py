@@ -18,7 +18,7 @@
 repository.
 """
 
-from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
+from vizier.api.client.base import KEY_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
 from vizier.api.client.cli.util import ts
 from vizier.viztrail.base import PROPERTY_NAME

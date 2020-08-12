@@ -238,9 +238,9 @@ class DefaultObjectStore(ObjectStore):
         """
         # Initialize the default values. Override them if respective properties
         # are given.
-        self.identifier_factory = identifier_factory if not identifier_factory is None else get_unique_identifier
+        self.identifier_factory = identifier_factory if identifier_factory is not None else get_unique_identifier
         self.keep_deleted_files = keep_deleted_files
-        if not properties is None:
+        if properties is not None:
             if PARA_KEEP_DELETED in properties:
                 self.keep_deleted_files = properties[PARA_KEEP_DELETED]
             if PARA_LONG_IDENTIFIER in properties and not properties[PARA_LONG_IDENTIFIER]:
@@ -314,10 +314,10 @@ class DefaultObjectStore(ObjectStore):
                     raise RuntimeError('could not generate unique identifier')
         # Create an empty file
         file_path = os.path.join(parent_folder, filename)
-        if not content is None:
+        if content is not None:
             self.write_object(object_path=file_path, content=content)
         else:
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w'):
                 pass
         return identifier
 

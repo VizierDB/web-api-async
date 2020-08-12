@@ -14,12 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import re
 from typing import Optional, List, Dict, Any
 
-from vizier.core.util import dump_json, load_json
-from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow, DATATYPE_VARCHAR
+from vizier.core.util import dump_json
+from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DATATYPE_VARCHAR
 from vizier.datastore.mimir.reader import MimirDatasetReader
 from vizier.datastore.annotation.base import DatasetCaveat
 
@@ -36,8 +35,8 @@ CAST_FALSE = 'CAST(0 AS BOOL)'
 Note that this does not check if a date string actually specifies a valid
 calendar date. But it appears that Mimir accepts any sting that follows this
 format."""
-DATE_FORMAT = re.compile('^\d{4}-\d\d?-\d\d?$')
-DATETIME_FORMAT = re.compile('^\d{4}-\d\d?-\d\d? \d\d?:\d\d?:\d\d?(\.\d+)?$')
+DATE_FORMAT = re.compile('^\d{4}-\d\d?-\d\d?$') # noqa: W605
+DATETIME_FORMAT = re.compile('^\d{4}-\d\d?-\d\d? \d\d?:\d\d?:\d\d?(\.\d+)?$') # noqa: W605
 
 
 class MimirDatasetColumn(DatasetColumn):
@@ -357,7 +356,7 @@ class MimirDatasetHandle(DatasetHandle):
 
     def confirm_sync_with_mimir(self):
         try:
-            sch = mimir.getSchema("SELECT * FROM `{}`".format(self.identifier))
+            mimir.getSchema("SELECT * FROM `{}`".format(self.identifier))
             return True
         except mimir.MimirError:
             return False

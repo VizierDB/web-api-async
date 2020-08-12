@@ -24,8 +24,6 @@ from vizier.engine.project.cache.base import ProjectCache
 from vizier.api.routes.base import UrlFactory
 
 import vizier.api.serialize.branch as serialize
-import vizier.api.serialize.labels as labels
-
 
 class VizierBranchApi(object):
     """The Vizier branch API implements the methods that correspond to
@@ -93,7 +91,7 @@ class VizierBranchApi(object):
                 raise ValueError('unknown source branch \'' + str(branch_id) + '\'')
             workflow = source_branch.get_workflow(workflow_id)
             if workflow is None:
-                    raise ValueError('unknown workflow \'' + str(workflow_id) + '\'')
+                raise ValueError('unknown workflow \'' + str(workflow_id) + '\'')
             module_index = -1
             for i in range(len(workflow.modules)):
                 module = workflow.modules[i]

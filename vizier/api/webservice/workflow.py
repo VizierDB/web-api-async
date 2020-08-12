@@ -21,7 +21,6 @@ workflows in vizier projects.
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.serialize.module as serialmd
-import vizier.api.serialize.project as serialpr
 import vizier.api.serialize.workflow as serialwf
 from vizier.engine.base import VizierEngine
 from vizier.api.routes.base import UrlFactory

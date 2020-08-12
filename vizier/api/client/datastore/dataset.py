@@ -92,7 +92,7 @@ class RemoteDatasetHandle(DatasetHandle):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        if offset == 0 and limit == None:
+        if offset == 0 and limit is None:
             return InMemDatasetReader(self.rows)
         elif limit is not None:
             return InMemDatasetReader(self.rows[offset:offset+limit])

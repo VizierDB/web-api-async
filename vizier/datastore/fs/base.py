@@ -24,18 +24,18 @@ import json
 import os
 import shutil
 import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.dataset import DatasetHandle, DatasetRow
+from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle
 from vizier.filestore.base import get_download_filename
-
-import vizier.datastore.base as base
 
 
 """Constants for data file names."""
@@ -365,6 +365,7 @@ class FileSystemDatastore(DefaultDatastore):
         -------
         string
         """
+        from vizier.datastore.mimir.store import DATA_OBJECT_FILE
         return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
 # ------------------------------------------------------------------------------

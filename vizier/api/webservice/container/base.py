@@ -23,9 +23,7 @@ from vizier.api.webservice.datastore import VizierDatastoreApi
 from vizier.api.webservice.filestore import VizierFilestoreApi
 from vizier.api.webservice.view import VizierDatasetViewApi
 from vizier.core import VERSION_INFO
-from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time
-from vizier.core.util import get_short_identifier, get_unique_identifier
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.datastore.mimir.factory import MimirDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
@@ -138,22 +136,10 @@ def get_engine(config):
     backend_id = config.engine.backend.identifier
     if not backend_id in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
-    # Get the identifier factory for the viztrails repository and create
-    # the object store. At this point we use the default object store only.
-    # We could add another environment variable to use different object
-    # stores (once implemented).
-    if config.engine.use_short_ids:
-        id_factory = get_short_identifier
-    else:
-        id_factory = get_unique_identifier
-    object_store = DefaultObjectStore(
-        identifier_factory=id_factory
-    )
     # By default the vizier engine uses the objectstore implementation for
     # the viztrails repository. The datastore and filestore factories depend
     # on the values of engine identifier (DEV or MIMIR).
     base_dir = config.engine.data_dir
-    viztrails_dir = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
     if config.engine.identifier in [base.DEV_ENGINE, base.MIMIR_ENGINE]:
         filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
         filestore_factory=FileSystemFilestoreFactory(filestores_dir)
@@ -184,6 +170,7 @@ def get_engine(config):
         )
     elif backend_id == base.BACKEND_CELERY:
         # Create and configure routing information (if given)
+        from vizier.config.celery import config_routes
         backend = CeleryBackend(
             routes=config_routes(config),
             synchronous=None

@@ -19,7 +19,7 @@ factory os a wrapper around a UrlFactory.
 """
 from typing import Optional 
 
-from vizier.api.routes.base import PAGE_LIMIT, UrlFactory
+from vizier.api.routes.base import UrlFactory
 
 class DatastoreClientUrlFactory(object):
     """Url factory for API client datastores that access and manipulate datasets

@@ -74,8 +74,6 @@ def BRANCH_HANDLE(project, branch, urls):
     -------
     dict
     """
-    project_id = project.identifier
-    branch_id = branch.identifier
     # Use the branch descriptor as basis
     obj = BRANCH_DESCRIPTOR(project=project, branch=branch, urls=urls)
     # Add descriptors for workflows in the branch history

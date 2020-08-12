@@ -84,12 +84,12 @@ def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
         labels.OBJECT_TYPE: artifact.artifact_type
     }
     #if not name is None:
-     #   obj[labels.NAME] = name
+    #   obj[labels.NAME] = name
     # Add self reference if the project and url factory are given
-    if not project is None and not urls is None:
-        project_id = project.identifier
-        dataobj_id = artifact.identifier
-        obj[labels.LINKS] = {}
+    # if not project is None and not urls is None:
+    #     project_id = project.identifier
+    #     dataobj_id = artifact.identifier
+    #     obj[labels.LINKS] = {}
     return obj
 
 def DATASET_DESCRIPTOR(

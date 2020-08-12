@@ -19,7 +19,6 @@ handle. The handle maintains information about the module command, status, the
 module outputs, and the module state (datasets).
 """
 
-from abc import abstractmethod
 from typing import Optional
 from datetime import datetime
 

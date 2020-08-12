@@ -22,13 +22,12 @@ The synchronized backend can also be used as a base class for the asynchronous
 backend.
 """
 
-from abc import abstractmethod
 from typing import Dict
 
 from vizier.engine.backend.base import TaskExecEngine
 from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs
 from vizier.engine.task.processor import TaskProcessor
 
 class SynchronousTaskEngine(TaskExecEngine):

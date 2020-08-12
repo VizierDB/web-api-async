@@ -19,7 +19,7 @@ container.
 """
 
 import docker # type: ignore[import]
-from typing import cast, List, Dict, Any, Optional
+from typing import cast, List, Dict, Any
 import requests
 
 from vizier.api.routes.container import ContainerApiUrlFactory
@@ -117,7 +117,7 @@ class ContainerProjectHandle(ProjectHandle):
             } for name in context[labels.CONTEXT_DATAOBJECTS]]
         }
         if not resources is None:
-            data[label.RESOURCES] = resources
+            data[labels.RESOURCES] = resources
         # Send request. Raise exception if status code indicates that the
         # request was not successful
         r = requests.post(url, json=data)

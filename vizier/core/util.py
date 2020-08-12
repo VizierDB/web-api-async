@@ -21,6 +21,7 @@ from typing import Any, TypeVar, Optional
 import json
 import os
 import uuid
+from datetime import date, datetime
 
 
 """Name of logger used for monitoring workflow engine performance."""
@@ -75,7 +76,7 @@ def default_serialize(obj):
         serial = obj.isoformat()
         return serial
 
-    if isinstance(obj, time):
+    if isinstance(obj, datetime):
         serial = obj.isoformat()
         return serial
 
@@ -103,10 +104,10 @@ def encode_values(values):
         if isinstance(val, str):
             try:
                 result.append(val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
+            except UnicodeDecodeError:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
+                except UnicodeDecodeError:
                     result.append(val.decode('latin1').encode('utf-8'))
         else:
             result.append(val)
@@ -149,7 +150,7 @@ def init_value(value: Optional[T], default_value: T) -> T:
     -------
     any
     """
-    return value if not value is None else default_value
+    return value if value is not None else default_value
 
 
 def is_scalar(value: Any) -> bool:
@@ -190,7 +191,7 @@ def is_valid_name(name):
     for c in name:
         if c.isalnum():
             allnums += 1
-        elif not c in ['_', '-', ' ']:
+        elif c not in ['_', '-', ' ']:
             return False
     return (allnums > 0)
 

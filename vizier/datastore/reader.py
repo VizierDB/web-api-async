@@ -26,7 +26,7 @@ import gzip
 import json
 from io import TextIOWrapper
 
-from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetRow
 
 """Json element names for default dataset serialization."""
 KEY_ROWS = 'rows'

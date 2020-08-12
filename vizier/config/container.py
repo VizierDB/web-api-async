@@ -43,8 +43,6 @@ logs:
     server
 """
 
-import os
-
 from vizier.config.app import AppConfig
 from vizier.config.base import get_config_value
 

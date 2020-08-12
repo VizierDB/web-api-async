@@ -15,15 +15,16 @@
 # limitations under the License.
 
 """Declaration of constants and helper methods for the Mimir datastore."""
+from vizier.datastore.dataset import DATATYPE_DATE, DATATYPE_DATETIME
+from datetime import date, datetime
 
 
 """Name of the database column that contains the row id for tuples
 (Important: Use upper case!).
 """
-from vizier.datastore.dataset import DATATYPE_DATE, DATATYPE_DATETIME, DATATYPE_INT, DATATYPE_REAL, DATATYPE_VARCHAR
-from datetime import date, datetime
-
 ROW_ID = 'ROWID()'
+
+
 BAD_COL_NAMES = {
     "ABORT":"`ABORT`", 
     "ACTION":"`ACTION`", 

@@ -13,8 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.api.serialize import labels
-
 """Default multi-process backend to execute vizier workflow tasks. The default
 backend starts a separate process for each task that is being executed. This
 backend is primarily intended for local installations of vizier with a single
@@ -27,8 +25,6 @@ from multiprocessing import Lock, Pool
 from multiprocessing.pool import Pool as PoolType
 from typing import Dict, Tuple
 
-from vizier.core.loader import ClassLoader
-from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import VizierBackend, exec_command
 from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING

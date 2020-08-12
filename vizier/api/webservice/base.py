@@ -27,7 +27,6 @@ store, data store, viztrail repository and the workflow execution engine.
 """
 
 import os
-import io
 from typing import cast, Dict, Any
 
 from vizier.api.webservice.branch import VizierBranchApi
@@ -68,7 +67,6 @@ import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
 import vizier.config.base as base
-from vizier.config.app import AppConfig
 
 
 class VizierApi(object):
@@ -189,7 +187,7 @@ class DotDict(dict):
         #from shutil import copyfileobj
         #copyfileobj(io.BytesIO(str(self.data)),open(str(dst).encode(),'wb'))    
         with open(str(dst), "w") as fw, open(str(self.file),"r") as fr: 
-            fw.writelines(l for l in fr)
+            fw.writelines(line for line in fr)
         
 # ------------------------------------------------------------------------------
 # Helper Methods

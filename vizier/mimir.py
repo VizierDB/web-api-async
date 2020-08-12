@@ -20,7 +20,6 @@ lenses.
 from typing import cast, Optional, List, Dict, Any, Tuple
 
 import requests
-import json
 import os
 from requests.exceptions import HTTPError
 from requests import Response
@@ -42,7 +41,7 @@ def readResponse(resp: Response) -> Dict[str, Any]:
     json_object = None
     try:
         resp.raise_for_status()
-    except HTTPError as http_e:
+    except HTTPError:
         raise MimirError({ 'errorMessage': "Internal Error [Mimir]: Got a {} error code.".format(resp.status_code) })
     except Exception as e: 
         raise MimirError({ 'errorMessage': "Internal Error [HTTP -> Mimir]: {}".format(e) })
@@ -112,7 +111,7 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
       "dependencies": dependencies,
       "properties" : properties
     }
-    if human_readable_name != None:
+    if human_readable_name is not None:
       req_json["humanReadableName"] = human_readable_name
     resp = readResponse(requests.post(_mimir_url + 'dataSource/load', json=req_json))
     return (resp['name'], resp['schema'])
@@ -161,6 +160,7 @@ def feedback(reasons, idx, ack, rvalue):
       "repairStr": rvalue
     } 
     resp = readResponse(requests.post(_mimir_url + 'annotations/feedback', json=req_json))
+    return resp
     
 #def feedbackCell(query, col, row, ack): 
     #req_json = 

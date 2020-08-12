@@ -201,11 +201,3 @@ class ModuleProvenance(object):
         debug("INDEPENDENT")
         return False
     
-    def split_context(self, context_all):
-        # datasets
-        context_ds = {key: value for (key, value) in context_all.items() 
-                      if not ( isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) )}
-        # dataobjects
-        context_do = {key: value for (key, value) in context_all.items() 
-                      if (isinstance(value, DataObject) or isinstance(value, DataObjectDescriptor) ) }
-        return context_ds, context_do

@@ -75,13 +75,12 @@ class ClassLoader(object):
         module = importlib.import_module(self.module_name)
         # print(module.__dict__['__file__'])
         # print(set(module.__dict__))
-        if not properties is None:
+        if properties is not None:
             return getattr(module, self.class_name)(properties=properties, **kwargs)
-        elif not self.properties is None:
+        elif self.properties is not None:
             return getattr(module, self.class_name)(properties=self.properties, **kwargs)
         else:
             return getattr(module, self.class_name)(**kwargs)
-
 
     @staticmethod
     def to_dict(module_name, class_name, properties=None):
@@ -102,7 +101,7 @@ class ClassLoader(object):
         dict()
         """
         obj = {'moduleName': module_name, 'className': class_name}
-        if not properties is None:
+        if properties is not None:
             obj['properties'] = properties
         return obj
 

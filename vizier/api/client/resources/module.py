@@ -19,7 +19,6 @@ remote vizier instance.
 """
 
 from vizier.api.client.resources.chart import ChartHandle
-from vizier.api.client.resources.dataset import DatasetDescriptor
 from vizier.core.timestamp import to_datetime
 from vizier.viztrail.module.output import OUTPUT_HTML, OUTPUT_TEXT
 from vizier.viztrail.module.timestamp import ModuleTimestamp
