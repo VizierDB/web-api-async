@@ -35,7 +35,8 @@
                     }
                 ], 
                 "id": "deleteColumn", 
-                "name": "Delete Column", 
+                "name": "Delete Column",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -89,7 +90,8 @@
                     }
                 ], 
                 "id": "deleteRow", 
-                "name": "Delete Row", 
+                "name": "Delete Row",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -131,7 +133,8 @@
                     }
                 ], 
                 "id": "dropDataset", 
-                "name": "Drop Dataset", 
+                "name": "Drop Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -195,7 +198,8 @@
                     }
                 ], 
                 "id": "insertColumn", 
-                "name": "Insert Column", 
+                "name": "Insert Column",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -269,7 +273,8 @@
                     }
                 ], 
                 "id": "insertRow", 
-                "name": "Insert Row", 
+                "name": "Insert Row",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -341,7 +346,8 @@
                     }
                 ], 
                 "id": "moveColumn", 
-                "name": "Move Column", 
+                "name": "Move Column",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -421,7 +427,8 @@
                     }
                 ], 
                 "id": "moveRow", 
-                "name": "Move Row", 
+                "name": "Move Row",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -491,7 +498,8 @@
                     }
                 ], 
                 "id": "projection", 
-                "name": "Filter Columns", 
+                "name": "Filter Columns",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -575,7 +583,8 @@
                     }
                 ], 
                 "id": "renameColumn", 
-                "name": "Rename Column", 
+                "name": "Rename Column",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -637,7 +646,8 @@
                     }
                 ], 
                 "id": "renameDataset", 
-                "name": "Rename Dataset", 
+                "name": "Rename Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -701,7 +711,8 @@
                     }
                 ], 
                 "id": "sortDataset", 
-                "name": "Sort Dataset", 
+                "name": "Sort Dataset",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 
@@ -815,7 +826,8 @@
                     }
                 ], 
                 "id": "updateCell", 
-                "name": "Update Cell", 
+                "name": "Update Cell",
+                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset", 

@@ -207,6 +207,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
         pckg.command_declaration(
             identifier=VIZUAL_LOAD,
             name='Load Dataset',
+            suggest=True,
             parameters=[
                 pckg.parameter_declaration(
                     identifier=pckg.PARA_NAME,
