@@ -20,6 +20,7 @@ import vizier.viztrail.command as md
 DATASETS = {
     'ds': DatasetDescriptor(
         identifier='0000',
+        name='ds',
         columns=[
             DatasetColumn(identifier=2, name='Some Name'),
             DatasetColumn(identifier=1, name='Street')
@@ -29,7 +30,7 @@ DATASETS = {
 PACKAGE = pckg.PackageIndex(vizual.VIZUAL_COMMANDS)
 
 SERVER_DIR = './.tmp'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/viztrail/module/.files/dataset.csv'
 
 
 class TestValidateVizual(unittest.TestCase):

@@ -24,8 +24,8 @@ from abc import abstractmethod
 import csv
 import gzip
 import json
+from io import TextIOWrapper
 
-from vizier.core.util import encode_values
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DatasetRow
 
 """Json element names for default dataset serialization."""
@@ -173,6 +173,7 @@ class DelimitedFileReader(DatasetReader):
         if not self.is_open:
             if self.compressed:
                 self.fh = gzip.open(self.filename, 'rb')
+                self.fh = TextIOWrapper(self.fh)
             else:
                 self.fh = open(self.filename, 'r')
             self.reader = csv.reader(
@@ -194,7 +195,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             ]
         }
     """
-    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=-1):
+    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=None):
         """Initialize information about the Json file.
 
         Parameters
@@ -274,7 +275,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             # offset or limit arguments were given we may select only a subset
             # of the rows in the file.
             ds_rows = json.loads(self.fh.read())[KEY_ROWS]
-            if self.offset > 0 or self.limit > 0:
+            if self.offset > 0 or self.limit is not None:
                 self.rows = list()
                 skip = self.offset
                 for row in ds_rows:
@@ -282,7 +283,7 @@ class DefaultJsonDatasetReader(DatasetReader):
                         skip -= 1
                     else:
                         self.rows.append(row)
-                        if self.limit > 0 and len(self.rows) >= self.limit:
+                        if self.limit is not None and len(self.rows) >= self.limit:
                             break
             else:
                 self.rows = ds_rows
@@ -303,11 +304,12 @@ class DefaultJsonDatasetReader(DatasetReader):
             fh = gzip.open(self.filename, 'wb')
         else:
             fh = open(self.filename, 'w')
+
         # Write dataset rows
         json.dump({
                 KEY_ROWS: [{
                     KEY_ROW_ID: row.identifier,
-                    KEY_ROW_VALUES: encode_values(row.values)
+                    KEY_ROW_VALUES: row.values
                 } for row in rows]
             },
             fh

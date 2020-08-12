@@ -101,13 +101,14 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
     # Add outputs and datasets if module is not active.
     if not module.is_active:
         datasets = list()
-        for name in module.datasets:
-            datasets.append(
-                serialds.DATASET_IDENTIFIER(
-                    identifier=module.datasets[name].identifier,
-                    name=name
+        for artifact in module.artifacts:
+            if artifact.is_dataset:
+                datasets.append(
+                    serialds.DATASET_IDENTIFIER(
+                        identifier=artifact.identifier,
+                        name=artifact.name
+                    )
                 )
-            )
         available_charts = list()
         for c_handle in charts:
             available_charts.append({

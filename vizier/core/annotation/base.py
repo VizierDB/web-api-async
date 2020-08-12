@@ -28,7 +28,7 @@ for an individual object in a persistent manner.
 from abc import abstractmethod
 
 
-class ObjectAnnotationSet(object):
+class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
@@ -91,7 +91,7 @@ class ObjectAnnotationSet(object):
         raise NotImplementedError
 
     @abstractmethod
-    def find_one(self, key, default_value=None, raise_error_on_multi_value=True):
+    def get(self, key, default_value=None, raise_error_on_multi_value=True):
         """Get a single value that is associated with the given key. If no value
         is associated with the key the default value is returned. If multiple
         values are associated with the given key a ValueError is raised unless
@@ -190,6 +190,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         """
         self.elements = elements if not elements is None else dict()
         self.writer = writer
+        
 
     def add(self, key, value, replace=False, persist=True):
         """Associate the given key with the given value. If the replace flag is
@@ -328,7 +329,13 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             # Unknown key. Return default value
             return default_value
 
-    def find_one(self, key, default_value=None, raise_error_on_multi_value=True):
+    def __setitem__(self, key, value):
+        self.update({key: value})
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def get(self, key, default_value=None, raise_error_on_multi_value=True):
         """Get a single value that is associated with the given key. If no value
         is associated with the key the default value is returned. If multiple
         values are associated with the given key a ValueError is raised unless

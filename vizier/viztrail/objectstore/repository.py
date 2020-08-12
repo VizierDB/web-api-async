@@ -98,7 +98,7 @@ class OSViztrailRepository(ViztrailRepository):
             )
             self.viztrails[vt.identifier] = vt
 
-    def create_viztrail(self, properties=None):
+    def create_viztrail(self, properties={}):
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
         be scalar values or a list of scalar values.

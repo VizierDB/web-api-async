@@ -18,14 +18,13 @@
 and folders in an object store.
 """
 
-from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
 from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH
-
 
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
@@ -67,8 +66,8 @@ class OSViztrailHandle(ViztrailHandle):
         ----------
         identifier : string
             Unique viztrail identifier
-        properties: vizier.core.annotation.base.ObjectAnnotationSet
-            Handler for user-defined properties
+        properties: dict(string, any)
+            Dictionary of user-defined properties
         base_path: string
             Identifier for folder containing viztrail resources
         object_store: vizier.core.io.base.ObjectStore, optional
@@ -100,7 +99,7 @@ class OSViztrailHandle(ViztrailHandle):
         self.branch_index = init_value(branch_index, self.object_store.join(self.branch_folder, OBJ_BRANCHINDEX))
         self.modules_folder =  init_value(modules_folder, self.object_store.join(base_path, FOLDER_MODULES))
 
-    def create_branch(self, provenance=None, properties=None, modules=None):
+    def create_branch(self, provenance=None, properties={}, modules=None):
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
 
@@ -108,8 +107,8 @@ class OSViztrailHandle(ViztrailHandle):
         ----------
         provenance: vizier.viztrail.base.BranchProvenance
             Provenance information for the new branch
-        properties: dict, optional
-            Set of properties for the new branch
+        properties: dict(string, any), optional
+            Dictionary of properties for the new branch
         modules: list(string), optional
             List of module identifier for the modules in the workflow at the
             head of the branch
@@ -137,7 +136,7 @@ class OSViztrailHandle(ViztrailHandle):
         return branch
 
     @staticmethod
-    def create_viztrail(identifier, base_path, object_store=None, properties=None) :
+    def create_viztrail(identifier, base_path, object_store=None, properties={}) :
         """Create a new viztrail resource. Will create the base directory for
         the viztrail.
 
@@ -146,8 +145,8 @@ class OSViztrailHandle(ViztrailHandle):
 
         Parameters
         ----------
-        properties: dict
-            Set of properties for the new viztrail
+        properties: dict(string, any)
+            Dictionary of properties for the new viztrail
         base_path: string
             Identifier for folder containing viztrail resources
         object_store: vizier.core.io.base.ObjectStore, optional
@@ -200,7 +199,7 @@ class OSViztrailHandle(ViztrailHandle):
             properties=PersistentAnnotationSet(
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store,
-                annotations=properties
+                properties=properties
             ),
             branches=[default_branch],
             default_branch=default_branch,
@@ -357,8 +356,8 @@ def create_branch(
     ----------
     provenance: vizier.viztrail.base.BranchProvenance
         Provenance information for the new branch
-    properties: dict, optional
-        Set of properties for the new branch
+    properties: dict(string, any), optional
+        Dictionary of properties for the new branch
     modules: list(string), optional
         List of module identifier for the modules in the workflow at the
         head of the branch

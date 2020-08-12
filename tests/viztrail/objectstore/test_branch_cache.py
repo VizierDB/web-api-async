@@ -39,7 +39,7 @@ class TestOSBranchCache(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -51,7 +51,6 @@ class TestOSBranchCache(unittest.TestCase):
             timestamp=ModuleTimestamp(
                 created_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -73,7 +72,6 @@ class TestOSBranchCache(unittest.TestCase):
                     started_at=get_current_time(),
                     finished_at=get_current_time()
                 ),
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput('4')]),
                 provenance=ModuleProvenance(),
                 module_folder=vt.modules_folder,
@@ -95,7 +93,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -123,7 +120,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -146,7 +142,7 @@ class TestOSBranchCache(unittest.TestCase):
         os.makedirs(base_path)
         vt = OSViztrailHandle.create_viztrail(
             identifier='ABC',
-            properties=None,
+            properties={},
             base_path=base_path
         )
         branch = vt.get_default_branch()
@@ -160,7 +156,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,
@@ -182,7 +177,6 @@ class TestOSBranchCache(unittest.TestCase):
                     started_at=get_current_time(),
                     finished_at=get_current_time()
                 ),
-                datasets=dict(),
                 outputs=ModuleOutputs(stdout=[TextOutput('4')]),
                 provenance=ModuleProvenance(),
                 module_folder=vt.modules_folder,
@@ -204,7 +198,6 @@ class TestOSBranchCache(unittest.TestCase):
                 started_at=get_current_time(),
                 finished_at=get_current_time()
             ),
-            datasets=dict(),
             outputs=ModuleOutputs(stdout=[TextOutput('4')]),
             provenance=ModuleProvenance(),
             module_folder=vt.modules_folder,

@@ -16,7 +16,7 @@ SERVER_DIR = './.tmp'
 FILESTORE_DIR = './.tmp/fs'
 DATASTORE_DIR = './.tmp/ds'
 
-CSV_FILE = './.files/w49k-mmkh.csv'
+CSV_FILE = './tests/engine/packages/sql/.files/w49k-mmkh.csv'
 DATASET_NAME = 'stats'
 
 class TestSQLProcessor(unittest.TestCase):
@@ -43,26 +43,25 @@ class TestSQLProcessor(unittest.TestCase):
         f_handle = self.filestore.upload_file(CSV_FILE)
         ds = self.datastore.load_dataset(f_handle=f_handle)
         cmd = sql_cell(
-            source='SELECT grade_or_service_category FROM ' + DATASET_NAME + ' WHERE program = \'GENERAL EDUCATION\'',
+            source='SELECT grade_or_service_category_ FROM ' + DATASET_NAME + ' WHERE program = \'GENERAL EDUCATION\'',
             validate=True
         )
         result = SQLTaskProcessor().compute(
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datasets={DATASET_NAME: ds.identifier},
+                project_id=3,
+                artifacts={DATASET_NAME: ds},
                 datastore=self.datastore,
                 filestore=self.filestore
             )
         )
         self.assertTrue(result.is_success)
-        self.assertIsNone(result.provenance.read)
-        self.assertIsNone(result.provenance.write)
-        self.assertTrue(len(result.outputs.stdout) > 0)
-        self.assertEqual(len(result.outputs.stderr), 0)
+        self.assertIsNotNone(result.provenance.read)
+        self.assertIsNotNone(result.provenance.write)
         # Materialize result
         cmd = sql_cell(
-            source='SELECT grade_or_service_category FROM ' + DATASET_NAME + ' WHERE program = \'GENERAL EDUCATION\'',
+            source='SELECT grade_or_service_category_ FROM ' + DATASET_NAME + ' WHERE program = \'GENERAL EDUCATION\'',
             output_dataset='ge',
             validate=True
         )
@@ -70,17 +69,16 @@ class TestSQLProcessor(unittest.TestCase):
             command_id=cmd.command_id,
             arguments=cmd.arguments,
             context=TaskContext(
-                datasets={DATASET_NAME: ds.identifier},
+                project_id=3,
+                artifacts={DATASET_NAME: ds},
                 datastore=self.datastore,
                 filestore=self.filestore
             )
         )
         self.assertTrue(result.is_success)
-        self.assertIsNone(result.provenance.read)
+        self.assertIsNotNone(result.provenance.read)
         self.assertIsNotNone(result.provenance.write)
         self.assertTrue('ge' in result.provenance.write)
-        self.assertTrue(len(result.outputs.stdout) > 0)
-        self.assertEqual(len(result.outputs.stderr), 0)
 
 
 if __name__ == '__main__':

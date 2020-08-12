@@ -15,11 +15,11 @@ import vizier.engine.packages.vizual.base as vizual
 
 
 SERVER_DIR = './.tmp'
-PACKAGES_DIR = './.files/packages'
-PROCESSORS_DIR = './.files/processors'
+PACKAGES_DIR = './tests/engine/workflows/.files/packages'
+PROCESSORS_DIR = './tests/engine/workflows/.files/processors/mimir'
 
-EMPLOYEE_FILE = './.files/employee.csv'
-PEOPLE_FILE = './.files/people.csv'
+EMPLOYEE_FILE = './tests/engine/workflows/.files/employee.csv'
+PEOPLE_FILE = './tests/engine/workflows/.files/people.csv'
 
 
 class TestVizierEngineSynchron(unittest.TestCase):
@@ -63,10 +63,8 @@ class TestVizierEngineSynchron(unittest.TestCase):
             )
         )
         self.assertTrue(module.is_success)
-        self.assertTrue('people' in module.datasets)
-        self.assertEqual(len(module.datasets['people'].columns), 2)
-        self.assertEqual(module.datasets['people'].row_count, 2)
-        self.assertEqual(len( module.outputs.stdout), 4)
+        self.assertTrue('people' in module.provenance.write)
+        self.assertEqual(len(module.provenance.write['people'].columns), 2)
         # MODULE 2
         # --------
         # UPDATE CELL
@@ -81,8 +79,9 @@ class TestVizierEngineSynchron(unittest.TestCase):
                 validate=True
             )
         )
+        print("STATUS: {}".format(module))
         self.assertTrue(module.is_success)
-        self.assertTrue('people' in module.datasets)
+        self.assertTrue('people' in module.provenance.write)
         # MODULE 3
         # --------
         # LOAD employee
@@ -97,8 +96,8 @@ class TestVizierEngineSynchron(unittest.TestCase):
             )
         )
         self.assertTrue(module.is_success)
-        self.assertTrue('people' in module.datasets)
-        self.assertTrue('employee' in module.datasets)
+        self.assertFalse('people' in module.provenance.write)
+        self.assertTrue('employee' in module.provenance.write)
         #
         # Reload engine and check the module states
         #
@@ -112,15 +111,11 @@ class TestVizierEngineSynchron(unittest.TestCase):
             self.assertIsNotNone(m.timestamp.started_at)
             self.assertIsNotNone(m.timestamp.finished_at)
             self.assertIsNotNone(m.provenance.write)
-            self.assertTrue('people' in m.datasets)
-        self.assertTrue('employee' in modules[-1].datasets)
+        self.assertTrue('people' in modules[0].provenance.write)
+        self.assertTrue('employee' in modules[-1].provenance.write)
         self.assertNotEqual(
-            modules[0].datasets['people'].identifier,
-            modules[1].datasets['people'].identifier
-        )
-        self.assertEqual(
-            modules[1].datasets['people'].identifier,
-            modules[2].datasets['people'].identifier
+            modules[0].provenance.write['people'].identifier,
+            modules[1].provenance.write['people'].identifier
         )
 
     def test_create_synchronous_workflow_with_errors(self):
@@ -144,6 +139,11 @@ class TestVizierEngineSynchron(unittest.TestCase):
                 validate=True
             )
         )
+        project = self.engine.projects.get_project(project.identifier)
+        modules = project.get_default_branch().get_head().modules
+        for m in modules:
+            print(m)
+            self.assertTrue(m.is_success)
         # MODULE 2
         # --------
         # UPDATE CELL
@@ -187,6 +187,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         project = self.engine.projects.get_project(project.identifier)
         modules = project.get_default_branch().get_head().modules
         for m in modules:
+            print(m)
             self.assertTrue(m.is_success)
         # MODULE 1
         # --------
@@ -236,7 +237,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEqual(len(modules[-1].datasets['friends'].columns), 3)
+        self.assertEqual(len(modules[0].provenance.write['friends'].columns), 3)
         # REPLACE MODULE 1
         # ----------------
         # Load people dataset instead employee
@@ -262,9 +263,9 @@ class TestVizierEngineSynchron(unittest.TestCase):
         self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEqual(len(modules[-1].datasets['friends'].columns), 2)
-        ds = project.datastore.get_dataset(modules[-1].datasets['friends'].identifier)
-        self.assertEqual(ds.fetch_rows()[0].values[1], 43)
+        self.assertEqual(len(modules[0].provenance.write['friends'].columns), 2)
+        ds = project.datastore.get_dataset(modules[0].provenance.write['friends'].identifier)
+        self.assertEqual(ds.fetch_rows()[0].values[1], 23)
         #
         # Reload engine and check the module states
         #
@@ -274,9 +275,9 @@ class TestVizierEngineSynchron(unittest.TestCase):
         self.assertEqual(len(modules), 5)
         for m in modules:
             self.assertTrue(m.is_success)
-        self.assertEqual(len(modules[-1].datasets['friends'].columns), 2)
-        ds = project.datastore.get_dataset(modules[-1].datasets['friends'].identifier)
-        self.assertEqual(ds.fetch_rows()[0].values[1], 43)
+        self.assertEqual(len(modules[0].provenance.write['friends'].columns), 2)
+        ds = project.datastore.get_dataset(modules[0].provenance.write['friends'].identifier)
+        self.assertEqual(ds.fetch_rows()[0].values[1], 23)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ from vizier.datastore.mimir.store import MimirDatastore
 from vizier.filestore.fs.base import FileSystemFilestore
 
 
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/datastore/.files/dataset.csv'
 
 SERVER_DIR = '.tmp'
 DATASTORE_DIR = os.path.join(SERVER_DIR, 'ds')

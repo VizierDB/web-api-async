@@ -47,7 +47,7 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
         'createdAt': branch.provenance.created_at.isoformat(),
         'lastModifiedAt': branch.last_modified_at.isoformat(),
         'isDefault': project.viztrail.is_default_branch(branch_id),
-        'properties': serialize.ANNOTATIONS(branch.properties),
+        'properties': branch.properties,
         labels.LINKS: serialize.HATEOAS({
             ref.SELF: urls.get_branch(project_id, branch_id),
             ref.BRANCH_DELETE: urls.delete_branch(project_id, branch_id),

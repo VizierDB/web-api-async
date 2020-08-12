@@ -148,8 +148,6 @@ class ModuleHandle(ModuleState):
         Unique module identifier
     command: vizier.viztrail.command.ModuleCommand
         Specification of the module (i.e., package, name, and arguments)
-    datasets: dict(vizier.datastore.dataset.DatasetDescriptor)
-        Dictionary of resulting datasets. The user-specified name is the key.
     external_form: string
         Printable representation of the module command
     outputs: vizier.viztrail.module.output.ModuleOutputs
@@ -161,13 +159,10 @@ class ModuleHandle(ModuleState):
         Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
     timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
         Module timestamp
-    dataobjects: dict(vizier.datastore.object.base.DataObject)
-        Dictionary of resulting dataobjects. The user-specified name is the key.
     """
     def __init__(
         self, command, external_form, identifier=None, state=None,
-        timestamp=None, datasets=None, outputs=None, provenance=None,
-        dataobjects=None
+        timestamp=None, outputs=None, provenance=None
     ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
@@ -184,16 +179,11 @@ class ModuleHandle(ModuleState):
             Module state (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS)
         timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp, optional
             Module timestamp
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting datasets. The user-specified name is the key
-            and the unique dataset identifier the value.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Module output streams STDOUT and STDERR
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen by
             previous execution of the module.
-        dataobjects: dict(vizier.datastore.object.base.DataObject)
-            Dictionary of resulting dataobjects. The user-specified name is the key.
         """
         super(ModuleHandle, self).__init__(
             state=state if not state is None else MODULE_PENDING
@@ -201,11 +191,43 @@ class ModuleHandle(ModuleState):
         self.identifier = identifier
         self.command = command
         self.external_form = external_form
-        self.datasets = datasets if not datasets is None else dict()
-        self.dataobjects = dataobjects if not dataobjects is None else dict()
         self.outputs = outputs if not outputs is None else ModuleOutputs()
         self.provenance = provenance if not provenance is None else ModuleProvenance()
         self.timestamp = timestamp if not timestamp is None else ModuleTimestamp()
+
+    @property
+    def artifacts(self):
+        if self.provenance is None: 
+            return []
+        if self.provenance.write is None:
+            return {}
+        return [ self.provenance.write[k] for k in self.provenance.write.keys() ]
+    
+    @property
+    def state_string(self):
+        if self.state ==   MODULE_PENDING:
+            return "PENDING"
+        elif self.state == MODULE_RUNNING:
+            return "RUNNING"
+        elif self.state == MODULE_CANCELED:
+            return "CANCELED"
+        elif self.state == MODULE_ERROR:
+            return "ERROR"
+        elif self.state == MODULE_SUCCESS:
+            return "SUCCESS"
+        else:
+            return "UNKNOWN ({})".format(self.state)
+    
+    def __repr__(self):
+        return "{}.{} @ {} is {}\n{}\n{}".format(
+            self.command.package_id,
+            self.command.command_id,
+            self.identifier,
+            self.state_string,
+            "\n".join(self.command.arguments.to_yaml_lines("  ")),
+            self.outputs
+        )+("\n"+str(self.outputs) if self.outputs is not None else "")
+
 
     @abstractmethod
     def set_canceled(self, finished_at=None, outputs=None):
@@ -254,7 +276,7 @@ class ModuleHandle(ModuleState):
         raise NotImplementedError
 
     @abstractmethod
-    def set_success(self, finished_at=None, datasets=None, outputs=None, provenance=None):
+    def set_success(self, finished_at=None, outputs=None, provenance=None):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -266,9 +288,6 @@ class ModuleHandle(ModuleState):
         ----------
         finished_at: datetime.datetime, optional
             Timestamp when module started running
-        datasets : dict(vizier.datastore.dataset.DatasetDescriptor), optional
-            Dictionary of resulting datasets. The user-specified name is the
-            key for the dataset descriptors.
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional

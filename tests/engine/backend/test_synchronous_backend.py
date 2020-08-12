@@ -6,7 +6,7 @@ import unittest
 
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.synchron import SynchronousTaskEngine
-from vizier.engine.base import task_context
+from vizier.engine.base import compute_context
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
@@ -27,7 +27,7 @@ SERVER_DIR = './.tmp'
 DATASTORES_DIR = SERVER_DIR + '/ds'
 FILESTORES_DIR = SERVER_DIR + '/fs'
 VIZTRAILS_DIR = SERVER_DIR + '/vt'
-CSV_FILE = './.files/dataset.csv'
+CSV_FILE = './tests/engine/backend/.files/dataset.csv'
 
 DATASET_NAME = 'people'
 SECOND_DATASET_NAME = 'my_people'
@@ -40,7 +40,7 @@ ds.insert_row(['Alice', 23])
 ds.insert_row(['Bob', 34])
 ds = vizierdb.create_dataset('""" + SECOND_DATASET_NAME + """', ds)
 for row in ds.rows:
-    print row.get_value('Name')
+    print(row.get_value('Name'))
 """
 
 
@@ -142,11 +142,10 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                 project_id=self.PROJECT_ID
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         self.assertTrue(result.is_success)
-        state = result.provenance.get_database_state(prev_state=dict())
-        context = task_context(state)
+        context = result.provenance.get_database_state(prev_state=dict())
         cmd = vizual.update_cell(
             dataset_name=DATASET_NAME,
             column=1,
@@ -160,12 +159,12 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                 project_id=self.PROJECT_ID
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         self.assertTrue(result.is_success)
-        state = result.provenance.get_database_state(prev_state=state)
-        self.assertNotEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
-        context = task_context(state)
+        prev_context = context
+        context = result.provenance.get_database_state(prev_state=context)
+        self.assertNotEqual(prev_context[DATASET_NAME], context[DATASET_NAME])
         cmd = pycell.python_cell(
             source=CREATE_DATASET_PY,
             validate=True
@@ -176,13 +175,15 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                 project_id=self.PROJECT_ID
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
+        if not result.is_success:
+            print(result.outputs)
         self.assertTrue(result.is_success)
-        state = result.provenance.get_database_state(prev_state=state)
-        self.assertTrue(SECOND_DATASET_NAME in state)
-        self.assertEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
-        context = task_context(state)
+        prev_context = context
+        context = result.provenance.get_database_state(prev_state=context)
+        self.assertTrue(SECOND_DATASET_NAME in context)
+        self.assertEqual(prev_context[DATASET_NAME], context[DATASET_NAME])
         cmd = vizual.update_cell(
             dataset_name=SECOND_DATASET_NAME,
             column=1,
@@ -196,12 +197,13 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                 project_id=self.PROJECT_ID
             ),
             command=cmd,
-            context=context
+            artifacts=context
         )
         self.assertTrue(result.is_success)
-        state = result.provenance.get_database_state(prev_state=state)
-        self.assertEqual(context[DATASET_NAME], task_context(state)[DATASET_NAME])
-        self.assertNotEqual(context[SECOND_DATASET_NAME], task_context(state)[SECOND_DATASET_NAME])
+        prev_context = context
+        context = result.provenance.get_database_state(prev_state=context)
+        self.assertEqual(prev_context[DATASET_NAME], context[DATASET_NAME])
+        self.assertNotEqual(prev_context[SECOND_DATASET_NAME], context[SECOND_DATASET_NAME])
 
     def test_execute_unsupported_command(self):
         """Test executing commands that are not supported for synchronous
@@ -218,7 +220,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                     position=1,
                     validate=True
                 ),
-                context=dict()
+                artifacts=dict()
             )
 
         with self.assertRaises(ValueError):
@@ -231,7 +233,7 @@ class TestSynchronousTaskEngine(unittest.TestCase):
                     dataset_name=DATASET_NAME,
                     validate=True
                 ),
-                context=dict()
+                artifacts=dict()
             )
 
 

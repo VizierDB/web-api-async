@@ -27,7 +27,7 @@ class DatasetDescriptor(object):
     """A dataset descriptor is simply an identifier and a dictionary of HATEOAS
     references.
     """
-    def __init__(self, identifier, columns, links):
+    def __init__(self, identifier, name, columns, links):
         """Initialize the dataset identifier, list of columns, and HATEOAS
         references.
 
@@ -41,6 +41,7 @@ class DatasetDescriptor(object):
             Dictionary of HATEOS references for the dataset
         """
         self.identifier = identifier
+        self.name = name
         self.columns = columns
         self.links = links
 
@@ -60,6 +61,7 @@ class DatasetDescriptor(object):
         """
         return DatasetDescriptor(
             identifier=obj[labels.ID],
+            name=obj[labels.NAME],
             columns=[
                 DatasetColumn(
                     identifier=col[labels.ID],

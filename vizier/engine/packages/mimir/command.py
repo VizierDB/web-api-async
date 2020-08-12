@@ -21,36 +21,6 @@ import vizier.engine.packages.base as pckg
 import vizier.engine.packages.mimir.base as mimir
 
 
-def mimir_domain(dataset_name, column, materialize_input=False, validate=False):
-    """Create instance of missing value lens command.
-
-    Parameters
-    ----------
-    dataset_name: string
-        Name of the dataset
-    column: string or int
-        Name or index for column
-    materialize_input: bool, optional
-        Flag indicating whether input should be materialized
-    validate: bool, optional
-        Validate the created command specification (if true)
-
-    Returns
-    -------
-    vizier.viztrail.module.ModuleCommand
-    """
-    return md.ModuleCommand(
-        mimir.PACKAGE_MIMIR,
-        mimir.MIMIR_DOMAIN,
-        arguments =[
-            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
-            md.ARG(id=pckg.PARA_COLUMN, value=column),
-            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
-        ],
-        packages=PACKAGE(validate=validate)
-    )
-
-
 def mimir_geocode(
     dataset_name, geocoder, house_nr=None, street=None, city=None, state=None,
     materialize_input=False, validate=False
@@ -237,45 +207,6 @@ def mimir_picker(
     )
 
 
-def mimir_schema_matching(
-    dataset_name, schema, result_name, materialize_input=False, validate=False
-):
-    """Create instance of mimir schema matching lens command.
-
-    Parameters
-    ----------
-    dataset_name: string
-        Name of the dataset
-    schema: list(dict)
-        List of objects containing 'column' and 'type' elements
-    materialize_input: bool, optional
-        Flag indicating whether input should be materialized
-    validate: bool, optional
-        Validate the created command specification (if true)
-
-    Returns
-    -------
-    vizier.viztrail.module.ModuleCommand
-    """
-    elements = list()
-    for col in schema:
-        items = list()
-        items.append(md.ARG(id=mimir.PARA_COLUMN_NAME, value=col['column']))
-        items.append(md.ARG(id=mimir.PARA_TYPE, value=col['type']))
-        elements.append(items)
-    return md.ModuleCommand(
-        mimir.PACKAGE_MIMIR,
-        mimir.MIMIR_SCHEMA_MATCHING,
-        arguments =[
-            md.ARG(id=pckg.PARA_DATASET, value=dataset_name),
-            md.ARG(id=mimir.PARA_SCHEMA, value=elements),
-            md.ARG(id=mimir.PARA_RESULT_DATASET, value=result_name),
-            md.ARG(id=mimir.PARA_MATERIALIZE_INPUT, value=materialize_input)
-        ],
-        packages=PACKAGE(validate=validate)
-    )
-
-
 def mimir_type_inference(
     dataset_name, percent_conform, materialize_input=False, validate=False
 ):
@@ -335,9 +266,9 @@ def mimir_shape_detector(
         packages=PACKAGE(validate=validate)
     )
 
-    def mimir_comment(
-        dataset_name, comments, result_columns, materialize_input=False, validate=False
-    ):
+def mimir_comment(
+    dataset_name, comments, result_columns, materialize_input=False, validate=False
+):
     """Create instance of mimir comment lens command.
 
     Parameters

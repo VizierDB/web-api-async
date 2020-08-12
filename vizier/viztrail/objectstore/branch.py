@@ -18,10 +18,10 @@
 and folders in an object store.
 """
 
-from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.module import get_module_path
@@ -196,7 +196,6 @@ class OSBranchHandle(BranchHandle):
                     external_form=pm.external_form,
                     state=pm.state,
                     timestamp=pm.timestamp,
-                    datasets=pm.datasets,
                     outputs=pm.outputs,
                     provenance=pm.provenance,
                     module_folder=self.modules_folder,
@@ -230,7 +229,7 @@ class OSBranchHandle(BranchHandle):
     @staticmethod
     def create_branch(
         identifier, base_path, modules_folder, is_default=False, provenance=None,
-        properties=None, created_at=None, modules=None, object_store=None
+        properties={}, created_at=None, modules=None, object_store=None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -324,7 +323,7 @@ class OSBranchHandle(BranchHandle):
             properties=PersistentAnnotationSet(
                 object_path=object_store.join(base_path, OBJ_PROPERTIES),
                 object_store=object_store,
-                annotations=properties
+                properties=properties
             ),
             workflows=workflows,
             head=head,
@@ -569,7 +568,6 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
     list(vizier.viztrail.objectstore.module.OSModuleHandle)
     """
     modules = list()
-    database_state = dict()
     for module_id in modules_list:
         module_path=get_module_path(
             modules_folder=modules_folder,
@@ -579,10 +577,8 @@ def read_workflow_modules(modules_list, modules_folder, object_store):
         m = OSModuleHandle.load_module(
             identifier=module_id,
             module_path=module_path,
-            prev_state=database_state,
             object_store=object_store
         )
-        database_state = m.datasets
         modules.append(m)
     return modules
 

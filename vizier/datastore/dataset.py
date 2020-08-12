@@ -20,9 +20,7 @@ workflows.
 """
 
 from abc import abstractmethod
-
-from vizier.datastore.annotation.dataset import DatasetMetadata
-
+from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -31,6 +29,8 @@ distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
 DATATYPE_DATE = 'date'
 DATATYPE_DATETIME = 'datetime'
 DATATYPE_INT = 'int'
+DATATYPE_SHORT = 'short'
+DATATYPE_LONG = 'long'
 DATATYPE_REAL = 'real'
 DATATYPE_VARCHAR = 'varchar'
 
@@ -38,6 +38,8 @@ COLUMN_DATATYPES = [
     DATATYPE_DATE,
     DATATYPE_DATETIME,
     DATATYPE_INT,
+    DATATYPE_SHORT,
+    DATATYPE_LONG,
     DATATYPE_REAL,
     DATATYPE_VARCHAR
 ]
@@ -87,7 +89,7 @@ class DatasetColumn(object):
         return name
 
 
-class DatasetDescriptor(object):
+class DatasetDescriptor(ArtifactDescriptor):
     """The descriptor maintains the dataset schema and basic information
     including the dataset identifier and row count.
 
@@ -100,7 +102,7 @@ class DatasetDescriptor(object):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, name=None):
+    def __init__(self, identifier, name, columns=None):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -112,9 +114,13 @@ class DatasetDescriptor(object):
         row_count: int, optional
             Number of rows in the dataset
         """
+        super(DatasetDescriptor, self).__init__(
+            identifier=identifier,
+            name=name,
+            artifact_type=ARTIFACT_TYPE_DATASET,
+        )    
         self.identifier = identifier
         self.columns = columns if not columns is None else list()
-        self.row_count = row_count if not row_count is None else 0
         self.name = name
 
     def column_by_id(self, identifier):
@@ -236,17 +242,6 @@ class DatasetDescriptor(object):
         else:
             return max([col.identifier for col in self.columns])
 
-    @abstractmethod
-    def max_row_id(self):
-        """Get maximum identifier for all rows in the dataset. If the dataset
-        is empty the result is -1.
-
-        Returns
-        -------
-        int
-        """
-        raise NotImplementedError
-
     def print_schema(self, name):
         """Print dataset schema as a list of lines.
 
@@ -288,7 +283,7 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, row_count=None, annotations=None, name=None):
+    def __init__(self, identifier, columns=None, name=None):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -309,12 +304,19 @@ class DatasetHandle(DatasetDescriptor):
         super(DatasetHandle, self).__init__(
             identifier=identifier,
             columns=columns,
-            row_count=row_count,
             name=name
-        )
-        self.annotations = annotations if not annotations is None else DatasetMetadata()
+        )    
 
-    def fetch_rows(self, offset=0, limit=-1):
+    @abstractmethod
+    def get_row_count(self):
+        raise NotImplementedError
+
+    @property
+    def row_count(self):
+        return self.get_row_count()
+    
+
+    def fetch_rows(self, offset=0, limit=None):
         """Get list of dataset rows. The offset and limit parameters are
         intended for pagination.
 
@@ -330,8 +332,10 @@ class DatasetHandle(DatasetDescriptor):
         list(vizier.dataset.base.DatasetRow)
         """
         # Return empty list for special case that limit is 0
-        if limit == 0:
-            return list()
+        if offset < 0:
+            raise Exception("Invalid Offset: {}".format(offset))
+        if limit is not None and limit < 0:
+            raise Exception("Invalid Limit: {}".format(limit))
         # Collect rows in result list. Skip first rows if offset is greater than
         # zero
         rows = list()
@@ -341,7 +345,7 @@ class DatasetHandle(DatasetDescriptor):
         return rows
 
     @abstractmethod
-    def get_annotations(self, column_id=None, row_id=None):
+    def get_caveats(self, column_id=None, row_id=None):
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -359,7 +363,21 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def reader(self, offset=0, limit=-1):
+    def get_properties(self):
+        """Get all annotations for a given dataset resource. If both identifier
+        are None all dataset annotations are returned.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        dict
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def reader(self, offset=0, limit=None):
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.
@@ -387,10 +405,10 @@ class DatasetRow(object):
         Unique row identifier
     values : list(string)
         List of column values in the row
-    annotations: list(bool), optional
+    caveats: list(bool), optional
         Optional flags indicating whether row cells are annotated
     """
-    def __init__(self, identifier=None, values=None, annotations=None):
+    def __init__(self, identifier=None, values=None, caveats=None):
         """Initialize the row object.
 
         Parameters
@@ -399,12 +417,15 @@ class DatasetRow(object):
             Unique row identifier
         values : list(string)
             List of column values in the row
-        annotations: list(bool), optional
+        caveats: list(bool), optional
             Optional flags indicating whether row cells are annotated
         """
         self.identifier = identifier if not identifier is None else -1
         self.values = values if not values is None else list()
-        self.annotations = annotations if not values is None else list()
+        self.caveats = caveats if not caveats is None else [ False for v in self.values ]
+
+    def __repr__(self):
+        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
 
 
 # ------------------------------------------------------------------------------

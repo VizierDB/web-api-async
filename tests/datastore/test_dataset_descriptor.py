@@ -13,6 +13,7 @@ class TestDatasetDescriptor(unittest.TestCase):
         """Test access to columns based on identifier and name."""
         ds = DatasetDescriptor(
             identifier='0',
+            name='0',
             columns=[
                 DatasetColumn(identifier=0, name='ABC'),
                 DatasetColumn(identifier=1, name='A'),
@@ -57,6 +58,7 @@ class TestDatasetDescriptor(unittest.TestCase):
         # position in the schema
         ds = DatasetDescriptor(
             identifier='0',
+            name='0',
             columns=[
                 DatasetColumn(identifier=4, name='ABC'),
                 DatasetColumn(identifier=2, name='A'),
@@ -89,6 +91,7 @@ class TestDatasetDescriptor(unittest.TestCase):
         """Test method that computes unique column names."""
         ds = DatasetDescriptor(
             identifier='0',
+            name='0',
             columns=[
                 DatasetColumn(identifier=0, name='ABC'),
                 DatasetColumn(identifier=1, name='A'),

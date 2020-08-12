@@ -172,7 +172,7 @@ class ContainerApiUrlFactory(object):
         """
         return self.get_dataset(project_id, dataset_id) + '/csv'
 
-    def get_dataset_annotations(self, project_id, dataset_id):
+    def get_dataset_caveats(self, project_id, dataset_id):
         """Url to retrieve dataset annotations.
 
         Parameters
@@ -187,22 +187,6 @@ class ContainerApiUrlFactory(object):
         string
         """
         return self.get_dataset(project_id, dataset_id) + '/annotations'
-
-    def update_dataset_annotations(self, project_id, dataset_id):
-        """Url to update dataset annotations.
-
-        Parameters
-        ----------
-        project_id: string
-            Unique project identifier
-        dataset_id: string
-            Unique dataset identifier
-
-        Returns
-        -------
-        string
-        """
-        return self.get_dataset_annotations(project_id, dataset_id)
 
     # --------------------------------------------------------------------------
     # Files

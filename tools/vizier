@@ -11,6 +11,7 @@ STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
 
 MIMIR_DEV="false"
 UI_DEV="false"
+TESTING="false"
 if [ $# -eq 1 ]
   then
     if [ "$1" == "devmimir" ]
@@ -28,6 +29,11 @@ if [ $# -eq 1 ]
 fi
 if [ $# -eq 2  ]
   then
+    if [ "$1" == "test" ]
+      then
+        echo "testing mode!"
+        TESTING="true"
+    fi
     if [ "$2" == "devmimir" ]
       then
         echo "mimir dev mode!"
@@ -39,7 +45,7 @@ if [ $# -eq 2  ]
       then
         echo "ui dev mode!"
         UI_DEV="true"
-    fi 
+    fi
 fi
 
 echo $APP_RESOURCES_DIR
@@ -74,8 +80,8 @@ export VIZIERSERVER_ROW_LIMIT
 # Maximum row limit for requests that read datasets (DEFAULT: -1 (returns all rows))
 VIZIERSERVER_MAX_ROW_LIMIT="${VIZIERSERVER_MAX_ROW_LIMIT:--1}"
 export VIZIERSERVER_MAX_ROW_LIMIT
-# Maximum size for file uploads in bytes (DEFAULT: 16777216)
-VIZIERSERVER_MAX_UPLOAD_SIZE="${VIZIERSERVER_MAX_UPLOAD_SIZE:-16777216}"
+# Maximum size for file uploads in bytes (DEFAULT: 67108864)
+VIZIERSERVER_MAX_UPLOAD_SIZE="${VIZIERSERVER_MAX_UPLOAD_SIZE:-67108864}"
 export VIZIERSERVER_MAX_UPLOAD_SIZE
 
 #Workflow Execution Engine
@@ -157,7 +163,12 @@ then
     exit 1
 fi
 
-trap "kill 0" EXIT
+if [ "$TESTING" == "true" ]
+then 
+  echo "testing mode. no trap"
+else
+  trap "kill 0" EXIT
+fi
 
 if [ "$MIMIR_DEV" == "true" ]
   then
@@ -208,8 +219,17 @@ while not (mimir_up and api_up):
 EOF
 
 echo "Vizier is up and running:"
-echo "    - Access the Vizier ui in your browser at: "
-echo " "
-echo "    $VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH/web-ui/vizier-db"
 
-wait
+if [ "$TESTING" == "true" ]
+    then
+    echo "    - Endpoint at: "
+    echo " "
+    echo "    $VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH/web-ui/vizier-db"
+    echo " "
+    echo "      ... Starting Testing"
+else
+    echo "    - Access the Vizier ui in your browser at: "
+    echo " "
+    echo "    $VIZIERSERVER_BASE_URL:$VIZIERSERVER_SERVER_PORT$VIZIERSERVER_APP_PATH/web-ui/vizier-db"
+    wait
+fi

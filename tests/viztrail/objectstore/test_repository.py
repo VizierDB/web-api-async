@@ -53,11 +53,9 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertTrue(os.path.isdir(os.path.join(vt_folder, FOLDER_MODULES)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, FOLDER_BRANCHES, OBJ_BRANCHINDEX)))
         self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_METADATA)))
-        self.assertFalse(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
         self.assertIsNotNone(repo.get_viztrail(vt1.identifier))
         vt2 = repo.create_viztrail(properties={PROPERTY_NAME: 'My Viztrail'})
         vt_folder = os.path.join(REPO_DIR, vt2.identifier)
-        self.assertTrue(os.path.isfile(os.path.join(vt_folder, OBJ_PROPERTIES)))
         self.assertEqual(len(repo.list_viztrails()), 2)
         # Ensure that each element in the listing has an identifier
         for vt in repo.list_viztrails():

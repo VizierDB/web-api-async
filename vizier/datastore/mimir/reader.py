@@ -29,7 +29,7 @@ class MimirDatasetReader(DatasetReader):
     """Dataset reader for Mimir datasets."""
     def __init__(
         self, table_name, columns,
-        offset=0, limit=-1, rowid=None
+        offset=0, limit=None, rowid=None
     ):
         """Initialize information about the delimited file and the file format.
 
@@ -48,7 +48,11 @@ class MimirDatasetReader(DatasetReader):
         """
         self.table_name = table_name
         self.columns = columns
+        if offset < 0:
+            raise Exception("Invalid Offset: {}".format(offset))
         self.offset = offset
+        if limit is not None and limit < 0:
+            raise Exception("Invalid Limit: {}".format(limit))
         self.limit = limit
         self.rowid = rowid
         # Convert row id list into row position index. Depending on whether
@@ -56,7 +60,7 @@ class MimirDatasetReader(DatasetReader):
         # dictionary. The internal flag .is_range_query keeps track of whether
         # offset or limit where given (True) or not (False). This information is
         # later used to generate the query for the database.
-        if offset > 0 or limit > 0:
+        if offset > 0 or limit is not None:
             self.is_range_query = True
         else:
             self.is_range_query = False

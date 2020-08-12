@@ -1,8 +1,30 @@
+dist: bionic
+
 language: python
 python:
   - "3.8"
- 
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'deb https://dl.bintray.com/sbt/debian /'
+        key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823'
+    packages:
+      - openjdk-8-jdk
+
+before_install:
+  - sudo apt-get remove scala-library scala
+  - wget https://www.scala-lang.org/files/archive/scala-2.12.10.deb
+  - sudo dpkg -i scala-2.12.10.deb
+  - wget -O sbt-1.3.8.deb "https://bintray.com/sbt/debian/download_file?file_path=sbt-1.3.8.deb"
+  - sudo dpkg -i sbt-1.3.8.deb
+      
+before_script:
+  - sudo rm /usr/local/bin/sbt
+  - sudo rm -r /usr/local/lib/jvm/openjdk11/
+  
 install:
+  - pip3 install vizier-webapi
   - pip3 install -r requirements.txt
 
 branches:
@@ -10,5 +32,9 @@ branches:
   - master
 
 script:
-  - python3 -m unittest
-
+  - sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+  - export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+  - which java
+  - java -version
+  - git clone https://github.com/UBOdin/mimir-api.git $TRAVIS_BUILD_DIR/../mimir-api
+  - ./tools/test all
