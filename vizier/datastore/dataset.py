@@ -23,9 +23,10 @@ from abc import abstractmethod
 from typing import Optional, List, Any, Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     from vizier.datastore.annotation.base import DatasetCaveat
+    from vizier.datastore.reader import DatasetReader
 
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
-from vizier.datastore.reader import DatasetReader
+
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -403,7 +404,7 @@ class DatasetHandle(DatasetDescriptor):
     def get_caveats(self, 
             column_id: Optional[int] = None, 
             row_id: Optional[str] = None
-        ) -> List[DatasetCaveat]:
+        ) -> List["DatasetCaveat"]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -435,7 +436,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def reader(self, offset: int = 0, limit: Optional[int] = None) -> DatasetReader:
+    def reader(self, offset: int = 0, limit: Optional[int] = None) -> "DatasetReader":
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.

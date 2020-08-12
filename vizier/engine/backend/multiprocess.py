@@ -30,7 +30,7 @@ from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING
 from vizier.engine.project.cache.base import ProjectCache
 from vizier.engine.backend.base import TaskExecEngine, NonSynchronousEngine
-from vizier.engine.task.processor import TaskProcessor
+from vizier.engine.task.processor import TaskProcessor, ExecResult
 from vizier.engine.task.base import TaskHandle
 
 class MultiProcessBackend(VizierBackend):
@@ -195,7 +195,7 @@ class MultiProcessBackend(VizierBackend):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def callback_function(result, tasks):
+def callback_function(result: Tuple[str, ExecResult], tasks: Dict[str,Tuple[TaskHandle, PoolType]]):
     """Callback function for executed tasks. Notifies the workflow controller
     and removes the task from the task index.
 
@@ -212,17 +212,19 @@ def callback_function(result, tasks):
         # Close the pool and remove the entry from the task index
         pool.close()
         del tasks[task_id]
-        # Notify the workflow controller that the task is finished
-        if exec_result.is_success:
-            task.controller.set_success(
-                task_id=task_id,
-                outputs=exec_result.outputs,
-                provenance=exec_result.provenance
-            )
+        if task.controller is None:
+            raise Exception("Tried to close out a TaskHandle without a Controller")
         else:
-            task.controller.set_error(
-                task_id=task_id,
-                outputs=exec_result.outputs
-            )
+            # Notify the workflow controller that the task is finished
+            if exec_result.is_success:
+                task.controller.set_success(
+                    task_id=task_id,
+                    result=exec_result
+                )
+            else:
+                task.controller.set_error(
+                    task_id=task_id,
+                    outputs=exec_result.outputs
+                )
     except KeyError:
         pass

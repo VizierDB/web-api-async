@@ -261,7 +261,7 @@ class OSModuleHandle(ModuleHandle):
                     package_id=UNKNOWN_ID,
                     command_id=UNKNOWN_ID,
                     arguments=list(),
-                    packages=dict()
+                    packages=None
                 ),
                 external_form='fatal error: object not found',
                 module_path=module_path,
@@ -273,7 +273,7 @@ class OSModuleHandle(ModuleHandle):
             package_id=obj[KEY_COMMAND][KEY_PACKAGE_ID],
             command_id=obj[KEY_COMMAND][KEY_COMMAND_ID],
             arguments=obj[KEY_COMMAND][KEY_ARGUMENTS],
-            packages=dict()
+            packages=None
         )
         # Create module timestamps
         created_at = to_datetime(obj[KEY_TIMESTAMP][KEY_CREATED_AT])

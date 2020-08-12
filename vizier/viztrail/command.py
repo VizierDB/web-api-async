@@ -393,7 +393,7 @@ class ModuleCommand(object):
             package_id: str, 
             command_id: str, 
             arguments: List[Dict[str,Any]], 
-            packages: Dict[str, PackageIndex]
+            packages: Optional[Dict[str, PackageIndex]]
         ):
         """Initialize the package and command identifier as well as the command
         arguments.
@@ -419,7 +419,7 @@ class ModuleCommand(object):
         # Validate the command if the package repository is given
         if not packages is None:
             if not package_id in packages:
-                raise ValueError('unknown package \'' + str(package_id) + '\'')
+                raise ValueError('unknown package \'' + str(package_id) + '\' out of { ' + ", ".join(list(packages)) + ' }')
             # The package index .get() method will raise an exception if the
             # given command is unknown. The .validate() method will raise
             # an exception if any of the given arguments is invalid or if a

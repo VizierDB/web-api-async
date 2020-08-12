@@ -26,13 +26,12 @@ import os
 import io
 
 from flask import Flask, jsonify, make_response, request, send_file
-from flask_cors import CORS
+from flask_cors import CORS # type: ignore[import]
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET
 from vizier.api.webservice.container.base import VizierContainerApi
 from vizier.config.container import ContainerConfig
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.base as srv
@@ -203,15 +202,7 @@ def create_dataset():
     rows = [deserialize.DATASET_ROW(row) for row in obj[labels.ROWS]]
     annotations = None
     if labels.ANNOTATIONS in obj:
-        annotations = DatasetMetadata()
-        for anno in obj[labels.ANNOTATIONS]:
-            a = deserialize.ANNOTATION(anno)
-            if a.column_id is None:
-                annotations.rows.append(a)
-            elif a.row_id is None:
-                annotations.columns.append(a)
-            else:
-                annotations.cells.append(a)
+        annotations = obj[labels.ANNOTATIONS]
     try:
         dataset = api.datasets.create_dataset(
             project_id=config.project_id,

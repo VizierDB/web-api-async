@@ -17,10 +17,11 @@
 """Url factories for web services when running a configuration in which each
 project wrapped inside an individual container.
 """
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, UrlFactory
-from vizier.engine.project.cache.container import ContainerProjectCache
+if TYPE_CHECKING:
+    from vizier.engine.project.cache.container import ContainerProjectCache
 
 
 class ContainerApiUrlFactory(object):
@@ -231,7 +232,7 @@ class ContainerEngineUrlFactory(UrlFactory):
     """
     def __init__(self, 
             base_url: str, 
-            projects: ContainerProjectCache, 
+            projects: "ContainerProjectCache", 
             api_doc_url: Optional[str] = None):
         """Intialize the base url for the web service and the cache for
         projects. Each project is expected to maintain a separate factory for

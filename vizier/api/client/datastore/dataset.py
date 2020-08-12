@@ -14,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
 from vizier.datastore.dataset import DatasetHandle
 from vizier.datastore.reader import InMemDatasetReader
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetRow, DatasetColumn
-from vizier.api.client.datastore.base import DatastoreClient
+if TYPE_CHECKING:
+    from vizier.api.client.datastore.base import DatastoreClient
 
 class RemoteDatasetHandle(DatasetHandle):
     """Handle for dataset that has been downloaded from a (remote) API."""
@@ -28,7 +29,7 @@ class RemoteDatasetHandle(DatasetHandle):
             identifier: str, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            store: DatastoreClient, 
+            store: "DatastoreClient", 
             properties: Dict[str, Any] = dict()):
         """Initialize the dataset handle. The list of rows is a list of
         dictionaries in the default serialization format.
