@@ -81,7 +81,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
     def __init__(self, 
             object_path: str, 
             object_store: Optional[ObjectStore] = None, 
-            properties: Dict[str, Any] = None
+            properties: Optional[Dict[str, Any]] = None
         ):
         """Initialize the file that maintains the properties. Annotations are
         read from file (if it exists).
@@ -100,6 +100,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
             Dictionary with initial set of properties
         """
         # Ensure that the object store is not None
+        super().__init__()
         if object_store is None:
             object_store = DefaultObjectStore()
         if properties is not None:
@@ -116,6 +117,7 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
             )
             for key in properties:
                 value = properties[key]
+                self.delete(key, persist = False)
                 if isinstance(value, list):
                     for val in value:
                         self.add(key, val, persist=False)

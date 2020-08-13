@@ -19,7 +19,7 @@ viztrails. It provides methods to create, delete, and access viztrails.
 """
 
 from abc import abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from vizier.viztrail.base import ViztrailHandle
 
 class ViztrailRepository(object):
@@ -28,7 +28,7 @@ class ViztrailRepository(object):
     """
     @abstractmethod
     def create_viztrail(self, 
-            properties: Dict[str, Any] = dict()
+            properties: Optional[Dict[str, Any]] = None
         ):
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either

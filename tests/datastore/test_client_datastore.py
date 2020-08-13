@@ -6,8 +6,7 @@ from vizier.api.client.base import VizierApiClient
 from vizier.api.client.datastore.base import DatastoreClient
 from vizier.api.routes.base import UrlFactory
 from vizier.api.routes.datastore import DatastoreClientUrlFactory
-from vizier.datastore.annotation.base import DatasetCaveat
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetRow
 
 from atexit import register as at_exit
 

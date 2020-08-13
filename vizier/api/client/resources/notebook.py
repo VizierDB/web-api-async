@@ -32,7 +32,7 @@ class DatastoreClientUrlFactory(object):
     for a vizier project. This class is a wrapper around a dataset descriptor
     returned by the API and that contains all the urls as HATEOAS references.
     """
-    def __init__(self, dataset: DatasetDescriptor):
+    def __init__(self, dataset: "DatasetDescriptor"):
         """Intialize the dataset descriptor containing the references.
 
         Parameters

@@ -280,8 +280,8 @@ class ModuleOutputs(object):
         Standard output stream
     """
     def __init__(self, 
-            stdout: List[OutputObject]=[], 
-            stderr: List[OutputObject]=[]):
+            stdout: Optional[List[OutputObject]]=None, 
+            stderr: Optional[List[OutputObject]]=None):
         """Initialize the standard output and error stream.
 
         Parameters
@@ -291,8 +291,8 @@ class ModuleOutputs(object):
         stdout: list(vizier.viztrail.module.OutputObject)
             Standard output stream
         """
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout = stdout if stdout is not None else list()
+        self.stderr = stderr if stderr is not None else list()
 
     def __repr__(self) -> str:
         ret: List[str] = []

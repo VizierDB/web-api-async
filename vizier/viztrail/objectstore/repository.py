@@ -102,7 +102,9 @@ class OSViztrailRepository(ViztrailRepository):
             assert vt is not None
             self.viztrails[vt.identifier] = vt
 
-    def create_viztrail(self, properties={}):
+    def create_viztrail(self, 
+            properties: Optional[Dict[str, Any]] = None
+        ) -> OSViztrailHandle:
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
         be scalar values or a list of scalar values.

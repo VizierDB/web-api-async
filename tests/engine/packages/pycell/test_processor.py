@@ -9,8 +9,6 @@ import unittest
 from vizier.engine.packages.pycell.command import python_cell
 from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.engine.task.base import TaskContext
-from vizier.engine.packages.pycell.client.base import VizierDBClient
-from vizier.engine.packages.pycell.client.dataset import DatasetClient
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.filestore.fs.base import FileSystemFilestore
 
@@ -162,8 +160,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             )
         )
         self.assertFalse(result.is_success)
-        self.assertIsNone(result.provenance.read)
-        self.assertIsNone(result.provenance.write)
+        self.assertTrue(result.provenance.read == {})
+        self.assertTrue(result.provenance.write == {})
         self.assertEqual(len(result.outputs.stdout), 0)
         self.assertEqual(len(result.outputs.stderr), 1)
         # Running a similar script that catches the error schould be a success

@@ -199,7 +199,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
     if is updated by a call to the .add() or .delete() method.
     """
     def __init__(self, 
-            elements: Dict[str, Any] = dict(), 
+            elements: Optional[Dict[str, Any]] = None, 
             writer: Optional[AnnotationStore] = None):
         """Initialize the set of annotations. Expects a dictionary of keys
         where values are either scalars or list of scalars.
@@ -211,7 +211,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         writer: vizier.core.annotation.AnnotationStore optional
             Optional store to persist changes
         """
-        self.elements = elements
+        self.elements: Dict[str, Any] = elements if elements is not None else dict()
         self.writer = writer
         
     def add(self, 
@@ -394,7 +394,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                 # Check if there is more than one value associated with the key.
                 # It is assumed that at least one value is in the list.
                 if raise_error_on_multi_value and len(el) > 1:
-                    raise ValueError('multiple annotation values for \'' + str(key) + '\'')
+                    raise ValueError('multiple annotation values for \'{}\': {}'.format(key, el))
                 else:
                     return el[0]
             else:

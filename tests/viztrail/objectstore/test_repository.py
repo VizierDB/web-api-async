@@ -4,14 +4,12 @@ import os
 import shutil
 import unittest
 
-from vizier.core.io.base import PARA_KEEP_DELETED, PARA_LONG_IDENTIFIER
 from vizier.core.io.mem import MemObjectStore
-from vizier.core.loader import ClassLoader
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.objectstore.repository import OBJ_VIZTRAILINDEX
 from vizier.viztrail.objectstore.viztrail import FOLDER_BRANCHES, FOLDER_MODULES
-from vizier.viztrail.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA, OBJ_PROPERTIES
-from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.objectstore.viztrail import OBJ_BRANCHINDEX, OBJ_METADATA
+from vizier.viztrail.named_object import PROPERTY_NAME
 
 
 REPO_DIR = './.temp'
@@ -42,7 +40,7 @@ class TestOSViztrailRepository(unittest.TestCase):
         self.assertFalse(os.path.isdir(vt_folder))
         self.assertEqual(len(os.listdir(REPO_DIR)), 0)
 
-    def test_create_viztrail(self):
+    def test_create_viztrail(self) -> None:
         """Test creating a new viztrail."""
         repo = OSViztrailRepository(base_path=REPO_DIR)
         self.assertTrue(os.path.isfile(os.path.join(REPO_DIR, OBJ_VIZTRAILINDEX)))

@@ -17,6 +17,7 @@
 """The common project cache solely uses the functionality of a provided
 viztrails repository to manipulate the cached objects.
 """
+from typing import Optional, Dict, Any
 
 from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.base import ProjectCache
@@ -60,7 +61,9 @@ class CommonProjectCache(ProjectCache):
             )
             self.projects[viztrail.identifier] = project
 
-    def create_project(self, properties={}):
+    def create_project(self, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Create a new project. Will create a viztrail in the underlying
         viztrail repository. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either

@@ -337,6 +337,10 @@ class OSModuleHandle(ModuleHandle):
                 ( 
                     c[0], 
                     ChartViewHandle.from_dict(c[1])  # type: ignore[no-untyped-call]
+                ) if isinstance(c, list) else 
+                (
+                    "Chart",
+                    ChartViewHandle.from_dict(c)
                 )
                 for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
             ]

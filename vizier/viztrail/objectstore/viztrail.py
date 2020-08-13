@@ -146,7 +146,11 @@ class OSViztrailHandle(ViztrailHandle):
         return branch
 
     @staticmethod
-    def create_viztrail(identifier, base_path, object_store=None, properties={}) :
+    def create_viztrail(
+            identifier: str, 
+            base_path: str, 
+            object_store: Optional[ObjectStore] = None, 
+            properties: Optional[Dict[str, Any]] = None) :
         """Create a new viztrail resource. Will create the base directory for
         the viztrail.
 
