@@ -27,6 +27,8 @@ from vizier.datastore.dataset import DatasetDescriptor
 import vizier.engine.packages.sample.base as cmd
 import vizier.mimir as mimir
 import math
+from vizier.core.util import get_unique_identifier
+from vizier.datastore.mimir.dataset import MimirDatasetHandle
 
 
 class SamplingProcessor(TaskProcessor):
