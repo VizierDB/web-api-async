@@ -2,7 +2,6 @@
 
 import unittest
 
-from vizier.core.loader import ClassLoader
 from vizier.api.routes.base import UrlFactory
 from vizier.api.routes.base import PROPERTIES_BASEURL, PROPERTIES_APIDOCURL
 from vizier.api.routes.task import TaskUrlFactory
@@ -42,7 +41,7 @@ class TestUrlFactoryInit(unittest.TestCase):
         self.assertEqual(urls.base_url, 'XYZ')
         self.assertEqual(urls.api_doc_url, 'ABC')
         # Value error if base url is not set
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AssertionError):
             urls = UrlFactory(
                 api_doc_url='ABC',
                 properties={PROPERTIES_APIDOCURL: 'XYZ'}

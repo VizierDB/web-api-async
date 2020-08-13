@@ -157,7 +157,7 @@ class Datastore(object):
     @abstractmethod
     def load_dataset(self, 
             f_handle: FileHandle, 
-            proposed_schema: List[Tuple[str, str]]
+            proposed_schema: List[Tuple[str, str]] = []
         ) -> DatasetHandle:
         """Create a new dataset from a given file.
 

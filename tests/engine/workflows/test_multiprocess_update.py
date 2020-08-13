@@ -114,9 +114,14 @@ class TestMultiprocessBackendUpdate(unittest.TestCase):
         while project.viztrail.default_branch.head.is_active:
             time.sleep(0.1)
         for module in project.viztrail.default_branch.head.modules:
+            # print("--------=======--------")
+            # print(module.command)
+            # print(module.outputs)
+            # print(module.provenance)
             if not module.is_success:
                 print(module.outputs)
             self.assertTrue(module.is_success)
+            self.assertTrue(DATASET_NAME in module.provenance.write)
         return branch_id
 
     def test_delete(self):

@@ -239,7 +239,8 @@ class VizierEngine(WorkflowController):
                         ModuleHandle(
                             state=state,
                             command=command,
-                            external_form=external_form
+                            external_form=external_form,
+                            provenance=ModuleProvenance(unexecuted=True)
                         )
                     ]
                 )
@@ -325,6 +326,7 @@ class VizierEngine(WorkflowController):
 
         Returns
         -------
+        modules that still need to be executed
         list(vizier.viztrail.module.base.ModuleHandle)
         """
         with self.backend.lock:
@@ -369,9 +371,13 @@ class VizierEngine(WorkflowController):
                         break
                     else:
                         m = modules[module_index]
+                        print("Before Context: {}".format(context))
+                        print("Applying: {}\n{}".format(m.command, m.provenance))
                         context = m.provenance.get_database_state(context)
+                        print("After Context: {}".format(context))
                         module_index += 1
                 if module_index < module_count:
+                    print("Re-execution starting with cell {}".format(module_index))
                     # The module that module_index points to has to be executed.
                     # Create a workflow that contains pending copies of all
                     # modules that require execution and run the first of these
@@ -565,7 +571,8 @@ class VizierEngine(WorkflowController):
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
                     datasets=[ context[name] for name in context if context[name].is_dataset ]
-                )
+                ),
+                provenance=ModuleProvenance(unexecuted=True)
             )
             # Create list of pending modules for the new workflow.
             pending_modules = [inserted_module]
@@ -648,7 +655,8 @@ class VizierEngine(WorkflowController):
                     datasets=[ context[name] for name in context if context[name].is_dataset ]
                 ),
                 provenance=ModuleProvenance(
-                    resources=modules[module_index].provenance.resources
+                    resources=modules[module_index].provenance.resources,
+                    unexecuted=True
                 )
             )
             # Create list of pending modules for the new workflow
@@ -705,6 +713,7 @@ class VizierEngine(WorkflowController):
         -------
         bool
         """
+        print("ERROR: {}".format(task_id))
         with self.backend.lock:
             # Get task handle and remove it from the internal index. The result
             # is None if the task does not exist.
@@ -830,6 +839,7 @@ class VizierEngine(WorkflowController):
                     # occur.
                     raise RuntimeError('invalid workflow state')
                 elif not next_module.provenance.requires_exec(context):
+                    # print("Module {} does not need re-execution, skipping".format(next_module))
                     context = next_module.provenance.get_database_state(context)
                     next_module.set_success(
                         finished_at=finished_at,
@@ -837,6 +847,7 @@ class VizierEngine(WorkflowController):
                         provenance=next_module.provenance,
                     )
                 else:
+                    # print("Scheduling {} for execution".format(next_module))
                     command = next_module.command
                     package_id = command.package_id
                     command_id = command.command_id

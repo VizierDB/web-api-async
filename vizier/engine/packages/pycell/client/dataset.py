@@ -148,7 +148,7 @@ class DatasetClient(object):
                 return col
         return None
 
-    def insert_column(self, name, data_type = None, position=None):
+    def insert_column(self, name, data_type = "varchar", position=None):
         """Add a new column to the dataset schema.
 
         Parameters

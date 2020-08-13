@@ -3,24 +3,23 @@
 import os
 import shutil
 import unittest
+from typing import Dict
 
-
-from vizier.core.timestamp import get_current_time, to_datetime
-from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
+from vizier.core.timestamp import to_datetime
+from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor, ArtifactDescriptor
 from vizier.view.chart import ChartViewHandle, DataSeriesHandle
 from vizier.viztrail.objectstore.module import OSModuleHandle
-from vizier.viztrail.module.base import MODULE_PENDING, MODULE_SUCCESS
+from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.engine.packages.plot.command import create_plot
 from vizier.engine.packages.pycell.command import python_cell
-from vizier.engine.base import compute_context
 
 MODULE_DIR = './.temp'
 
 
-DATASETS = {
+DATASETS: Dict[str, ArtifactDescriptor] = {
     'DS1': DatasetDescriptor(identifier='ID1', name='DS1'),
     'DS2': DatasetDescriptor(
         identifier='ID2',
@@ -121,7 +120,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.outputs.stdout), 2)
         self.assertEqual(len(m.outputs.stderr), 1)
 
-    def test_provenance(self):
+    def test_provenance(self) -> None:
         """Test reading and writing modules with provenance information."""
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -136,10 +135,10 @@ class TestOSModuleIO(unittest.TestCase):
             identifier=mod0.identifier,
             module_path=mod0.module_path
         )
-        self.assertIsNone(m.provenance.read)
-        self.assertIsNone(m.provenance.write)
-        self.assertIsNone(m.provenance.delete)
-        self.assertIsNone(m.provenance.resources)
+        self.assertTrue(m.provenance.read is None or m.provenance.read == {})
+        self.assertTrue(m.provenance.write is None or m.provenance.write == {})
+        self.assertTrue(m.provenance.delete is None or m.provenance.delete == set([]))
+        self.assertTrue(m.provenance.resources is None or m.provenance.resources == {})
         # Modules that only has read provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -161,7 +160,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.provenance.read), 1)
         self.assertEqual(m.provenance.read['DS1'], 'ID1')
         self.assertEqual(m.provenance.resources['fileId'], '0123456789')
-        self.assertIsNone(m.provenance.write)
+        self.assertTrue(m.provenance.write == {})
         # Modules that only has write provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -182,7 +181,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.provenance.write), 2)
         self.assertEqual(m.provenance.write['DS1'].identifier, 'ID1')
         self.assertEqual(m.provenance.write['DS2'].identifier, 'ID2')
-        self.assertIsNone(m.provenance.read)
+        self.assertTrue(m.provenance.read == {})
         # Module with read and write provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -192,7 +191,7 @@ class TestOSModuleIO(unittest.TestCase):
             provenance=ModuleProvenance(
                 read={'DS1': 'ID1'},
                 write=DATASETS,
-                delete=['A', 'B']
+                delete=set(['A', 'B'])
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR
@@ -208,7 +207,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.provenance.write), 2)
         self.assertEqual(m.provenance.write['DS1'].identifier, 'ID1')
         self.assertEqual(m.provenance.write['DS2'].identifier, 'ID2')
-        self.assertEqual(m.provenance.delete, ['A', 'B'])
+        self.assertEqual(m.provenance.delete, set(['A', 'B']))
         # Module with chart
         chart = ChartViewHandle(
             identifier='A',
@@ -241,7 +240,7 @@ class TestOSModuleIO(unittest.TestCase):
             state=MODULE_PENDING,
             outputs=ModuleOutputs(),
             provenance=ModuleProvenance(
-                charts=[chart]
+                charts=[("my_chart", chart)]
             ),
             timestamp=ModuleTimestamp(),
             module_folder=MODULE_DIR
@@ -252,18 +251,18 @@ class TestOSModuleIO(unittest.TestCase):
         )
         self.assertEqual(len(m.provenance.charts), 1)
         c = m.provenance.charts[0]
-        self.assertEqual(chart.identifier, c.identifier)
-        self.assertEqual(chart.dataset_name, c.dataset_name)
-        self.assertEqual(chart.chart_name, c.chart_name)
-        self.assertEqual(chart.x_axis, c.x_axis)
-        self.assertEqual(chart.chart_type, c.chart_type)
-        self.assertEqual(chart.grouped_chart, c.grouped_chart)
-        self.assertEqual(len(c.data), 3)
+        self.assertEqual(chart.identifier, c[1].identifier)
+        self.assertEqual(chart.dataset_name, c[1].dataset_name)
+        self.assertEqual(chart.chart_name, c[1].chart_name)
+        self.assertEqual(chart.x_axis, c[1].x_axis)
+        self.assertEqual(chart.chart_type, c[1].chart_type)
+        self.assertEqual(chart.grouped_chart, c[1].grouped_chart)
+        self.assertEqual(len(c[1].data), 3)
         for i in range(3):
-            self.assertEqual(c.data[i].column, chart.data[i].column)
-            self.assertEqual(c.data[i].label, chart.data[i].label)
-            self.assertEqual(c.data[i].range_start, chart.data[i].range_start)
-            self.assertEqual(c.data[i].range_end, chart.data[i].range_end)
+            self.assertEqual(c[1].data[i].column, chart.data[i].column)
+            self.assertEqual(c[1].data[i].label, chart.data[i].label)
+            self.assertEqual(c[1].data[i].range_start, chart.data[i].range_start)
+            self.assertEqual(c[1].data[i].range_end, chart.data[i].range_end)
 
     def test_read_write_module(self):
         """Test reading and writing modules."""

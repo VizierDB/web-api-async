@@ -349,7 +349,10 @@ class VizierDBClient(object):
         self.write.add(new_name.lower())
 
 
-    def update_dataset(self, name, dataset):
+    def update_dataset(self, 
+            name: str, 
+            dataset: DatasetClient
+        ) -> DatasetClient:
         """Update a given dataset.
 
         Raises ValueError if the specified dataset does not exist.

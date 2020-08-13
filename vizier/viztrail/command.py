@@ -431,8 +431,8 @@ class ModuleCommand(object):
             # mandatory argument is missing.
             self.arguments.validate(packages[package_id].get(command_id))
 
-    def __repr__(self):
-        "\n".join(["{}.{} <- ("]+self.arguments.to_yaml_lines("  ")+")")
+    def __repr__(self) -> str:
+        return "\n".join(["{}.{} <- (".format(self.package_id, self.command_id)]+self.arguments.to_yaml_lines("  ")+[")"])
 
     @staticmethod
     def from_dict(doc):

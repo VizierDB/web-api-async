@@ -18,7 +18,7 @@
 object store.
 """
 
-from typing import cast, Dict, Any, Optional, Set, List
+from typing import cast, Dict, Any, Optional, List
 from datetime import datetime
 
 from vizier.core.io.base import DefaultObjectStore, ObjectStore
@@ -228,7 +228,8 @@ class OSModuleHandle(ModuleHandle):
             identifier: str, 
             module_path: str, 
             prev_state: Optional[Dict[str, ArtifactDescriptor]] = None, 
-            object_store: ObjectStore = DefaultObjectStore()):
+            object_store: ObjectStore = DefaultObjectStore()
+        ) -> "OSModuleHandle":
         """Load module from given object store.
 
         Parameters
@@ -324,7 +325,7 @@ class OSModuleHandle(ModuleHandle):
                     )
                 write_prov[ds[KEY_DATASET_NAME]] = descriptor
         if KEY_PROVENANCE_DELETE in obj[KEY_PROVENANCE]:
-            delete_prov = cast(Set[str], obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE])
+            delete_prov = set(obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE])
         else:
             delete_prov = set()
         if KEY_PROVENANCE_RESOURCES in obj[KEY_PROVENANCE]:
@@ -333,8 +334,11 @@ class OSModuleHandle(ModuleHandle):
             res_prov = dict()
         if KEY_PROVENANCE_CHARTS in obj[KEY_PROVENANCE]:
             charts_prov = [
-                ChartViewHandle.from_dict(c) # type: ignore[no-untyped-call]
-                    for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
+                ( 
+                    c[0], 
+                    ChartViewHandle.from_dict(c[1])  # type: ignore[no-untyped-call]
+                )
+                for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
             ]
         else:
             charts_prov = list()

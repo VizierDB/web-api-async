@@ -11,7 +11,7 @@ from vizier.config.base import MIMIR_ENGINE
 from vizier.engine.packages.pycell.command import python_cell
 from vizier.engine.packages.vizual.command import load_dataset
 
-import vizier.mimir as mimir
+import vizier.mimir as mimir # noqa: F401
 import vizier.config.app as app
 import vizier.engine.packages.base as pckg
 

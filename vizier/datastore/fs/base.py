@@ -27,7 +27,7 @@ import tempfile
 import urllib.request
 import urllib.error
 import urllib.parse
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any, Optional
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
@@ -61,7 +61,14 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, properties=None, human_readable_name=None, backend_options=None, dependencies=None):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Dict[str, Any] = {}, 
+            human_readable_name: Optional[str] = None, 
+            backend_options: Optional[List[Dict[str, str]]] = None, 
+            dependencies: List[str] = []
+        ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -88,12 +95,16 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
-        identifiers = set(row.identifier for row in rows if row.identifier >= 0)
+        identifiers = set(
+            row.identifier 
+            for row in rows 
+            if row.identifier is not None and row.identifier >= 0
+        )
         identifiers.add(0)
         max_row_id = max(identifiers)
         rows = [
             DatasetRow(
-                identifier = row.identifier if row.identifier >= 0 else idx + max_row_id,
+                identifier = row.identifier if row.identifier is not None and row.identifier >= 0 else idx + max_row_id,
                 values = row.values,
                 caveats = row.caveats
             )
@@ -246,7 +257,7 @@ class FileSystemDatastore(DefaultDatastore):
 
     def load_dataset(self, 
             f_handle: FileHandle, 
-            proposed_schema: List[Tuple[str,str]]
+            proposed_schema: List[Tuple[str,str]] = []
         ) -> FileSystemDatasetHandle:
         """Create a new dataset from a given file.
 

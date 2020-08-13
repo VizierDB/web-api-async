@@ -34,7 +34,7 @@ PAGE_OFFSET = 'offset'
 class UrlFactory(object):
     """Factory to create urls for all routes that the webservice supports."""
     def __init__(self, 
-            base_url: str, 
+            base_url: Optional[str] = None, 
             api_doc_url: Optional[str] = None, 
             properties: Optional[Dict[str, str]] = None
         ):
@@ -53,13 +53,17 @@ class UrlFactory(object):
             Dictionary that may contain the base url an the API documentation
             url
         """
-        self.base_url = base_url
         self.api_doc_url = api_doc_url
-        if not properties is None:
-            if PROPERTIES_BASEURL in properties:
-                self.base_url = properties[PROPERTIES_BASEURL]
-            if PROPERTIES_APIDOCURL in properties:
-                self.api_doc_url = properties[PROPERTIES_APIDOCURL]
+        self.base_url:str
+        if properties is not None and PROPERTIES_BASEURL in properties:
+            self.base_url = properties[PROPERTIES_BASEURL]
+        else:
+            assert(base_url is not None)
+            self.base_url = base_url
+
+        if properties is not None and PROPERTIES_APIDOCURL in properties:
+            self.api_doc_url = properties[PROPERTIES_APIDOCURL]
+
         # Ensure that base_url does not end with a slash
         while len(self.base_url) > 0:
             if self.base_url[-1] == '/':

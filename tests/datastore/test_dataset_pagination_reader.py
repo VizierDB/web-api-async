@@ -44,7 +44,7 @@ class TestDatasetPaginationReader(unittest.TestCase):
 
     def test_mimir_engine(self):
         """Test functionality for the Mimir setup."""
-        import vizier.mimir as mimir
+        import vizier.mimir as mimir # noqa: F401
         self.run_tests(ENGINEENV_MIMIR)
 
     def run_tests(self, engine):

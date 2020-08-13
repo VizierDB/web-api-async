@@ -4,28 +4,28 @@ import os
 import shutil
 import time
 import unittest
+from datetime import datetime
+from typing import Dict
 
-
-
+from vizier.core.timestamp import get_current_time
+from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
-from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
+from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
 from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
-from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
+from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor
-from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.engine.task.base import TaskHandle
-from vizier.engine.task.processor import TaskProcessor
+from vizier.engine.task.processor import TaskProcessor, ExecResult
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
 from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.module.output import ModuleOutputs
 
-import vizier.engine.packages.vizual.command as vizual
 import vizier.engine.packages.pycell.command as pycell
-import vizier.engine.packages.base as pckg
 
 
 
@@ -49,15 +49,26 @@ class FakeWorkflowController(WorkflowController):
         self.outputs = None
         self.task_id = None
 
-    def set_error(self, task_id, finished_at=None, outputs=None):
+    def set_error(self, 
+            task_id: str, 
+            finished_at: datetime = None, 
+            outputs: ModuleOutputs = None
+        ):
         self.task_id = task_id
         self.outputs = outputs
         self.state = 'ERROR'
 
-    def set_success(self, task_id, finished_at=None, datasets=None, outputs=None, provenance=None):
+    def set_success(self, 
+            task_id: str, 
+            finished_at: datetime = get_current_time(),
+            result: ExecResult = ExecResult()
+        ):
         self.task_id = task_id
-        self.outputs = outputs
+        self.outputs = result.outputs
         self.state = 'SUCCESS'
+
+    def set_running(self):
+        pass
 
 
 class TestMultiprocessBackend(unittest.TestCase):
@@ -79,7 +90,7 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.backend = MultiProcessBackend(
             processors={
                 PACKAGE_PYTHON: PyCellTaskProcessor(),
-                PACKAGE_VIZUAL:  VizualTaskProcessor(api=MimirVizualApi()),
+                PACKAGE_VIZUAL: VizualTaskProcessor(api=MimirVizualApi()),
                 'error': FakeTaskProcessor()
             },
             projects=projects
@@ -91,9 +102,9 @@ class TestMultiprocessBackend(unittest.TestCase):
         if os.path.isdir(SERVER_DIR):
             shutil.rmtree(SERVER_DIR)
 
-    def test_cancel(self):
+    def test_cancel(self) -> None:
         """Test executing a sequence of supported commands."""
-        context = dict()
+        context: Dict[str,ArtifactDescriptor] = dict()
         cmd = pycell.python_cell(
             source='import time\ntime.sleep(5)',
             validate=True
@@ -114,12 +125,17 @@ class TestMultiprocessBackend(unittest.TestCase):
         self.assertIsNone(controller.task_id)
         self.assertIsNone(controller.state)
 
-    def test_error(self):
+    def test_error(self) -> None:
         """Test executing a command with processor that raises an exception
         instead of returning an execution result.
         """
-        context = dict()
-        cmd = ModuleCommand(package_id='error', command_id='error')
+        context: Dict[str, ArtifactDescriptor] = dict()
+        cmd = ModuleCommand(
+            package_id='error', 
+            command_id='error',
+            arguments=[],
+            packages=None
+        )
         controller = FakeWorkflowController()
         self.backend.execute_async(
             task=TaskHandle(

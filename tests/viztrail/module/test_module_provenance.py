@@ -46,9 +46,9 @@ class TestModuleProvenance(unittest.TestCase):
             'C': DatasetDescriptor(identifier='567', name='C')
         }
         # For an empty read or write set the .requires_exec() method should
-        # always return True
-        self.assertTrue(ModuleProvenance().requires_exec(datasets))
-        self.assertTrue(ModuleProvenance(read={'A':'123'}).requires_exec(datasets))
+        # always return False
+        self.assertFalse(ModuleProvenance().requires_exec(datasets))
+        self.assertFalse(ModuleProvenance(read={'A':'123'}).requires_exec(datasets))
         self.assertTrue(ModuleProvenance(write={'A':DatasetDescriptor(identifier='789', name='A')}, delete=['A']).requires_exec(datasets))
         # If the module modifies a dataset that it doesn't read but that does
         # exist the result is True

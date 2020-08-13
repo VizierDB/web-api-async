@@ -163,6 +163,7 @@ class PyCellTaskProcessor(TaskProcessor):
         for output in client.stdout:
             outputs.stdout.append(output)
 
+
         if is_success:
             # Create provenance information. Ensure that all dictionaries
             # contain elements of expected types, i.e, ensure that the user did

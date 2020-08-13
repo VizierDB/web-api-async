@@ -170,7 +170,6 @@ else
   trap "kill 0" EXIT
 fi
 
-$NO_MIMIR=
 if [ "${NO_MIMIR:-false}" == "true" ]
   then
     echo "Asked to not launch Mimir.  Make sure it's running."

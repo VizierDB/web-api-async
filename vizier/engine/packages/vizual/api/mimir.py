@@ -302,7 +302,7 @@ class MimirVizualApi(VizualApi):
         dataset = None
         f_handle = None
         result_resources = dict()
-        if not url is None:
+        if url is not None:
             if(debug_is_on()):
                 print("LOAD URL: {}".format(url))
             # If the same url has been previously used to generate a dataset
@@ -315,7 +315,7 @@ class MimirVizualApi(VizualApi):
                         print("   ... re-using existing dataset {}".format(ds_id))
                     dataset = datastore.get_dataset(ds_id)
             result_resources[base.RESOURCE_URL] = url
-        elif not file_id is None:
+        elif file_id is not None:
             if debug_is_on():
                 print("LOAD FILE: {}".format(file_id))
             # If the same file has been previously used to generate a dataset
@@ -323,17 +323,22 @@ class MimirVizualApi(VizualApi):
             if (not reload) and (resources is not None) and (base.RESOURCE_FILEID in resources) and (base.RESOURCE_DATASET in resources):
                 if resources[base.RESOURCE_FILEID] == file_id:
                     ds_id = resources[base.RESOURCE_DATASET]
-                    if(debug_is_on()):
-                        print("   ... re-using existing dataset {}".format(ds_id))
+                    # if(debug_is_on()):
+                    print("   ... re-using existing dataset {}".format(ds_id))
                     dataset = datastore.get_dataset(ds_id)
+                    print("DATASET: {}".format(dataset))
             # If the dataset is None we will load the dataset from an uploaded
             # file. Need to get the file handle for the file here.
             if dataset is None:
+                print("getting file")
                 f_handle = filestore.get_file(file_id)
+                assert(f_handle is not None)
             result_resources[base.RESOURCE_FILEID] = file_id
         else:
             raise ValueError('no source identifier given for load')
         
+        assert(url is not None or f_handle is not None or dataset is not None)
+
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
         if dataset is None:

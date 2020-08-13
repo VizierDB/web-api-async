@@ -8,8 +8,9 @@ from vizier.datastore.mimir.store import MimirDatastore
 from vizier.engine.packages.vizual.api.base import RESOURCE_DATASET, RESOURCE_FILEID, RESOURCE_URL
 from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.filestore.fs.base import FileSystemFilestore
+from vizier.datastore.dataset import DatasetHandle
 
-import vizier.mimir as mimir
+import vizier.mimir as mimir # noqa: F401
 from vizier.mimir import MimirError
 
 SERVER_DIR = './.tmp'
@@ -26,6 +27,8 @@ DOWNLOAD_URL = None #'http://cds-swg1.cims.nyu.edu:8080/opendb-api/api/v1/datase
 
 
 class TestDefaultVizualApi(unittest.TestCase):
+
+    api: MimirVizualApi
 
     def setUp(self):
         """Create an instance of the default vizier API for an empty server
@@ -85,7 +88,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         ds_rows = ds.fetch_rows()
         # Keep track of column and row identifier
-        col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Delete Age column
         col_id = ds.column_by_name('AGE').identifier
@@ -260,7 +262,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         # Keep track of column and row identifier
         ds_rows = ds.fetch_rows()
-        col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Insert row at index position 1
         row_ids.insert(1, None)
@@ -300,8 +301,8 @@ class TestDefaultVizualApi(unittest.TestCase):
         for i in range(len(ds.columns)):
             self.assertIsNone(row.values[i])
         # Ensure that row ids haven't changed
-        ### July 16, 2020 by OK: Bug in mimir that is going to take a bunch of
-        ### heavy lifting to fix: https://github.com/UBOdin/mimir-api/issues/11
+        # ## July 16, 2020 by OK: Bug in mimir that is going to take a bunch of
+        # ## heavy lifting to fix: https://github.com/UBOdin/mimir-api/issues/11
         # for i in range(len(ds_rows)):
         #     if row_ids[i] is not None:
         #         self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
@@ -311,7 +312,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         # Ensure no exception is raised
         self.api.insert_row(ds.identifier, 4, self.datastore)
 
-    def load_dataset(self):
+    def load_dataset(self) -> None:
         """Test functionality to load a dataset."""
         # Create a new dataset
         fh = self.filestore.upload_file(CSV_FILE)
@@ -322,6 +323,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         )
         ds = result.dataset
         resources = result.resources
+        assert(isinstance(ds, DatasetHandle))
         ds_rows = ds.fetch_rows()
         self.assertEqual(len(ds.columns), 3)
         self.assertEqual(len(ds_rows), 2)
@@ -334,12 +336,15 @@ class TestDefaultVizualApi(unittest.TestCase):
         # information. This should not raise an error since the file is not
         # accessed but the previous dataset reused.
         self.filestore.delete_file(fh.identifier)
+        # print(self.filestore.list_files())
+        print("RESOURCES: {}".format(resources))
         result = self.api.load_dataset(
             datastore=self.datastore,
             filestore=self.filestore,
             file_id=fh.identifier,
             resources=resources,
-            reload=False
+            reload=False,
+            proposed_schema = []
         )
         self.assertEqual(result.dataset.identifier, ds.identifier)
         # Doing the same without the resources should raise an exception
@@ -506,7 +511,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         ds_rows = ds.fetch_rows()
         # Keep track of column and row identifier
-        col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Swap first two rows
         result = self.api.move_row(ds.identifier, row_ids[0], 1, self.datastore)
@@ -562,15 +566,15 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEqual(row.values[2], '35K')
         # Ensure that row ids haven't changed
 
-        ### July 16, 2020 by OK: Bug in mimir that is going to take a bunch of
-        ### heavy lifting to fix: https://github.com/UBOdin/mimir-api/issues/11
+        # ## July 16, 2020 by OK: Bug in mimir that is going to take a bunch of
+        # ## heavy lifting to fix: https://github.com/UBOdin/mimir-api/issues/11
         # for i in range(len(ds_rows)):
         #     self.assertEqual(int(ds_rows[i].identifier), int(row_ids[i]))
         # No changes if source and target position are the same
 
         result = self.api.move_row(ds.identifier, row_ids[1], 1, self.datastore)
 
-        ### July 21, 2020 by OK: It would be fantastic if we could easily detect
+        # ## July 21, 2020 by OK: It would be fantastic if we could easily detect
         # no-op vizual, but for now skip this check
         #self.assertEqual(ds.identifier, result.dataset.identifier)
 
@@ -578,7 +582,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         with self.assertRaises(MimirError):
             self.api.move_row('unknown:uri', 0, 1, self.datastore)
         # Raise error if target position is out of bounds
-        ### July 21, 2020 by OK: Skipping this check for now
+        # ## July 21, 2020 by OK: Skipping this check for now
         # with self.assertRaises(ValueError):
         #     self.api.move_row(ds.identifier, 0, -1, self.datastore)
         # with self.assertRaises(ValueError):
@@ -595,7 +599,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         ds_rows = ds.fetch_rows()
         # Keep track of column and row identifier
-        col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Rename first column to Firstname
         result = self.api.rename_column(
@@ -631,7 +634,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             'BDate',
             self.datastore
         )
-        ### July 21, 2020 by OK: It would be fantastic if we could easily detect
+        # ## July 21, 2020 by OK: It would be fantastic if we could easily detect
         # no-op vizual, but for now skip this check
         # self.assertEqual(ds.identifier, result.dataset.identifier)
         # Ensure exception is thrown if dataset identifier is unknown
@@ -724,7 +727,6 @@ class TestDefaultVizualApi(unittest.TestCase):
         ).dataset
         ds_rows = ds.fetch_rows()
         # Keep track of column and row identifier
-        col_ids = [col.identifier for col in ds.columns]
         row_ids = [row.identifier for row in ds_rows]
         # Update cell [0, 0]. Ensure that one row was updated and a new
         # identifier is generated. Also ensure that the resulting datasets
