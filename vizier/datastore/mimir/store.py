@@ -260,9 +260,16 @@ class MimirDatastore(DefaultDatastore):
             human_readable_name = human_readable_name
         )
 
-    def load_dataset(
-        self, f_handle=None, url=None, detect_headers=True, infer_types=True, properties = {},
-        load_format='csv', options=[], human_readable_name=None
+    def load_dataset(self, 
+            f_handle: Optional[FileHandle] = None, 
+            proposed_schema: List[Tuple[str,str]] = [],
+            url: Optional[str] = None, 
+            detect_headers: bool = True, 
+            infer_types: bool = True, 
+            properties: Dict[str,Any] = {},
+            load_format: str ='csv', 
+            options: List[Dict[str,str]] = [], 
+            human_readable_name: Optional[str] = None,
     ):
         """Create a new dataset from a given file or url. Expects that either
         the file handle or the url are not None. Raises ValueError if both are
@@ -290,15 +297,17 @@ class MimirDatastore(DefaultDatastore):
         -------
         vizier.datastore.mimir.dataset.MimirDatasetHandle
         """
+        assert(url is not None or f_handle is not None)
         if f_handle is None and url is None:
             raise ValueError('no load source given')
-        elif not f_handle is None and not url is None:
+        elif f_handle is not None and url is not None:
             raise ValueError('too many load sources given')
-        elif url is None:
+        elif url is None and f_handle is not None:
             # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
             abspath = f_handle.filepath
-        elif not url is None:
+        elif url is not None:
             abspath = url
+
 
         # for ease of debugging, associate each table with a prefix identifying its nature
         prefix = load_format if load_format in SAFE_FORMAT_IDENTIFIER_PREFIXES else "LOADED_"
@@ -312,7 +321,8 @@ class MimirDatastore(DefaultDatastore):
             human_readable_name,
             options, 
             properties = properties,
-            result_name = prefix + get_unique_identifier()
+            result_name = prefix + get_unique_identifier(),
+            proposed_schema = proposed_schema
         )
         return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties)
 

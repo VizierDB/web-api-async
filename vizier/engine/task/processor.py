@@ -23,12 +23,13 @@ declared in the package in a vizier workflow.
 import os
 
 from abc import abstractmethod
-from typing import List, Dict, Any
+from typing import Dict
 
 from vizier.core.io.base import read_object_from_file
 from vizier.core.loader import ClassLoader
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.command import ModuleArguments
 
 
 class ExecResult(object):
@@ -51,7 +52,7 @@ class ExecResult(object):
             is_success: bool = True, 
             outputs: ModuleOutputs = ModuleOutputs(), 
             provenance: ModuleProvenance = ModuleProvenance(), 
-            updated_arguments: List[Dict[str,Any]] =None):
+            updated_arguments: ModuleArguments =None):
         """Initialize the result components.
 
         Parameters

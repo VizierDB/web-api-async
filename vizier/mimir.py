@@ -101,7 +101,18 @@ def createAdaptiveSchema(dataset, params, type):
 def vistrailsDeployWorkflowToViztool(x, name, type, users, start, end, fields, latlonfields, housenumberfield, streetfield, cityfield, statefield, orderbyfields):
     return ''
     
-def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_readable_name = None, backend_options = [], dependencies = [], properties = {}, result_name = None):
+def loadDataSource(
+      file: str, 
+      infer_types: bool, 
+      detect_headers: bool, 
+      format: str = 'csv', 
+      human_readable_name: Optional[str] = None, 
+      backend_options: List[Dict[str,str]] = [], 
+      dependencies: List[str] = [], 
+      properties: Dict[str,Any] = {}, 
+      result_name: Optional[str] = None,
+      proposed_schema: List[Tuple[str,str]] = []
+    ) -> Tuple[str,List[Dict[str,str]]]:
     req_json ={
       "file": file,
       "format": format,
@@ -109,7 +120,11 @@ def loadDataSource(file, infer_types, detect_headers, format = 'csv', human_read
       "detectHeaders": detect_headers,
       "backendOption": backend_options,
       "dependencies": dependencies,
-      "properties" : properties
+      "properties" : properties,
+      "proposedSchema" : [
+        { "name" : col[0], "type" : col[1] } 
+        for col in proposed_schema
+      ]
     }
     if human_readable_name is not None:
       req_json["humanReadableName"] = human_readable_name
@@ -201,7 +216,12 @@ def explainEverythingJson(query: str) -> List[DatasetCaveat]:
       for caveat in resp['reasons']
     ]
 
-def vistrailsQueryMimirJson(query, include_uncertainty, include_reasons, input = ''): 
+def vistrailsQueryMimirJson(
+      query: str, 
+      include_uncertainty: bool, 
+      include_reasons: bool, 
+      input: str = ''
+    ) -> Dict[str, Any]: 
     req_json = {
       "input": input,
       "query": query,
@@ -231,7 +251,7 @@ def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit
     resp = readResponse(requests.post(_mimir_url + 'query/table', json=req_json))
     return resp
 
-def countRows(view_name):
+def countRows(view_name: str) -> int:
     sql = 'SELECT COUNT(1) FROM ' + view_name 
     rs_count = vistrailsQueryMimirJson(sql, False, False)
     row_count = int(rs_count['data'][0][0])

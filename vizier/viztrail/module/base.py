@@ -26,7 +26,7 @@ from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.command import ModuleCommand, ModuleArguments
 
 """Constants for possible module states."""
 MODULE_PENDING = 0
@@ -302,7 +302,8 @@ class ModuleHandle(ModuleState):
     def set_success(self, 
             finished_at: datetime = get_current_time(), 
             outputs: ModuleOutputs = ModuleOutputs(), 
-            provenance: ModuleProvenance = ModuleProvenance()
+            provenance: ModuleProvenance = ModuleProvenance(),
+            updated_arguments: Optional[ModuleArguments] = None
         ):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
@@ -329,6 +330,8 @@ class ModuleHandle(ModuleState):
         # started_at timestamp may not have been set.
         if self.timestamp.started_at is None:
             self.timestamp.started_at = self.timestamp.finished_at
+        if updated_arguments is not None:
+            self.command.arguments = updated_arguments
         self.outputs = outputs
         self.provenance = provenance
 

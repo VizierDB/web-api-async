@@ -17,11 +17,15 @@
 """Implementation of the vizual API for configurations that use Mimir as the
 storage backend.
 """
+from typing import List, Dict, Any, Optional, Tuple
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.base import get_index_for_column
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
+from vizier.datastore.base import Datastore
+from vizier.datastore.mimir.store import MimirDatastore
+from vizier.filestore.base import Filestore
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.mimir as mimir
@@ -239,11 +243,23 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def load_dataset(
-        self, datastore, filestore, file_id=None, url=None, detect_headers=True,
-        infer_types=True, load_format='csv', options=[], username=None,
-        password=None, resources=None, reload=True, human_readable_name = None
-    ):
+
+    def load_dataset(self, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        file_id: Optional[str] = None, 
+        url: Optional[str] = None, 
+        detect_headers: bool = True,
+        infer_types: bool = True, 
+        load_format: str = 'csv', 
+        options: List[Dict[str,str]] = [], 
+        username: str = None,
+        password: str = None, 
+        resources: Optional[Dict[str, Any]] = None, 
+        reload: bool = False, 
+        human_readable_name: Optional[str] = None,
+        proposed_schema: List[Tuple[str,str]] = []
+    ) -> VizualApiResult:
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
         one of them will be None. The user name and password may only be given
@@ -262,31 +278,22 @@ class MimirVizualApi(VizualApi):
 
         Parameters
         ----------
-        datastore : vizier.datastore.mimir.base.FileSystemDatastore
-            Datastore to retireve and update datasets
-        filestore: vizier.filestore.Filestore
-            Filestore to retrieve uploaded datasets
-        file_id: string, optional
-            Identifier for a file in an associated filestore
-        url: string, optional
-            Identifier for a web resource
-        detect_headers: bool, optional
-            Detect column names in loaded file if True
-        infer_types: bool, optional
-            Infer column types for loaded dataset if True
-        load_format: string, optional
-            Format identifier
-        options: list, optional
-            Additional options for Mimirs load command
-        username: string, optional
-            User name for authentication when accessing restricted resources
-        password: string, optional
-            Password for authentication when accessing restricted resources
-        resources: dict, optional
-            Dictionary of additional resources (i.e., key,value pairs) that were
+        datastore : Datastore to retireve and update datasets
+        filestore: Filestore to retrieve uploaded datasets
+        file_id: Identifier for a file in an associated filestore
+        url: Identifier for a web resource
+        detect_headers: Detect column names in loaded file if True
+        infer_types: Infer column types for loaded dataset if True
+        load_format: Format identifier
+        options: Additional options for Mimirs load command
+        username: User name for authentication when accessing restricted resources
+        password: Password for authentication when accessing restricted resources
+        resources: Dictionary of additional resources (i.e., key,value pairs) that were
             generated during a previous execution of the associated module
-        reload: bool, optional
-            If set to false, avoid reloading the data if possible.
+        reload: If set to false, avoid reloading the data if possible.
+        human_readable_name: A user-facing name for this table
+        proposed_schema: A list of name/type pairs that will override 
+                         the inferred column names/types if present
 
         Returns
         -------
@@ -330,6 +337,7 @@ class MimirVizualApi(VizualApi):
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
         if dataset is None:
+            assert(isinstance(datastore, MimirDatastore))
             if(debug_is_on()):
                 print("   ... loading dataset {} / {}".format(url, f_handle))
             dataset = datastore.load_dataset(
@@ -339,7 +347,8 @@ class MimirVizualApi(VizualApi):
                 infer_types=infer_types,
                 load_format=load_format,
                 human_readable_name = human_readable_name,
-                options=options
+                options=options,
+                proposed_schema = proposed_schema
             )
         result_resources[base.RESOURCE_DATASET] = dataset.identifier
         return VizualApiResult(

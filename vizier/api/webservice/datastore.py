@@ -140,7 +140,12 @@ class VizierDatastoreApi(object):
             )
         ]
 
-    def get_dataset(self, project_id, dataset_id, offset=None, limit=None):
+    def get_dataset(self, 
+            project_id: str, 
+            dataset_id: str, 
+            offset: int = 0, 
+            limit: int = -1
+        ) -> Optional[Dict[str, Any]]:
         """Get dataset with given identifier. The result is None if no dataset
         with the given identifier exists.
 

@@ -82,7 +82,11 @@ class FileSystemFilestore(Filestore):
             return True
         return False
 
-    def download_file(self, url, username=None, password=None):
+    def download_file(self, 
+            url: str, 
+            username: str = None, 
+            password: str = None
+        ) -> FileHandle:
         """Create a local copy of the identified web resource.
 
         Parameters
@@ -142,7 +146,10 @@ class FileSystemFilestore(Filestore):
             )
         return None
 
-    def get_file_dir(self, identifier, create=False):
+    def get_file_dir(self, 
+            identifier: str, 
+            create: bool = False
+        ) -> str:
         """Get path to the directory for the file with the given identifier. If
         the directory does not exist it will be created if the create flag is
         True.
@@ -275,7 +282,7 @@ def read_metadata_file(file_dir):
     return obj['originalFilename'], obj['mimeType'], obj['encoding']
 
 
-def write_metadata_file(file_dir, f_handle):
+def write_metadata_file(file_dir: str, f_handle: FileHandle) -> None:
     """Write the metadata file for the given file handle.
 
     Parameters

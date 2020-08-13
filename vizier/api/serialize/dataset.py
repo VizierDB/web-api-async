@@ -17,13 +17,13 @@
 """This module contains helper methods for the webservice that are used to
 serialize datasets.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import vizier.api.serialize.base as serialize
 import vizier.api.routes.base as routes
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor, DatasetHandle
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.engine.project.base import ProjectHandle
 from vizier.api.routes.base import UrlFactory
@@ -147,7 +147,14 @@ def DATASET_DESCRIPTOR(
     return obj
 
 
-def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
+def DATASET_HANDLE(
+        project: ProjectHandle, 
+        dataset: DatasetHandle, 
+        rows: List[DatasetRow], 
+        defaults: Any, # ConfigObject uses type hacking... pretend it's an any
+        urls: UrlFactory, 
+        offset: int = 0, 
+        limit: int = -1):
     """Dictionary serialization for dataset handle. Includes (part of) the
     dataset rows.
 

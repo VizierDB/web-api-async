@@ -20,9 +20,10 @@ workflows.
 """
 
 from abc import abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 
 import os
+from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor, DatasetHandle
 
@@ -154,7 +155,10 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def load_dataset(self, f_handle):
+    def load_dataset(self, 
+            f_handle: FileHandle, 
+            proposed_schema: List[Tuple[str, str]]
+        ) -> DatasetHandle:
         """Create a new dataset from a given file.
 
         Raises ValueError if the given file could not be loaded as a dataset.
@@ -301,7 +305,7 @@ class DefaultDatastore(Datastore):
         raise NotImplementedError
 
 
-    def get_dataset_dir(self, identifier):
+    def get_dataset_dir(self, identifier: str) -> str:
         """Get the base directory for a dataset with given identifier. Having a
         separate method makes it easier to change the folder structure used to
         store datasets.

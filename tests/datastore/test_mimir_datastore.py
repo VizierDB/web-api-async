@@ -1,9 +1,6 @@
-import csv
 import os
 import shutil
 import unittest
-
-import vizier.mimir as mimir
 
 from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.mimir.store import MimirDatastore

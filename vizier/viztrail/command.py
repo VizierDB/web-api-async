@@ -137,7 +137,12 @@ class ModuleArguments(object):
                     return None
         return None
 
-    def get_value(self, key, as_int=False, raise_error=True, default_value=None):
+    def get_value(self, 
+            key: str, 
+            as_int: bool = False, 
+            raise_error: bool = True, 
+            default_value: Any = None
+        ) -> Any:
         """Retrieve command argument with given key. Will raise ValueError if no
         argument with given key is present.
 

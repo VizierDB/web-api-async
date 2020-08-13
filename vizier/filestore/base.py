@@ -17,7 +17,7 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
-from typing import Optional
+from typing import Optional, IO, Dict, Any
 
 import gzip
 import mimetypes
@@ -118,7 +118,7 @@ class FileHandle(object):
         """
         return self.file_name
 
-    def open(self):
+    def open(self) -> IO:
         """Get open file object for associated file.
 
         Returns
@@ -152,7 +152,11 @@ class Filestore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def download_file(self, uri, username=None, password=None):
+    def download_file(self, 
+            url: str, 
+            username: str = None, 
+            password: str = None
+        ) -> FileHandle:
         """Create a local copy of the identified web resource.
 
         Parameters
@@ -171,7 +175,7 @@ class Filestore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_file(self, identifier):
+    def get_file(self, identifier: str) -> FileHandle:
         """Get handle for file with given identifier. Returns None if no file
         with given identifier exists.
 
@@ -236,7 +240,7 @@ class Filestore(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_download_filename(url, info):
+def get_download_filename(url: str, info: Dict[str,Any]) -> str:
     """Extract a file name from a given Url or request info header.
 
     Parameters

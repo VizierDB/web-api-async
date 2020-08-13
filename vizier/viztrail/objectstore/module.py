@@ -26,7 +26,7 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.view.chart import ChartViewHandle
-from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
+from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID, ModuleArguments
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -412,7 +412,8 @@ class OSModuleHandle(ModuleHandle):
     def set_success(self, 
             finished_at: datetime = get_current_time(), 
             outputs: ModuleOutputs = ModuleOutputs(), 
-            provenance: ModuleProvenance = ModuleProvenance()
+            provenance: ModuleProvenance = ModuleProvenance(),
+            updated_arguments: Optional[ModuleArguments] = None
         ):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
@@ -433,7 +434,7 @@ class OSModuleHandle(ModuleHandle):
         """
         # Update state, timestamp, database state, outputs and provenance
         # information.
-        super().set_success(finished_at, outputs, provenance)
+        super().set_success(finished_at, outputs, provenance, updated_arguments)
         # Materialize module state
         self.write_safe()
 

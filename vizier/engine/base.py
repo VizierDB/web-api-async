@@ -805,10 +805,12 @@ class VizierEngine(WorkflowController):
             if not module.is_running:
                 # The result is false if the state of the module did not change
                 return False
+            # print("UPDATED ARGUMENTS: {}".format(result.updated_arguments))
             module.set_success(
                 finished_at=finished_at,
                 outputs=result.outputs,
                 provenance=result.provenance,
+                updated_arguments=result.updated_arguments
             )
             context = compute_context(workflow.modules[0:module_index])
             context = result.provenance.get_database_state(context)

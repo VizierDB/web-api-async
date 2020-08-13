@@ -25,8 +25,10 @@ import csv
 import gzip
 import json
 from io import TextIOWrapper
+from typing import List, Optional
 
 from vizier.datastore.dataset import DatasetRow
+from vizier.datastore.base import DatasetColumn
 
 """Json element names for default dataset serialization."""
 KEY_ROWS = 'rows'
@@ -71,7 +73,7 @@ class DatasetReader(object):
         raise NotImplementedError
 
     @abstractmethod
-    def next(self):
+    def __next__(self) -> DatasetRow:
         """Return the next row in the dataset iterator. Raises StopIteration if
         end of dataset is reached.
 
@@ -80,6 +82,9 @@ class DatasetReader(object):
         vizier.datastore.base.DatasetRow
         """
         raise NotImplementedError
+
+    def next(self) -> DatasetRow:
+        return self.__next__()
 
     @abstractmethod
     def open(self):
@@ -195,7 +200,12 @@ class DefaultJsonDatasetReader(DatasetReader):
             ]
         }
     """
-    def __init__(self, filename, columns=None, compressed=False, offset=0, limit=None):
+    def __init__(self, 
+            filename: str, 
+            columns: List[DatasetColumn] = None, 
+            compressed: bool =False, 
+            offset: int = 0, 
+            limit: Optional[int] = None):
         """Initialize information about the Json file.
 
         Parameters
@@ -291,7 +301,7 @@ class DefaultJsonDatasetReader(DatasetReader):
             self.is_open = True
         return self
 
-    def write(self, rows):
+    def write(self, rows: List[DatasetRow]) -> None:
         """Write the given list of dataset rows to file in default Json format.
 
         Parameters

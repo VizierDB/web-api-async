@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import re
-from typing import Optional, List, Dict, Any
+from typing import cast, Optional, List, Dict, Any
 
 from vizier.core.util import dump_json
 from vizier.datastore.dataset import DatasetHandle, DatasetColumn, DATATYPE_VARCHAR
@@ -125,7 +125,7 @@ class MimirDatasetColumn(DatasetColumn):
         """
         return self.data_type.lower() in ['int', 'real']
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Get dictionary serialization for dataset column object.
 
         Returns
@@ -238,6 +238,7 @@ class MimirDatasetHandle(DatasetHandle):
             columns=list(columns), # list(...) to make the typechecker happy; see http://mypy.readthedocs.io/en/latest/common_issues.html#variance
             name=name
         )
+        self._row_count: Optional[int] = None
         self._properties = properties
 
     @staticmethod
@@ -263,12 +264,12 @@ class MimirDatasetHandle(DatasetHandle):
             name = name
         )
 
-    def get_row_count(self):
+    def get_row_count(self) -> int:
         if self._row_count is None:
             self._row_count = mimir.countRows(self.identifier)
         return self._row_count
 
-    def get_properties(self):
+    def get_properties(self) -> Dict[str, Any]:
         return self._properties
 
     def write_properties_to_file(self, file):
@@ -337,7 +338,7 @@ class MimirDatasetHandle(DatasetHandle):
             rowid=rowid
         )
 
-    def to_file(self, filename):
+    def to_file(self, filename: str) -> None:
         """Write dataset to file. The default serialization format is Json.
 
         Parameters
@@ -347,9 +348,9 @@ class MimirDatasetHandle(DatasetHandle):
         """
         doc = {
             'id': self.identifier,
-            'columns': [col.to_dict() for col in self.columns],
+            'columns': [cast(MimirDatasetColumn, col).to_dict() for col in self.columns],
             'tableName': str(self.identifier),
-            'rowCounter': self.row_counter
+            'rowCounter': self._row_count
         }
         with open(filename, 'w') as f:
             dump_json(doc, f)

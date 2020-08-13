@@ -18,7 +18,7 @@
 standard output and one for error messages.
 """
 
-from typing import List, Any, Iterable
+from typing import List, Any, Iterable, Dict, Optional
 from vizier.view.chart import ChartViewHandle
 
 import traceback
@@ -26,7 +26,7 @@ from vizier.mimir import MimirError
 from requests.exceptions import ConnectionError
 import itertools
 from vizier import debug_is_on
-from vizier.datastore.dataset import DatasetHandle
+from vizier.datastore.dataset import DatasetDescriptor
 
 """Predefined output types."""
 OUTPUT_CHART = 'chart/view'
@@ -112,7 +112,7 @@ class OutputObject(object):
 
 class DatasetOutput(OutputObject):
     """Output object where the value is a dataset handle."""
-    def __init__(self, value: DatasetHandle):
+    def __init__(self, value: Dict[str, Any]):
         """Initialize the output dataset.
 
         Parameters
@@ -121,6 +121,32 @@ class DatasetOutput(OutputObject):
             Output dataset
         """
         super(DatasetOutput, self).__init__(type=OUTPUT_DATASET, value=value)
+
+    @staticmethod
+    def from_handle(
+            ds: DatasetDescriptor, 
+            project_id: str,
+            name: Optional[str] = None, 
+            raise_error_on_missing: bool = False
+        ) -> Optional[OutputObject]:
+        from vizier.api.webservice import server
+        ds_output = server.api.datasets.get_dataset(
+            project_id=project_id,
+            dataset_id=ds.identifier,
+            offset=0,
+            limit=10
+        )
+        if ds_output is None:
+            if raise_error_on_missing:
+                raise ValueError("Dataset {} does not exist.".format(ds.identifier if name is None else name))
+            else:
+                return None
+        if name is not None:
+            ds_output['name'] = name 
+        return DatasetOutput(ds_output)
+
+
+
 
 
 class ChartOutput(OutputObject):

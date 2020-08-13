@@ -16,7 +16,7 @@
 
 """Collection of helper methods."""
 
-from typing import Any, TypeVar, Optional
+from typing import Any, TypeVar, Optional, IO
 
 import json
 import os
@@ -32,7 +32,7 @@ LOGGER_ENGINE = 'LOGGER_ENGINE'
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def cast(value):
+def cast(value: str) -> Any:
     """Attempt to convert a given value to integer or float. If both attempts
     fail the value is returned as is.
 
@@ -83,7 +83,7 @@ def default_serialize(obj):
     return obj.__dict__
 
 
-def dump_json(obj, stream):
+def dump_json(obj, stream: IO) -> None:
     """Write Json serialization of the object to the given stream."""
     stream.write(serialize(obj))
 
@@ -173,7 +173,7 @@ def is_scalar(value: Any) -> bool:
     return False
 
 
-def is_valid_name(name):
+def is_valid_name(name: str) -> bool:
     """Returns Ture if a given string represents a valid name (e.g., for a
     dataset). Valid names contain only letters, digits, hyphen, underline, or
     blanl. A valid name has to contain at least one digit or letter.
@@ -239,6 +239,6 @@ def min_max(values):
     return min_val, max_val
 
 
-def serialize(obj):
+def serialize(obj: Any) -> str:
     """Default Json resializer for python objects."""
     return json.dumps(obj, default=default_serialize)
