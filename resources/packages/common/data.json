@@ -4,63 +4,44 @@
             {
                 "format": [
                     {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
                         "value": "LOAD"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "DATASET"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "name"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "const", 
-                        "value": "FROM"
-                    }, 
-                    {
-                        "lspace": true, 
-                        "rspace": true, 
-                        "type": "var", 
-                        "value": "file"
                     },
                     {
                         "lspace": true,
-                        "rspace": false,
+                        "rspace": true,
                         "type": "const",
-                        "value": "(load format:"
+                        "value": "DATASET"
                     },
                     {
-                        "lspace": false,
-                        "rspace": false,
+                        "lspace": true,
+                        "rspace": true,
                         "type": "var",
-                        "value": "loadFormat"
+                        "value": "name"
                     },
                     {
-                        "lspace": false,
-                        "rspace": false,
+                        "lspace": true,
+                        "rspace": true,
                         "type": "const",
-                        "value": ")"
+                        "value": "FROM"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "file"
                     }
-                ], 
-                "id": "load", 
+                ],
+                "id": "load",
                 "name": "Load Dataset",
-                "suggest": true,
                 "parameter": [
                     {
                         "datatype": "string",
                         "hidden": false,
                         "id": "name",
-                        "index": 1,
+                        "index": 0,
                         "name": "Dataset Name",
                         "required": true
                     },
@@ -68,7 +49,7 @@
                         "datatype": "fileid",
                         "hidden": false,
                         "id": "file",
-                        "index": 0,
+                        "index": 1,
                         "name": "Source File",
                         "required": true
                     },
@@ -133,28 +114,54 @@
                         ]
                     },
                     {
-                        "datatype": "bool",
-                        "defaultValue": false, 
-                        "hidden": false, 
-                        "id": "loadInferTypes", 
-                        "index": 3, 
-                        "name": "Infer Types", 
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "schema",
+                        "index": 3,
+                        "name": "Schema (leave blank to guess)",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "bool", 
-                        "defaultValue": false, 
-                        "hidden": false, 
-                        "id": "loadDetectHeaders", 
-                        "index": 4, 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "schema_column",
+                        "index": 4,
+                        "name": "Column Name",
+                        "parent": "schema",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "schema_datatype",
+                        "index": 5,
+                        "name": "Data Type",
+                        "parent": "schema",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "defaultValue": true,
+                        "hidden": true,
+                        "id": "loadInferTypes",
+                        "index": 6,
+                        "name": "Infer Types",
+                        "required": false
+                    },
+                    {
+                        "datatype": "bool",
+                        "defaultValue": true,
+                        "hidden": false,
+                        "id": "loadDetectHeaders",
+                        "index": 7,
                         "name": "File Has Headers",
                         "required": false
                     },
                     {
                         "datatype": "bool",
-                        "hidden": false,
+                        "hidden": true,
                         "id": "loadDataSourceErrors",
-                        "index": 5,
+                        "index": 8,
                         "name": "Data Source Error Annotations",
                         "required": false
                     },
@@ -162,7 +169,7 @@
                         "datatype": "list",
                         "hidden": false,
                         "id": "loadOptions",
-                        "index": 6,
+                        "index": 9,
                         "name": "Load Options",
                         "required": false
                     },
@@ -170,7 +177,7 @@
                         "datatype": "string",
                         "hidden": false,
                         "id": "loadOptionKey",
-                        "index": 7,
+                        "index": 10,
                         "name": "Option Key",
                         "parent": "loadOptions",
                         "required": false
@@ -179,12 +186,13 @@
                         "datatype": "string",
                         "hidden": false,
                         "id": "loadOptionValue",
-                        "index": 8,
+                        "index": 11,
                         "name": "Option Value",
                         "parent": "loadOptions",
                         "required": false
                     }
-                ]
+                ],
+                "suggest": true
             },
             {
                 "format": [

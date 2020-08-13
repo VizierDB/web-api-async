@@ -60,10 +60,15 @@ PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'
 PARA_VALUE = 'value'
+PARA_SCHEMA = 'schema'
+
 # Concatenation of parameter keys
 PARA_COLUMNS_COLUMN = PARA_COLUMNS + '_' + pckg.PARA_COLUMN
 PARA_COLUMNS_ORDER = PARA_COLUMNS + '_' + PARA_ORDER
 PARA_COLUMNS_RENAME = PARA_COLUMNS + '_' + pckg.PARA_NAME
+
+PARA_SCHEMA_COLUMN = PARA_SCHEMA + '_' + pckg.PARA_COLUMN
+PARA_SCHEMA_TYPE = PARA_SCHEMA + '_' + 'datatype'
 
 #Values for sort order.
 SORT_ASC = 'ASC'
@@ -241,10 +246,33 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     required=True
                 ),
                 pckg.parameter_declaration(
+                    PARA_SCHEMA,
+                    name='Schema (leave blank to guess)',
+                    data_type=pckg.DT_LIST,
+                    index=3,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_SCHEMA_COLUMN,
+                    name='Column Name',
+                    data_type=pckg.DT_STRING,
+                    index=4,
+                    parent=PARA_SCHEMA,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    PARA_SCHEMA_TYPE,
+                    name='Data Type',
+                    data_type=pckg.DT_STRING,
+                    index=5,
+                    parent=PARA_SCHEMA,
+                    required=False
+                ),
+                pckg.parameter_declaration(
                     PARA_INFER_TYPES,
                     name='Infer Types',
                     data_type=pckg.DT_BOOL,
-                    index=3,
+                    index=6,
                     default_value=True,
                     required=False
                 ),
@@ -252,7 +280,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     PARA_DETECT_HEADERS,
                     name='File Has Headers',
                     data_type=pckg.DT_BOOL,
-                    index=4,
+                    index=7,
                     default_value=True,
                     required=False
                 ),
@@ -260,21 +288,21 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     PARA_LOAD_DSE,
                     name='Data Source Error Annotations',
                     data_type=pckg.DT_BOOL,
-                    index=5,
+                    index=8,
                     required=False
                 ),
                 pckg.parameter_declaration(
                     PARA_LOAD_OPTIONS,
                     name='Load Options',
                     data_type=pckg.DT_LIST,
-                    index=6,
+                    index=9,
                     required=False
                 ),
                 pckg.parameter_declaration(
                     PARA_LOAD_OPTION_KEY,
                     name='Option Key',
                     data_type=pckg.DT_STRING,
-                    index=7,
+                    index=10,
                     parent=PARA_LOAD_OPTIONS,
                     required=False
                 ),
@@ -282,7 +310,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                     PARA_LOAD_OPTION_VALUE,
                     name='Option Value',
                     data_type=pckg.DT_STRING,
-                    index=8,
+                    index=11,
                     parent=PARA_LOAD_OPTIONS,
                     required=False
                 )
