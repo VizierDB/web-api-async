@@ -19,6 +19,7 @@
 
 import json
 import re
+import io
 from bokeh.io import output_notebook # type: ignore[import]
 from bokeh.io.notebook import install_notebook_hook # type: ignore[import]
 from bokeh.embed import json_item # type: ignore[import]
@@ -47,10 +48,7 @@ def vizier_bokeh_load(resources, verbose, hide_banner, load_timeout):
     # in doing anything specific here.
     pass
 
-def vizier_bokeh_show(obj, state, notebook_handle):
-    """Hook called by Bokeh when show() is called"""
-    # r = "bokeh_plot_"+str([ random.choice(range(0, 10)) for x in range(0, 20) ])
-    global target_client
+def vizier_bokeh_render(obj):
     plot_object_id = "bokeh_plot_{}".format(obj.id)
 
     # Generate and sanitize the plot content
@@ -65,6 +63,13 @@ def vizier_bokeh_show(obj, state, notebook_handle):
     # actually embeds the image.  Note the substitution of single-quotes
     # in the sanitization step above.
     html += (('<img src onError="Bokeh.embed.embed_item('+content+');"/>'))
+    return html
+
+def vizier_bokeh_show(obj, state, notebook_handle):
+    """Hook called by Bokeh when show() is called"""
+    # r = "bokeh_plot_"+str([ random.choice(range(0, 10)) for x in range(0, 20) ])
+    global target_client
+    html = vizier_bokeh_render(obj)
     if target_client is None:
         print(html)
     else:
@@ -76,3 +81,9 @@ def vizier_bokeh_app(app, state, notebook_url, **kwargs):
     raise
 
 install_notebook_hook('vizier', vizier_bokeh_load, vizier_bokeh_show, vizier_bokeh_app)
+
+def vizier_matplotlib_render(figure):
+    with io.BytesIO() as imgbytes:
+        figure.savefig(imgbytes, format="svg")
+        return imgbytes.getvalue().decode("utf-8")
+

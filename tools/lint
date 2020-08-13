@@ -5,7 +5,7 @@ cd $DIR
 
 if [ "$(which flake8)" ] ; then
   flake8 --config=.flake8 vizier || exit -1 
-  echo "No Errors"
+  echo "Vizier is free of lint"
 else
   echo "flake8 is not installed"
   echo

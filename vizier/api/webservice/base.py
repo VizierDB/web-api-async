@@ -148,7 +148,11 @@ class VizierApi(object):
                 pckg_obj['description'] = pckg.description
             pckg_commands = list()
             for cmd in list(pckg.commands.values()):
-                cmd_obj: Dict[str, Any] = {'id': cmd.identifier, 'name': cmd.name}
+                cmd_obj: Dict[str, Any] = {
+                    'id': cmd.identifier, 
+                    'name': cmd.name, 
+                    'suggest': cmd.suggest
+                }
                 if not cmd.description is None:
                     cmd_obj['description'] = cmd.description
                 cmd_obj['parameters'] = list(cmd.parameters.values())

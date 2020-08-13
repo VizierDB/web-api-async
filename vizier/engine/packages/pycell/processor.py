@@ -76,8 +76,6 @@ class PyCellTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
-        
-
         # Get Python script from user arguments.  It is the source for VizierDBClient
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
 

@@ -31,8 +31,14 @@ import astor # type: ignore[import]
 import inspect
 from minio import Minio # type: ignore[import]
 from minio.error import ResponseError # type: ignore[import]
+# 2020-08-11 by OK: The following options are never used
+#from minio.select.options import SelectObjectOptions, InputSerialization,\
+#    CSVInput, OutputSerialization, CSVOutput, RequestProgress # type: ignore[import]
 from minio.select.errors import SelectCRCValidationError # type: ignore[import]
-
+from bokeh.models.layouts import LayoutDOM as BokehLayout # type: ignore[import]
+from matplotlib.figure import Figure as MatplotlibFigure # type: ignore[import]
+from matplotlib.axes import Axes as MatplotlibAxes # type: ignore[import]
+from vizier.engine.packages.pycell.plugins import vizier_bokeh_render, vizier_matplotlib_render
         
     
 class VizierDBClient(object):
@@ -454,7 +460,7 @@ class VizierDBClient(object):
     def set_output_format(self, mime_type):
         self.output_format = mime_type
 
-    def show(self, value, mime_type = None):
+    def show(self, value, mime_type = None, force_to_string = True):
         if not issubclass(type(value), OutputObject):
             if mime_type is not None:
                 value = OutputObject(value = value, type = mime_type)
@@ -469,8 +475,21 @@ class VizierDBClient(object):
                                 limit=10
                             )
                 value = DatasetOutput(ds_handle)
+            elif issubclass(type(value), BokehLayout):
+                value = vizier_bokeh_render(value)
+                value = HtmlOutput(value = value)
+            elif issubclass(type(value), MatplotlibFigure):
+                value = HtmlOutput(value = vizier_matplotlib_render(value))
+            elif issubclass(type(value), MatplotlibAxes):
+                value = HtmlOutput(value = vizier_matplotlib_render(value.get_figure()))
             else:
-                value = TextOutput(value = value)
+                repr_html = getattr(value, "_repr_html_", None)
+                if repr_html is not None:
+                    value = HtmlOutput(str(repr_html()))
+                elif force_to_string:
+                    value = TextOutput(value = str(value))
+                else:
+                    return
         self.stdout.append(value)
 
     def show_html(self, value):

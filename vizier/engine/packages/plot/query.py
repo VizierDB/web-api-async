@@ -70,21 +70,22 @@ class DataStreamConsumer(object):
         # Check if the row index falls inside the consumed interval
         if row_index >= self.range_start and (self.range_end is None or row_index <= self.range_end):
             val = row.values[self.column_index]
-            if isinstance(val, date) or isinstance(val, datetime):
-                val = time.mktime(val.timetuple())
-            if self.cast_to_number:
-                # Only convert if not already a numeric value. Assumes a
-                # string if not numeric
-                if not isinstance(val, int) and not isinstance(val, float):
-                    # Try to cast to integer first. Remove commas.
-                    try:
-                        val = int(val.replace(',', ''))
-                    except ValueError:
-                        # Try to convert to float if int failed
+            if val is not None:
+                if isinstance(val, date) or isinstance(val, datetime):
+                    val = time.mktime(val.timetuple())
+                if self.cast_to_number:
+                    # Only convert if not already a numeric value. Assumes a
+                    # string if not numeric
+                    if not isinstance(val, int) and not isinstance(val, float):
+                        # Try to cast to integer first. Remove commas.
                         try:
-                            val = float(val)
+                            val = int(val.replace(',', ''))
                         except ValueError:
-                            pass
+                            # Try to convert to float if int failed
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                pass
             self.values.append(val)
         self.values_caveats.append(row.caveats[self.column_index])    
 

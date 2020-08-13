@@ -47,6 +47,7 @@ LABEL_ID = 'id'
 LABEL_LANGUAGE = 'language'
 LABEL_LEFTSPACE = 'lspace'
 LABEL_NAME = 'name'
+LABEL_SUGGEST = 'suggest'
 LABEL_CATEGORY = 'category'
 LABEL_PARAMETER = 'parameter'
 LABEL_PARENT = 'parent'
@@ -56,12 +57,14 @@ LABEL_RIGHTSPACE = 'rspace'
 LABEL_SUFFIX = 'suffix'
 LABEL_TYPE = 'type'
 LABEL_VALUE = 'value'
+LABEL_SUGGEST = 'suggest'
 
 PACKAGE_SCHEMA = {
     'type': 'object',
     'properties': {
         LABEL_ID: {'type': 'string'},
         LABEL_NAME: {'type': 'string'},
+        LABEL_SUGGEST: {'type': 'boolean'},
         LABEL_DESCRIPTION: {'type': 'string'},
         LABEL_COMMAND: {
             'type': 'array',
@@ -259,6 +262,7 @@ def validate_package(pckg_declaration: Dict[str, Any]) -> None:
 
 def command_declaration(identifier, 
         name: Optional[str] = None, 
+        suggest: bool = False, 
         description: Optional[str] = None, 
         group_id: Optional[str] = None, 
         parameters: Optional[List[Dict[str, Any]]] = None, 
@@ -301,6 +305,7 @@ def command_declaration(identifier,
         obj[LABEL_PARAMETER] = list()
     if not format is None:
         obj[LABEL_FORMAT] = format
+    obj[LABEL_SUGGEST] = suggest
     return obj
 
 
@@ -653,6 +658,7 @@ class PackageIndex(object):
             self.commands[cmd[LABEL_ID]] = CommandDeclaration(
                 identifier=cmd[LABEL_ID],
                 name=cmd[LABEL_NAME],
+                suggest=cmd[LABEL_SUGGEST] if LABEL_SUGGEST in cmd else False,
                 description=cmd[LABEL_DESCRIPTION] if LABEL_DESCRIPTION in cmd else None,
                 paramaters=cmd[LABEL_PARAMETER],
                 format=cmd[LABEL_FORMAT] if LABEL_FORMAT in cmd else list()
@@ -688,6 +694,7 @@ class CommandDeclaration(object):
             name: str, 
             paramaters: List[Dict[str,Any]], 
             format: List[Dict[str,Any]], 
+            suggest: bool = False,
             description: Optional[str] = None):
         """Initialize the index from a given list of paramater declarations.
 
@@ -712,6 +719,7 @@ class CommandDeclaration(object):
         for para in paramaters:
             self.parameters[para[LABEL_ID]] = para
         self.format = format
+        self.suggest = suggest
 
     def get(self, 
             parameter_id: str
