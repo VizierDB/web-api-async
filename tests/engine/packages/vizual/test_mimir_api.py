@@ -332,22 +332,8 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertIsNotNone(resources)
         self.assertEqual(resources[RESOURCE_FILEID], fh.identifier)
         self.assertEqual(resources[RESOURCE_DATASET], ds.identifier)
-        # Delete file handle and run load_dataset again with returned resource
-        # information. This should not raise an error since the file is not
-        # accessed but the previous dataset reused.
+        # Delete file handle and oing the same should raise an exception
         self.filestore.delete_file(fh.identifier)
-        # print(self.filestore.list_files())
-        print("RESOURCES: {}".format(resources))
-        result = self.api.load_dataset(
-            datastore=self.datastore,
-            filestore=self.filestore,
-            file_id=fh.identifier,
-            resources=resources,
-            reload=False,
-            proposed_schema = []
-        )
-        self.assertEqual(result.dataset.identifier, ds.identifier)
-        # Doing the same without the resources should raise an exception
         with self.assertRaises(ValueError):
             self.api.load_dataset(
                 datastore=self.datastore,

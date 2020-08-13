@@ -332,16 +332,17 @@ class MimirVizualApi(VizualApi):
             if dataset is None:
                 print("getting file")
                 f_handle = filestore.get_file(file_id)
-                assert(f_handle is not None)
+                if(f_handle is None): 
+                    raise ValueError("The uploaded file got deleted, try re-uploading.")
             result_resources[base.RESOURCE_FILEID] = file_id
         else:
             raise ValueError('no source identifier given for load')
         
-        assert(url is not None or f_handle is not None or dataset is not None)
-
         # If the dataset is still None at this point we need to call the
         # load_dataset method of the datastore to load it.
         if dataset is None:
+            if(url is None and f_handle is None):
+                raise ValueError("Need an URL or an Uploaded File to load")
             assert(isinstance(datastore, MimirDatastore))
             if(debug_is_on()):
                 print("   ... loading dataset {} / {}".format(url, f_handle))
