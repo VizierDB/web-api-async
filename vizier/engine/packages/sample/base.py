@@ -16,8 +16,6 @@
 
 """Specification of parameters for SQL cell."""
 
-import vizier.engine.packages.base as pckg
-
 
 """Global constants."""
 

@@ -26,15 +26,21 @@ for an individual object in a persistent manner.
 """
 
 from abc import abstractmethod
-
+from typing import Dict, Optional, Any, List
 
 class ObjectAnnotationSet(list):
     """Interface for accessing and manipulating user-defined annotations.
     Annotations are (key,value) pairs. For each key we maintain a list of
     multiple distinct values.
+
+    { labels.KEY : "key", labels.VALUE : "value" }
     """
     @abstractmethod
-    def add(self, key, value, replace=False):
+    def add(self, 
+            key: str, 
+            value: Any, 
+            replace: bool = False
+        ) -> None:
         """Associate the given key with the given value. If the replace flag is
         True all other values that are currently associated with the key are
         removed. If the replace flag is False the value will be added to the
@@ -52,7 +58,10 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, key, value=None):
+    def delete(self, 
+            key: str, 
+            value: Optional[Any] = None
+        ) -> bool:
         """Delete the annotations for the given key. If the optional value is
         None all annotated values for the given key are removed. If the value is
         not None only the resulting (key,value) pair will be removed.
@@ -73,7 +82,10 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def find_all(self, key, default_value=[]):
+    def find_all(self, 
+            key: str, 
+            default_value: List[Any] = []
+        ) -> List[Any]:
         """Get the list of values that are associated with the given key. If no
         value is associated with the key the default value is returned.
 
@@ -91,7 +103,11 @@ class ObjectAnnotationSet(list):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, key, default_value=None, raise_error_on_multi_value=True):
+    def get(self, 
+            key: str, 
+            default_value: Optional[Any] = None, 
+            raise_error_on_multi_value: bool = True
+        ) -> Any:
         """Get a single value that is associated with the given key. If no value
         is associated with the key the default value is returned. If multiple
         values are associated with the given key a ValueError is raised unless
@@ -114,7 +130,10 @@ class ObjectAnnotationSet(list):
         """
         raise NotImplementedError
 
-    def replace(self, key, value):
+    def replace(self, 
+            key: str, 
+            value: Any
+        ) -> None:
         """Update the value for the property with the given key. If the value
         is None the property will be deleted.
 
@@ -128,7 +147,9 @@ class ObjectAnnotationSet(list):
         self.add(key=key, value=value, replace=True)
 
     @abstractmethod
-    def update(self, properties):
+    def update(self, 
+            properties: Dict[str, Any]
+        ) -> None:
         """Update the current properties based on the values in the dictionary.
 
         The (key, value)-pairs in the properties dictionary define the update
@@ -146,7 +167,7 @@ class AnnotationStore(object):
     annotations.
     """
     @abstractmethod
-    def store(self, annotations):
+    def store(self, annotations: Dict[str, Any]) -> None:
         """Persist the given dictionary of object annotations. Each key in the
         dictionary is expected to be associated with either a scalar value or
         a list of scalar values.
@@ -159,7 +180,7 @@ class AnnotationStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def values(self):
+    def values(self) -> Dict[str, Any]:
         """Get a dictionary of key,value pairs that contains all annotations.
 
         Returns
@@ -177,7 +198,9 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
     An optional AnnotationStore is used to persist the annotation set whenever
     if is updated by a call to the .add() or .delete() method.
     """
-    def __init__(self, elements=None, writer=None):
+    def __init__(self, 
+            elements: Optional[Dict[str, Any]] = None, 
+            writer: Optional[AnnotationStore] = None):
         """Initialize the set of annotations. Expects a dictionary of keys
         where values are either scalars or list of scalars.
 
@@ -188,11 +211,15 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         writer: vizier.core.annotation.AnnotationStore optional
             Optional store to persist changes
         """
-        self.elements = elements if not elements is None else dict()
+        self.elements: Dict[str, Any] = elements if elements is not None else dict()
         self.writer = writer
         
-
-    def add(self, key, value, replace=False, persist=True):
+    def add(self, 
+            key: str, 
+            value: Any, 
+            replace: bool = False, 
+            persist: bool = True
+        ) -> None:
         """Associate the given key with the given value. If the replace flag is
         True all other values that are currently associated with the key are
         removed. If the replace flag is False the value will be added to the
@@ -217,7 +244,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             raise ValueError('invalid annotation value type \'' + str(type(value)) + '\'')
         # Set the value if the replace flag is True or no prior annotation for
         # the given key exists
-        if not key in self.elements:
+        if key not in self.elements:
             self.elements[key] = value
         else:
             # Check if any of the annotated values matches the given value. In
@@ -245,10 +272,14 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                     self.elements[key] = [el, value]
         # The set of annotations was modified. Persist them if a store is
         # defined and the persist flag is True.
-        if not self.writer is None and persist:
+        if self.writer is not None and persist:
             self.writer.store(self.elements)
 
-    def delete(self, key, value=None, persist=True):
+    def delete(self, 
+            key: str, 
+            value: Optional[Any] = None, 
+            persist: bool = True
+        ) -> bool:
         """Delete the annotations for the given key. If the optional value is
         None all annotated values for the given key are removed. If the value is
         not None only the resulting (key,value) pair will be removed.
@@ -269,7 +300,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
         bool
         """
         if key in self.elements:
-            if not value is None:
+            if value is not None:
                 el = self.elements[key]
                 if isinstance(el, list):
                     # Find the given value in the list of associated values
@@ -296,12 +327,15 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                 del self.elements[key]
             # This part is only reached if the annotation set has changed. If
             # the annotation store is set we persist the changes
-            if not self.writer is None and persist:
+            if self.writer is not None and persist:
                 self.writer.store(self.elements)
             return True
         return False
 
-    def find_all(self, key, default_value=[]):
+    def find_all(self, 
+            key: str, 
+            default_value: List[Any] = []
+        ) -> List[Any]:
         """Get the list of values that are associated with the given key. If no
         value is associated with the key the default value is returned.
 
@@ -329,13 +363,11 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             # Unknown key. Return default value
             return default_value
 
-    def __setitem__(self, key, value):
-        self.update({key: value})
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def get(self, key, default_value=None, raise_error_on_multi_value=True):
+    def get(self, 
+            key: str, 
+            default_value: Optional[Any] = None, 
+            raise_error_on_multi_value: bool = True
+        ) -> Any:
         """Get a single value that is associated with the given key. If no value
         is associated with the key the default value is returned. If multiple
         values are associated with the given key a ValueError is raised unless
@@ -362,7 +394,7 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
                 # Check if there is more than one value associated with the key.
                 # It is assumed that at least one value is in the list.
                 if raise_error_on_multi_value and len(el) > 1:
-                    raise ValueError('multiple annotation values for \'' + str(key) + '\'')
+                    raise ValueError('multiple annotation values for \'{}\': {}'.format(key, el))
                 else:
                     return el[0]
             else:
@@ -372,7 +404,9 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             # Unknown key. Return default value
             return default_value
 
-    def update(self, properties):
+    def update(self, 
+            properties: Dict[str, Any]
+        ):
         """Update the current properties based on the values in the dictionary.
 
         The (key, value)-pairs in the properties dictionary define the update
@@ -406,10 +440,10 @@ class DefaultAnnotationSet(ObjectAnnotationSet):
             else:
                 self.add(key=key, value=value, replace=True, persist=False)
         # Persist changes
-        if not self.writer is None:
+        if self.writer is not None:
             self.writer.store(self.elements)
 
-    def values(self):
+    def values(self) -> Dict[str, Any]:
         """Get a dictionary of key,value pairs that contains all annotations.
 
         Returns

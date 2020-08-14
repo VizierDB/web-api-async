@@ -22,10 +22,12 @@ Each vizual command will create a new dataset instance on success.
 """
 
 from abc import abstractmethod
+from typing import Optional, List, Tuple, Dict, Any
 
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 from vizier.datastore.mimir.dataset import MimirDatasetHandle
-
+from vizier.datastore.base import Datastore
+from vizier.filestore.base import Filestore
+from vizier.datastore.dataset import DatasetDescriptor
 
 """Labels for resources in a previous download state."""
 RESOURCE_DATASET = 'dataset'
@@ -42,7 +44,10 @@ class VizualApiResult(object):
     represent simple key,value pairs where values are scalars or lists or
     dictionaries.
     """
-    def __init__(self, dataset, resources=None):
+    def __init__(self, 
+            dataset: DatasetDescriptor, 
+            resources: Dict[str,Any]=dict()
+        ):
         """Initialize the API result components.
 
         Parameters
@@ -192,11 +197,22 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def load_dataset(
-        self, datastore, filestore, file_id=None, url=None, detect_headers=True,
-        infer_types=True, load_format='csv', options=[], username=None,
-        password=None, resources=None, reload=False, human_readable_name=None
-    ):
+    def load_dataset(self, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        file_id: Optional[str] = None, 
+        url: Optional[str] = None, 
+        detect_headers: bool = True,
+        infer_types: bool = True, 
+        load_format: str = 'csv', 
+        options: List[Dict[str,str]] = [], 
+        username: str = None,
+        password: str = None, 
+        resources: Optional[Dict[str, Any]] = None, 
+        reload: bool = False, 
+        human_readable_name: Optional[str] = None,
+        proposed_schema: List[Tuple[str,str]] = []
+    ) -> VizualApiResult:
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
         one of them will be None. The user name and password may only be given

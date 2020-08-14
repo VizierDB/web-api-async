@@ -20,10 +20,14 @@ that represent the history of the branch.
 """
 
 from abc import abstractmethod
+from typing import Optional, List
+from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
-from vizier.viztrail.base import NamedObject
-
+from vizier.viztrail.named_object import NamedObject
+from vizier.viztrail.workflow import WorkflowHandle
+from vizier.viztrail.module.base import ModuleHandle, ModuleCommand
+from vizier.core.annotation.base import ObjectAnnotationSet
 
 """Initial name for the default branch."""
 DEFAULT_BRANCH = 'Default'
@@ -53,7 +57,12 @@ class BranchProvenance(object):
         Identifier of source workflow
 
     """
-    def __init__(self, source_branch=None, workflow_id=None, module_id=None, created_at=None):
+    def __init__(self, 
+            source_branch: Optional[str] = None, 
+            workflow_id: Optional[str] = None, 
+            module_id: Optional[str] = None, 
+            created_at: Optional[datetime] = None
+        ):
         """Initialize the provenance object.
 
         Raises ValueError if at least one but not all arguments are None.
@@ -100,7 +109,11 @@ class BranchHandle(NamedObject):
     provenance: vizier.viztrail.base.BranchProvenance
         Provenance information for this branch
     """
-    def __init__(self, identifier, properties, provenance):
+    def __init__(self, 
+            identifier: str, 
+            properties: ObjectAnnotationSet, 
+            provenance: BranchProvenance
+        ):
         """Initialize the viztrail branch.
 
         Parameters
@@ -117,7 +130,12 @@ class BranchHandle(NamedObject):
         self.provenance = provenance
 
     @abstractmethod
-    def append_workflow(self, modules, action, command, pending_modules=None):
+    def append_workflow(self, 
+            modules: List[ModuleHandle], 
+            action: str, 
+            command: ModuleCommand, 
+            pending_modules: Optional[List[ModuleHandle]]=None
+        ) -> WorkflowHandle:
         """Append a workflow as the new head of the branch. The new workflow may
         contain modules that have not been persisted prevoiusly (pending
         modules). These modules are persisted as part of the workflow being
@@ -151,7 +169,7 @@ class BranchHandle(NamedObject):
         """
         return self.provenance.created_at
 
-    def get_head(self):
+    def get_head(self) -> WorkflowHandle:
         """Shortcut the get the workflow at the head of the branch. The result
         is None if the branch is empty.
 
@@ -172,7 +190,7 @@ class BranchHandle(NamedObject):
         raise NotImplementedError
 
     @abstractmethod
-    def get_workflow(self, workflow_id=None):
+    def get_workflow(self, workflow_id: Optional[str] = None) -> WorkflowHandle:
         """Get the workflow with the given identifier. If the identifier is
         none the head of the branch is returned. The result is None if the
         branch is empty.

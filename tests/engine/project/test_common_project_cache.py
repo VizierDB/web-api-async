@@ -9,7 +9,7 @@ from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.project.cache.common import CommonProjectCache
 from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
-from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.named_object import PROPERTY_NAME
 
 
 SERVER_DIR = './.tmp'
@@ -47,12 +47,16 @@ class TestCommonProjectCache(unittest.TestCase):
         self.assertIsNone(self.cache.get_project('000'))
         self.assertFalse(self.cache.delete_project('000'))
 
-    def test_project_life_cycle(self):
+    def test_project_life_cycle(self) -> None:
         """Test creating, accessing, and deleting projects."""
         pj1 = self.cache.create_project({PROPERTY_NAME: 'My First Project'})
         self.assertEqual(len(self.cache.list_projects()), 1)
+        self.assertEqual(pj1.name, 'My First Project')
         pj2 = self.cache.create_project({PROPERTY_NAME: 'My Second Project'})
         self.assertEqual(len(self.cache.list_projects()), 2)
+        self.assertEqual(pj1.name, 'My First Project')
+        self.assertEqual(pj2.name, 'My Second Project')
+        self.assertNotEqual(pj1.identifier, pj2.identifier)
         self.assertEqual(self.cache.get_project(pj1.identifier).identifier, pj1.identifier)
         self.assertEqual(self.cache.get_project(pj1.identifier).name, 'My First Project')
         self.assertEqual(self.cache.get_project(pj2.identifier).identifier, pj2.identifier)

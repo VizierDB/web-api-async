@@ -19,6 +19,8 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
+from typing import Optional
+
 ARTIFACT_TYPE_DATASET = "application/dataset"
 ARTIFACT_TYPE_PYTHON  = "application/python"
 ARTIFACT_TYPE_TEXT    = "text/plain"
@@ -35,7 +37,11 @@ class ArtifactDescriptor(dict):
     artifact_type: string
         The type of the artifact.  Typically either a MIME type, or "application/dataset"
     """
-    def __init__(self, identifier, name, artifact_type):
+    def __init__(self, 
+            identifier: str, 
+            name: Optional[str], 
+            artifact_type: str
+        ):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -53,5 +59,5 @@ class ArtifactDescriptor(dict):
         self.artifact_type = artifact_type
 
     @property
-    def is_dataset(self):
+    def is_dataset(self) -> bool:
       return self.artifact_type == ARTIFACT_TYPE_DATASET

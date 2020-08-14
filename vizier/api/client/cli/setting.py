@@ -19,11 +19,11 @@
 from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
 from vizier.api.client.base import MSG_NO_DEFAULT_BRANCH, MSG_NO_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
-
+from vizier.api.client.base import VizierApiClient
 
 class SettingCommands(Command):
     """"Collection of commands that interact with the default settings."""
-    def __init__(self, api):
+    def __init__(self, api: VizierApiClient):
         """Initialize the viztrails API.
 
         Parameters

@@ -17,9 +17,11 @@
 """Implementation for an object properties set that is maintained using an
 object store.
 """
+from typing import cast, Dict, Any, Optional, List
+
 
 from vizier.core.annotation.base import AnnotationStore, DefaultAnnotationSet
-from vizier.core.io.base import DefaultObjectStore
+from vizier.core.io.base import ObjectStore, DefaultObjectStore
 from vizier.core.util import init_value
 
 
@@ -27,7 +29,9 @@ class PersistentAnnotationStore(AnnotationStore):
     """Persistent store for object annotations. Materializes object annotations
     using a given object store.
     """
-    def __init__(self, object_path, object_store=None):
+    def __init__(self, 
+            object_path: str, 
+            object_store: Optional[ObjectStore] = None):
         """Initialize the path to the resource in the object store. By default
         annotation stes are persisted as files on the locak file system.
 
@@ -61,13 +65,24 @@ class PersistentAnnotationStore(AnnotationStore):
             ]
         )
 
+    def values(self) -> Dict[str, Any]:
+        return dict(
+            (obj, self.object_store.read_object(
+                        self.object_store.join(self.object_path, obj)))
+            for obj in self.object_store.list_objects(self.object_path)
+        )
+
 
 class PersistentAnnotationSet(DefaultAnnotationSet):
     """Object annotation set that is associated with a persistent annotation
     store. This class is a shortcut to instantiate an object annotation store
     with a persistent annotation store defined in this module.
     """
-    def __init__(self, object_path, object_store=None, properties=None):
+    def __init__(self, 
+            object_path: str, 
+            object_store: Optional[ObjectStore] = None, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Initialize the file that maintains the properties. Annotations are
         read from file (if it exists).
 
@@ -85,9 +100,10 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
             Dictionary with initial set of properties
         """
         # Ensure that the object store is not None
+        super().__init__()
         if object_store is None:
             object_store = DefaultObjectStore()
-        if not properties is None:
+        if properties is not None:
             # Initialize properties from the given dictionary. The persistent
             # set can only be initialized once.
             if object_store.exists(object_path):
@@ -101,17 +117,18 @@ class PersistentAnnotationSet(DefaultAnnotationSet):
             )
             for key in properties:
                 value = properties[key]
+                self.delete(key, persist = False)
                 if isinstance(value, list):
                     for val in value:
                         self.add(key, val, persist=False)
                 else:
                     self.add(key, value, persist=False)
-            self.writer.store(self.elements)
+            cast(AnnotationStore, self.writer).store(self.elements)
         else:
             # Read properties from disk if the annotation file exists
             elements = dict()
             if object_store.exists(object_path):
-                obj = object_store.read_object(object_path)
+                obj = cast(List[Dict[str,Any]], object_store.read_object(object_path))
                 for anno in obj:
                     elements[anno['key']] = anno['value']
             # Initialize the default object annotation set

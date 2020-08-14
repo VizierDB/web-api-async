@@ -24,9 +24,11 @@ to define the front-end forms that are rendered in notebook cells to gather
 user input.
 """
 
+from typing import List, Dict, Any, Optional
+
 import json
 import yaml
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError # type: ignore[import]
 
 
 # ------------------------------------------------------------------------------
@@ -190,7 +192,13 @@ FILE_RELOAD = 'reload'
 
 CATEGORY_DEFAULT = 'default'
 
-def package_declaration(identifier, commands, name=None, category=None, description=None):
+def package_declaration(
+        identifier: str, 
+        commands: List[Dict[str, Any]], 
+        name: Optional[str] = None, 
+        category: Optional[str] = None, 
+        description: Optional[str] = None
+    ) -> Dict[str, Any]:
     """Create a dictionary containing a package declaration.
 
     Parameters
@@ -208,7 +216,7 @@ def package_declaration(identifier, commands, name=None, category=None, descript
     -------
     dict
     """
-    obj = dict({LABEL_ID: identifier})
+    obj:Dict[str, Any] = dict({LABEL_ID: identifier})
     obj[LABEL_COMMAND] = commands
     if not name is None:
         obj[LABEL_NAME] = name
@@ -219,7 +227,7 @@ def package_declaration(identifier, commands, name=None, category=None, descript
     return obj
 
 
-def validate_package(pckg_declaration):
+def validate_package(pckg_declaration: Dict[str, Any]) -> None:
     """Validate a given package declaration. Includes validating declarations
     for package commands. Raises a ValueError if an invalid package
     declaration is given.
@@ -252,7 +260,14 @@ def validate_package(pckg_declaration):
 # Command Declaration
 # ------------------------------------------------------------------------------
 
-def command_declaration(identifier, name=None, suggest=False, description=None, group_id=None, parameters=None, format=None):
+def command_declaration(identifier, 
+        name: Optional[str] = None, 
+        suggest: bool = False, 
+        description: Optional[str] = None, 
+        group_id: Optional[str] = None, 
+        parameters: Optional[List[Dict[str, Any]]] = None, 
+        format: List[Dict[str,Any]] = None
+    ) -> Dict[str, Any]:
     """Create a dictionary containing a package command declaration.
 
     Parameters
@@ -275,7 +290,7 @@ def command_declaration(identifier, name=None, suggest=False, description=None, 
     -------
     dict
     """
-    obj = dict({LABEL_ID: identifier})
+    obj:Dict[str, Any] = dict({LABEL_ID: identifier})
     if not name is None:
         obj[LABEL_NAME] = name
     else:
@@ -304,7 +319,11 @@ PARA_DATASET = 'dataset'
 PARA_NAME = 'name'
 
 
-def enum_value(value, text=None, is_default=False):
+def enum_value(
+        value: Any, 
+        text: str = None, 
+        is_default: bool = False
+    ) -> Dict[str,Any]:
     """Create dictionary representing a value in an enumeration of possible
     values for a command parameter.
 
@@ -330,14 +349,22 @@ def enum_value(value, text=None, is_default=False):
 
 
 def parameter_declaration(
-        identifier, name=None, data_type=None, index=0, required=True,
-        values=None, parent=None, language=None, default_value=None, hidden=False
-    ):
+        identifier: str, 
+        name: Optional[str] = None, 
+        data_type: Optional[str] = None, 
+        index: Optional[int] = 0, 
+        required: Optional[bool] = True,
+        values: Optional[List[Dict[str,Any]]] = None, 
+        parent: Optional[str] = None, 
+        language: Optional[str] = None, 
+        default_value: Optional[Any] = None, 
+        hidden: bool = False
+    ) -> Dict[str,Any]:
     """Create a dictionary that contains a module parameter specification.
 
     Parameters
     ----------
-    identifier: string
+    identifier: string`
         Unique parameter identifier
     name: string
         Printable parameter name
@@ -365,8 +392,8 @@ def parameter_declaration(
     dict
     """
     if not data_type in DATA_TYPES:
-        raise ValueError('invalid parameter data type \'' + data_type + '\'')
-    para = {
+        raise ValueError('invalid parameter data type \'' + (data_type if data_type is not None else "unknown") + '\'')
+    para:Dict[str,Any] = {
         LABEL_ID: identifier,
         LABEL_NAME: name,
         LABEL_DATATYPE: data_type,
@@ -385,7 +412,7 @@ def parameter_declaration(
     return para
 
 
-def para_column(index, parent=None):
+def para_column(index: int, parent: Optional[str] = None) -> Dict[str,Any]:
     """Return dictionary specifying the default column parameter used by most
     modules.
 
@@ -402,7 +429,7 @@ def para_column(index, parent=None):
     )
 
 
-def para_dataset(index):
+def para_dataset(index: int) -> Dict[str,Any]:
     """Return dictionary specifying the default dataset parameter used by most
     modules.
 
@@ -432,9 +459,15 @@ FORMAT_TYPE = [FORMAT_CONST, FORMAT_OPTION, FORMAT_VARIABLE]
 
 
 def format_element(
-    type, value, nested_format=None, prefix=None, suffix=None, delimiter=None,
-    lspace=True, rspace=True
-):
+    type: str, 
+    value: str, 
+    nested_format: Optional[List[Dict[str, Any]]] = None, 
+    prefix: Optional[str] = None, 
+    suffix: Optional[str] = None, 
+    delimiter: Optional[str] = None,
+    lspace: bool = True, 
+    rspace: bool = True
+) -> Dict[str, Any]:
     """Generic dictionary for elements in a command format declaration.
 
     Parameters
@@ -480,7 +513,11 @@ def format_element(
     return obj
 
 
-def constant_format(value, lspace=True, rspace=True):
+def constant_format(
+        value: str, 
+        lspace: bool = True, 
+        rspace: bool = True
+    ) -> Dict[str, Any]:
     """Dictionary for a constant in a format declaration for a package command.
 
     Parameters
@@ -504,7 +541,11 @@ def constant_format(value, lspace=True, rspace=True):
     )
 
 
-def group_format(parameter_id, format, delimiter=None):
+def group_format(
+        parameter_id: str, 
+        format: List[Dict[str,Any]], 
+        delimiter: Optional[str] = None
+    ) -> Dict[str, Any]:
     """Dictionary for a variable value in a format declaration for a package
     command that references a list of values. Creates a nested format element.
 
@@ -529,7 +570,11 @@ def group_format(parameter_id, format, delimiter=None):
     )
 
 
-def optional_format(parameter_id, prefix=None, suffix=None):
+def optional_format(
+        parameter_id: str, 
+        prefix: Optional[str] = None, 
+        suffix: Optional[str] = None
+    ) -> Dict[str, Any]:
     """Dictionary for a variable value in a format declaration for a package
     command that references a parameter and is dependent on the parameter being
     present.
@@ -556,7 +601,7 @@ def optional_format(parameter_id, prefix=None, suffix=None):
         suffix=suffix
     )
 
-def variable_format(parameter_id):
+def variable_format(parameter_id: str) -> Dict[str, Any]:
     """Dictionary for a variable value in a format declaration for a package
     command.
 
@@ -580,7 +625,7 @@ class PackageIndex(object):
     """Index of package command declarations. Maintains a dictionary that can be
     used to instantiate objects of the associated package task engine.
     """
-    def __init__(self, package):
+    def __init__(self, package: Dict[str, Any]):
         """Initialize the index from a package declaration.
 
         Validates the given package declaration. Raises ValueError if an
@@ -619,7 +664,9 @@ class PackageIndex(object):
                 format=cmd[LABEL_FORMAT] if LABEL_FORMAT in cmd else list()
             )
 
-    def get(self, command_id):
+    def get(self, 
+            command_id: str
+        ) -> "CommandDeclaration":
         """Get the parameter declarations for the given command.
 
         Raises ValueError if no command with the given identifier exists.
@@ -642,7 +689,13 @@ class CommandDeclaration(object):
     """Command declaration contains an index of command parameter declarations
     and the command format declaration.
     """
-    def __init__(self, identifier, name, paramaters, format, suggest=False, description=None):
+    def __init__(self, 
+            identifier: str, 
+            name: str, 
+            paramaters: List[Dict[str,Any]], 
+            format: List[Dict[str,Any]], 
+            suggest: bool = False,
+            description: Optional[str] = None):
         """Initialize the index from a given list of paramater declarations.
 
         Parameters
@@ -668,7 +721,9 @@ class CommandDeclaration(object):
         self.format = format
         self.suggest = suggest
 
-    def get(self, parameter_id):
+    def get(self, 
+            parameter_id: str
+        ) -> Dict[str, Any]:
         """Get declaration for parameter with given identifier.
 
         Raises ValueError if no parameter with the given identifier exists.
@@ -686,7 +741,9 @@ class CommandDeclaration(object):
             raise ValueError('unknown parameter \'' + str(parameter_id) + '\'')
         return self.parameters[parameter_id]
 
-    def mandatory(self, parent=None):
+    def mandatory(self, 
+            parent: str = None
+        ) -> List[str]:
         """Get a list of parameter names that are mandatory. The optional parent
         parameter allows to request mandatory parameter for nested components.
 

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 """Task processor for commands in the vizual package."""
+from typing import Optional, Dict, Any
 
 from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
@@ -26,9 +27,10 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
 import vizier.engine.packages.vizual.api.base as apibase
+from vizier.viztrail.command import ARG_ID, ARG_VALUE, ModuleArguments
 from vizier.config.app import AppConfig
-import vizier.mimir as mimir
-from vizier.datastore.mimir.dataset import MimirDatasetColumn
+from vizier.engine.task.base import TaskContext
+from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -38,7 +40,11 @@ class VizualTaskProcessor(TaskProcessor):
     uses an instance of the vizual API to allow running on different types of
     datastores (e.g., the default datastore or the Mimir datastore).
     """
-    def __init__(self, api=None, properties=None, config = AppConfig()):
+    def __init__(self, 
+            api: Optional[VizualApi] = None, 
+            properties: Dict[str, Any] = None, 
+            config: AppConfig = AppConfig()
+        ):
         """Initialize the vizual API instance. Either expects an API instance or
         a dictionary from which an instance can be loaded. The second option is
         only attempted if the given api is None.
@@ -49,13 +55,16 @@ class VizualTaskProcessor(TaskProcessor):
             Instance of the vizual API
         """
         self.config = config
-        if not api is None:
+        self.api: VizualApi
+        if api is not None:
             self.api = api
-        else:
+        elif properties is not None:
             # Expects a dictionary with a single element that contains the
             # class specification
             values = properties[PROPERTY_API]
             self.api = ClassLoader(values=values).get_instance()
+        else:
+            raise ValueError("VizualTaskProcessor expects either `properties` or `api`")
 
     def compute(self, command_id, arguments, context):
         """Compute results for the given vizual command using the set of user-
@@ -244,7 +253,8 @@ class VizualTaskProcessor(TaskProcessor):
         # dictionary of datasets in the context. Will raise exception if the
         # specified dataset does not exist.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        ds = context.get_dataset(ds_name)
+        # verify that the dataset exists
+        context.get_dataset(ds_name)
         datasets = dict(context.datasets)
         del datasets[ds_name]
         return ExecResult(
@@ -378,7 +388,7 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_load_dataset(self, args, context):
+    def compute_load_dataset(self, args: ModuleArguments, context: TaskContext) -> ExecResult:
         """Execute load dataset command.
 
         Parameters
@@ -433,9 +443,18 @@ class VizualTaskProcessor(TaskProcessor):
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
-                m_opts.append({'name':load_opt_key,  'value':load_opt_val})
+                m_opts.append({'name':load_opt_key, 'value':load_opt_val})
+
+        proposed_schema = [
+            (
+                column.get_value(cmd.PARA_SCHEMA_COLUMN, raise_error=True),
+                column.get_value(cmd.PARA_SCHEMA_TYPE, raise_error=True)
+            )
+            for column 
+            in args.get_value(cmd.PARA_SCHEMA, raise_error=False, default_value=[])
+        ]
         # Execute load command.
-        result = self.api.load_dataset(
+        result: VizualApiResult = self.api.load_dataset(
             datastore=context.datastore,
             filestore=context.filestore,
             file_id=file_id,
@@ -448,40 +467,43 @@ class VizualTaskProcessor(TaskProcessor):
             password=password,
             resources=context.resources,
             reload=reload,
-            human_readable_name = ds_name.upper()
-        )
-        # Delete the uploaded file (of load was from file). A reference to the
-        # created dataset is in the resources and will be used if the module is
-        # re-executed.
-        #if not file_id is None:
-        #    context.filestore.delete_file(file_id)
-        ds = DatasetDescriptor(
-            identifier=result.dataset.identifier,
-            name=ds_name,
-            columns=result.dataset.columns
-        )
-        from vizier.api.webservice import server
-        ds_output = server.api.datasets.get_dataset(
-            project_id=context.project_id,
-            dataset_id=ds.identifier,
-            offset=0,
-            limit=10
+            human_readable_name = ds_name.upper(),
+            proposed_schema = proposed_schema
         )
 
+        actual_schema = [
+                ModuleArguments([
+                    {
+                        ARG_ID: cmd.PARA_SCHEMA_COLUMN,
+                        ARG_VALUE: col.name
+                    },
+                    {
+                        ARG_ID: cmd.PARA_SCHEMA_TYPE,
+                        ARG_VALUE: col.data_type
+                    }
+                ], parent = cmd.PARA_SCHEMA)
+                for col in result.dataset.columns
+            ]
+        updated_args = ModuleArguments(args.to_list())
+        updated_args.arguments[cmd.PARA_SCHEMA] = actual_schema
+
+
         outputs = ModuleOutputs()
+        ds_output = DatasetOutput.from_handle(result.dataset, context.project_id, ds_name)
         if ds_output is not None:
-            ds_output['name'] = ds_name 
-            outputs.stdout.append(DatasetOutput(ds_output))
+            outputs.stdout.append(ds_output)
         else:
             outputs.stderr.append(TextOutput("Error displaying dataset"))
+
 
         return ExecResult(
             outputs=outputs,
             provenance=ModuleProvenance(
                 read=dict(), # need to explicitly declare a lack of dependencies
-                write={ds_name: ds},
+                write={ds_name: result.dataset},
                 resources=result.resources
-            )
+            ),
+            updated_arguments = updated_args
         )
 
     def compute_empty_dataset(self, args, context):
@@ -597,7 +619,7 @@ class VizualTaskProcessor(TaskProcessor):
             for option in options:
                 unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
                 unload_opt_val = option.get_value(cmd.PARA_UNLOAD_OPTION_VALUE)
-                m_opts.append({'name':unload_opt_key,  'value':unload_opt_val})
+                m_opts.append({'name':unload_opt_key, 'value':unload_opt_val})
         # Execute load command.
         dataset = context.get_dataset(ds_name)
         result = self.api.unload_dataset(

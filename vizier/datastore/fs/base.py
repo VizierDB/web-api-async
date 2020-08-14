@@ -24,18 +24,19 @@ import json
 import os
 import shutil
 import tempfile
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
+from typing import Tuple, List, Dict, Any, Optional
 
 from vizier.core.util import cast, get_unique_identifier
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
-from vizier.datastore.dataset import DatasetHandle, DatasetRow
+from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
-from vizier.filestore.base import FileHandle
+from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
-
-import vizier.datastore.base as base
 
 
 """Constants for data file names."""
@@ -60,7 +61,14 @@ class FileSystemDatastore(DefaultDatastore):
         """
         super(FileSystemDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, properties=None, human_readable_name=None, backend_options=None, dependencies=None):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Dict[str, Any] = {}, 
+            human_readable_name: Optional[str] = None, 
+            backend_options: Optional[List[Dict[str, str]]] = None, 
+            dependencies: List[str] = []
+        ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -87,12 +95,16 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
-        identifiers = set(row.identifier for row in rows if row.identifier >= 0)
+        identifiers = set(
+            row.identifier 
+            for row in rows 
+            if row.identifier is not None and row.identifier >= 0
+        )
         identifiers.add(0)
         max_row_id = max(identifiers)
         rows = [
             DatasetRow(
-                identifier = row.identifier if row.identifier >= 0 else idx + max_row_id,
+                identifier = row.identifier if row.identifier is not None and row.identifier >= 0 else idx + max_row_id,
                 values = row.values,
                 caveats = row.caveats
             )
@@ -156,7 +168,13 @@ class FileSystemDatastore(DefaultDatastore):
         shutil.rmtree(dataset_dir)
         return True
 
-    def download_dataset(self, url, username=None, password=None, filestore=None):
+    def download_dataset(self, 
+            url: str, 
+            username: str = None, 
+            password: str = None, 
+            filestore: Filestore = None,
+            proposed_schema: List[Tuple[str,str]] = []
+        ):
         """Create a new dataset from a given file. Returns the handle for the
         downloaded file only if the filestore has been provided as an argument
         in which case the file handle is meaningful file handle.
@@ -188,7 +206,7 @@ class FileSystemDatastore(DefaultDatastore):
             )
             # Since the filestore was given we return a tuple of dataset
             # descriptor and file handle
-            return self.load_dataset(fh), fh
+            return self.load_dataset(fh, proposed_schema), fh
         else:
             # Manually download the file temporarily
             temp_dir = tempfile.mkdtemp()
@@ -203,7 +221,7 @@ class FileSystemDatastore(DefaultDatastore):
                     filepath=download_file,
                     file_name=filename
                 )
-                dataset = self.load_dataset(fh)
+                dataset = self.load_dataset(fh, proposed_schema)
                 shutil.rmtree(temp_dir)
                 # Return only the dataset descriptor
                 return dataset
@@ -237,7 +255,10 @@ class FileSystemDatastore(DefaultDatastore):
             properties_filename=self.get_properties_filename(identifier)
         )
 
-    def load_dataset(self, f_handle):
+    def load_dataset(self, 
+            f_handle: FileHandle, 
+            proposed_schema: List[Tuple[str,str]] = []
+        ) -> FileSystemDatasetHandle:
         """Create a new dataset from a given file.
 
         Raises ValueError if the given file could not be loaded as a dataset.
@@ -260,8 +281,8 @@ class FileSystemDatastore(DefaultDatastore):
         # Open the file as a csv file. Expects that the first row contains the
         # column names. Read dataset schema and dataset rows into two separate
         # lists.
-        columns = []
-        rows = []
+        columns: List[DatasetColumn] = []
+        rows: List[DatasetRow] = []
         with f_handle.open() as csvfile:
             reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
             for col_name in next(reader):
@@ -365,6 +386,7 @@ class FileSystemDatastore(DefaultDatastore):
         -------
         string
         """
+        from vizier.datastore.mimir.store import DATA_OBJECT_FILE
         return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
 # ------------------------------------------------------------------------------

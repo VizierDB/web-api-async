@@ -16,18 +16,22 @@
 
 """Simple command line interpreter to test functionality of the vizier Api."""
 
+from typing import Optional, List
+
 from vizier.api.client.base import VizierApiClient
 from vizier.api.client.cli import print_header
 from vizier.api.client.cli.notebook import NotebookCommands
 from vizier.api.client.cli.setting import SettingCommands
 from vizier.api.client.cli.viztrail import ViztrailsCommands
+from vizier.core.annotation.base import ObjectAnnotationSet
+from vizier.api.routes.base import UrlFactory
 
 
 class CommandInterpreter(object):
     """The command interpreter allows to run simple commands against an instance
     of the vizier Api.
     """
-    def __init__(self, urls, defaults):
+    def __init__(self, urls: UrlFactory, defaults: Optional[ObjectAnnotationSet]):
         """Initialize the Url factory for requests and the object with the
         default values.
 
@@ -45,7 +49,7 @@ class CommandInterpreter(object):
             NotebookCommands(api=self.api)
         ]
 
-    def eval(self, tokens):
+    def eval(self, tokens: List[str]) -> None:
         """Evaluate a command line. Runs through the set of configured commands
         until the first command evaluates to True.
 

@@ -18,6 +18,9 @@
 The project handle may also contain references to the datastore and filestore
 that are associated with a project.
 """
+from vizier.viztrail.base import ViztrailHandle
+from vizier.datastore.base import Datastore
+from vizier.filestore.base import Filestore
 
 
 class ProjectHandle(object):
@@ -26,7 +29,11 @@ class ProjectHandle(object):
     for projects that maintain their datastores and filestores in separate
     containers or virtual machines.
     """
-    def __init__(self, viztrail, datastore=None, filestore=None):
+    def __init__(self, 
+            viztrail: ViztrailHandle, 
+            datastore: Datastore, 
+            filestore: Filestore
+        ):
         """Initialize the project components.
 
         Parameters

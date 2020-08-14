@@ -17,13 +17,12 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
+from typing import Optional, IO, Dict, Any
 
 import gzip
 import mimetypes
 
 from abc import abstractmethod
-
-from vizier.core.util import get_unique_identifier
 
 
 """File format identifier."""
@@ -35,7 +34,12 @@ ENCODING_GZIP = 'gzip'
 
 class FileHandle(object):
     """File handle for an uploaded file."""
-    def __init__(self, identifier, filepath, file_name, mimetype=None, encoding=None):
+    def __init__(self, 
+            identifier: str, 
+            filepath: str, 
+            file_name: str, 
+            mimetype: Optional[str] = None, 
+            encoding: Optional[str] = None):
         """Initialize the file identifier, the (full) file path, the file
         format, and the file encoding (for compressed files).
 
@@ -87,7 +91,7 @@ class FileHandle(object):
         -------
         string
         """
-        if self.mimetype ==  FORMAT_CSV:
+        if self.mimetype == FORMAT_CSV:
             return ','
         elif self.mimetype == FORMAT_TSV:
             return '\t'
@@ -114,7 +118,7 @@ class FileHandle(object):
         """
         return self.file_name
 
-    def open(self):
+    def open(self) -> IO:
         """Get open file object for associated file.
 
         Returns
@@ -148,7 +152,11 @@ class Filestore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def download_file(self, uri, username=None, password=None):
+    def download_file(self, 
+            url: str, 
+            username: str = None, 
+            password: str = None
+        ) -> FileHandle:
         """Create a local copy of the identified web resource.
 
         Parameters
@@ -167,7 +175,7 @@ class Filestore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_file(self, identifier):
+    def get_file(self, identifier: str) -> FileHandle:
         """Get handle for file with given identifier. Returns None if no file
         with given identifier exists.
 
@@ -232,7 +240,7 @@ class Filestore(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_download_filename(url, info):
+def get_download_filename(url: str, info: Dict[str,Any]) -> str:
     """Extract a file name from a given Url or request info header.
 
     Parameters

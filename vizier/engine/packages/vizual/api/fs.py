@@ -17,10 +17,14 @@
 """Default implementation of the vizual API. Uses the file system based
 filestore and datastore to persist files and datasets.
 """
+from typing import Optional, List, Tuple, Dict, Any
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import DatasetColumn, DatasetRow
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
+from vizier.datastore.base import Datastore
+from vizier.filestore.base import Filestore
+from vizier.datastore.fs.base import FileSystemDatastore
 
 import vizier.engine.packages.vizual.api.base as base
 
@@ -60,7 +64,6 @@ class DefaultVizualApi(VizualApi):
         # Delete column from schema. Keep track of the column name for the
         # result output.
         columns = list(dataset.columns)
-        name = columns[col_index].name
         del columns[col_index]
         # Delete all value for the deleted column
         rows = dataset.fetch_rows()
@@ -217,7 +220,7 @@ class DefaultVizualApi(VizualApi):
                 name=name if not name is None else ''
             )
         )
-         # Add a null value to each row for the new column
+        # Add a null value to each row for the new column
         for row in rows:
             row.values.insert(position, None)
         # Store updated dataset to get new identifier
@@ -271,11 +274,22 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def load_dataset(
-        self, datastore, filestore, file_id=None, url=None, detect_headers=True,
-        infer_types=True, load_format='csv', options=[], username=None,
-        password=None, resources=None, reload=False, human_readable_name=None
-    ):
+    def load_dataset(self, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        file_id: Optional[str] = None, 
+        url: Optional[str] = None, 
+        detect_headers: bool = True,
+        infer_types: bool = True, 
+        load_format: str = 'csv', 
+        options: List[Dict[str,str]] = [], 
+        username: str = None,
+        password: str = None, 
+        resources: Optional[Dict[str, Any]] = None, 
+        reload: bool = False, 
+        human_readable_name: Optional[str] = None,
+        proposed_schema: List[Tuple[str,str]] = []
+    ) -> VizualApiResult:
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
         one of them will be None. The user name and password may only be given
@@ -321,7 +335,7 @@ class DefaultVizualApi(VizualApi):
         """
         dataset = None
         result_resources = dict()
-        if not url is None:
+        if url is not None:
             # If the same url has been previously used to generate a dataset
             # we do not need to download the file and re-create the dataset.
             if not reload and not resources is None and base.RESOURCE_URL in resources and base.RESOURCE_DATASET in resources:
@@ -332,6 +346,7 @@ class DefaultVizualApi(VizualApi):
             # If dataset is still None we need to create a new dataset by
             # downloading the given Uri
             if dataset is None:
+                assert(isinstance(datastore, FileSystemDatastore))
                 dataset = datastore.download_dataset(
                     url=url,
                     username=username,
@@ -339,6 +354,9 @@ class DefaultVizualApi(VizualApi):
                 )
             result_resources[base.RESOURCE_URL] = url
         else:
+            # either url or file_id must not be None
+            assert(file_id is not None)
+            
             # If the same file has been previously used to generate a dataset
             # we do not need to re-create it.
             if not resources is None and base.RESOURCE_FILEID in resources and base.RESOURCE_DATASET in resources:
@@ -350,6 +368,7 @@ class DefaultVizualApi(VizualApi):
             if dataset is None:
                 dataset = datastore.load_dataset(
                     f_handle=filestore.get_file(file_id),
+                    proposed_schema=proposed_schema
                 )
             result_resources[base.RESOURCE_FILEID] = file_id
         # Ensure that the dataset is not None at this point

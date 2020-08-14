@@ -19,11 +19,15 @@ datastore is for example used by python cell processors that do not have access
 to a shared file system, e.g., processors that are sandboxed in containers.
 """
 
+from typing import List, Dict, Any, Optional
 import json
 import requests
 
 from vizier.api.client.datastore.dataset import RemoteDatasetHandle
 from vizier.datastore.base import Datastore
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle, DatasetDescriptor
+from vizier.datastore.annotation.base import DatasetCaveat
+from vizier.api.routes.datastore import DatastoreClientUrlFactory
 
 import vizier.api.serialize.dataset as serialize
 import vizier.api.serialize.deserialize as deserialize
@@ -35,7 +39,7 @@ class DatastoreClient(Datastore):
 
     The datastore only allows access to datasets for a single project.
     """
-    def __init__(self, urls):
+    def __init__(self, urls: DatastoreClientUrlFactory):
         """Initialize the url factory to retireve and manipulate API resources.
 
         Parameters
@@ -45,7 +49,11 @@ class DatastoreClient(Datastore):
         """
         self.urls = urls
 
-    def create_dataset(self, columns, rows, properties=None):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Optional[Dict[str, Any]] =None
+        ) -> DatasetDescriptor:
         """Create a new dataset in the project datastore using the API. Expects
         a list of columns and the rows for the dataset. All columns and rows
         should have unique non-negative identifier (although this may not
@@ -70,7 +78,7 @@ class DatastoreClient(Datastore):
         vizier.datastore.dataset.DatasetDescriptor
         """
         url = self.urls.create_dataset()
-        data = {
+        data:Dict[str, Any] = {
             labels.COLUMNS: [serialize.DATASET_COLUMN(col) for col in columns],
             labels.ROWS: [serialize.DATASET_ROW(row) for row in rows]
         }
@@ -83,7 +91,7 @@ class DatastoreClient(Datastore):
         obj = json.loads(r.text)
         return deserialize.DATASET_DESCRIPTOR(obj)
 
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.
 
@@ -112,7 +120,11 @@ class DatastoreClient(Datastore):
             store=self
         )
 
-    def get_caveats(self, identifier, column_id=None, row_id=None):
+    def get_caveats(self, 
+            identifier: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get all dataset annotations.
 
         Parameters
@@ -127,11 +139,11 @@ class DatastoreClient(Datastore):
         url = self.urls.get_dataset_caveats(identifier, column_id, row_id)
         r = requests.get(url)
         if r.status_code == 404:
-            return None
+            return list()
         elif r.status_code != 200:
             r.raise_for_status()
         # The result is the workflow handle
-        return [deserialize.DATASET_CAVEAT(obj) for obj in json.loads(r.text)]
+        return [deserialize.CAVEAT(obj) for obj in json.loads(r.text)]
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the

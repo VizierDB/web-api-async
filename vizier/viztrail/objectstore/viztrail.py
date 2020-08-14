@@ -17,15 +17,18 @@
 """Implementation for a viztrail handle that maintains all resources as objects
 and folders in an object store.
 """
+from typing import Optional, cast, Dict, List, Any
+from datetime import datetime
 
 from vizier.core.io.base import DefaultObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
-from vizier.viztrail.base import ViztrailHandle, PROPERTY_NAME
-from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH
-
+from vizier.viztrail.base import ViztrailHandle
+from vizier.viztrail.named_object import PROPERTY_NAME
+from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH, BranchHandle
+from vizier.core.io.base import ObjectStore
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
 FOLDER_MODULES = 'modules'
@@ -55,10 +58,17 @@ class OSViztrailHandle(ViztrailHandle):
     branches/       : Viztrail branches
     modules/        : Modules in viztrail workflows
     """
-    def __init__(
-        self, identifier, properties, base_path, branches, default_branch,
-        object_store=None, created_at=None, branch_index=None,
-        branch_folder=None, modules_folder=None
+    def __init__(self, 
+            identifier: str, 
+            properties: PersistentAnnotationSet, 
+            base_path: str, 
+            branches: List[BranchHandle], 
+            default_branch: Optional[BranchHandle],
+            object_store: ObjectStore = DefaultObjectStore(), 
+            created_at: datetime = get_current_time(), 
+            branch_index: Optional[str] = None,
+            branch_folder: Optional[str] = None, 
+            modules_folder: Optional[str] = None
     ):
         """Initialize the viztrail descriptor.
 
@@ -94,7 +104,7 @@ class OSViztrailHandle(ViztrailHandle):
         )
         # Initizlize the object store and identifier for all subfolders.
         self.base_path = base_path
-        self.object_store = init_value(object_store, DefaultObjectStore())
+        self.object_store = object_store
         self.branch_folder = init_value(branch_folder, self.object_store.join(base_path, FOLDER_BRANCHES))
         self.branch_index = init_value(branch_index, self.object_store.join(self.branch_folder, OBJ_BRANCHINDEX))
         self.modules_folder =  init_value(modules_folder, self.object_store.join(base_path, FOLDER_MODULES))
@@ -136,7 +146,11 @@ class OSViztrailHandle(ViztrailHandle):
         return branch
 
     @staticmethod
-    def create_viztrail(identifier, base_path, object_store=None, properties={}) :
+    def create_viztrail(
+            identifier: str, 
+            base_path: str, 
+            object_store: Optional[ObjectStore] = None, 
+            properties: Optional[Dict[str, Any]] = None) :
         """Create a new viztrail resource. Will create the base directory for
         the viztrail.
 
@@ -249,7 +263,10 @@ class OSViztrailHandle(ViztrailHandle):
             return False
 
     @staticmethod
-    def load_viztrail(base_path, object_store=None):
+    def load_viztrail(
+            base_path: str, 
+            object_store: Optional[ObjectStore] = None
+        ) -> Optional["OSViztrailHandle"]:
         """Load all viztrail resources from given object store.
 
         Parameters
@@ -266,10 +283,14 @@ class OSViztrailHandle(ViztrailHandle):
         # Make sure the object store is not None
         if object_store is None:
             object_store = DefaultObjectStore()
+        object_store = cast(ObjectStore, object_store)
         # Load viztrail metadata
         metadata = object_store.read_object(
             object_store.join(base_path, OBJ_METADATA)
         )
+        if metadata is None:
+            return None
+        metadata = cast(Dict[str, Any], metadata)
         identifier = metadata[KEY_IDENTIFIER]
         created_at = to_datetime(metadata[KEY_CREATED_AT])
         # Load active branches. The branch index resource contains a list of
@@ -278,8 +299,8 @@ class OSViztrailHandle(ViztrailHandle):
         branch_index = object_store.join(branch_folder, OBJ_BRANCHINDEX)
         modules_folder = object_store.join(base_path, FOLDER_MODULES)
         branches = list()
-        default_branch = None
-        for b in object_store.read_object(branch_index):
+        default_branch: Optional[BranchHandle] = None
+        for b in cast(List[Dict[str, Any]], object_store.read_object(branch_index)):
             branch_id = b[KEY_IDENTIFIER]
             is_default = b[KEY_DEFAULT]
             branches.append(

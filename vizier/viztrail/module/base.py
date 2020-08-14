@@ -19,12 +19,14 @@ handle. The handle maintains information about the module command, status, the
 module outputs, and the module state (datasets).
 """
 
-from abc import abstractmethod
+from typing import Optional
+from datetime import datetime
 
+from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
-
+from vizier.viztrail.command import ModuleCommand, ModuleArguments
 
 """Constants for possible module states."""
 MODULE_PENDING = 0
@@ -46,7 +48,7 @@ class ModuleState(object):
     """Object representing the module (and workflow) state. Implements boolean
     properties to test the current state.
     """
-    def __init__(self, state):
+    def __init__(self, state:int):
         """Set the state value. Raises ValueError if given state is not a valid
         value (one of PENDING, RUNNING, CANCELED, ERROR, SUCCESS).
 
@@ -160,10 +162,15 @@ class ModuleHandle(ModuleState):
     timestamp: vizier.viztrail.module.timestamp.ModuleTimestamp
         Module timestamp
     """
-    def __init__(
-        self, command, external_form, identifier=None, state=None,
-        timestamp=None, outputs=None, provenance=None
-    ):
+    def __init__(self, 
+            command: ModuleCommand, 
+            external_form: Optional[str], 
+            identifier: Optional[str] = None, 
+            state: int = MODULE_PENDING,
+            timestamp: ModuleTimestamp = ModuleTimestamp(), 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance()
+        ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
 
@@ -228,14 +235,15 @@ class ModuleHandle(ModuleState):
             self.outputs
         )+("\n"+str(self.outputs) if self.outputs is not None else "")
 
-
-    @abstractmethod
-    def set_canceled(self, finished_at=None, outputs=None):
+    def set_canceled(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ) -> None:
         """Set status of the module to canceled. The finished_at property of the
         timestamp is set to the given value or the current time (if None). The
         module outputs are set to the given value. If no outputs are given the
         module output streams will be empty.
-
+        
         Parameters
         ----------
         finished_at: datetime.datetime, optional
@@ -243,10 +251,15 @@ class ModuleHandle(ModuleState):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        raise NotImplementedError
+        # Update state, timestamp and output information. Clear database state.
+        self.state = MODULE_CANCELED
+        self.timestamp.finished_at = finished_at
+        self.outputs = outputs
 
-    @abstractmethod
-    def set_error(self, finished_at=None, outputs=None):
+    def set_error(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ) -> None:
         """Set status of the module to error. The finished_at property of the
         timestamp is set to the given value or the current time (if None). The
         module outputs are adjusted to the given value. the output streams are
@@ -259,10 +272,15 @@ class ModuleHandle(ModuleState):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        raise NotImplementedError
+        # Update state, timestamp and output information. Clear database state.
+        self.state = MODULE_ERROR
+        self.timestamp.finished_at = finished_at
+        self.outputs = outputs
 
-    @abstractmethod
-    def set_running(self, started_at=None, external_form=None):
+    def set_running(self, 
+            started_at: datetime = get_current_time(), 
+            external_form: Optional[str] = None
+        ) -> None:
         """Set status of the module to running. The started_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -273,10 +291,20 @@ class ModuleHandle(ModuleState):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        raise NotImplementedError
+        # Update state and timestamp information. Clear outputs and, database
+        # state,
+        if external_form is not None:
+            self.external_form = external_form
+        self.state = MODULE_RUNNING
+        self.timestamp.started_at = started_at
+        self.outputs = ModuleOutputs()
 
-    @abstractmethod
-    def set_success(self, finished_at=None, outputs=None, provenance=None):
+    def set_success(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance(),
+            updated_arguments: Optional[ModuleArguments] = None
+        ):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -294,10 +322,22 @@ class ModuleHandle(ModuleState):
             Provenance information about datasets that were read and writen by
             previous execution of the module.
         """
-        raise NotImplementedError
+        # Update state, timestamp, database state, outputs and provenance
+        # information.
+        self.state = MODULE_SUCCESS
+        self.timestamp.finished_at = finished_at
+        # If the module is set to success straight from pending state the
+        # started_at timestamp may not have been set.
+        if self.timestamp.started_at is None:
+            self.timestamp.started_at = self.timestamp.finished_at
+        if updated_arguments is not None:
+            self.command.arguments = updated_arguments
+        self.outputs = outputs
+        self.provenance = provenance
 
-    @abstractmethod
-    def update_property(self, external_form):
+    def update_property(self, 
+            external_form: Optional[str] = None
+        ) -> None:
         """Update the value for the external command representation
 
         Parameters
@@ -305,4 +345,4 @@ class ModuleHandle(ModuleState):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        raise NotImplementedError
+        self.external_form = external_form

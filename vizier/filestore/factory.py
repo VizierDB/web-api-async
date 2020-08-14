@@ -20,6 +20,7 @@ the project is instantiated.
 """
 
 from abc import abstractmethod
+from vizier.filestore.base import Filestore
 
 
 class FilestoreFactory(object):
@@ -40,7 +41,7 @@ class FilestoreFactory(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_filestore(self, identifier):
+    def get_filestore(self, identifier: str) -> Filestore:
         """Get the filestore instance for the project with the given identifier.
 
         Paramaters

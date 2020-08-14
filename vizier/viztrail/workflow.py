@@ -21,10 +21,12 @@ Viztrails are collections of workflows (branches). A viztrail maintains not
 only the different workflows but also the history for each of them.
 """
 
-from vizier.core.util import init_value
-from vizier.core.timestamp import get_current_time, to_datetime
-from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS
+from typing import Optional, List
+from datetime import datetime
 
+from vizier.core.util import init_value
+from vizier.core.timestamp import get_current_time
+from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS, ModuleHandle
 
 """Workflow modification action identifier."""
 ACTION_APPEND = 'apd'
@@ -52,7 +54,13 @@ class WorkflowDescriptor(object):
     package_id: string
         Identifier of the package the module command is from
     """
-    def __init__(self, identifier, action, package_id=None, command_id=None, created_at=None):
+    def __init__(self, 
+            identifier: str, 
+            action: str, 
+            package_id: Optional[str] = None, 
+            command_id: Optional[str] = None, 
+            created_at: Optional[datetime] = None
+        ):
         """Initialize the descriptor. If action is not the branch create action
         the package_id and command_id are expected to not be None.
 
@@ -96,7 +104,12 @@ class WorkflowHandle(object):
         Sequence of modules that make up the workflow and result in the current
         state of the database after successful workflow execution.
     """
-    def __init__(self, identifier, branch_id, modules, descriptor):
+    def __init__(self, 
+            identifier: str, 
+            branch_id: str, 
+            modules: List[ModuleHandle], 
+            descriptor: WorkflowDescriptor
+        ):
         """Initialize the workflow handle.
 
         Parameters

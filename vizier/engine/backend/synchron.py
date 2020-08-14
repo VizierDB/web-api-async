@@ -22,17 +22,20 @@ The synchronized backend can also be used as a base class for the asynchronous
 backend.
 """
 
-from abc import abstractmethod
+from typing import Dict
 
 from vizier.engine.backend.base import TaskExecEngine
 from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
-
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.engine.task.processor import TaskProcessor
 
 class SynchronousTaskEngine(TaskExecEngine):
     """Backend that only supports synchronous execution of tasks."""
-    def __init__(self, commands, projects):
+    def __init__(self, 
+            commands: Dict[str, Dict[str, TaskProcessor]], 
+            projects
+        ):
         """Initialize the commands dictionary that contains the task engines
         for all commands that can be executed. This is a dictionary of
         dictionaries that are keyed by the package identifier. Each internal

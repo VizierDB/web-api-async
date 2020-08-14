@@ -21,15 +21,19 @@ workflows in vizier projects.
 from vizier.viztrail.command import ModuleCommand
 
 import vizier.api.serialize.module as serialmd
-import vizier.api.serialize.project as serialpr
 import vizier.api.serialize.workflow as serialwf
+from vizier.engine.base import VizierEngine
+from vizier.api.routes.base import UrlFactory
 
 
 class VizierWorkflowApi(object):
     """The Vizier workflow API implements the methods that correspond to
     requests that access and manipulate workflows in vizier projects.
     """
-    def __init__(self, engine, urls):
+    def __init__(self, 
+            engine: VizierEngine, 
+            urls: UrlFactory
+        ):
         """Initialize the API components.
 
         Parameters

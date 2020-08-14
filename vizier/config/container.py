@@ -42,10 +42,9 @@ run:
 logs:
     server
 """
+from typing import Dict, Any
 
-import os
-
-from vizier.config.app import AppConfig
+from vizier.config.app import AppConfig, DEFAULT_SETTINGS
 from vizier.config.base import get_config_value
 
 
@@ -63,7 +62,7 @@ class ContainerConfig(AppConfig):
     Extends the application configuration object with the project id and the
     url of the controlling web service.
     """
-    def __init__(self, default_values=None):
+    def __init__(self, default_values: Dict[str, Any] = DEFAULT_SETTINGS):
         """Initialize the configuration object from the respective environment
         variables and the optional default values.
 

@@ -17,14 +17,18 @@
 """This module contains helper methods for the webservice that are used to
 serialize datasets.
 """
+from typing import Dict, Any, Optional, List
 
 import vizier.api.serialize.base as serialize
 import vizier.api.routes.base as routes
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor, DatasetHandle
+from vizier.datastore.annotation.base import DatasetCaveat
+from vizier.engine.project.base import ProjectHandle
+from vizier.api.routes.base import UrlFactory
 
-
-def CAVEAT(caveat):
+def CAVEAT(caveat: DatasetCaveat) -> Dict[str, Any]:
     """Get dictionary serialization for a dataset annotation.
 
     Parameters
@@ -36,10 +40,10 @@ def CAVEAT(caveat):
     -------
     dict
     """
-    return anno.to_dict()
+    return caveat.to_dict()
 
 
-def DATASET_COLUMN(column):
+def DATASET_COLUMN(column: DatasetColumn) -> Dict[str, Any]:
     """Dictionary serialization for a dataset column.
 
     Parameters
@@ -80,15 +84,20 @@ def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
         labels.OBJECT_TYPE: artifact.artifact_type
     }
     #if not name is None:
-     #   obj[labels.NAME] = name
+    #   obj[labels.NAME] = name
     # Add self reference if the project and url factory are given
-    if not project is None and not urls is None:
-        project_id = project.identifier
-        dataobj_id = artifact.identifier
-        obj[labels.LINKS] = {}
+    # if not project is None and not urls is None:
+    #     project_id = project.identifier
+    #     dataobj_id = artifact.identifier
+    #     obj[labels.LINKS] = {}
     return obj
 
-def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
+def DATASET_DESCRIPTOR(
+        dataset: DatasetDescriptor, 
+        name: Optional[str] = None, 
+        project: Optional[ProjectHandle] = None, 
+        urls: Optional[UrlFactory] = None
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a dataset descriptor.
 
     Parameters
@@ -138,7 +147,14 @@ def DATASET_DESCRIPTOR(dataset, name=None, project=None, urls=None):
     return obj
 
 
-def DATASET_HANDLE(project, dataset, rows, defaults, urls, offset=0, limit=-1):
+def DATASET_HANDLE(
+        project: ProjectHandle, 
+        dataset: DatasetHandle, 
+        rows: List[DatasetRow], 
+        defaults: Any, # ConfigObject uses type hacking... pretend it's an any
+        urls: UrlFactory, 
+        offset: int = 0, 
+        limit: int = -1):
     """Dictionary serialization for dataset handle. Includes (part of) the
     dataset rows.
 
@@ -266,7 +282,7 @@ def DATASET_IDENTIFIER(identifier, name):
     }
 
 
-def DATASET_ROW(row):
+def DATASET_ROW(row: DatasetRow) -> Dict[str, Any]:
     """Dictionary serialization for a dataset row.
 
     Parameters

@@ -18,7 +18,7 @@
 server instances.
 """
 
-from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.named_object import PROPERTY_NAME
 
 
 # ------------------------------------------------------------------------------
@@ -134,8 +134,6 @@ def validate_json_request(request, required=None, optional=None):
         if not key in possible_keys:
             raise InvalidRequest('unknown element \'' + key + '\'')
     return obj
-
-
 
 def validate_name(properties, message='not a valid name'):
     """Ensure that a name property (if given) is not None or the empty string.

@@ -6,7 +6,9 @@ EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
 IS_TRAVIS=${TRAVIS:-false}
 
 #start vizier and mimir
-./tools/vizier test devmimir
+if [ "$NO_VIZIER" != "true" ] ; then
+  ./tools/vizier test devmimir
+fi
 
 if [ "$IS_TRAVIS" == "false" ] ; then
   trap "kill 0" EXIT
@@ -37,11 +39,13 @@ for CURRENT_TEST in $TESTS; do
   echo "------- " $CURRENT_TEST " --------"
   python3 -m unittest $CURRENT_TEST 2>&1 | tee -a $LAST_TEST_FILE 
 done
-awk '{ if(x) print $0; x=0 } /======================================================================/ { x = 1 }' < last_test_results.txt \
-  | sed $EXTRACT_FAILING_UNIT_CLASSES \
-  | uniq > $LAST_FAILURES_FILE
-if [ "$(cat $LAST_FAILURES_FILE | tr -d '\n')" ] ; then
-  echo
-  echo "==== FAILED TESTS ===="
-  cat $LAST_FAILURES_FILE
+if [ -f $LAST_TEST_FILE ] ; then
+  awk '{ if(x) print $0; x=0 } /======================================================================/ { x = 1 }' < last_test_results.txt \
+    | sed $EXTRACT_FAILING_UNIT_CLASSES \
+    | uniq > $LAST_FAILURES_FILE
+  if [ "$(cat $LAST_FAILURES_FILE | tr -d '\n')" ] ; then
+    echo
+    echo "==== FAILED TESTS ===="
+    cat $LAST_FAILURES_FILE
+  fi
 fi

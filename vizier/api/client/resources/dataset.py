@@ -15,6 +15,7 @@
 # limitations under the License.
 
 """Objects representing descriptors and handles for datasets."""
+from typing import List, Dict, Any, Optional
 
 from vizier.datastore.base import get_column_index
 from vizier.datastore.dataset import DatasetColumn
@@ -27,7 +28,12 @@ class DatasetDescriptor(object):
     """A dataset descriptor is simply an identifier and a dictionary of HATEOAS
     references.
     """
-    def __init__(self, identifier, name, columns, links):
+    def __init__(self, 
+            identifier: str, 
+            name: Optional[str],
+            columns: List[DatasetColumn], 
+            links: Dict[str, Any]
+        ):
         """Initialize the dataset identifier, list of columns, and HATEOAS
         references.
 

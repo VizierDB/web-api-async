@@ -8,7 +8,7 @@ import unittest
 from vizier.engine.packages.pycell.command import python_cell
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.viztrail import OSViztrailHandle
-from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.named_object import PROPERTY_NAME
 from vizier.viztrail.module.base import MODULE_SUCCESS
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -157,7 +157,6 @@ class TestOSViztrail(unittest.TestCase):
             base_path=base_path
         )
         self.assertEqual(vt.identifier, 'ABC')
-        self.assertIsNone(vt.name)
 
     def test_create_load_delete(self):
         """Ensure that create and load works properly."""

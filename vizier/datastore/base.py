@@ -20,8 +20,12 @@ workflows.
 """
 
 from abc import abstractmethod
+from typing import Optional, List, Dict, Any, Tuple
 
 import os
+from vizier.filestore.base import FileHandle
+from vizier.datastore.annotation.base import DatasetCaveat
+from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor, DatasetHandle
 
 
 """Metadata file name for datasets in the the default datastore."""
@@ -31,7 +35,11 @@ METADATA_FILE = 'annotations.json'
 class Datastore(object):
     """Abstract API to store and retireve datasets."""
     @abstractmethod
-    def create_dataset(self, columns, rows, properties={}):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Dict[str, Any] = {}
+        ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -58,7 +66,11 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_caveats(self, identifier, column_id=None, row_id=None):
+    def get_caveats(self, 
+            identifier: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
@@ -111,7 +123,7 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.
 
@@ -127,7 +139,7 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_descriptor(self, identifier):
+    def get_descriptor(self, identifier: str) -> DatasetDescriptor:
         """Get the descriptor for the dataset with given identifier from the
         data store. Returns None if no dataset with the given identifier exists.
 
@@ -143,7 +155,10 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def load_dataset(self, f_handle):
+    def load_dataset(self, 
+            f_handle: FileHandle, 
+            proposed_schema: List[Tuple[str, str]] = []
+        ) -> DatasetHandle:
         """Create a new dataset from a given file.
 
         Raises ValueError if the given file could not be loaded as a dataset.
@@ -290,7 +305,7 @@ class DefaultDatastore(Datastore):
         raise NotImplementedError
 
 
-    def get_dataset_dir(self, identifier):
+    def get_dataset_dir(self, identifier: str) -> str:
         """Get the base directory for a dataset with given identifier. Having a
         separate method makes it easier to change the folder structure used to
         store datasets.

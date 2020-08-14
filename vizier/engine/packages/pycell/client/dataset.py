@@ -18,7 +18,7 @@
 """
 
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
-from bokeh.models.sources import ColumnDataSource
+from bokeh.models.sources import ColumnDataSource # type: ignore[import]
 
 class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
@@ -148,7 +148,7 @@ class DatasetClient(object):
                 return col
         return None
 
-    def insert_column(self, name, data_type = None, position=None):
+    def insert_column(self, name, data_type = "varchar", position=None):
         """Add a new column to the dataset schema.
 
         Parameters
@@ -295,7 +295,7 @@ class DatasetClient(object):
         bokeh.models.sources.ColumnDataSource  
         """
 
-        if columns == None:
+        if columns is None:
             columns = self.columns
         return ColumnDataSource(dict([
             (
@@ -306,7 +306,7 @@ class DatasetClient(object):
         ]))
         
     def show_map(self, lat_col, lon_col, label_col=None, center_lat=None, center_lon=None, zoom=8, height="500", map_provider='OSM'):
-        import numpy as np
+        import numpy as np # type: ignore[import]
         width="100%"
         addrpts = list()
         lats = []
@@ -322,8 +322,8 @@ class DatasetClient(object):
                 if not label_col is None:
                     label = str(row.get_value(label_col))
                 rowstr = '[' + str(lat) + ', ' + \
-                            str(lon) + ', \'' + \
-                            label + '\']'
+                             str(lon) + ', \'' + \
+                             label + '\']'
                 addrpts.append(rowstr)
                 
         if center_lat is None:
@@ -348,7 +348,7 @@ class DatasetClient(object):
         from vizier.engine.packages.pycell.packages.wrappers import D3ChartWrapper
 
         charttypes = ["table", "bar", "bar_stacked", "bar_horizontal", "bar_circular", "bar_cluster", "donut", 
-                     "polar", "heat_rad", "heat_table", "punch", "bubble", "candle", "line", "radar", "rose"];
+                     "polar", "heat_rad", "heat_table", "punch", "bubble", "candle", "line", "radar", "rose"]
         
         if chart_type not in charttypes:
             print(("Please specify a valid chart type: one of: " + str(charttypes)))

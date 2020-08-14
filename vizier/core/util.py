@@ -16,9 +16,12 @@
 
 """Collection of helper methods."""
 
+from typing import Any, TypeVar, Optional, IO
+
 import json
 import os
 import uuid
+from datetime import date, datetime
 
 
 """Name of logger used for monitoring workflow engine performance."""
@@ -29,7 +32,7 @@ LOGGER_ENGINE = 'LOGGER_ENGINE'
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def cast(value):
+def cast(value: str) -> Any:
     """Attempt to convert a given value to integer or float. If both attempts
     fail the value is returned as is.
 
@@ -73,14 +76,14 @@ def default_serialize(obj):
         serial = obj.isoformat()
         return serial
 
-    if isinstance(obj, time):
+    if isinstance(obj, datetime):
         serial = obj.isoformat()
         return serial
 
     return obj.__dict__
 
 
-def dump_json(obj, stream):
+def dump_json(obj, stream: IO) -> None:
     """Write Json serialization of the object to the given stream."""
     stream.write(serialize(obj))
 
@@ -101,17 +104,17 @@ def encode_values(values):
         if isinstance(val, str):
             try:
                 result.append(val.encode('utf-8'))
-            except UnicodeDecodeError as ex:
+            except UnicodeDecodeError:
                 try:
                     result.append(val.decode('cp1252').encode('utf-8'))
-                except UnicodeDecodeError as ex:
+                except UnicodeDecodeError:
                     result.append(val.decode('latin1').encode('utf-8'))
         else:
             result.append(val)
     return result
 
 
-def get_unique_identifier():
+def get_unique_identifier() -> str:
     """Create a new unique identifier.
 
     Returns
@@ -132,7 +135,9 @@ def get_short_identifier():
     return get_unique_identifier()[:8]
 
 
-def init_value(value, default_value):
+T = TypeVar('T')
+
+def init_value(value: Optional[T], default_value: T) -> T:
     """Returns the value if it is not None. Otherwise, returns the default
     value.
 
@@ -145,10 +150,10 @@ def init_value(value, default_value):
     -------
     any
     """
-    return value if not value is None else default_value
+    return value if value is not None else default_value
 
 
-def is_scalar(value):
+def is_scalar(value: Any) -> bool:
     """Test if a given value is a string, integer or float.
 
     Parameters
@@ -168,7 +173,7 @@ def is_scalar(value):
     return False
 
 
-def is_valid_name(name):
+def is_valid_name(name: str) -> bool:
     """Returns Ture if a given string represents a valid name (e.g., for a
     dataset). Valid names contain only letters, digits, hyphen, underline, or
     blanl. A valid name has to contain at least one digit or letter.
@@ -186,7 +191,7 @@ def is_valid_name(name):
     for c in name:
         if c.isalnum():
             allnums += 1
-        elif not c in ['_', '-', ' ']:
+        elif c not in ['_', '-', ' ']:
             return False
     return (allnums > 0)
 
@@ -234,6 +239,6 @@ def min_max(values):
     return min_val, max_val
 
 
-def serialize(obj):
+def serialize(obj: Any) -> str:
     """Default Json resializer for python objects."""
     return json.dumps(obj, default=default_serialize)

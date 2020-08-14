@@ -28,8 +28,10 @@ the dataset schema.
 
 import json
 import os
+from typing import List, Optional, Dict, Any
 
 from vizier.datastore.dataset import DatasetColumn, DatasetHandle
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.reader import DefaultJsonDatasetReader
 
 
@@ -57,9 +59,13 @@ class FileSystemDatasetHandle(DatasetHandle):
             ]
         }
     """
-    def __init__(
-        self, identifier, columns, max_row_id, data_file, row_count=0,
-        properties={}
+    def __init__(self, 
+            identifier: str, 
+            columns: List[DatasetColumn], 
+            max_row_id: int, 
+            data_file: str, 
+            row_count: int = 0,
+            properties: Dict[str, Any] = {}
     ):
         """Initialize the dataset handle.
 
@@ -148,6 +154,12 @@ class FileSystemDatasetHandle(DatasetHandle):
         """
         return self.properties
 
+    def get_caveats(self, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
+        return []
+
     def max_row_id(self):
         """Get maximum identifier for all rows in the dataset. If the dataset
         is empty the result is -1.
@@ -181,7 +193,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             limit=limit
         )
 
-    def to_file(self, descriptor_file):
+    def to_file(self, descriptor_file: str) -> None:
         """Write dataset descriptor to file. The default serialization format is
         Json.
 

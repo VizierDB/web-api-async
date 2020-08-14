@@ -18,15 +18,15 @@
 repository.
 """
 
-from vizier.api.client.base import KEY_DEFAULT_BRANCH, KEY_DEFAULT_PROJECT
+from vizier.api.client.base import KEY_DEFAULT_PROJECT
 from vizier.api.client.cli.command import Command
 from vizier.api.client.cli.util import ts
-from vizier.viztrail.base import PROPERTY_NAME
-
+from vizier.viztrail.named_object import PROPERTY_NAME
+from vizier.api.client.base import VizierApiClient
 
 class ViztrailsCommands(Command):
     """"Collection of commands that interact with the viztrails repository."""
-    def __init__(self, api):
+    def __init__(self, api: VizierApiClient):
         """Initialize the viztrails API.
 
         Parameters

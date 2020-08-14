@@ -18,28 +18,20 @@
 storage backend.
 """
 
-import csv
-import gzip
-import json
 import os
-import unicodecsv
+from typing import List, Dict, Any, Optional, Tuple
 
-from io import StringIO
-
-from vizier.core.util import dump_json, load_json
-from vizier.core.util import get_unique_identifier, min_max
-from vizier.core.timestamp import  get_current_time
+from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import FileHandle
 from vizier.datastore.base import DefaultDatastore
+from vizier.datastore.dataset import DatasetRow, DatasetColumn
+from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
 import vizier.mimir as mimir
-import vizier.datastore.base as helper
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
-from vizier import debug_is_on
 import shutil
-import traceback
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -70,7 +62,14 @@ class MimirDatastore(DefaultDatastore):
         """
         super(MimirDatastore, self).__init__(base_path)
 
-    def create_dataset(self, columns, rows, human_readable_name = None, properties={},backend_options = [], dependencies = []):
+    def create_dataset(self, 
+            columns: List[DatasetColumn], 
+            rows: List[DatasetRow], 
+            properties: Dict[str, Any] = {},
+            human_readable_name: Optional[str] = None, 
+            backend_options: List[Tuple[str, str]] = [], 
+            dependencies: List[str] = []
+        ) -> MimirDatasetHandle:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
 
@@ -90,6 +89,14 @@ class MimirDatastore(DefaultDatastore):
         """
         # Get unique identifier for new dataset
         identifier = 'DS_' + get_unique_identifier()
+        columns = [
+            col if isinstance(col, MimirDatasetColumn) else MimirDatasetColumn(
+                    identifier = col.identifier,
+                    name_in_dataset = col.name,
+                    data_type = col.data_type
+                )
+            for col in columns
+        ]
 
         table_name, schema = mimir.loadDataInline(
             schema = [
@@ -110,9 +117,14 @@ class MimirDatastore(DefaultDatastore):
         )
 
         # Insert the new dataset metadata information into the datastore
-        return MimirDatasetHandle.from_mimir_result(table_name, schema, properties, None, human_readable_name)
+        return MimirDatasetHandle.from_mimir_result(
+            table_name = table_name, 
+            schema = schema, 
+            properties = properties, 
+            name = human_readable_name
+        )
 
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier: str) -> MimirDatasetHandle:
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -129,7 +141,11 @@ class MimirDatastore(DefaultDatastore):
         schema, properties = mimir.getTableInfo(identifier)
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties)
 
-    def get_caveats(self, identifier, column_id=-1, row_id='-1'):
+    def get_caveats(self, 
+            identifier: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[DatasetCaveat]:
         """Get list of annotations for a dataset component. Expects at least one
         of the given identifier to be a valid identifier (>= 0).
 
@@ -244,9 +260,16 @@ class MimirDatastore(DefaultDatastore):
             human_readable_name = human_readable_name
         )
 
-    def load_dataset(
-        self, f_handle=None, url=None, detect_headers=True, infer_types=True, properties = {},
-        load_format='csv', options=[], human_readable_name=None
+    def load_dataset(self, 
+            f_handle: Optional[FileHandle] = None, 
+            proposed_schema: List[Tuple[str,str]] = [],
+            url: Optional[str] = None, 
+            detect_headers: bool = True, 
+            infer_types: bool = True, 
+            properties: Dict[str,Any] = {},
+            load_format: str ='csv', 
+            options: List[Dict[str,str]] = [], 
+            human_readable_name: Optional[str] = None,
     ):
         """Create a new dataset from a given file or url. Expects that either
         the file handle or the url are not None. Raises ValueError if both are
@@ -274,15 +297,17 @@ class MimirDatastore(DefaultDatastore):
         -------
         vizier.datastore.mimir.dataset.MimirDatasetHandle
         """
+        assert(url is not None or f_handle is not None)
         if f_handle is None and url is None:
             raise ValueError('no load source given')
-        elif not f_handle is None and not url is None:
+        elif f_handle is not None and url is not None:
             raise ValueError('too many load sources given')
-        elif url is None:
-             # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
-             abspath = f_handle.filepath
-        elif not url is None:
+        elif url is None and f_handle is not None:
+            # os.path.abspath((r'%s' % os.getcwd().replace('\\','/') ) + '/' + f_handle.filepath)
+            abspath = f_handle.filepath
+        elif url is not None:
             abspath = url
+
 
         # for ease of debugging, associate each table with a prefix identifying its nature
         prefix = load_format if load_format in SAFE_FORMAT_IDENTIFIER_PREFIXES else "LOADED_"
@@ -296,7 +321,8 @@ class MimirDatastore(DefaultDatastore):
             human_readable_name,
             options, 
             properties = properties,
-            result_name = prefix + get_unique_identifier()
+            result_name = prefix + get_unique_identifier(),
+            proposed_schema = proposed_schema
         )
         return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties)
 

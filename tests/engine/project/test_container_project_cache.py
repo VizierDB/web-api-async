@@ -4,12 +4,13 @@ import os
 import shutil
 import unittest
 
-from vizier.config.app import AppConfig
+from vizier.config.app import AppConfig, DEFAULT_FILESTORES_DIR, DEFAULT_DATASTORES_DIR
 from vizier.core.io.base import DefaultObjectStore
 from vizier.engine.project.cache.container import ContainerProjectCache
-from vizier.viztrail.base import PROPERTY_NAME
+from vizier.viztrail.named_object import PROPERTY_NAME
 from vizier.viztrail.objectstore.repository import OSViztrailRepository
-
+from vizier.datastore.mimir.factory import MimirDatastoreFactory
+from vizier.filestore.fs.factory import FileSystemFilestoreFactory
 
 SERVER_DIR = './.tmp'
 VIZTRAILS_DIR = SERVER_DIR + '/vt'
@@ -54,10 +55,14 @@ class TestContainerCache(unittest.TestCase):
         )
         # Initialize the project cache
         viztrails = OSViztrailRepository(base_path=VIZTRAILS_DIR)
+        filestores_dir = os.path.join(SERVER_DIR, DEFAULT_FILESTORES_DIR)
+        datastores_dir = os.path.join(SERVER_DIR, DEFAULT_DATASTORES_DIR)
         projects = ContainerProjectCache(
             viztrails=viztrails,
             container_file=filename,
-            config=AppConfig()
+            config=AppConfig(),
+            datastores=MimirDatastoreFactory(datastores_dir),
+            filestores=FileSystemFilestoreFactory(filestores_dir)
         )
         self.assertEqual(len(projects.list_projects()), 2)
         self.assertEqual(projects.get_project(vt1.identifier).container_api, 'API1')

@@ -18,12 +18,12 @@
 serialize web resources.
 """
 
-from vizier.viztrail.module.output import ModuleOutputs, OutputObject
+from typing import List, Dict, Optional, Any
 
 import vizier.api.serialize.labels as labels
 
 
-def HATEOAS(links):
+def HATEOAS(links: Dict[str, Optional[str]]) -> List[Dict[str, Optional[str]]]:
     """Convert a dictionary of key,value pairs into a list of references. Each
     list element is a dictionary that contains a 'rel' and 'href' element.
 
@@ -40,7 +40,7 @@ def HATEOAS(links):
     return [{labels.REL: key, labels.HREF: links[key]} for key in links]
 
 
-def PROPERTIES(properties):
+def PROPERTIES(properties: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Serialize a dictionary of object properties into a list of dictionaries
     as expected by the web service API.
 

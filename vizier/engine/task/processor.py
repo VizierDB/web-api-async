@@ -23,11 +23,13 @@ declared in the package in a vizier workflow.
 import os
 
 from abc import abstractmethod
+from typing import Dict
 
 from vizier.core.io.base import read_object_from_file
 from vizier.core.loader import ClassLoader
 from vizier.viztrail.module.output import ModuleOutputs
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.command import ModuleArguments
 
 
 class ExecResult(object):
@@ -46,7 +48,11 @@ class ExecResult(object):
         Provenance information about datasets that were read and writen during
         task execution.
     """
-    def __init__(self, is_success=True, outputs=None, provenance=None):
+    def __init__(self, 
+            is_success: bool = True, 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance(), 
+            updated_arguments: ModuleArguments =None):
         """Initialize the result components.
 
         Parameters
@@ -58,10 +64,20 @@ class ExecResult(object):
         provenance: vizier.viztrail.module.provenance.ModuleProvenance, optional
             Provenance information about datasets that were read and writen
             during task execution.
+        updated_arguments: vizier.viztrail.command.ModuleArguments, optional
+            If provided, the module's arguments will be overridden by the provided
+            argument list.  This functionality should *only* be used when the module
+            needs to infer/guess some of its arguments (e.g., Load Dataset needs to 
+            actually try to load the dataset to have type/name information for 
+            columns).  If updated arguments are provided, it is up to the processor 
+            to guarantee that the updated arguments are *idempotent* with its 
+            current execution (although idempotence with changes to the data and/or
+            processor implementation need not be enforced.)
         """
         self.is_success = is_success
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.provenance = provenance if not provenance is None else ModuleProvenance()
+        self.outputs = outputs
+        self.provenance = provenance
+        self.updated_arguments = updated_arguments
 
     @property
     def is_error(self):
@@ -110,7 +126,7 @@ class TaskProcessor(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def load_processors(path):
+def load_processors(path: str) -> Dict[str, TaskProcessor]:
     """Load task processors for packages from directories in the given
     path. The path may contain multiple directories separated by ':'. The
     directories in the path are processed in reverse order to ensure that

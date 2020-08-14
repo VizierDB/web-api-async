@@ -24,6 +24,7 @@ import csv
 import os
 import io
 import tarfile
+import traceback
 
 from flask import Blueprint, jsonify, make_response, request, send_file, send_from_directory
 from werkzeug.utils import secure_filename
@@ -36,7 +37,6 @@ import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 import vizier.config.app as app
-import pkg_resources
 import json
 
 # -----------------------------------------------------------------------------
@@ -156,12 +156,8 @@ def import_project():
         if file.filename == '':
             raise srv.InvalidRequest('empty file name')
         # Save uploaded file to temp directory
-        filename = secure_filename(file.filename)
         try:
             base_dir = config.engine.data_dir
-            vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
-            filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
-            datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
             si = io.BytesIO()
             file.save(dst=si)
             si.seek(0)
@@ -713,7 +709,7 @@ def get_dataset(project_id, dataset_id):
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/annotations')
-def get_dataset_caveats(project_id, dataset_id):
+def get_dataset_caveats(project_id: str, dataset_id: str) -> str:
     """Get annotations that are associated with the given dataset.
     """
     # Expects at least a column or row identifier

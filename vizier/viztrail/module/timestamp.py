@@ -20,8 +20,10 @@ contains the time when module execution started. For completed modules the
 timestamp also contains the time when execution finished.
 """
 
-from vizier.core.timestamp import get_current_time
+from typing import Optional
+from datetime import datetime
 
+from vizier.core.timestamp import get_current_time
 
 class ModuleTimestamp(object):
     """Each module contains three timestamps:created_at, started_at and
@@ -42,7 +44,10 @@ class ModuleTimestamp(object):
         Time when module execution finished (either due to cancel, error or
         success state change)
     """
-    def __init__(self, created_at=None, started_at=None, finished_at=None):
+    def __init__(self, 
+            created_at: Optional[datetime] = None, 
+            started_at: Optional[datetime] = None, 
+            finished_at: Optional[datetime] = None):
         """Initialize the timestamp components. If created_at is None the
         other two timestamps are expected to be None as well. Will raise
         ValueError if created_at is None but one of the other two timestamps

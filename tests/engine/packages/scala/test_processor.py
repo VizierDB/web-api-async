@@ -6,7 +6,7 @@ from vizier.engine.packages.scala.command import scala_cell
 from vizier.engine.packages.scala.processor import ScalaTaskProcessor
 from vizier.engine.task.base import TaskContext
 
-import vizier.mimir as mimir
+import vizier.mimir as mimir # noqa: F401
 
 
 class TestScalaProcessor(unittest.TestCase):
@@ -30,8 +30,8 @@ class TestScalaProcessor(unittest.TestCase):
             )
         )
         self.assertTrue(result.is_success)
-        self.assertIsNone(result.provenance.read)
-        self.assertIsNone(result.provenance.write)
+        self.assertTrue(result.provenance.read == {})
+        self.assertTrue(result.provenance.write == {})
         self.assertEqual(result.outputs.stdout[0].value, 'Hello, world!')
 
 

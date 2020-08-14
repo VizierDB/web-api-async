@@ -25,7 +25,6 @@ from vizier.engine.controller import WorkflowController
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
-import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.module as serialmd
 import vizier.viztrail.module.base as states
 

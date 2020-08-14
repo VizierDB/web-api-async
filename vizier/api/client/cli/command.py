@@ -24,12 +24,12 @@ methods:
 """
 
 from abc import abstractmethod
-
+from typing import List
 
 class Command(object):
     """Abstract class for interpreter commands."""
     @abstractmethod
-    def eval(self, tokens):
+    def eval(self, tokens: List[str]) -> bool:
         """If the given tokens sequence matches the given command execute it
         and return True. Otherwise, return False.
 
@@ -45,7 +45,7 @@ class Command(object):
         raise NotImplementedError
 
     @abstractmethod
-    def help(self):
+    def help(self) -> None:
         """Print a simple help statement for the command."""
         raise NotImplementedError
 
@@ -63,9 +63,9 @@ class Command(object):
         columns = [0] * len(rows[0])
         for row in rows:
             for col in range(len(columns)):
-                l = len(row[col])
-                if l > columns[col]:
-                    columns[col] = l
+                count = len(row[col])
+                if count > columns[col]:
+                    columns[col] = count
         # Create format string
         format = None
         divider = list()

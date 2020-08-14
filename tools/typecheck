@@ -1,0 +1,42 @@
+#!/bin/bash
+
+DIR=$(dirname $0)/..
+cd $DIR
+
+DEFAULT_ENTRYPOINTS="vizier"
+TEST_ENTRYPOINTS="$(find tests -name '*.py')"
+
+
+if [ "$*" = "" ] ; then
+  ENTRYPOINTS="$DEFAULT_ENTRYPOINTS"
+elif [ "$1" = "flake" ] ; then
+  exit 0
+elif [ "$1" = "all" ] ; then
+  ENTRYPOINTS="$DEFAULT_ENTRYPOINTS $TEST_ENTRYPOINTS"
+elif [ "$1" = "test" ] ; then
+  ENTRYPOINTS="$TEST_ENTRYPOINTS"
+else
+  ENTRYPOINTS="$*"
+fi
+
+FLAGS="
+  --disallow-any-unimported 
+  --show-error-codes 
+  --disallow-untyped-calls
+"
+
+if [ "$(which mypy)" ] ; then
+  for i in $ENTRYPOINTS; do 
+    echo Checking $i
+    if mypy $FLAGS $i ; then 
+      true
+    else
+      exit -1
+    fi
+  done
+else
+  echo "mypy is not installed"
+  echo
+  echo "$> pip3 install mypy"
+fi
+

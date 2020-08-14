@@ -19,13 +19,18 @@ the filestores that are associated with vizier projects.
 """
 
 import vizier.api.serialize.files as serialize
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.api.routes.base import UrlFactory
 
 
 class VizierFilestoreApi(object):
     """The Vizier filestore API implements the methods that correspond to
     requests that upload and download files.
     """
-    def __init__(self, projects, urls):
+    def __init__(self, 
+            projects: ProjectCache, 
+            urls: UrlFactory
+        ):
         """Initialize the API components.
 
         Parameters

@@ -16,10 +16,12 @@
 
 import json
 import requests
+from typing import TYPE_CHECKING
 
-from vizier.api.client.resources.module import ModuleResource
 from vizier.api.client.resources.workflow import WorkflowResource
 from vizier.api.client.datastore.base import DatastoreClient
+if TYPE_CHECKING:
+    from vizier.api.client.resources.dataset import DatasetDescriptor
 
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
@@ -30,7 +32,7 @@ class DatastoreClientUrlFactory(object):
     for a vizier project. This class is a wrapper around a dataset descriptor
     returned by the API and that contains all the urls as HATEOAS references.
     """
-    def __init__(self, dataset):
+    def __init__(self, dataset: "DatasetDescriptor"):
         """Intialize the dataset descriptor containing the references.
 
         Parameters
@@ -43,7 +45,7 @@ class DatastoreClientUrlFactory(object):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, dataset_id):
+    def get_dataset(self, dataset_id: str) -> str:
         """Url to retrieve dataset rows.
 
         Parameters

@@ -19,7 +19,7 @@
     human-readable descriptions of potential land-mines in the data.  Each caveat has a unique
     identifier and a message, and may optionally include a grouping identifier called a family.
 """
-
+from typing import Dict, Any, Optional, List
 
 class DatasetCaveat(object):
     """Dataset annotations are key,value pairs. Each annotation is associated
@@ -36,7 +36,11 @@ class DatasetCaveat(object):
     family: scalar, optional
         Opaque grouping key, used to associate sets of caveats together
     """
-    def __init__(self, key, message, family = None):
+    def __init__(self, 
+            key: List[Any], 
+            message: str, 
+            family: Optional[str] = None
+        ):
         """Initialize the annotation components. Raises ValueError if both
         identifier are None.
 
@@ -58,11 +62,11 @@ class DatasetCaveat(object):
     def __repr__(self):
         return "{}({}) = '{}'".format(
                 self.family if self.family is None else "GENERIC_CAVEAT",
-                ", ".join(key),
-                message
+                ", ".join(self.key),
+                self.message
             )
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Get default dictionary serialization for the annotation object.
 
         Raises a ValueError if the annotation value is not a scalar value.
@@ -78,7 +82,7 @@ class DatasetCaveat(object):
         }
 
     @staticmethod
-    def from_dict(doc):
+    def from_dict(doc: Dict[str, Any]) -> "DatasetCaveat":
         """Create an annotation instance from a dictionary representation.
 
         Parameters
@@ -90,7 +94,7 @@ class DatasetCaveat(object):
         -------
         vizier.datastore.annotation.base.DatasetAnnotation
         """
-        return DatasetAnnotation(
+        return DatasetCaveat(
             key=doc['key'],
             message=doc['message'],
             family=doc.get('family', None)

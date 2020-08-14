@@ -24,13 +24,18 @@ import vizier.api.serialize.base as serialize
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.project as serialpr
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.api.routes.base import UrlFactory
 
 
 class VizierProjectApi(object):
     """The Vizier project API implements the methods that correspond to
     requests that access and manipulate projects.
     """
-    def __init__(self, projects, urls):
+    def __init__(self,
+            projects: ProjectCache, 
+            urls: UrlFactory
+        ):
         """Initialize the API components.
 
         Parameters

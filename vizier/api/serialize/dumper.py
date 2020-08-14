@@ -1,8 +1,11 @@
+# type: ignore
+# flake8: noqa
 '''
 Created on Aug 5, 2020
 
 @author: mike
 '''
+
 import sys, string
 from types import *
 

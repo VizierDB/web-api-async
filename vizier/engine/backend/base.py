@@ -19,10 +19,13 @@ implementations for the backend are possible.
 """
 
 from abc import abstractmethod
+from typing import Dict, Any
 
+from vizier.datastore.artifact import ArtifactDescriptor
+from vizier.engine.task.base import TaskHandle
 from vizier.engine.task.processor import ExecResult
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput
-
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.command import ModuleCommand
 
 class NonLock(object):
     """Dummy implementation of __enter__ and __exit__ methods for backends that
@@ -45,7 +48,7 @@ class TaskExecEngine(object):
     execution of any command.
     """
     @abstractmethod
-    def can_execute(self, command):
+    def can_execute(self, command: ModuleCommand) -> bool:
         """Test whether a given command can be executed in synchronous mode. If
         the result is True the command can be executed in the same process as
         the calling method.
@@ -62,7 +65,12 @@ class TaskExecEngine(object):
         raise NotImplementedError
 
     @abstractmethod
-    def execute(self, task, command, context, resources=None):
+    def execute(self, 
+            task: TaskHandle, 
+            command: ModuleCommand, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any]
+        ) -> ExecResult:
         """Execute a given command. The command will be executed immediately if
         the backend supports synchronous excution, i.e., if the .can_excute()
         method returns True. The result is the execution result returned by the
@@ -110,6 +118,13 @@ class NonSynchronousEngine(TaskExecEngine):
         """
         return False
 
+    def execute(self, 
+            task: TaskHandle, 
+            command: ModuleCommand, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any]
+        ) -> ExecResult:
+        raise NotImplementedError
 
 class VizierBackend(object):
     """The backend interface defines two main methods: execute and cancel. The
@@ -124,7 +139,7 @@ class VizierBackend(object):
     If tasks are executed remotely the lock is a dummy lock. Only for
     multi-process execution the lock shoulc be the default multi-process-lock.
     """
-    def __init__(self, synchronous, lock=None):
+    def __init__(self, synchronous: TaskExecEngine = NonSynchronousEngine(), lock=None):
         """Initialize the implementation-specific lock. Use a dummy lock if
         the subclass does not provide a lock.
 
@@ -135,10 +150,10 @@ class VizierBackend(object):
         lock: class
             Class that implements __enter__ and __exit__ methods
         """
-        self.synchronous = synchronous if not synchronous is None else NonSynchronousEngine()
+        self.synchronous = synchronous
         self.lock = lock if not lock is None else NonLock()
 
-    def can_execute(self, command):
+    def can_execute(self, command: ModuleCommand) -> bool:
         """Test whether a given command can be executed in synchronous mode. If
         the result is True the command can be executed in the same process as
         the calling method.
@@ -155,7 +170,9 @@ class VizierBackend(object):
         return self.synchronous.can_execute(command)
 
     @abstractmethod
-    def cancel_task(self, task_id):
+    def cancel_task(self, 
+            task_id: str
+        ) -> None:
         """Request to cancel execution of the given task.
 
         Parameters
@@ -165,7 +182,12 @@ class VizierBackend(object):
         """
         raise NotImplementedError
 
-    def execute(self, task, command, context, resources=None):
+    def execute(self, 
+            task: TaskHandle, 
+            command: ModuleCommand, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any] = dict()
+        ) -> ExecResult:
         """Execute a given command. The command will be executed immediately if
         the backend supports synchronous excution, i.e., if the .can_excute()
         method returns True. The result is the execution result returned by the
@@ -173,34 +195,21 @@ class VizierBackend(object):
 
         Raises ValueError if the given command cannot be excuted in synchronous
         mode.
-
-        Parameters
-        ----------
-        task: vizier.engine.task.base.TaskHandle
-            Handle for task for which execution is requested by the controlling
-            workflow engine
-        command : vizier.viztrail.command.ModuleCommand
-            Specification of the command that is to be executed
-        context: dict
-            Dictionary of available resource in the database state. The key is
-            the resource name. Values are resource identifiers.
-        resources: dict, optional
-            Optional information about resources that were generated during a
-            previous execution of the command
-
-        Returns
-        ------
-        vizier.engine.task.processor.ExecResult
         """
         return self.synchronous.execute(
             task=task,
             command=command,
-            artifacts=context,
+            artifacts=artifacts,
             resources=resources
         )
 
     @abstractmethod
-    def execute_async(self, task, command, context, resources=None):
+    def execute_async(self, 
+            task: TaskHandle, 
+            command: ModuleCommand, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any] = dict()
+        ) -> None:
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
@@ -224,7 +233,7 @@ class VizierBackend(object):
         raise NotImplementedError
 
     @abstractmethod
-    def next_task_state(self):
+    def next_task_state(self) -> int:
         """Get the module state of the next task that will be submitted for
         execution. This method allows the workflow controller to set the initial
         state of a module before submitting it for execution.
@@ -235,7 +244,9 @@ class VizierBackend(object):
         """
         raise NotImplementedError
 
-    def task_finished(self, task_id):
+    def task_finished(self, 
+            task_id: str
+        ) -> None:
         """Notify a backend that a task has finished. This is primarily of
         interest for backends that send tasks to remote workers that in turn
         notify the web service if a task is finished. This notification allows

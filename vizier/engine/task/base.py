@@ -19,11 +19,13 @@ in which task are executed. The interface for task execution engines (i.e.,
 processors) is defined in the processor module.
 """
 
-import os
+from typing import Optional, Dict, Any
 
-from vizier.core.io.base import read_object_from_file
-from vizier.core.loader import ClassLoader
 
+from vizier.engine.controller import WorkflowController
+from vizier.datastore.base import Datastore
+from vizier.filestore.base import Filestore
+from vizier.datastore.artifact import ArtifactDescriptor
 
 class TaskContext(object):
     """The task context contains references to the datastore and filestore that
@@ -43,7 +45,12 @@ class TaskContext(object):
     filestore: vizier.filestore.Filestore
         Filestore for the project that executes the task
     """
-    def __init__(self, project_id, datastore, filestore, artifacts, resources=None):
+    def __init__(self, 
+            project_id: str,
+            datastore: Datastore, 
+            filestore: Filestore, 
+            artifacts: Dict[str, ArtifactDescriptor], 
+            resources: Dict[str, Any] = dict()):
         """Initialize the components of the task context.
 
         Parameters
@@ -115,7 +122,10 @@ class TaskHandle(object):
     The given controller is used to signal state changes to the controlling
     workflow engine.
     """
-    def __init__(self, task_id, project_id, controller=None):
+    def __init__(self, 
+            task_id: str, 
+            project_id: str, 
+            controller: Optional[WorkflowController]=None):
         """Initialize the components of the task handle.
 
         Parameters

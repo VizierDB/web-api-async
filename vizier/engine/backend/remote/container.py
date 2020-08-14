@@ -14,9 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+
 from vizier.engine.backend.base import VizierBackend
 from vizier.viztrail.module.base import MODULE_RUNNING
-
+from vizier.engine.project.cache.container import ContainerProjectCache
+from vizier.engine.backend.base import NonSynchronousEngine
+from vizier.engine.project.base import ProjectHandle
 
 class ContainerBackend(VizierBackend):
     """The backend interface defines two main methods: execute and cancel. The
@@ -31,7 +35,9 @@ class ContainerBackend(VizierBackend):
     If tasks are executed remotely the lock is a dummy lock. Only for
     multi-process execution the lock shoulc be the default multi-process-lock.
     """
-    def __init__(self, projects):
+    def __init__(self, 
+            projects: ContainerProjectCache
+        ):
         """
 
         Parameters
@@ -40,10 +46,10 @@ class ContainerBackend(VizierBackend):
             Cache for container projects
         """
         # The container backend cannot execute any command synchronously
-        super(ContainerBackend, self).__init__(synchronous=None)
+        super(ContainerBackend, self).__init__(synchronous=NonSynchronousEngine())
         self.projects = projects
         # Keep mapping of task identifier to projects
-        self.tasks = dict()
+        self.tasks: Dict[str, ProjectHandle] = dict()
 
     def cancel_task(self, task_id):
         """Request to cancel execution of the given task.

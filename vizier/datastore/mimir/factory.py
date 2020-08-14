@@ -18,6 +18,7 @@
 
 import os
 import shutil
+from typing import Optional, Dict, Any
 
 from vizier.datastore.factory import DatastoreFactory
 from vizier.datastore.mimir.store import MimirDatastore
@@ -29,7 +30,10 @@ PARA_DIRECTORY = 'directory'
 
 class MimirDatastoreFactory(DatastoreFactory):
     """Datastore factory for Mimir datastores."""
-    def __init__(self, base_path=None, properties=None):
+    def __init__(self, 
+            base_path: Optional[str] = None, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Initialize the reference to the base directory that contains all
         datastore folders.
 

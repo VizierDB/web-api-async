@@ -13,11 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional, Dict, Any
 
 from vizier.engine.backend.remote.celery.app import celeryapp
 from vizier.engine.backend.base import VizierBackend
 from vizier.viztrail.module.base import MODULE_PENDING
 from vizier.engine.backend.remote.celery.worker import execute
+from vizier.engine.backend.base import TaskExecEngine, NonSynchronousEngine
 
 
 class CeleryBackend(VizierBackend):
@@ -33,13 +35,16 @@ class CeleryBackend(VizierBackend):
     If tasks are executed remotely the lock is a dummy lock. Only for
     multi-process execution the lock shoulc be the default multi-process-lock.
     """
-    def __init__(self, routes=None, synchronous=None):
+    def __init__(self, 
+            routes: Optional[Dict[str, Dict[str, str]]] = None, 
+            synchronous: TaskExecEngine = NonSynchronousEngine()
+        ):
         """
 
         Parameters
         ----------
         routes: dict, optional
-            Mapping of package commands to queue names
+            Mapping of package commands to command names to queue names
         synchronous: vizier.engine.backend.base.TaskExecEngine, optional
             Engine for synchronous task execution
         """
@@ -47,7 +52,7 @@ class CeleryBackend(VizierBackend):
         super(CeleryBackend, self).__init__(synchronous=synchronous)
         self.routes = routes
         # Keep dictionary of celery tasks in order to be able to cancel a task
-        self.tasks = dict()
+        self.tasks: Dict[str, Any] = dict()
 
     def cancel_task(self, task_id):
         """Request to cancel execution of the given task.

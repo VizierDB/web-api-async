@@ -18,7 +18,7 @@
 using environment variable VIZIERCELERYBROKER_URL."""
 
 
-from celery import Celery
+from celery import Celery # type: ignore[import]
 
 import os
 

@@ -18,16 +18,24 @@
 the datastores that are associated with vizier projects.
 """
 
-from vizier.core.util import is_scalar
+from typing import Any, Dict, Optional, Tuple, List
 
 import vizier.api.serialize.dataset as serialize
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.api.routes.base import UrlFactory
+from vizier.engine.project.base import ProjectHandle
+from vizier.datastore.dataset import DatasetHandle
 
 
 class VizierDatastoreApi(object):
     """The Vizier datastore API implements the methods that correspond to
     requests that access and manipulate datasets and their annotations.
     """
-    def __init__(self, projects, urls, defaults):
+    def __init__(self, 
+            projects: ProjectCache, 
+            urls: UrlFactory, 
+            defaults: Any # vizier.config.base.ConfigObject w/ dynamic attributes
+        ):
         """Initialize the API components.
 
         Parameters
@@ -88,7 +96,12 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_caveats(self, project_id, dataset_id, column_id=None, row_id=None):
+    def get_caveats(self, 
+            project_id: str, 
+            dataset_id: str, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List[Dict[str, Any]]:
         """Get annotations for dataset with given identifier. The result is None
         if no dataset with the given identifier exists.
 
@@ -117,7 +130,7 @@ class VizierDatastoreApi(object):
         # do not exist.
         project, dataset = self.get_dataset_handle(project_id, dataset_id)
         if dataset is None:
-            return None
+            return list()
         return [
             serialize.CAVEAT(caveat)
             for caveat in project.datastore.get_caveats(
@@ -127,7 +140,12 @@ class VizierDatastoreApi(object):
             )
         ]
 
-    def get_dataset(self, project_id, dataset_id, offset=None, limit=None):
+    def get_dataset(self, 
+            project_id: str, 
+            dataset_id: str, 
+            offset: int = 0, 
+            limit: int = -1
+        ) -> Optional[Dict[str, Any]]:
         """Get dataset with given identifier. The result is None if no dataset
         with the given identifier exists.
 
@@ -208,7 +226,10 @@ class VizierDatastoreApi(object):
             urls=self.urls
         )
 
-    def get_dataset_handle(self, project_id, dataset_id):
+    def get_dataset_handle(self, 
+            project_id: str, 
+            dataset_id: str
+        ) -> Tuple[ProjectHandle, Optional[DatasetHandle]]:
         """Get handle for dataset with given identifier. The result is None if
         the dataset or the project do not exist.
 

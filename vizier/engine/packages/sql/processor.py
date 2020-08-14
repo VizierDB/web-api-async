@@ -16,18 +16,12 @@
 
 """Implementation of the task processor for the SQL package."""
 
-import json
-import sys
-
 from vizier.datastore.dataset import DatasetDescriptor
-from vizier.datastore.mimir.base import ROW_ID
-from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
-from vizier.engine.packages.mimir.processor import print_dataset_schema
+from vizier.datastore.mimir.dataset import MimirDatasetHandle
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 
-import vizier.config.base as config
 import vizier.engine.packages.sql.base as cmd
 import vizier.mimir as mimir
 

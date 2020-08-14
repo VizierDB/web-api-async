@@ -19,11 +19,10 @@
 
 import json
 import re
-import random
 import io
-from bokeh.io import output_notebook
-from bokeh.io.notebook import install_notebook_hook
-from bokeh.embed import json_item, file_html
+from bokeh.io import output_notebook # type: ignore[import]
+from bokeh.io.notebook import install_notebook_hook # type: ignore[import]
+from bokeh.embed import json_item # type: ignore[import]
 
 target_client = None
 
@@ -31,7 +30,7 @@ def python_cell_preload(variables, client):
     global target_client
     """Convenient place to hook extension code that needs to run before a python cell"""
 
-    ## Set up Bokeh
+    # Set up Bokeh
     target_client = client
     output_notebook(notebook_type = 'vizier')
 
@@ -40,7 +39,7 @@ def python_cell_close():
     target_client = None
 
 
-#################### Bokeh Support ####################
+# ################### Bokeh Support ####################
 # https://bokeh.pydata.org/en/latest/docs/reference.html
 
 def vizier_bokeh_load(resources, verbose, hide_banner, load_timeout):

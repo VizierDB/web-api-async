@@ -2,11 +2,11 @@ import os
 import shutil
 import unittest
 
-from vizier.core.timestamp import get_current_time, to_datetime
+from vizier.core.timestamp import get_current_time
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.module.base import MODULE_PENDING
-from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.engine.packages.pycell.command import python_cell
@@ -248,7 +248,7 @@ class TestModuleState(unittest.TestCase):
         )
         self.assertTrue(module.is_running)
 
-    def test_success(self):
+    def test_success(self) -> None:
         """Update module state from pending to success."""
         # Create original module
         module = OSModuleHandle.create_module(
@@ -271,8 +271,8 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEqual(len(module.outputs.stderr), 0)
         self.assertEqual(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertTrue(module.provenance.read == {})
+        self.assertTrue(module.provenance.write == {})
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -284,8 +284,8 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEqual(len(module.outputs.stderr), 0)
         self.assertEqual(len(module.outputs.stdout), 0)
-        self.assertIsNone(module.provenance.read)
-        self.assertIsNone(module.provenance.write)
+        self.assertTrue(module.provenance.read == {})
+        self.assertTrue(module.provenance.write == {})
         # Set success with all optional parameters
         ts = get_current_time()
         module.set_success(

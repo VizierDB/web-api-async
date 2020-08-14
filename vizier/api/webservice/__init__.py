@@ -23,7 +23,7 @@ import logging
 import os
 
 from flask import Flask, jsonify, make_response, redirect
-from flask_cors import CORS
+from flask_cors import CORS # type: ignore[import]
 from logging.handlers import RotatingFileHandler
 
 from vizier.config.app import AppConfig
@@ -32,7 +32,7 @@ import vizier.api.base as srv
 import vizier.config.base as const
 
 
-def create_app():
+def create_app() -> Flask:
     """Factory pattern for Flask. Initialize the Flask application object.
 
     Returns
@@ -123,8 +123,10 @@ def create_app():
         # Initialize the Mimir gateway if using Mimir engine
         if config.engine.identifier == const.MIMIR_ENGINE:
             import vizier.mimir as mimir
+            print("Using Mimir at {}".format(mimir._mimir_url))
 
     root_redirect_path = "{}/web-ui/vizier-db".format(server.bp.url_prefix)
+
     @app.route("/")
     def handle_root():
         """Redirect users to the web UI

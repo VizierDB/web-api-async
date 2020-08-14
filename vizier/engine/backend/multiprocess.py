@@ -13,8 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from vizier.api.serialize import labels
-
 """Default multi-process backend to execute vizier workflow tasks. The default
 backend starts a separate process for each task that is being executed. This
 backend is primarily intended for local installations of vizier with a single
@@ -24,20 +22,27 @@ or virtual environment.
 
 from functools import partial
 from multiprocessing import Lock, Pool
+from multiprocessing.pool import Pool as PoolType
+from typing import Dict, Tuple
 
-from vizier.core.loader import ClassLoader
-from vizier.core.timestamp import get_current_time
 from vizier.engine.backend.base import VizierBackend, exec_command
 from vizier.engine.task.base import TaskContext
 from vizier.viztrail.module.base import MODULE_RUNNING
-
+from vizier.engine.project.cache.base import ProjectCache
+from vizier.engine.backend.base import TaskExecEngine, NonSynchronousEngine
+from vizier.engine.task.processor import TaskProcessor, ExecResult
+from vizier.engine.task.base import TaskHandle
 
 class MultiProcessBackend(VizierBackend):
     """The multi-process backend lauches a single-process pool for each task
     that is being executed. There is no limit on the number of tasks that are
     executed in parallel.
     """
-    def __init__(self, projects, processors, synchronous=None):
+    def __init__(self, 
+            projects: ProjectCache, 
+            processors: Dict[str, TaskProcessor], 
+            synchronous: TaskExecEngine = NonSynchronousEngine()
+        ):
         """Initialize the index of package processors. Accepts an optional
         dictionary of commands that will be executed synchronously instead of
         forking a new process for execution. The optional properties dictionary
@@ -77,7 +82,7 @@ class MultiProcessBackend(VizierBackend):
         # the index is the unique task identifier. This dictionary is used to
         # cancel tasks and to update the controller when task execution
         # is complete.
-        self.tasks = dict()
+        self.tasks: Dict[str, Tuple[TaskHandle, PoolType]] = dict()
 
     def cancel_task(self, task_id):
         """Request to cancel execution of the given task.
@@ -97,7 +102,9 @@ class MultiProcessBackend(VizierBackend):
         except KeyError:
             pass
 
-    def execute_async(self, task, command, artifacts, resources=None):
+    def execute_async(self, 
+            task: TaskHandle, 
+            command, artifacts, resources=None):
         """Request execution of a given task. The task handle is used to
         identify the task when interacting with the API. The executed task
         itself is defined by the given command specification. The given context
@@ -188,7 +195,7 @@ class MultiProcessBackend(VizierBackend):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def callback_function(result, tasks):
+def callback_function(result: Tuple[str, ExecResult], tasks: Dict[str,Tuple[TaskHandle, PoolType]]):
     """Callback function for executed tasks. Notifies the workflow controller
     and removes the task from the task index.
 
@@ -205,17 +212,19 @@ def callback_function(result, tasks):
         # Close the pool and remove the entry from the task index
         pool.close()
         del tasks[task_id]
-        # Notify the workflow controller that the task is finished
-        if exec_result.is_success:
-            task.controller.set_success(
-                task_id=task_id,
-                outputs=exec_result.outputs,
-                provenance=exec_result.provenance
-            )
+        if task.controller is None:
+            raise Exception("Tried to close out a TaskHandle without a Controller")
         else:
-            task.controller.set_error(
-                task_id=task_id,
-                outputs=exec_result.outputs
-            )
+            # Notify the workflow controller that the task is finished
+            if exec_result.is_success:
+                task.controller.set_success(
+                    task_id=task_id,
+                    result=exec_result
+                )
+            else:
+                task.controller.set_error(
+                    task_id=task_id,
+                    outputs=exec_result.outputs
+                )
     except KeyError:
         pass

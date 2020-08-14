@@ -16,12 +16,11 @@
 
 """Helper methods to configure the celery backend."""
 
-import os
+from typing import Dict, Optional
+from vizier.config.app import AppConfig
 
-import vizier.config.app as app
 
-
-def config_routes(config):
+def config_routes(config: AppConfig) -> Optional[Dict[str, Dict[str, str]]]:
     """Create routing information for individual vizier commands. Expects
     routing information in the environment variable VIZIERENGINE_CELERY_ROUTES.
     The value format is a colon separated list of package.command.queue strings.
@@ -37,13 +36,13 @@ def config_routes(config):
     -------
     dict
     """
-    routes = None
+    routes: Optional[Dict[str, Dict[str, str]]] = None
     routing = config.engine.backend.celery.routes
-    if not routing is None and not routing.strip() == '':
+    if routing is not None and not routing.strip() != '':
         routes = dict()
         for rt in routing.split(':'):
             package_id, command_id, queue = rt.split('.')
-            if not package_id in routes:
+            if package_id not in routes:
                 routes[package_id] = dict()
             routes[package_id][command_id] = queue
     return routes

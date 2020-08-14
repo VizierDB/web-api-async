@@ -17,16 +17,23 @@
 """The common project cache solely uses the functionality of a provided
 viztrails repository to manipulate the cached objects.
 """
+from typing import Optional, Dict, Any
 
 from vizier.engine.project.base import ProjectHandle
 from vizier.engine.project.cache.base import ProjectCache
-
+from vizier.datastore.factory import DatastoreFactory
+from vizier.filestore.factory import FilestoreFactory
+from vizier.viztrail.repository import ViztrailRepository
 
 class CommonProjectCache(ProjectCache):
     """The common project cache is a simple wrapper around a viztrail
     repository, a datastore factory, and a filestore factory.
     """
-    def __init__(self, datastores, filestores, viztrails):
+    def __init__(self, 
+            datastores: DatastoreFactory, 
+            filestores: FilestoreFactory, 
+            viztrails: ViztrailRepository
+        ):
         """Initialize the cache components and load all projects in the given
         viztrails repository. Maintains all projects in an dictionary keyed by
         their identifier.
@@ -54,7 +61,9 @@ class CommonProjectCache(ProjectCache):
             )
             self.projects[viztrail.identifier] = project
 
-    def create_project(self, properties={}):
+    def create_project(self, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Create a new project. Will create a viztrail in the underlying
         viztrail repository. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either

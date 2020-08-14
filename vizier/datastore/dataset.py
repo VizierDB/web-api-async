@@ -20,7 +20,13 @@ workflows.
 """
 
 from abc import abstractmethod
+from typing import Optional, List, Any, Dict, TYPE_CHECKING
+if TYPE_CHECKING:
+    from vizier.datastore.annotation.base import DatasetCaveat
+    from vizier.datastore.reader import DatasetReader
+
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
+
 
 """Identifier for column data types. By now the following data types are
 distinguished: date (format yyyy-MM-dd), int, varchar, real, and datetime
@@ -60,7 +66,10 @@ class DatasetColumn(object):
         following data_type values are expected: date (format yyyy-MM-dd), int,
         varchar, real, and datetime (format yyyy-MM-dd hh:mm:ss:zzzz).
     """
-    def __init__(self, identifier=None, name=None, data_type=None):
+    def __init__(self, 
+            identifier: int = -1, 
+            name: Optional[str] = None, 
+            data_type: str = DATATYPE_VARCHAR):
         """Initialize the column object.
 
         Parameters
@@ -72,9 +81,9 @@ class DatasetColumn(object):
         data_type: string, optional
             String representation of the column data type.
         """
-        self.identifier = identifier if not identifier is None else -1
-        self.name = name
-        self.data_type = data_type if not data_type is None else DATATYPE_VARCHAR
+        self.identifier = identifier
+        self.name = name if name is not None else "col_{}".format(abs(identifier))
+        self.data_type = data_type
 
     def __str__(self):
         """Human-readable string representation for the column.
@@ -85,7 +94,7 @@ class DatasetColumn(object):
         """
         name = self.name
         if not self.data_type is None:
-             name += '(' + str(self.data_type) + ')'
+            name += '(' + str(self.data_type) + ')'
         return name
 
 
@@ -102,7 +111,11 @@ class DatasetDescriptor(ArtifactDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, name, columns=None):
+    def __init__(self, 
+            identifier: str, 
+            name: Optional[str] = None,
+            columns: List[DatasetColumn] = list()
+        ):
         """Initialize the dataset descriptor.
 
         Parameters
@@ -123,7 +136,9 @@ class DatasetDescriptor(ArtifactDescriptor):
         self.columns = columns if not columns is None else list()
         self.name = name
 
-    def column_by_id(self, identifier):
+    def column_by_id(self, 
+            identifier: int
+        ) -> DatasetColumn:
         """Get the column with the given identifier.
 
         Raises ValueError if no column with the given indentifier exists.
@@ -265,6 +280,41 @@ class DatasetDescriptor(ArtifactDescriptor):
         return output
 
 
+class DatasetRow(object):
+    """Row in a Vizier DB dataset.
+
+    Attributes
+    ----------
+    identifier: int
+        Unique row identifier
+    values : list(string)
+        List of column values in the row
+    caveats: list(bool), optional
+        Optional flags indicating whether row cells are annotated
+    """
+    def __init__(self, 
+            identifier: int = -1, 
+            values: Optional[List[Any]] = None, 
+            caveats: Optional[List[bool]] = None):
+        """Initialize the row object.
+
+        Parameters
+        ----------
+        identifier: int, optional
+            Unique row identifier
+        values : list(string)
+            List of column values in the row
+        caveats: list(bool), optional
+            Optional flags indicating whether row cells are annotated
+        """
+        self.identifier = identifier
+        self.values: List[Any] = values if not values is None else list()
+        self.caveats: List[bool] = caveats if not caveats is None else [ False for v in self.values ]
+
+    def __repr__(self):
+        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
+
+
 class DatasetHandle(DatasetDescriptor):
     """Abstract class to maintain information about a dataset in a Vizier
     datastore. Contains the unique dataset identifier, the lists of
@@ -283,7 +333,11 @@ class DatasetHandle(DatasetDescriptor):
     row_count: int
         Number of rows in the dataset
     """
-    def __init__(self, identifier, columns=None, name=None):
+    def __init__(self, 
+            identifier: str, 
+            columns: List[DatasetColumn] = list(), 
+            name: Optional[str] = None
+        ):
         """Initialize the dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -307,16 +361,18 @@ class DatasetHandle(DatasetDescriptor):
             name=name
         )    
 
-    @abstractmethod
-    def get_row_count(self):
-        raise NotImplementedError
-
     @property
     def row_count(self):
         return self.get_row_count()
     
+    @abstractmethod
+    def get_row_count(self) -> int:
+        raise NotImplementedError
 
-    def fetch_rows(self, offset=0, limit=None):
+    def fetch_rows(self, 
+            offset: int = 0, 
+            limit: Optional[int] = None
+        ) -> List[DatasetRow]:
         """Get list of dataset rows. The offset and limit parameters are
         intended for pagination.
 
@@ -338,14 +394,17 @@ class DatasetHandle(DatasetDescriptor):
             raise Exception("Invalid Limit: {}".format(limit))
         # Collect rows in result list. Skip first rows if offset is greater than
         # zero
-        rows = list()
+        rows:List[DatasetRow] = list()
         with self.reader(offset=offset, limit=limit) as reader:
             for row in reader:
                 rows.append(row)
         return rows
 
     @abstractmethod
-    def get_caveats(self, column_id=None, row_id=None):
+    def get_caveats(self, 
+            column_id: Optional[int] = None, 
+            row_id: Optional[str] = None
+        ) -> List["DatasetCaveat"]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -363,7 +422,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def get_properties(self):
+    def get_properties(self) -> Dict[str, Any]:
         """Get all annotations for a given dataset resource. If both identifier
         are None all dataset annotations are returned.
 
@@ -377,7 +436,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError
 
     @abstractmethod
-    def reader(self, offset=0, limit=None):
+    def reader(self, offset: int = 0, limit: Optional[int] = None) -> "DatasetReader":
         """Get reader for the dataset to access the dataset rows. The optional
         offset amd limit parameters are used to retrieve only a subset of
         rows.
@@ -394,38 +453,6 @@ class DatasetHandle(DatasetDescriptor):
         vizier.datastore.reader.DatasetReader
         """
         raise NotImplementedError
-
-
-class DatasetRow(object):
-    """Row in a Vizier DB dataset.
-
-    Attributes
-    ----------
-    identifier: int
-        Unique row identifier
-    values : list(string)
-        List of column values in the row
-    caveats: list(bool), optional
-        Optional flags indicating whether row cells are annotated
-    """
-    def __init__(self, identifier=None, values=None, caveats=None):
-        """Initialize the row object.
-
-        Parameters
-        ----------
-        identifier: int, optional
-            Unique row identifier
-        values : list(string)
-            List of column values in the row
-        caveats: list(bool), optional
-            Optional flags indicating whether row cells are annotated
-        """
-        self.identifier = identifier if not identifier is None else -1
-        self.values = values if not values is None else list()
-        self.caveats = caveats if not caveats is None else [ False for v in self.values ]
-
-    def __repr__(self):
-        return "DatasetRow({}@< {} >)".format(self.identifier, ", ".join(str(v) for v in self.values))
 
 
 # ------------------------------------------------------------------------------

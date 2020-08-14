@@ -25,4 +25,4 @@ TIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 def ts(timestamp):
     """Convert datatime timestamp to string."""
-    return  utc_to_local(timestamp).strftime(TIME_FORMAT)
+    return utc_to_local(timestamp).strftime(TIME_FORMAT)

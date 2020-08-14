@@ -18,12 +18,15 @@
 object store.
 """
 
-from vizier.core.io.base import DefaultObjectStore
+from typing import cast, Dict, Any, Optional, List
+from datetime import datetime
+
+from vizier.core.io.base import DefaultObjectStore, ObjectStore
 from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.view.chart import ChartViewHandle
-from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID
+from vizier.viztrail.command import ModuleCommand, UNKNOWN_ID, ModuleArguments
 from vizier.viztrail.module.base import ModuleHandle
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -109,11 +112,17 @@ class OSModuleHandle(ModuleHandle):
       - resources: {}
       - charts: []
     """
-    def __init__(
-        self, identifier, command, external_form, module_path,
-        state=None, timestamp=None, outputs=None,
-        provenance=None, object_store=None
-    ):
+    def __init__(self, 
+            identifier: str, 
+            command: ModuleCommand, 
+            external_form: str, 
+            module_path: str,
+            state: int = mstate.MODULE_PENDING, 
+            timestamp: ModuleTimestamp = ModuleTimestamp(), 
+            outputs: ModuleOutputs = ModuleOutputs(),
+            provenance: ModuleProvenance = ModuleProvenance(), 
+            object_store: ObjectStore = DefaultObjectStore()
+        ):
         """Initialize the module handle. For new modules, datasets and outputs
         are initially empty.
 
@@ -143,13 +152,13 @@ class OSModuleHandle(ModuleHandle):
             identifier=identifier,
             command=command,
             external_form=external_form,
-            state=state if not state is None else mstate.MODULE_PENDING,
+            state=state,
             timestamp=timestamp,
             outputs= outputs,
             provenance=provenance,
         )
         self.module_path = module_path
-        self.object_store = object_store if not object_store is None else DefaultObjectStore()
+        self.object_store = object_store
 
     @staticmethod
     def create_module(
@@ -215,7 +224,12 @@ class OSModuleHandle(ModuleHandle):
         )
 
     @staticmethod
-    def load_module(identifier, module_path, prev_state=None, object_store=None):
+    def load_module(
+            identifier: str, 
+            module_path: str, 
+            prev_state: Optional[Dict[str, ArtifactDescriptor]] = None, 
+            object_store: ObjectStore = DefaultObjectStore()
+        ) -> "OSModuleHandle":
         """Load module from given object store.
 
         Parameters
@@ -236,19 +250,19 @@ class OSModuleHandle(ModuleHandle):
         vizier.viztrail.objectstore.module.OSModuleHandle
         """
         # Make sure the object store is not None
-        if object_store is None:
-            object_store = DefaultObjectStore()
         # Read object from store. This may raise a ValueError to indicate that
         # the module does not exists (in a system error condtion). In this
         # case we return a new module that is in error state.
         try:
-            obj = object_store.read_object(object_path=module_path)
+            obj = cast(Dict[str, Any], object_store.read_object(object_path=module_path))
         except ValueError:
             return OSModuleHandle(
                 identifier=identifier,
                 command=ModuleCommand(
                     package_id=UNKNOWN_ID,
-                    command_id=UNKNOWN_ID
+                    command_id=UNKNOWN_ID,
+                    arguments=list(),
+                    packages=None
                 ),
                 external_form='fatal error: object not found',
                 module_path=module_path,
@@ -259,16 +273,17 @@ class OSModuleHandle(ModuleHandle):
         command = ModuleCommand(
             package_id=obj[KEY_COMMAND][KEY_PACKAGE_ID],
             command_id=obj[KEY_COMMAND][KEY_COMMAND_ID],
-            arguments=obj[KEY_COMMAND][KEY_ARGUMENTS]
+            arguments=obj[KEY_COMMAND][KEY_ARGUMENTS],
+            packages=None
         )
         # Create module timestamps
         created_at = to_datetime(obj[KEY_TIMESTAMP][KEY_CREATED_AT])
         if KEY_STARTED_AT in obj[KEY_TIMESTAMP]:
-            started_at = to_datetime(obj[KEY_TIMESTAMP][KEY_STARTED_AT])
+            started_at: Optional[datetime] = to_datetime(obj[KEY_TIMESTAMP][KEY_STARTED_AT])
         else:
             started_at = None
         if KEY_FINISHED_AT in obj[KEY_TIMESTAMP]:
-            finished_at = to_datetime(obj[KEY_TIMESTAMP][KEY_FINISHED_AT])
+            finished_at: Optional[datetime] = to_datetime(obj[KEY_TIMESTAMP][KEY_FINISHED_AT])
         else:
             finished_at = None
         timestamp = ModuleTimestamp(
@@ -309,18 +324,28 @@ class OSModuleHandle(ModuleHandle):
                         ]
                     )
                 write_prov[ds[KEY_DATASET_NAME]] = descriptor
-        delete_prov = None
         if KEY_PROVENANCE_DELETE in obj[KEY_PROVENANCE]:
-            delete_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE]
-        res_prov = None
+            delete_prov = set(obj[KEY_PROVENANCE][KEY_PROVENANCE_DELETE])
+        else:
+            delete_prov = set()
         if KEY_PROVENANCE_RESOURCES in obj[KEY_PROVENANCE]:
-            res_prov = obj[KEY_PROVENANCE][KEY_PROVENANCE_RESOURCES]
-        charts_prov = None
+            res_prov = cast(Dict[str, Any], obj[KEY_PROVENANCE][KEY_PROVENANCE_RESOURCES])
+        else:
+            res_prov = dict()
         if KEY_PROVENANCE_CHARTS in obj[KEY_PROVENANCE]:
             charts_prov = [
-                ChartViewHandle.from_dict(c)
-                    for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
+                ( 
+                    c[0], 
+                    ChartViewHandle.from_dict(c[1])  # type: ignore[no-untyped-call]
+                ) if isinstance(c, list) else 
+                (
+                    "Chart",
+                    ChartViewHandle.from_dict(c)
+                )
+                for c in obj[KEY_PROVENANCE][KEY_PROVENANCE_CHARTS]
             ]
+        else:
+            charts_prov = list()
         provenance = ModuleProvenance(
             read=read_prov,
             write=write_prov,
@@ -341,27 +366,23 @@ class OSModuleHandle(ModuleHandle):
             object_store=object_store,
         )
 
-    def set_canceled(self, finished_at=None, outputs=None):
+    def set_canceled(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ) -> None:
         """Set status of the module to canceled. The finished_at property of the
         timestamp is set to the given value or the current time (if None). The
         module outputs are set to the given value. If no outputs are given the
         module output streams will be empty.
-
-        Parameters
-        ----------
-        finished_at: datetime.datetime, optional
-            Timestamp when module started running
-        outputs: vizier.viztrail.module.output.ModuleOutputs, optional
-            Output streams for module
         """
-        # Update state, timestamp and output information. Clear database state.
-        self.state = mstate.MODULE_CANCELED
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        super().set_canceled(finished_at, outputs)
         # Materialize module state
         self.write_safe()
 
-    def set_error(self, finished_at=None, outputs=None):
+    def set_error(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs()
+        ):
         """Set status of the module to error. The finished_at property of the
         timestamp is set to the given value or the current time (if None). The
         module outputs are adjusted to the given value. the output streams are
@@ -374,14 +395,14 @@ class OSModuleHandle(ModuleHandle):
         outputs: vizier.viztrail.module.output.ModuleOutputs, optional
             Output streams for module
         """
-        # Update state, timestamp and output information. Clear database state.
-        self.state = mstate.MODULE_ERROR
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
+        super().set_error(finished_at, outputs)
         # Materialize module state
         self.write_safe()
 
-    def set_running(self, started_at=None, external_form=None):
+    def set_running(self, 
+            started_at: datetime = get_current_time(), 
+            external_form: Optional[str] = None
+        ):
         """Set status of the module to running. The started_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -392,17 +413,16 @@ class OSModuleHandle(ModuleHandle):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        # Update state and timestamp information. Clear outputs and, database
-        # state,
-        if not external_form is None:
-            self.external_form = external_form
-        self.state = mstate.MODULE_RUNNING
-        self.timestamp.started_at = started_at if not started_at is None else get_current_time()
-        self.outputs = ModuleOutputs()
+        super().set_running(started_at, external_form)
         # Materialize module state
         self.write_safe()
 
-    def set_success(self, finished_at=None, outputs=None, provenance=None):
+    def set_success(self, 
+            finished_at: datetime = get_current_time(), 
+            outputs: ModuleOutputs = ModuleOutputs(), 
+            provenance: ModuleProvenance = ModuleProvenance(),
+            updated_arguments: Optional[ModuleArguments] = None
+        ):
         """Set status of the module to success. The finished_at property of the
         timestamp is set to the given value or the current time (if None).
 
@@ -422,18 +442,13 @@ class OSModuleHandle(ModuleHandle):
         """
         # Update state, timestamp, database state, outputs and provenance
         # information.
-        self.state = mstate.MODULE_SUCCESS
-        self.timestamp.finished_at = finished_at if not finished_at is None else get_current_time()
-        # If the module is set to success straight from pending state the
-        # started_at timestamp may not have been set.
-        if self.timestamp.started_at is None:
-            self.timestamp.started_at = self.timestamp.finished_at
-        self.outputs = outputs if not outputs is None else ModuleOutputs()
-        self.provenance = provenance if not provenance is None else ModuleProvenance()
+        super().set_success(finished_at, outputs, provenance, updated_arguments)
         # Materialize module state
         self.write_safe()
 
-    def update_property(self, external_form):
+    def update_property(self, 
+            external_form: Optional[str] = None
+        ) -> None:
         """Update the value for the external command representation
 
         Parameters
@@ -441,10 +456,12 @@ class OSModuleHandle(ModuleHandle):
         external_form: string, optional
             Adjusted external representation for the module command.
         """
-        self.external_form = external_form
+        super().update_property(
+            external_form = external_form
+        )
         self.write_safe()
 
-    def write_module(self):
+    def write_module(self) -> None:
         """Write current module state to object store."""
         obj = serialize_module(
             command=self.command,
@@ -459,7 +476,7 @@ class OSModuleHandle(ModuleHandle):
             content=obj
         )
 
-    def write_safe(self):
+    def write_safe(self) -> None:
         """The write safe method writes the current module state to the object
         store. It catches any occuring exception and sets the module into error
         state if an exception occurs. This method is used to ensure that the
@@ -478,7 +495,11 @@ class OSModuleHandle(ModuleHandle):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_module_path(modules_folder, module_id, object_store):
+def get_module_path(
+        modules_folder: str, 
+        module_id: str, 
+        object_store: ObjectStore
+    ) -> str:
     """Use a single method to get the module path. This should make it easier to
     change the directory structure for maintaining modules.
 
@@ -500,7 +521,7 @@ def get_module_path(modules_folder, module_id, object_store):
     return object_store.join(modules_folder, module_id)
 
 
-def get_output_stream(items):
+def get_output_stream(items: List[Dict[str, Any]]) -> List[OutputObject]:
     """Convert a list of items in an output stream into a list of output
     objects. The element in list items are expected to be in default
     serialization format for output objects.
@@ -525,7 +546,14 @@ def get_output_stream(items):
     return result
 
 
-def serialize_module(command, external_form, state, timestamp, outputs, provenance):
+def serialize_module(
+        command: ModuleCommand, 
+        external_form: Optional[str], 
+        state: int, 
+        timestamp: ModuleTimestamp, 
+        outputs: ModuleOutputs, 
+        provenance: ModuleProvenance
+    ) -> Dict[str, Any]:
     """Get dictionary serialization of a module.
 
     Parameters
@@ -555,7 +583,7 @@ def serialize_module(command, external_form, state, timestamp, outputs, provenan
     if not timestamp.finished_at is None:
         ts[KEY_FINISHED_AT] = timestamp.finished_at.isoformat()
     # Create dictionary serialization for module provenance
-    prov = dict()
+    prov: Dict[str, Any] = dict()
     if not provenance.read is None:
         prov[KEY_PROVENANCE_READ] = [{
                 KEY_DATASET_NAME: name,
@@ -574,20 +602,20 @@ def serialize_module(command, external_form, state, timestamp, outputs, provenan
                         KEY_COLUMN_ID: col.identifier,
                         KEY_COLUMN_NAME: col.name,
                         KEY_COLUMN_TYPE: col.data_type
-                    } for col in dsoo.columns]
+                    } for col in cast(DatasetDescriptor, dsoo).columns]
                 })
             else:
                 prov[KEY_PROVENANCE_WRITE].append({
-                    KEY_DATAOBJECT_NAME: dsoo.key,
+                    KEY_DATAOBJECT_NAME: ds_name,
                     KEY_DATAOBJECT_ID: dsoo.identifier,
-                    KEY_DATAOBJECT_TYPE: dsoo.obj_type
+                    KEY_DATAOBJECT_TYPE: dsoo.artifact_type
                 })
     if not provenance.delete is None:
         prov[KEY_PROVENANCE_DELETE] = list(provenance.delete)
     if not provenance.resources is None:
         prov[KEY_PROVENANCE_RESOURCES] = provenance.resources
     if not provenance.charts is None:
-        prov[KEY_PROVENANCE_CHARTS] = [c.to_dict() for c in provenance.charts]
+        prov[KEY_PROVENANCE_CHARTS] = [(c[0], c[1].to_dict()) for c in provenance.charts] # type: ignore[no-untyped-call]
     # Create dictionary serialization for the module handle
     return {
         KEY_EXTERNAL_FORM: external_form,

@@ -19,14 +19,17 @@ viztrails. It provides methods to create, delete, and access viztrails.
 """
 
 from abc import abstractmethod
-
+from typing import Dict, Any, List, Optional
+from vizier.viztrail.base import ViztrailHandle
 
 class ViztrailRepository(object):
     """Repository for viztrails. This is an abstract class that defines all
     necessary methods to maintain and manipulate viztrails.
     """
     @abstractmethod
-    def create_viztrail(self, properties=None):
+    def create_viztrail(self, 
+            properties: Optional[Dict[str, Any]] = None
+        ):
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
         be scalar values or a list of scalar values.
@@ -43,7 +46,7 @@ class ViztrailRepository(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_viztrail(self, viztrail_id):
+    def delete_viztrail(self, viztrail_id: str) -> bool:
         """Delete the viztrail with given identifier. The result is True if a
         viztrail with the given identifier existed, False otherwise.
 
@@ -59,7 +62,7 @@ class ViztrailRepository(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_viztrail(self, viztrail_id):
+    def get_viztrail(self, viztrail_id: str) -> ViztrailHandle:
         """Retrieve the viztrail with the given identifier. The result is None
         if no viztrail with given identifier exists.
 
@@ -75,7 +78,7 @@ class ViztrailRepository(object):
         raise NotImplementedError
 
     @abstractmethod
-    def list_viztrails(self):
+    def list_viztrails(self) -> List[ViztrailHandle]:
         """List handles for all viztrails in the repository.
 
         Returns
