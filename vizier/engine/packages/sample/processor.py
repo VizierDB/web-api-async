@@ -109,7 +109,7 @@ class SamplingProcessor(TaskProcessor):
         table_name, schema = mimir.createSample(
             input_dataset.identifier,
             sample_mode,
-            resultName = "SAMPLE_"+get_unique_identifier()
+            result_name = "SAMPLE_"+get_unique_identifier()
         )
         ds = MimirDatasetHandle.from_mimir_result(table_name, schema, properties = {})
 
