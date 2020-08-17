@@ -253,7 +253,7 @@ class VizierDBClient(object):
             existing_name = name.lower()
         )
 
-    def get_dataset_identifier(self, name):
+    def get_dataset_identifier(self, name: str) -> str:
         """Returns the unique identifier for the dataset with the given name.
 
         Raises ValueError if no dataset with the given name exists.

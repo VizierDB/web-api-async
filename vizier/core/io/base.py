@@ -46,7 +46,10 @@ class ObjectStore(object):
     and write objects and to maintain folders.
     """
     @abstractmethod
-    def create_folder(self, parent_folder, identifier=None):
+    def create_folder(self, 
+            parent_folder: str, 
+            identifier: Optional[str] = None
+        ) -> str:
         """Create a new folder in the given parent folder. The folder name is
         either given as the identifier argument or a new unique identifier is
         created if the argument is None. Returns the identifier for the created
@@ -92,7 +95,10 @@ class ObjectStore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_folder(self, folder_path, force_delete=False):
+    def delete_folder(self, 
+            folder_path: str, 
+            force_delete: bool = False
+        ) -> None:
         """Delete the folder with the given path and all of its files and
         subfolders.
 
@@ -198,7 +204,7 @@ class ObjectStore(object):
     @abstractmethod
     def write_object(self, 
             object_path: str, 
-            content: Union[Dict[str, Any], List[Dict[str, Any]], None]
+            content: Union[Dict[str, Any], List[Dict[str, Any]], List[str], None]
         ) -> None:
         """Write content as Json document to given path.
 
@@ -246,7 +252,10 @@ class DefaultObjectStore(ObjectStore):
             if PARA_LONG_IDENTIFIER in properties and not properties[PARA_LONG_IDENTIFIER]:
                 self.identifier_factory = get_short_identifier
 
-    def create_folder(self, parent_folder, identifier=None):
+    def create_folder(self, 
+            parent_folder: str, 
+            identifier: Optional[str] = None
+        ) -> str:
         """Create a new folder in the given parent folder. The folder name is
         either given as the identifier argument or a new unique identifier is
         created if the argument is None. Returns the identifier for the created
@@ -324,7 +333,7 @@ class DefaultObjectStore(ObjectStore):
     def delete_folder(self, 
             folder_path: str, 
             force_delete: bool = False
-        ):
+        ) -> None:
         """Delete the folder with the given path and all of its files and
         subfolders.
 
@@ -452,7 +461,7 @@ class DefaultObjectStore(ObjectStore):
 
     def write_object(self, 
             object_path: str, 
-            content: Union[List[Dict[str, Any]], Dict[str, Any], None]
+            content: Union[List[Dict[str, Any]], Dict[str, Any], List[str], None]
         ):
         """Write content as Json document to given path.
 

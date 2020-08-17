@@ -91,7 +91,7 @@ class OSViztrailRepository(ViztrailRepository):
             )
         # Load viztrails and intialize the remaining instance variables by
         # calling the constructor of the super class
-        self.viztrails = dict()
+        self.viztrails: Dict[str, OSViztrailHandle] = dict()
         for identifier in cast(Dict[str, Any], self.object_store.read_object(self.viztrails_index)):
             vt = OSViztrailHandle.load_viztrail(
                 base_path=self.object_store.join(self.base_path, identifier),

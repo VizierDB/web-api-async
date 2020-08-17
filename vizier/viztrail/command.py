@@ -87,9 +87,9 @@ class ModuleArguments(object):
     def __repr__(self):
         return "\n".join(self.to_yaml_lines(""))
 
-    def to_yaml_lines(self, prefix = ""):
-        def wrap(key, arg): 
-            rest = []
+    def to_yaml_lines(self, prefix: str = "") -> List[str]:
+        def wrap(key: str, arg: Any) -> List[str]: 
+            rest: List[str] = []
             if isinstance(arg, ModuleArguments):
                 rest = arg.to_yaml_lines(prefix+"  ")
                 arg = ""
@@ -432,7 +432,9 @@ class ModuleCommand(object):
             self.arguments.validate(packages[package_id].get(command_id))
 
     def __repr__(self) -> str:
-        return "\n".join(["{}.{} <- (".format(self.package_id, self.command_id)]+self.arguments.to_yaml_lines("  ")+[")"])
+        return "\n".join([
+            "{}.{} <- (".format(self.package_id, self.command_id)
+        ]+self.arguments.to_yaml_lines("  ")+[")"])
 
     @staticmethod
     def from_dict(doc):

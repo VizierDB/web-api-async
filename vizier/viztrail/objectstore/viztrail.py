@@ -178,7 +178,8 @@ class OSViztrailHandle(ViztrailHandle):
         branch_folder = object_store.join(base_path, FOLDER_BRANCHES)
         object_store.create_folder(base_path, identifier=FOLDER_BRANCHES)
         branch_index = object_store.join(branch_folder, OBJ_BRANCHINDEX)
-        object_store.write_object(object_path=branch_index, content=list())
+        content:List[str] = []
+        object_store.write_object(object_path=branch_index, content=content)
         modules_folder = object_store.join(base_path, FOLDER_MODULES)
         object_store.create_folder(base_path, identifier=FOLDER_MODULES)
         # Write viztrail metadata to disk
@@ -367,9 +368,15 @@ class OSViztrailHandle(ViztrailHandle):
 # ------------------------------------------------------------------------------
 
 def create_branch(
-    provenance, properties, modules, branch_folder, modules_folder,
-    object_store, is_default=False, created_at=None
-):
+    provenance: BranchProvenance, 
+    properties: Dict[str, Any], 
+    modules: Optional[List[str]], 
+    branch_folder: str, 
+    modules_folder: str,
+    object_store: ObjectStore, 
+    is_default: bool = False, 
+    created_at: Optional[datetime] = None
+) -> OSBranchHandle:
     """Create a new branch. If the list of workflow modules is given the list
     defines the branch head. Otherwise, the branch is empty.
 
@@ -422,7 +429,11 @@ def create_branch(
     return branch
 
 
-def write_branch_index(branches, object_path, object_store):
+def write_branch_index(
+        branches: Dict[str, OSBranchHandle], 
+        object_path: str, 
+        object_store: ObjectStore
+    ) -> None:
     """Write index file for current branch set.
 
     Parameters

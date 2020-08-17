@@ -134,7 +134,7 @@ class FileSystemDatasetHandle(DatasetHandle):
             properties=properties
         )
 
-    def write_properties_to_file(self, file):
+    def write_properties_to_file(self, file: str) -> None:
         with open(file, 'w') as f:
             json.dump(self.properties, f)
 

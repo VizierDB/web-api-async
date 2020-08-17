@@ -393,7 +393,7 @@ class FileSystemDatastore(DefaultDatastore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def validate_dataset(columns, rows):
+def validate_dataset(columns: List[DatasetColumn], rows: List[DatasetRow]) -> Tuple[int,int]:
     """Validate that (i) each column has a unique identifier, (ii) each row has
     a unique identifier, and (iii) each row has exactly one value per column.
 

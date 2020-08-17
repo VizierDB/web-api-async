@@ -17,8 +17,13 @@
 """Classes to manipulate vizier datasets from within the Python workflow cell.
 """
 
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index
+from typing import Optional, TYPE_CHECKING, Dict, Any, List
+if TYPE_CHECKING:
+    from vizier.engine.packages.pycell.client.base import VizierDBClient
+
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index, DatasetHandle
 from bokeh.models.sources import ColumnDataSource # type: ignore[import]
+
 
 class DatasetClient(object):
     """Client to interact with a Vizier dataset from within a Python workflow
@@ -34,7 +39,10 @@ class DatasetClient(object):
     rows : list(vizier.datastore.client.MutableDatasetRow)
         List of rows in the dataset
     """
-    def __init__(self, dataset=None, client=None, existing_name=None):
+    def __init__(self, 
+            dataset: Optional[DatasetHandle] = None, 
+            client: Optional["VizierDBClient"] = None, 
+            existing_name: str = None):
         """Initialize the client for a given dataset.
 
         Raises ValueError if dataset columns or rows do not have unique
@@ -54,11 +62,11 @@ class DatasetClient(object):
         self.client = client
         self.existing_name = existing_name
         if dataset is not None:
-            self.identifier = dataset.identifier
+            self.identifier: Optional[str] = dataset.identifier
             self.columns = dataset.columns
             # Delay fetching rows and dataset annotations for now
-            self._properties = None
-            self._rows = None
+            self._properties: Optional[Dict[str, Any]] = None
+            self._rows: Optional[List[DatasetRow]] = None
         else:
             self.identifier = None
             self.columns = list()

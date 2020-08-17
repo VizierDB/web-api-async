@@ -336,7 +336,7 @@ class DefaultDatastore(Datastore):
         """
         return self.get_dataset(identifier)
 
-    def get_properties_filename(self, identifier):
+    def get_properties_filename(self, identifier: str) -> str:
         """Get filename of meatdata file for the dataset with the given
         identifier.
 

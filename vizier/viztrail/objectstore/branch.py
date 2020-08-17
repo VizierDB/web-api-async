@@ -18,6 +18,7 @@
 and folders in an object store.
 """
 from typing import cast, Optional, Dict, Any, List
+from datetime import datetime
 
 from vizier.core.io.base import ObjectStore, DefaultObjectStore
 from vizier.core.util import init_value
@@ -29,7 +30,7 @@ from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.objectstore.module import get_module_path
 from vizier.viztrail.workflow import WorkflowDescriptor, WorkflowHandle
 from vizier.viztrail.workflow import ACTION_CREATE
-from vizier.viztrail.module.base import ModuleHandle
+from vizier.viztrail.module.base import ModuleHandle, ModuleCommand
 
 """Resource identifier"""
 OBJ_METADATA = 'branch'
@@ -214,8 +215,15 @@ class OSBranchHandle(BranchHandle):
 
     @staticmethod
     def create_branch(
-        identifier, base_path, modules_folder, is_default=False, provenance=None,
-        properties={}, created_at=None, modules=None, object_store=None
+        identifier: str, 
+        base_path: str, 
+        modules_folder: str, 
+        is_default: bool = False, 
+        provenance: Optional[BranchProvenance] = None,
+        properties: Optional[Dict[str, Any]] = None, 
+        created_at: Optional[datetime] = None, 
+        modules: Optional[List[str]] = None, 
+        object_store: Optional[ObjectStore] = None
     ):
         """Create a new branch. If the workflow is given the new branch contains
         exactly this workflow. Otherwise, the branch is empty.
@@ -268,7 +276,7 @@ class OSBranchHandle(BranchHandle):
         if provenance is None:
             provenance = BranchProvenance()
         # Write provenance information to disk
-        doc = {KEY_CREATED_AT: provenance.created_at.isoformat()}
+        doc: Dict[str, Any] = {KEY_CREATED_AT: provenance.created_at.isoformat()}
         if not provenance.source_branch is None:
             # If one propery is not None all are expected to be not None
             doc[KEY_SOURCE_BRANCH] = provenance.source_branch
@@ -480,7 +488,7 @@ class OSBranchHandle(BranchHandle):
 # Helper Method
 # ------------------------------------------------------------------------------
 
-def get_workflow_id(identifier):
+def get_workflow_id(identifier: int) -> str:
     """Get a hexadecimal string of eight characters length for the given
     integer.
 
@@ -587,8 +595,13 @@ def read_workflow_modules(
 
 
 def write_workflow_handle(
-    modules, workflow_count, base_path, object_store, action, command=None,
-    created_at=None
+    modules: List[str], 
+    workflow_count: int, 
+    base_path: str, 
+    object_store: ObjectStore, 
+    action: str, 
+    command: Optional[ModuleCommand] = None,
+    created_at: Optional[datetime] = None
 ):
     """Create a handle for a new workflow. Returns the descriptor for the new
     workflow.

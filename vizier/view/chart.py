@@ -19,6 +19,7 @@
 Chart views are definitions of views on datasets that are indented for plotting
 as charts in the Web UI.
 """
+from typing import Dict, Any, Optional, List
 
 from vizier.core.util import get_unique_identifier
 
@@ -35,7 +36,11 @@ class DataSeriesHandle(object):
     label: string
         Data series label
     """
-    def __init__(self, column, label=None, range_start=None, range_end=None):
+    def __init__(self, 
+            column: int, 
+            label: Optional[str] = None, 
+            range_start: Optional[int] = None, 
+            range_end: Optional[int] = None):
         """Initialize the data series handle.
 
         Parameters
@@ -56,7 +61,7 @@ class DataSeriesHandle(object):
         self.range_end = range_end
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str, Any]) -> "DataSeriesHandle":
         """Create data series handle from dictionary serialization.
 
         Parameters
@@ -106,8 +111,14 @@ class ChartViewHandle(object):
     view more robust against renaming of columns.
     """
     def __init__(
-        self, dataset_name, identifier=None, chart_name=None, data=None,
-        x_axis=None, chart_type=None, grouped_chart=True
+        self, 
+        dataset_name: str, 
+        identifier: Optional[str] = None, 
+        chart_name: Optional[str] = None, 
+        data: Optional[List[DataSeriesHandle]] = None,
+        x_axis: Optional[int] = None, 
+        chart_type: Optional[str] = None, 
+        grouped_chart: bool = True
     ):
         """Initialize the view handle.
 
@@ -166,7 +177,7 @@ class ChartViewHandle(object):
         return series
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str,Any]) -> "ChartViewHandle":
         """Create chart handle from dictionary serialization.
 
         Parameters
