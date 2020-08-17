@@ -231,8 +231,14 @@ def vistrailsQueryMimirJson(
     resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
     return resp
 
-def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit = None, include_uncertainty = None): 
-    req_json = { "table" : table }
+def getTable(
+      table: str, 
+      columns: Optional[List[str]] = None, 
+      offset: Optional[int] = None, 
+      offset_to_rowid: Optional[str] = None, 
+      limit: Optional[int] = None, 
+      include_uncertainty: Optional[bool] = None): 
+    req_json: Dict[str, Any] = { "table" : table }
     if columns is not None:
       req_json["columns"] = columns
     if offset is not None:

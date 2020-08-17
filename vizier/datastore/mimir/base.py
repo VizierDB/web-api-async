@@ -15,6 +15,10 @@
 # limitations under the License.
 
 """Declaration of constants and helper methods for the Mimir datastore."""
+from typing import Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from vizier.datastore.mimir.dataset import MimirDatasetColumn
+
 from vizier.datastore.dataset import DATATYPE_DATE, DATATYPE_DATETIME
 from datetime import date, datetime
 
@@ -191,7 +195,7 @@ def get_select_query(table_name, columns=None):
         return 'SELECT ' + ROW_ID + ' FROM ' + table_name
     
 
-def mimir_value_to_python(encoded, column):
+def mimir_value_to_python(encoded: Any, column: "MimirDatasetColumn") -> Any:
     if column.data_type == DATATYPE_DATE and type(encoded) is dict:
         return date(encoded["year"], encoded["month"], encoded["date"])
     elif column.data_type == DATATYPE_DATETIME and type(encoded) is dict:

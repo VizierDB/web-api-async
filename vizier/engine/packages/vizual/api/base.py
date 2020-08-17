@@ -62,11 +62,15 @@ class VizualApiResult(object):
         self.resources = resources
 
     @staticmethod
-    def from_mimir(response):
+    def from_mimir(
+            response: Dict[str, Any], 
+            name: Optional[str] = None
+        ) -> "VizualApiResult":
         ds = MimirDatasetHandle.from_mimir_result(
-            response["name"], 
-            response["schema"], 
-            response["properties"]
+            table_name = response["name"], 
+            schema = response["schema"], 
+            properties = response["properties"],
+            name = name
         )
         return VizualApiResult(ds)
 

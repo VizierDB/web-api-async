@@ -90,7 +90,7 @@ class SQLTaskProcessor(TaskProcessor):
                 mimir_table_names,
                 source
             )
-            ds = MimirDatasetHandle.from_mimir_result(view_name, mimirSchema, properties)
+            ds = MimirDatasetHandle.from_mimir_result(view_name, mimirSchema, properties, ds_name)
 
             print(mimirSchema)
             

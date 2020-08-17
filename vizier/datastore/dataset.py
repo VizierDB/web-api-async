@@ -113,7 +113,7 @@ class DatasetDescriptor(ArtifactDescriptor):
     """
     def __init__(self, 
             identifier: str, 
-            name: Optional[str] = None,
+            name: str = "Untitled Dataset",
             columns: List[DatasetColumn] = list()
         ):
         """Initialize the dataset descriptor.
@@ -293,7 +293,7 @@ class DatasetRow(object):
         Optional flags indicating whether row cells are annotated
     """
     def __init__(self, 
-            identifier: int = -1, 
+            identifier: str = "-1", 
             values: Optional[List[Any]] = None, 
             caveats: Optional[List[bool]] = None):
         """Initialize the row object.
@@ -336,7 +336,7 @@ class DatasetHandle(DatasetDescriptor):
     def __init__(self, 
             identifier: str, 
             columns: List[DatasetColumn] = list(), 
-            name: Optional[str] = None
+            name: str = "Untitled Dataset"
         ):
         """Initialize the dataset.
 

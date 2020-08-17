@@ -68,7 +68,7 @@ class MimirVizualApi(VizualApi):
             "column" : col_index
         }
         response = mimir.vizualScript(dataset.identifier, command)
-        return VizualApiResult.from_mimir(response)
+        return VizualApiResult.from_mimir(response, identifier)
 
     def delete_row(self, identifier, row_index, datastore):
         """Delete a row in a given dataset.
