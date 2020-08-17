@@ -24,6 +24,7 @@ import vizier.api.routes.base as routes
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor, DatasetHandle
+from vizier.datastore.artifact import ArtifactDescriptor
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.engine.project.base import ProjectHandle
 from vizier.api.routes.base import UrlFactory
@@ -62,7 +63,11 @@ def DATASET_COLUMN(column: DatasetColumn) -> Dict[str, Any]:
     }
 
 
-def ARTIFACT_DESCRIPTOR(artifact, project=None, urls=None):
+def ARTIFACT_DESCRIPTOR(
+        artifact: ArtifactDescriptor, 
+        project: Optional[ProjectHandle] = None, 
+        urls: Optional[UrlFactory] = None
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a dataobject descriptor.
 
     Parameters
@@ -261,7 +266,7 @@ def DATASET_HANDLE(
     return obj
 
 
-def DATASET_IDENTIFIER(identifier, name):
+def DATASET_IDENTIFIER(identifier: str, name: str) -> Dict[str, Any]:
     """Dictionary serialization for a dataset that is associated with a
     workflow module.
 

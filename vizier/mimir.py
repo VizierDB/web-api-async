@@ -312,7 +312,13 @@ def tableExists(tableName):
         return False
 
 
-def createSample(inputds, mode_config, seed = None, result_name = None, properties = {}):
+def createSample(
+    inputds: str, 
+    mode_config: Dict[str, Any], 
+    seed: Optional[int] = None, 
+    result_name: Optional[str] = None, 
+    properties: Optional[Dict[str, Any]] = None
+  ) -> Tuple[str, List[Dict[str, Any]]]:
   """
     Create a sample of dataset input according to the sampling mode
     configuration given in modejs.  See Mimir's mimir.algebra.sampling
@@ -335,7 +341,7 @@ def createSample(inputds, mode_config, seed = None, result_name = None, properti
     "source" : inputds,
     "samplingMode" : mode_config,
     "seed" : seed, 
-    "properties" : properties,
+    "properties" : properties if properties is not None else {},
     "resultName" : result_name
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))

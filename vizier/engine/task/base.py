@@ -26,6 +26,7 @@ from vizier.engine.controller import WorkflowController
 from vizier.datastore.base import Datastore
 from vizier.filestore.base import Filestore
 from vizier.datastore.artifact import ArtifactDescriptor
+from vizier.datastore.dataset import DatasetHandle
 
 class TaskContext(object):
     """The task context contains references to the datastore and filestore that
@@ -75,7 +76,9 @@ class TaskContext(object):
         self.resources = resources
         self.dataobjects = { name: artifacts[name] for name in artifacts if not artifacts[name].is_dataset }
 
-    def get_dataset(self, name):
+    def get_dataset(self, 
+            name: str
+        ) -> DatasetHandle:
         """Get the handle for the dataset with the given name. Raises ValueError
         if the dataset does not exist.
 
