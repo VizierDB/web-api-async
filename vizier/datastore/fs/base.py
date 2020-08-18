@@ -65,7 +65,7 @@ class FileSystemDatastore(DefaultDatastore):
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
             properties: Dict[str, Any] = {}, 
-            human_readable_name: Optional[str] = None, 
+            human_readable_name: str = "Untitled Dataset", 
             backend_options: Optional[List[Dict[str, str]]] = None, 
             dependencies: List[str] = []
         ) -> DatasetDescriptor:
@@ -96,15 +96,15 @@ class FileSystemDatastore(DefaultDatastore):
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
         identifiers = set(
-            row.identifier 
+            int(row.identifier)
             for row in rows 
-            if row.identifier is not None and row.identifier >= 0
+            if row.identifier is not None and int(row.identifier) >= 0
         )
         identifiers.add(0)
         max_row_id = max(identifiers)
         rows = [
             DatasetRow(
-                identifier = row.identifier if row.identifier is not None and row.identifier >= 0 else idx + max_row_id,
+                identifier = row.identifier if row.identifier is not None and int(row.identifier) >= 0 else str(idx + max_row_id),
                 values = row.values,
                 caveats = row.caveats
             )
@@ -294,7 +294,7 @@ class FileSystemDatastore(DefaultDatastore):
                 )
             for row in reader:
                 values = [cast(v.strip()) for v in row]
-                rows.append(DatasetRow(identifier=len(rows), values=values))
+                rows.append(DatasetRow(identifier=str(len(rows)), values=values))
         # Get unique identifier and create subfolder for the new dataset
         identifier = get_unique_identifier()
         dataset_dir = self.get_dataset_dir(identifier)
@@ -427,9 +427,9 @@ def validate_dataset(columns: List[DatasetColumn], rows: List[DatasetRow]) -> Tu
     for row in rows:
         if len(row.values) != len(columns):
             raise ValueError('schema violation for row \'' + str(row.identifier) + '\'')
-        elif row.identifier < 0:
+        elif int(row.identifier) < 0:
             raise ValueError('negative row identifier \'' + str(row.identifier) + '\'')
-        elif row.identifier in row_ids:
+        elif int(row.identifier) in row_ids:
             raise ValueError('duplicate row identifier \'' + str(row.identifier) + '\'')
-        row_ids.add(row.identifier)
+        row_ids.add(int(row.identifier))
     return max(col_ids) if len(col_ids) > 0 else -1, max(row_ids) if len(row_ids) > 0 else -1

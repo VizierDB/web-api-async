@@ -286,7 +286,7 @@ class MimirProcessor(TaskProcessor):
         lens_schema = mimir_lens_response['schema']
         lens_properties = mimir_lens_response['properties']
 
-        ds = MimirDatasetHandle.from_mimir_result(lens_name, lens_schema, lens_properties)
+        ds = MimirDatasetHandle.from_mimir_result(lens_name, lens_schema, lens_properties, ds_name)
 
         if command_id in LENSES_THAT_SHOULD_NOT_DISPLAY_TABLES:
             print_dataset_schema(outputs, ds_name, ds.columns)

@@ -18,16 +18,20 @@
 Implementation of the task processor that executes commands that
 are defined in the `sampling` package.
 """
+from typing import List, Dict, Any, TYPE_CHECKING
 
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.api.webservice import server
-from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput
+from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
-from vizier.datastore.dataset import DatasetDescriptor
+from vizier.datastore.dataset import DatasetDescriptor, DatasetColumn
 import vizier.engine.packages.sample.base as cmd
 import vizier.mimir as mimir
 from vizier.core.util import get_unique_identifier
 from vizier.datastore.mimir.dataset import MimirDatasetHandle
+if TYPE_CHECKING:
+    from vizier.viztrail.command import ModuleArguments
+from vizier.engine.task.base import TaskContext
 
 
 class SamplingProcessor(TaskProcessor):
@@ -42,7 +46,11 @@ class SamplingProcessor(TaskProcessor):
         Initialize the vizual API instance
         """
 
-    def compute(self, command_id, arguments, context):
+    def compute(self, 
+            command_id: str, 
+            arguments: "ModuleArguments", 
+            context: TaskContext
+        ) -> ExecResult:
         """Compute results for commands in the sampling package using 
         the set of user-provided arguments and the current database 
         state.
@@ -62,7 +70,7 @@ class SamplingProcessor(TaskProcessor):
         """
 
         input_ds_name = arguments.get_value(cmd.PARA_INPUT_DATASET).lower()
-        input_dataset = context.get_dataset(input_ds_name)
+        input_dataset: DatasetDescriptor = context.get_dataset(input_ds_name)
         if input_dataset is None:
             raise ValueError('unknown dataset \'' + input_ds_name + '\'')
 
@@ -110,7 +118,7 @@ class SamplingProcessor(TaskProcessor):
             sample_mode,
             result_name = "SAMPLE_"+get_unique_identifier()
         )
-        ds = MimirDatasetHandle.from_mimir_result(table_name, schema, properties = {})
+        ds = MimirDatasetHandle.from_mimir_result(table_name, schema, properties = {}, name = output_ds_name)
 
         # And start rendering some output
         outputs = ModuleOutputs()
@@ -120,8 +128,11 @@ class SamplingProcessor(TaskProcessor):
             offset=0,
             limit=10
         )
-        ds_output['name'] = output_ds_name
-        outputs.stdout.append(DatasetOutput(ds_output))
+        if ds_output is not None:
+            ds_output['name'] = output_ds_name
+            outputs.stdout.append(DatasetOutput(ds_output))
+        else:
+            outputs.stderr.append(TextOutput("Error displaying dataset"))
 
         # Record Reads and writes
         provenance = ModuleProvenance(
@@ -132,8 +143,7 @@ class SamplingProcessor(TaskProcessor):
                 output_ds_name: DatasetDescriptor(
                     identifier=ds.identifier,
                     name=output_ds_name,
-                    columns=ds.columns,
-                    row_count=ds.row_count
+                    columns=ds.columns
                 )
             }
         )
@@ -144,11 +154,15 @@ class SamplingProcessor(TaskProcessor):
             provenance=provenance
         )
 
-    def get_automatic_strata(self, dataset, column, probability):
+    def get_automatic_strata(self, 
+            dataset: DatasetDescriptor, 
+            column: DatasetColumn, 
+            probability: float
+        ) -> List[Dict[str, Any]]:
         counts = mimir.vistrailsQueryMimirJson(
             query = "SELECT `{}`, COUNT(*) FROM `{}` GROUP BY `{}`".format(
                     column.name, 
-                    dataset.table_name,
+                    dataset.identifier,
                     column.name
                 ),
             include_uncertainty = False,

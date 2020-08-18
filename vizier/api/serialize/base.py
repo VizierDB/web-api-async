@@ -21,6 +21,7 @@ serialize web resources.
 from typing import List, Dict, Optional, Any
 
 import vizier.api.serialize.labels as labels
+from vizier.viztrail.module.output import ModuleOutputs, OutputObject
 
 
 def HATEOAS(links: Dict[str, Optional[str]]) -> List[Dict[str, Optional[str]]]:
@@ -68,7 +69,7 @@ def PROPERTIES(properties: Dict[str, Any]) -> List[Dict[str, Any]]:
 # Output streams
 # ------------------------------------------------------------------------------
 
-def OUTPUT(out):
+def OUTPUT(out: OutputObject) -> Dict[str, Any]:
     """Get dictionary serialization for an output object.
 
     Parameters
@@ -83,7 +84,7 @@ def OUTPUT(out):
     return {'type': out.type, 'value': out.value}
 
 
-def OUTPUTS(output_streams):
+def OUTPUTS(output_streams: ModuleOutputs) -> Dict[str, Any]:
     """Get dictionary serialization for a pair of STDOUT and STDERR output
     stream.
 

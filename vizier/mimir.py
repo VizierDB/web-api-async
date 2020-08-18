@@ -231,8 +231,14 @@ def vistrailsQueryMimirJson(
     resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
     return resp
 
-def getTable(table, columns = None, offset = None, offset_to_rowid = None, limit = None, include_uncertainty = None): 
-    req_json = { "table" : table }
+def getTable(
+      table: str, 
+      columns: Optional[List[str]] = None, 
+      offset: Optional[int] = None, 
+      offset_to_rowid: Optional[str] = None, 
+      limit: Optional[int] = None, 
+      include_uncertainty: Optional[bool] = None): 
+    req_json: Dict[str, Any] = { "table" : table }
     if columns is not None:
       req_json["columns"] = columns
     if offset is not None:
@@ -306,7 +312,13 @@ def tableExists(tableName):
         return False
 
 
-def createSample(inputds, mode_config, seed = None, result_name = None, properties = {}):
+def createSample(
+    inputds: str, 
+    mode_config: Dict[str, Any], 
+    seed: Optional[int] = None, 
+    result_name: Optional[str] = None, 
+    properties: Optional[Dict[str, Any]] = None
+  ) -> Tuple[str, List[Dict[str, Any]]]:
   """
     Create a sample of dataset input according to the sampling mode
     configuration given in modejs.  See Mimir's mimir.algebra.sampling
@@ -329,7 +341,7 @@ def createSample(inputds, mode_config, seed = None, result_name = None, properti
     "source" : inputds,
     "samplingMode" : mode_config,
     "seed" : seed, 
-    "properties" : properties,
+    "properties" : properties if properties is not None else {},
     "resultName" : result_name
   }
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Implements reader for datasets that are stored in the Mimir backend."""
-
+from typing import List
 from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.reader import DatasetReader
 
@@ -66,14 +66,11 @@ class MimirDatasetReader(DatasetReader):
         self.is_open = False
         self.read_index = None
         self.rows = None
-        # Index position of columns in dataset rows
-        self.col_map = None
 
     def close(self):
         """Close any open files and set the is_open flag to False."""
         self.rows = None
         self.read_index = None
-        self.col_map = None
         self.is_open = False
 
     def __next__(self):
@@ -95,7 +92,7 @@ class MimirDatasetReader(DatasetReader):
             self.close()
         raise StopIteration
 
-    def open(self):
+    def open(self) -> "MimirDatasetReader":
         """Setup the reader by querying the database and creating an in-memory
         copy of the dataset rows.
 
@@ -120,10 +117,6 @@ class MimirDatasetReader(DatasetReader):
             #self.row_ids = rs['prov']
             # Initialize mapping of column rdb names to index positions in
             # dataset rows
-            self.col_map = dict()
-            for i in range(len(rs['schema'])):
-                col = rs['schema'][i]
-                self.col_map[base.sanitize_column_name(col['name'])] = i
             rs_rows = rs['data']
             row_ids = rs['prov']
             annotation_flags = rs['colTaint']
@@ -133,12 +126,11 @@ class MimirDatasetReader(DatasetReader):
                 row_annotation_flags = annotation_flags[row_index]  
                 row_id = str(row_ids[row_index])
                 values = [None] * len(self.columns)
-                annotation_flag_values = [None] * len(self.columns)
+                annotation_flag_values: List[bool] = [False] * len(self.columns)
                 for i in range(len(self.columns)):
                     col = self.columns[i]
-                    col_index = self.col_map[col.name_in_rdb]
-                    values[i] = base.mimir_value_to_python(row[col_index], col)
-                    annotation_flag_values[i] = not row_annotation_flags[col_index]
+                    values[i] = base.mimir_value_to_python(row[i], col)
+                    annotation_flag_values[i] = not row_annotation_flags[i]
                 self.rows.append(DatasetRow(row_id, values, annotation_flag_values))
             self.read_index = 0
             self.is_open = True

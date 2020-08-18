@@ -17,15 +17,32 @@
 """This module contains helper methods for the webservice that are used to
 serialize workflow modules.
 """
+from typing import Dict, Optional, List, Any, TYPE_CHECKING
 
 from vizier.viztrail.module.output import ModuleOutputs
+from vizier.datastore.artifact import ArtifactDescriptor
+if TYPE_CHECKING:
+    from vizier.engine.project.base import ProjectHandle
+from vizier.viztrail.branch import BranchHandle
+from vizier.viztrail.module.base import ModuleHandle
+from vizier.viztrail.workflow import WorkflowHandle
+from vizier.api.routes.base import UrlFactory
+from vizier.view.chart import ChartViewHandle
 
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.dataset as serialds
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 
-def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, include_self=True):
+def MODULE_HANDLE(
+        project: "ProjectHandle", 
+        branch: BranchHandle, 
+        module: ModuleHandle, 
+        urls: UrlFactory, 
+        workflow: Optional[WorkflowHandle] = None, 
+        charts: List[ChartViewHandle] = None, 
+        include_self: bool = True
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a handle in the workflow at the branch
     head.
 
@@ -58,7 +75,8 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
     module_id = module.identifier
     cmd = module.command
     timestamp = module.timestamp
-    obj = {
+    actual_workflow = branch.get_head() if workflow is None else workflow
+    obj: Dict[str, Any] = {
         labels.ID: module_id,
         'state': module.state,
         labels.COMMAND: {
@@ -70,62 +88,82 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
         labels.TIMESTAMPS: {
             labels.CREATED_AT: timestamp.created_at.isoformat()
         },
-        labels.LINKS: serialize.HATEOAS({
-            ref.MODULE_INSERT: urls.workflow_module_insert(
-                project_id=project_id,
-                branch_id=branch_id,
-                module_id=module_id
-            )
-        })
+        labels.LINKS: serialize.HATEOAS(
+            {} if module_id is None else {
+                ref.MODULE_INSERT: urls.workflow_module_insert(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    module_id=module_id
+                )
+            }
+        )
     }
     if include_self:
-        obj[labels.LINKS].extend(serialize.HATEOAS({
-            ref.SELF: urls.get_workflow_module(
-                project_id=project_id,
-                branch_id=branch_id,
-                module_id=module_id
-            ),
-            ref.MODULE_DELETE: urls.workflow_module_delete(
-                project_id=project_id,
-                branch_id=branch_id,
-                module_id=module_id
-            ),
-            ref.MODULE_REPLACE: urls.workflow_module_replace(
-                project_id=project_id,
-                branch_id=branch_id,
-                module_id=module_id
-            )
-        }))
+        obj[labels.LINKS].extend(serialize.HATEOAS(
+            {} if module_id is None else {
+                ref.SELF: urls.get_workflow_module(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    module_id=module_id
+                ),
+                ref.MODULE_DELETE: urls.workflow_module_delete(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    module_id=module_id
+                ),
+                ref.MODULE_REPLACE: urls.workflow_module_replace(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    module_id=module_id
+                )
+            }
+        ))
     if not timestamp.started_at is None:
         obj[labels.TIMESTAMPS][labels.STARTED_AT] = timestamp.started_at.isoformat()
     # Add outputs and datasets if module is not active.
     if not module.is_active:
+        artifacts: Dict[str, ArtifactDescriptor] = dict()
+        for precursor in actual_workflow.modules:
+            artifacts = precursor.provenance.get_database_state(artifacts)
         datasets = list()
-        for artifact in module.artifacts:
+        other_artifacts = list()
+        for artifact_name in artifacts:
+            artifact = artifacts[artifact_name]
             if artifact.is_dataset:
                 datasets.append(
                     serialds.DATASET_IDENTIFIER(
                         identifier=artifact.identifier,
-                        name=artifact.name
+                        name=artifact_name
+                    )
+                )
+            else:
+                other_artifacts.append(
+                    serialds.ARTIFACT_DESCRIPTOR(
+                        artifact = artifact,
+                        project = project_id
                     )
                 )
         available_charts = list()
-        for c_handle in charts:
-            available_charts.append({
-                labels.NAME: c_handle.chart_name,
-                labels.LINKS: serialize.HATEOAS({
-                    ref.SELF: urls.get_chart_view(
-                        project_id=project_id,
-                        branch_id=branch_id,
-                        workflow_id=workflow.identifier,
-                        module_id=module_id,
-                        chart_id=c_handle.identifier
+        if charts is not None:
+            for c_handle in charts:
+                available_charts.append({
+                    labels.NAME: c_handle.chart_name,
+                    labels.LINKS: serialize.HATEOAS(
+                        {} if module_id is None else {
+                            ref.SELF: urls.get_chart_view(
+                                project_id=project_id,
+                                branch_id=branch_id,
+                                workflow_id=actual_workflow.identifier,
+                                module_id=module_id,
+                                chart_id=c_handle.identifier
+                            )
+                        }
                     )
                 })
-            })
         obj[labels.DATASETS] = datasets
         obj[labels.CHARTS] = available_charts
         obj[labels.OUTPUTS] = serialize.OUTPUTS(module.outputs)
+        obj[labels.ARTIFACTS] = other_artifacts
         if not timestamp.finished_at is None:
             obj[labels.TIMESTAMPS][labels.FINISHED_AT] = timestamp.finished_at.isoformat()
     else:
@@ -134,6 +172,7 @@ def MODULE_HANDLE(project, branch, module, urls, workflow=None, charts=None, inc
         obj[labels.DATASETS] = list()
         obj[labels.CHARTS] = list()
         obj[labels.OUTPUTS] = serialize.OUTPUTS(ModuleOutputs())
+        obj[labels.ARTIFACTS] = list()
     return obj
 
 

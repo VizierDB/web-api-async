@@ -217,7 +217,7 @@ class MimirDatasetHandle(DatasetHandle):
             identifier: str, 
             columns: List[MimirDatasetColumn], 
             properties: Dict[str, Any], 
-            name: Optional[str] = None
+            name: str = "Untitled Dataset"
         ):
         """Initialize the descriptor.
 
@@ -246,7 +246,7 @@ class MimirDatasetHandle(DatasetHandle):
             table_name: str, 
             schema: List[Dict[str,str]], 
             properties: Dict[str, Any],
-            name = None
+            name: Optional[str] = None
         ):
         columns = [
             MimirDatasetColumn(
@@ -257,11 +257,12 @@ class MimirDatasetHandle(DatasetHandle):
             )
             for identifier, col in enumerate(schema)
         ]
+
         return MimirDatasetHandle(
             identifier = table_name,
             columns = columns,
             properties = properties,
-            name = name
+            name = table_name if name is None else name
         )
 
     def get_row_count(self) -> int:

@@ -66,7 +66,7 @@ class MimirDatastore(DefaultDatastore):
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
             properties: Dict[str, Any] = {},
-            human_readable_name: Optional[str] = None, 
+            human_readable_name: str = "Untitled Dataset", 
             backend_options: List[Tuple[str, str]] = [], 
             dependencies: List[str] = []
         ) -> MimirDatasetHandle:
@@ -124,7 +124,7 @@ class MimirDatastore(DefaultDatastore):
             name = human_readable_name
         )
 
-    def get_dataset(self, identifier: str) -> MimirDatasetHandle:
+    def get_dataset(self, identifier: str, name: Optional[str] = None) -> MimirDatasetHandle:
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -139,7 +139,7 @@ class MimirDatastore(DefaultDatastore):
         """
         # Return None if the dataset file does not exist
         schema, properties = mimir.getTableInfo(identifier)
-        return MimirDatasetHandle.from_mimir_result(identifier, schema, properties)
+        return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
     def get_caveats(self, 
             identifier: str, 
@@ -324,7 +324,7 @@ class MimirDatastore(DefaultDatastore):
             result_name = prefix + get_unique_identifier(),
             proposed_schema = proposed_schema
         )
-        return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties)
+        return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties, human_readable_name)
 
 
     def unload_dataset(self, filepath, dataset_name, format='csv', options=[], filename=""):
