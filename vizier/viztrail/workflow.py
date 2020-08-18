@@ -139,7 +139,7 @@ class WorkflowHandle(object):
         """
         return self.descriptor.created_at
 
-    def get_state(self):
+    def get_state(self) -> ModuleState:
         """The workflow state is either SUCCESS or the state of the first module
         that is not in SUCCESS state.
 

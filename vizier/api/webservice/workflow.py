@@ -17,6 +17,10 @@
 """Vizier Workflow API - Implements all methods of the API to interact with
 workflows in vizier projects.
 """
+from typing import TYPE_CHECKING, List
+if TYPE_CHECKING:
+    from vizier.view.chart import ChartViewHandle
+    from vizier.viztrail.workflow import WorkflowHandle
 
 from vizier.viztrail.command import ModuleCommand
 
@@ -401,7 +405,10 @@ class VizierWorkflowApi(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def get_module_charts(workflow, module_id):
+def get_module_charts(
+        workflow: "WorkflowHandle", 
+        module_id: str
+    ) -> List["ChartViewHandle"]:
     """Get the list of charts that are available for a given module.
 
     Parameters
@@ -420,8 +427,8 @@ def get_module_charts(workflow, module_id):
     datasets = list()
     for m in workflow.modules:
         if not m.provenance.charts is None:
-            for c_handle in m.provenance.charts:
-                charts[c_handle.chart_name.lower()] = c_handle
+            for c_name, c_handle in m.provenance.charts:
+                charts[c_name.lower()] = c_handle
         for artifact in m.artifacts:
             if artifact.is_dataset:
                 datasets.append(artifact.name)

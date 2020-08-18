@@ -15,6 +15,7 @@
 # limitations under the License.
 
 """Task processor for commands in the plot package."""
+from typing import Optional
 
 from vizier.core.util import is_valid_name
 from vizier.engine.packages.plot.query import ChartQuery
@@ -22,6 +23,9 @@ from vizier.view.chart import ChartViewHandle
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, ChartOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.command import ModuleArguments
+from vizier.engine.task.base import TaskContext
+from vizier.datastore.dataset import DatasetHandle
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.plot.base as cmd
@@ -29,7 +33,11 @@ import vizier.engine.packages.plot.base as cmd
 
 class PlotProcessor(TaskProcessor):
     """Implmentation of the task processor for the plot package."""
-    def compute(self, command_id, arguments, context):
+    def compute(self, 
+            command_id: str, 
+            arguments: ModuleArguments, 
+            context: TaskContext
+        ) -> ExecResult:
         """Compute results for the given plot command using the set of user-
         provided arguments and the current database state. Return an execution
         result is case of success or error.
@@ -57,7 +65,10 @@ class PlotProcessor(TaskProcessor):
         else:
             raise ValueError('unknown plot command \'' + str(command_id) + '\'')
 
-    def compute_simple_chart(self, args, context):
+    def compute_simple_chart(self, 
+            args: ModuleArguments, 
+            context: TaskContext
+        ) -> ExecResult:
         """Execute simple chart command.
 
         Parameters
@@ -121,7 +132,7 @@ class PlotProcessor(TaskProcessor):
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},
                 write=dict(),
-                charts=[view]
+                charts=[(chart_name, view)]
             )
         )
 
@@ -130,7 +141,14 @@ class PlotProcessor(TaskProcessor):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def add_data_series(args, view, dataset, default_label=None, col_arg_id=cmd.PARA_SERIES_COLUMN, range_arg_id=cmd.PARA_SERIES_RANGE):
+def add_data_series(
+        args: ModuleArguments, 
+        view: ChartViewHandle, 
+        dataset: DatasetHandle, 
+        default_label: Optional[str] = None, 
+        col_arg_id: str = cmd.PARA_SERIES_COLUMN, 
+        range_arg_id: str = cmd.PARA_SERIES_RANGE
+    ) -> None:
     """Add a data series handle to a given chart view handle. Expects a data
     series specification and a dataset descriptor.
 

@@ -17,7 +17,13 @@
 """This module contains helper methods for the webservice that are used to
 serialize workflow resources.
 """
+from typing import TYPE_CHECKING, Dict, Any, Optional
+if TYPE_CHECKING:
+    from vizier.engine.project.base import ProjectHandle
+    from vizier.viztrail.branch import BranchHandle
+    from vizier.viztrail.workflow import WorkflowHandle
 
+from vizier.api.routes.base import UrlFactory
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.dataset as serialds
@@ -96,7 +102,12 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
     }
 
 
-def WORKFLOW_HANDLE(project, branch, workflow, urls):
+def WORKFLOW_HANDLE(
+        project: "ProjectHandle", 
+        branch: "BranchHandle", 
+        workflow: "WorkflowHandle", 
+        urls: UrlFactory
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a workflow handle.
 
     Parameters
@@ -118,7 +129,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     branch_id = branch.identifier
     workflow_id = workflow.identifier
     descriptor = workflow.descriptor
-    read_only = (branch.head.identifier != workflow_id)
+    read_only = (branch.get_head().identifier != workflow_id)
     # Create lists of module handles and dataset handles
     modules = list()
     datasets = dict()
@@ -127,8 +138,8 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     charts = dict()
     for m in workflow.modules:
         if not m.provenance.charts is None:
-            for c_handle in m.provenance.charts:
-                charts[c_handle.chart_name.lower()] = c_handle
+            for c_name, c_handle in m.provenance.charts:
+                charts[c_name] = c_handle
         available_charts = list()
         # Only include charts for modules that completed successful
         for artifact in m.artifacts:
@@ -160,7 +171,7 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
                 include_self=(not read_only)
             )
         )
-    handle_links = None
+    handle_links: Optional[Dict[str,Optional[str]]] = None
     if workflow.is_active:
         handle_links = {
             ref.WORKFLOW_CANCEL: urls.cancel_workflow(
@@ -190,7 +201,12 @@ def WORKFLOW_HANDLE(project, branch, workflow, urls):
     }
 
 
-def WORKFLOW_HANDLE_LINKS(urls, project_id, branch_id, workflow_id=None, links=None):
+def WORKFLOW_HANDLE_LINKS(
+        urls: UrlFactory, 
+        project_id: str, 
+        branch_id: str, 
+        workflow_id: Optional[str] = None, 
+        links: Optional[Dict[str,Optional[str]]] = None):
     """Get basic set of HATEOAS references for workflow handles.
 
     For an empty workflow the identifier is None. In that case the result will

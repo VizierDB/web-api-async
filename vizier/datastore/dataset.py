@@ -202,7 +202,7 @@ class DatasetDescriptor(ArtifactDescriptor):
         """
         return get_column_index(self.columns, column_id)
 
-    def get_index(self, column_id):
+    def get_index(self, column_id: int) -> Optional[int]:
         """Get index position for column with given id. Returns None if no
         column with column_id exists.
 
