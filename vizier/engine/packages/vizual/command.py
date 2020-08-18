@@ -208,7 +208,7 @@ def load_dataset(
         vizual.PACKAGE_VIZUAL,
         vizual.VIZUAL_LOAD,
         arguments=arguments,
-        packages=PACKAGE(validate=validate)
+        packages=None#PACKAGE(validate=validate)
     )
 
 
