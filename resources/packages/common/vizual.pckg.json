@@ -101,7 +101,7 @@
                         "required": true
                     },
                     {
-                        "datatype": "rowidx",
+                        "datatype": "rowid",
                         "hidden": false,
                         "id": "row",
                         "index": 1,
@@ -753,7 +753,7 @@
                         "required": true
                     },
                     {
-                        "datatype": "rowidx",
+                        "datatype": "rowid",
                         "hidden": false,
                         "id": "row",
                         "index": 1,

@@ -146,7 +146,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
             name='Delete Row',
             parameters=[
                 pckg.para_dataset(0),
-                para_row_index(1)
+                para_row_id(1)
             ],
             format=[
                 pckg.constant_format('DELETE'),
@@ -401,7 +401,7 @@ VIZUAL_COMMANDS = pckg.package_declaration(
             name='Move Row',
             parameters=[
                 pckg.para_dataset(0),
-                para_row_index(1),
+                para_row_id(1),
                 para_position(2)
             ],
             format=[
