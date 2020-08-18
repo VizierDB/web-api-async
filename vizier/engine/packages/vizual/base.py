@@ -209,174 +209,174 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.variable_format(PARA_POSITION)
             ]
         ),
-        pckg.command_declaration(
-            identifier=VIZUAL_LOAD,
-            name='Load Dataset',
-            suggest=True,
-            parameters=[
-                pckg.parameter_declaration(
-                    identifier=pckg.PARA_NAME,
-                    name='Dataset Name',
-                    data_type=pckg.DT_STRING,
-                    index=0
-                ),
-                pckg.parameter_declaration(
-                    identifier=PARA_FILE,
-                    name='Source File',
-                    data_type=pckg.DT_FILE_ID,
-                    index=1
-                ),
-                pckg.parameter_declaration(
-                    PARA_LOAD_FORMAT,
-                    name='Load Format',
-                    data_type=pckg.DT_STRING,
-                    values=[
-                        pckg.enum_value(value='csv', text='CSV', is_default=True),
-                        pckg.enum_value(value='json', text='JSON'),
-                        pckg.enum_value(value='mimir.exec.spark.datasource.pdf', text='PDF'),
-                        pckg.enum_value(value='mimir.exec.spark.datasource.google.spreadsheet', text='Google Sheet'),
-                        pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
-                        pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
-                        pckg.enum_value(value='jdbc', text='JDBC Source'),
-                        pckg.enum_value(value='text', text='Text'),
-                        pckg.enum_value(value='parquet', text='Parquet'),
-                        pckg.enum_value(value='orc', text='ORC')
-                    ],
-                    index=2,
-                    required=True
-                ),
-                pckg.parameter_declaration(
-                    PARA_SCHEMA,
-                    name='Schema (leave blank to guess)',
-                    data_type=pckg.DT_LIST,
-                    index=3,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_SCHEMA_COLUMN,
-                    name='Column Name',
-                    data_type=pckg.DT_STRING,
-                    index=4,
-                    parent=PARA_SCHEMA,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_SCHEMA_TYPE,
-                    name='Data Type',
-                    data_type=pckg.DT_STRING,
-                    index=5,
-                    parent=PARA_SCHEMA,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_INFER_TYPES,
-                    name='Infer Types',
-                    data_type=pckg.DT_BOOL,
-                    index=6,
-                    default_value=True,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_DETECT_HEADERS,
-                    name='File Has Headers',
-                    data_type=pckg.DT_BOOL,
-                    index=7,
-                    default_value=True,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_LOAD_DSE,
-                    name='Data Source Error Annotations',
-                    data_type=pckg.DT_BOOL,
-                    index=8,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_LOAD_OPTIONS,
-                    name='Load Options',
-                    data_type=pckg.DT_LIST,
-                    index=9,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_LOAD_OPTION_KEY,
-                    name='Option Key',
-                    data_type=pckg.DT_STRING,
-                    index=10,
-                    parent=PARA_LOAD_OPTIONS,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_LOAD_OPTION_VALUE,
-                    name='Option Value',
-                    data_type=pckg.DT_STRING,
-                    index=11,
-                    parent=PARA_LOAD_OPTIONS,
-                    required=False
-                )
-            ],
-            format=[
-                pckg.constant_format('LOAD'),
-                pckg.constant_format('DATASET'),
-                pckg.variable_format(pckg.PARA_NAME),
-                pckg.constant_format('FROM'),
-                pckg.variable_format(PARA_FILE)
-            ]
-        ),
-        pckg.command_declaration(
-            identifier=VIZUAL_UNLOAD,
-            name='Unload Dataset',
-            parameters=[
-                pckg.para_dataset(0),
-                pckg.parameter_declaration(
-                    PARA_UNLOAD_FORMAT,
-                    name='Unload Format',
-                    data_type=pckg.DT_STRING,
-                    values=[
-                        pckg.enum_value(value='csv', text='CSV', is_default=True),
-                        pckg.enum_value(value='json', text='JSON'),
-                        pckg.enum_value(value='mimir.exec.spark.datasource.google.spreadsheet', text='Google Sheet'),
-                        pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
-                        pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
-                        pckg.enum_value(value='jdbc', text='JDBC Source'),
-                        pckg.enum_value(value='text', text='Text'),
-                        pckg.enum_value(value='parquet', text='Parquet'),
-                        pckg.enum_value(value='orc', text='ORC')
-                    ],
-                    index=1,
-                    required=True
-                ),
-                pckg.parameter_declaration(
-                    PARA_UNLOAD_OPTIONS,
-                    name='Unload Options',
-                    data_type=pckg.DT_LIST,
-                    index=2,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_UNLOAD_OPTION_KEY,
-                    name='Option Key',
-                    data_type=pckg.DT_STRING,
-                    index=3,
-                    parent=PARA_UNLOAD_OPTIONS,
-                    required=False
-                ),
-                pckg.parameter_declaration(
-                    PARA_UNLOAD_OPTION_VALUE,
-                    name='Option Value',
-                    data_type=pckg.DT_STRING,
-                    index=4,
-                    parent=PARA_UNLOAD_OPTIONS,
-                    required=False
-                )
-            ],
-            format=[
-                pckg.constant_format('UNLOAD'),
-                pckg.variable_format(pckg.PARA_DATASET),
-                pckg.constant_format('TO'),
-                pckg.variable_format(PARA_UNLOAD_FORMAT)
-            ]
-        ),
+        # pckg.command_declaration(
+        #     identifier=VIZUAL_LOAD,
+        #     name='Load Dataset',
+        #     suggest=True,
+        #     parameters=[
+        #         pckg.parameter_declaration(
+        #             identifier=pckg.PARA_NAME,
+        #             name='Dataset Name',
+        #             data_type=pckg.DT_STRING,
+        #             index=0
+        #         ),
+        #         pckg.parameter_declaration(
+        #             identifier=PARA_FILE,
+        #             name='Source File',
+        #             data_type=pckg.DT_FILE_ID,
+        #             index=1
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_LOAD_FORMAT,
+        #             name='Load Format',
+        #             data_type=pckg.DT_STRING,
+        #             values=[
+        #                 pckg.enum_value(value='csv', text='CSV', is_default=True),
+        #                 pckg.enum_value(value='json', text='JSON'),
+        #                 pckg.enum_value(value='mimir.exec.spark.datasource.pdf', text='PDF'),
+        #                 pckg.enum_value(value='mimir.exec.spark.datasource.google.spreadsheet', text='Google Sheet'),
+        #                 pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
+        #                 pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
+        #                 pckg.enum_value(value='jdbc', text='JDBC Source'),
+        #                 pckg.enum_value(value='text', text='Text'),
+        #                 pckg.enum_value(value='parquet', text='Parquet'),
+        #                 pckg.enum_value(value='orc', text='ORC')
+        #             ],
+        #             index=2,
+        #             required=True
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_SCHEMA,
+        #             name='Schema (leave blank to guess)',
+        #             data_type=pckg.DT_LIST,
+        #             index=3,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_SCHEMA_COLUMN,
+        #             name='Column Name',
+        #             data_type=pckg.DT_STRING,
+        #             index=4,
+        #             parent=PARA_SCHEMA,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_SCHEMA_TYPE,
+        #             name='Data Type',
+        #             data_type=pckg.DT_STRING,
+        #             index=5,
+        #             parent=PARA_SCHEMA,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_INFER_TYPES,
+        #             name='Infer Types',
+        #             data_type=pckg.DT_BOOL,
+        #             index=6,
+        #             default_value=True,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_DETECT_HEADERS,
+        #             name='File Has Headers',
+        #             data_type=pckg.DT_BOOL,
+        #             index=7,
+        #             default_value=True,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_LOAD_DSE,
+        #             name='Data Source Error Annotations',
+        #             data_type=pckg.DT_BOOL,
+        #             index=8,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_LOAD_OPTIONS,
+        #             name='Load Options',
+        #             data_type=pckg.DT_LIST,
+        #             index=9,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_LOAD_OPTION_KEY,
+        #             name='Option Key',
+        #             data_type=pckg.DT_STRING,
+        #             index=10,
+        #             parent=PARA_LOAD_OPTIONS,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_LOAD_OPTION_VALUE,
+        #             name='Option Value',
+        #             data_type=pckg.DT_STRING,
+        #             index=11,
+        #             parent=PARA_LOAD_OPTIONS,
+        #             required=False
+        #         )
+        #     ],
+        #     format=[
+        #         pckg.constant_format('LOAD'),
+        #         pckg.constant_format('DATASET'),
+        #         pckg.variable_format(pckg.PARA_NAME),
+        #         pckg.constant_format('FROM'),
+        #         pckg.variable_format(PARA_FILE)
+        #     ]
+        # ),
+        # pckg.command_declaration(
+        #     identifier=VIZUAL_UNLOAD,
+        #     name='Unload Dataset',
+        #     parameters=[
+        #         pckg.para_dataset(0),
+        #         pckg.parameter_declaration(
+        #             PARA_UNLOAD_FORMAT,
+        #             name='Unload Format',
+        #             data_type=pckg.DT_STRING,
+        #             values=[
+        #                 pckg.enum_value(value='csv', text='CSV', is_default=True),
+        #                 pckg.enum_value(value='json', text='JSON'),
+        #                 pckg.enum_value(value='mimir.exec.spark.datasource.google.spreadsheet', text='Google Sheet'),
+        #                 pckg.enum_value(value='com.databricks.spark.xml', text='XML'),
+        #                 pckg.enum_value(value='com.crealytics.spark.excel', text='Excel'),
+        #                 pckg.enum_value(value='jdbc', text='JDBC Source'),
+        #                 pckg.enum_value(value='text', text='Text'),
+        #                 pckg.enum_value(value='parquet', text='Parquet'),
+        #                 pckg.enum_value(value='orc', text='ORC')
+        #             ],
+        #             index=1,
+        #             required=True
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_UNLOAD_OPTIONS,
+        #             name='Unload Options',
+        #             data_type=pckg.DT_LIST,
+        #             index=2,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_UNLOAD_OPTION_KEY,
+        #             name='Option Key',
+        #             data_type=pckg.DT_STRING,
+        #             index=3,
+        #             parent=PARA_UNLOAD_OPTIONS,
+        #             required=False
+        #         ),
+        #         pckg.parameter_declaration(
+        #             PARA_UNLOAD_OPTION_VALUE,
+        #             name='Option Value',
+        #             data_type=pckg.DT_STRING,
+        #             index=4,
+        #             parent=PARA_UNLOAD_OPTIONS,
+        #             required=False
+        #         )
+        #     ],
+        #     format=[
+        #         pckg.constant_format('UNLOAD'),
+        #         pckg.variable_format(pckg.PARA_DATASET),
+        #         pckg.constant_format('TO'),
+        #         pckg.variable_format(PARA_UNLOAD_FORMAT)
+        #     ]
+        # ),
         pckg.command_declaration(
             identifier=VIZUAL_MOV_COL,
             name='Move Column',
