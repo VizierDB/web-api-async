@@ -85,8 +85,8 @@ class VizierDatasetViewApi(object):
         charts = dict()
         for m in workflow.modules:
             if not m.provenance.charts is None:
-                for c in m.provenance.charts:
-                    charts[c.chart_name] = c
+                for chart_name, chart in m.provenance.charts:
+                    charts[chart_name] = chart
             if m.identifier == module_id:
                 module = m
                 break
@@ -106,7 +106,8 @@ class VizierDatasetViewApi(object):
         # can take the result directly from the module output.
         if not chart.dataset_name in module.datasets:
             raise ValueError('unknown dataset \'' + chart.dataset_name + '\'')
-        if not module.provenance.charts is None and chart.chart_name in module.provenance.charts:
+        module_charts = [c[0] for c in module.provenance.charts]
+        if not module.provenance.charts is None and chart.chart_name in module_charts:
             data = module.outputs.stdout[0].value
         else:
             dataset_id = module.datasets[chart.dataset_name].identifier
