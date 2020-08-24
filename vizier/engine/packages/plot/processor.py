@@ -121,7 +121,7 @@ class PlotProcessor(TaskProcessor):
             provenance=ModuleProvenance(
                 read={ds_name: ds.identifier},
                 write=dict(),
-                charts=[view]
+                charts=[(view.chart_name.lower(), view)]
             )
         )
 

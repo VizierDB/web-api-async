@@ -420,8 +420,8 @@ def get_module_charts(workflow, module_id):
     datasets = list()
     for m in workflow.modules:
         if not m.provenance.charts is None:
-            for c_handle in m.provenance.charts:
-                charts[c_handle.chart_name.lower()] = c_handle
+            for chart_name, chart in m.provenance.charts:
+                charts[chart_name] = chart
         for artifact in m.artifacts:
             if artifact.is_dataset:
                 datasets.append(artifact.name)
