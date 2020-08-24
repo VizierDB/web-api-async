@@ -96,14 +96,14 @@ def create_app() -> Flask:
     def upload_error(exception):
         """Exception handler for file uploads that exceed the file size limit."""
         app.logger.error(exception)
-        return make_response(jsonify({'error': str(exception)}), 413)
+        return make_response(jsonify({'title':'Error', 'message': str(exception), 'error': str(exception)}), 413)
 
 
     @app.errorhandler(500)
     def internal_error(exception):
         """Exception handler that logs exceptions."""
         app.logger.error(exception)
-        return make_response(jsonify({'error': str(exception)}), 500)
+        return make_response(jsonify({'title':'Error', 'message': str(exception), 'error': str(exception)}), 500)
 
     # Register the API blueprint
     from . import server
