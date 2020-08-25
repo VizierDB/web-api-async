@@ -83,10 +83,14 @@ class VizierDatasetViewApi(object):
         # searching for the module.
         module = None
         charts = dict()
+        datasets = dict()
         for m in workflow.modules:
+            for artifact in m.artifacts:
+                if artifact.is_dataset:
+                    datasets[artifact.name] = artifact.identifier
             if not m.provenance.charts is None:
-                for c in m.provenance.charts:
-                    charts[c.chart_name] = c
+                for chart_name, chart in m.provenance.charts:
+                    charts[chart_name] = chart
             if m.identifier == module_id:
                 module = m
                 break
@@ -104,15 +108,16 @@ class VizierDatasetViewApi(object):
         # exception if the dataset does not exist in the module. If the chart
         # was defined in the module we do not need to execute the query but
         # can take the result directly from the module output.
-        if not chart.dataset_name in module.datasets:
+        if not chart.dataset_name in datasets:
             raise ValueError('unknown dataset \'' + chart.dataset_name + '\'')
-        if not module.provenance.charts is None and chart.chart_name in module.provenance.charts:
+        module_charts = [c[0] for c in module.provenance.charts]
+        if not module.provenance.charts is None and chart.chart_name in module_charts:
             data = module.outputs.stdout[0].value
         else:
-            dataset_id = module.datasets[chart.dataset_name].identifier
+            dataset_id = datasets[chart.dataset_name]
             dataset = project.datastore.get_dataset(dataset_id)
-            rows = ChartQuery.exec_query(dataset=dataset, view=chart)
-            data = CHART_VIEW_DATA(view=chart, rows=rows)
+            (rows, caveats) = ChartQuery.exec_query(dataset=dataset, view=chart)
+            data = CHART_VIEW_DATA(view=chart, rows=rows, caveats=caveats)
         return serialize.CHART_VIEW(
             project_id=project_id,
             branch_id=branch_id,

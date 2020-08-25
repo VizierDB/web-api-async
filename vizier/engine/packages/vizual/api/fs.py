@@ -101,11 +101,11 @@ class DefaultVizualApi(VizualApi):
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Make sure that row refers a valid row in the dataset
-        if row_index < 0 or row_index >= dataset.row_count:
+        if int(row_index) < 0 or int(row_index) >= dataset.row_count:
             raise ValueError('invalid row index \'' + str(row_index) + '\'')
         # Delete the row at the given index position
         rows = dataset.fetch_rows()
-        del rows[row_index]
+        del rows[int(row_index)]
         # Store updated dataset to get new identifier
         ds = datastore.create_dataset(
             columns=dataset.columns,
@@ -499,7 +499,7 @@ class DefaultVizualApi(VizualApi):
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Make sure that row is within dataset bounds
-        if row_index < 0 or row_index >= dataset.row_count:
+        if int(row_index) < 0 or int(row_index) >= dataset.row_count:
             raise ValueError('invalid source row \'' + str(row_index) + '\'')
         # Make sure that position is a valid row index in the new dataset
         if position < 0 or position > dataset.row_count:
@@ -507,7 +507,7 @@ class DefaultVizualApi(VizualApi):
         # No need to do anything if source position equals target position
         if row_index != position:
             rows = dataset.fetch_rows()
-            rows.insert(position, rows.pop(row_index))
+            rows.insert(position, rows.pop(int(row_index)))
             # Store updated dataset to get new identifier
             ds = datastore.create_dataset(
                 columns=dataset.columns,

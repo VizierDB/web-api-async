@@ -59,49 +59,49 @@ class TestValidateVizual(unittest.TestCase):
         )
         self.assertEqual(cmd, 'DELETE COLUMN \'Some Name\' FROM ds')
 
-    def test_load_dataset(self):
-        """Test validation of load dataset command."""
-        db = FileSystemFilestore(SERVER_DIR)
-        fh = db.upload_file(CSV_FILE)
-        cmd = load_dataset(
-            dataset_name='ds',
-            file={
-                pckg.FILE_ID: fh.identifier,
-                pckg.FILE_NAME: fh.file_name
-            },
-            validate=True
-        ).to_external_form(
-            command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS
-        )
-        self.assertEqual(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
-        cmd = load_dataset(
-            dataset_name='ds',
-            file={pckg.FILE_URL: 'http://some.file.url'},
-            validate=True
-        ).to_external_form(
-            command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS
-        )
-        self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
-        cmd = load_dataset(
-            dataset_name='ds',
-            file={pckg.FILE_ID: fh.identifier, pckg.FILE_URL: 'http://some.file.url'},
-            validate=True
-        ).to_external_form(
-            command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS
-        )
-        self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
-        cmd = load_dataset(
-            dataset_name='ds',
-            file={pckg.FILE_ID: 'Some File'},
-            validate=True
-        ).to_external_form(
-            command=PACKAGE.get(vizual.VIZUAL_LOAD),
-            datasets=DATASETS
-        )
-        self.assertEqual(cmd, 'LOAD DATASET ds FROM \'Some File\'')
+#     def test_load_dataset(self):
+#         """Test validation of load dataset command."""
+#         db = FileSystemFilestore(SERVER_DIR)
+#         fh = db.upload_file(CSV_FILE)
+#         cmd = load_dataset(
+#             dataset_name='ds',
+#             file={
+#                 pckg.FILE_ID: fh.identifier,
+#                 pckg.FILE_NAME: fh.file_name
+#             },
+#             validate=True
+#         ).to_external_form(
+#             command=PACKAGE.get(vizual.VIZUAL_LOAD),
+#             datasets=DATASETS
+#         )
+#         self.assertEqual(cmd, 'LOAD DATASET ds FROM ' + fh.file_name)
+#         cmd = load_dataset(
+#             dataset_name='ds',
+#             file={pckg.FILE_URL: 'http://some.file.url'},
+#             validate=True
+#         ).to_external_form(
+#             command=PACKAGE.get(vizual.VIZUAL_LOAD),
+#             datasets=DATASETS
+#         )
+#         self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
+#         cmd = load_dataset(
+#             dataset_name='ds',
+#             file={pckg.FILE_ID: fh.identifier, pckg.FILE_URL: 'http://some.file.url'},
+#             validate=True
+#         ).to_external_form(
+#             command=PACKAGE.get(vizual.VIZUAL_LOAD),
+#             datasets=DATASETS
+#         )
+#         self.assertEqual(cmd, 'LOAD DATASET ds FROM http://some.file.url')
+#         cmd = load_dataset(
+#             dataset_name='ds',
+#             file={pckg.FILE_ID: 'Some File'},
+#             validate=True
+#         ).to_external_form(
+#             command=PACKAGE.get(vizual.VIZUAL_LOAD),
+#             datasets=DATASETS
+#         )
+#         self.assertEqual(cmd, 'LOAD DATASET ds FROM \'Some File\'')
 
     def test_projection(self):
         """Test validation of projection command."""
