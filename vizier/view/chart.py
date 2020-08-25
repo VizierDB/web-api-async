@@ -148,7 +148,12 @@ class ChartViewHandle(object):
         self.chart_type = chart_type if not chart_type is None else 'Bar Chart'
         self.grouped_chart = grouped_chart
 
-    def add_series(self, column, label=None, range_start=None, range_end=None):
+    def add_series(self, 
+            column: int, 
+            label: Optional[str] = None, 
+            range_start: Optional[int] = None, 
+            range_end: Optional[int] = None
+        ) -> DataSeriesHandle:
         """Append a data series to the chart view.
 
         Parameters

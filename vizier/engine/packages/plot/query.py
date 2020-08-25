@@ -15,9 +15,12 @@
 # limitations under the License.
 
 """Classes to support queries over datasets to generate simple plot charts."""
+from typing import List, Any, Optional
 
 from datetime import date, datetime
 import time
+from vizier.datastore.dataset import DatasetHandle, DatasetRow
+from vizier.view.chart import ChartViewHandle
 
 class DataStreamConsumer(object):
     """Consumer for data rows. The row consumers are used to filter cell values
@@ -29,7 +32,12 @@ class DataStreamConsumer(object):
     values: list
         List of values in the resulting data series
     """
-    def __init__(self, column_index, range_start=None, range_end=None, cast_to_number=True):
+    def __init__(self, 
+            column_index: int, 
+            range_start: Optional[int] = None, 
+            range_end: Optional[int] = None, 
+            cast_to_number: bool = True
+        ):
         """Initialize the index position for the column in the dataset schema
         that is being consumed and the range interval of row indexes.
 
@@ -53,10 +61,13 @@ class DataStreamConsumer(object):
         self.range_end = range_end
         self.cast_to_number = cast_to_number
         # Initialize the result set
-        self.values = list()
-        self.values_caveats = list()
+        self.values: List[Any] = list()
+        self.values_caveats: List[bool] = list()
         
-    def consume(self, row, row_index):
+    def consume(self, 
+            row: DatasetRow, 
+            row_index: int
+        ) -> None:
         """Consume a dataset row. The position of the row in the ordered list of
         dataset rows is given by the row_index.
 
@@ -92,7 +103,7 @@ class DataStreamConsumer(object):
 class ChartQuery(object):
     """Query processor for simple chart queries."""
     @staticmethod
-    def exec_query(dataset, view):
+    def exec_query(dataset: DatasetHandle, view: ChartViewHandle):
         """Query a given dataset by selecting the columns in the given list.
         Each row in the result is the result of projecting a tuple in the
         dataset on the given columns.
@@ -145,9 +156,9 @@ class ChartQuery(object):
             limit=(max_interval[1]-max_interval[0])+1
         )
         row_index = max_interval[0]
-        for row in rows:
+        for exported_row in rows:
             for c in consumers:
-                c.consume(row=row, row_index=row_index)
+                c.consume(row=exported_row, row_index=row_index)
             row_index += 1
         # the size of the result set is determined by the longest data series
         max_values = -1
@@ -158,8 +169,8 @@ class ChartQuery(object):
         data = []
         data_caveats = []
         for idx_row in range(max_values):
-            row = list()
-            row_caveats = list()
+            row: List[Any] = list()
+            row_caveats: List[Optional[bool]] = list()
             for idx_series in range(len(consumers)):
                 consumer = consumers[idx_series]
                 if idx_row < len(consumer.values):
