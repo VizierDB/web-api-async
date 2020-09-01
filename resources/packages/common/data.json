@@ -137,7 +137,59 @@
                         "index": 5,
                         "name": "Data Type",
                         "parent": "schema",
-                        "required": false
+                        "required": false,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "string",
+                                "value": "string"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "real",
+                                "value": "real"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "float",
+                                "value": "float"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "boolean",
+                                "value": "boolean"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "short",
+                                "value": "short"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "date",
+                                "value": "date"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "timestamp",
+                                "value": "timestamp"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "int",
+                                "value": "int"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "long",
+                                "value": "long"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "byte",
+                                "value": "byte"
+                            }
+                         ]
                     },
                     {
                         "datatype": "bool",
