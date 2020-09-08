@@ -125,6 +125,8 @@ def MODULE_HANDLE(
         artifacts: Dict[str, ArtifactDescriptor] = dict()
         for precursor in actual_workflow.modules:
             artifacts = precursor.provenance.get_database_state(artifacts)
+            if precursor == module:
+                break
         datasets = list()
         other_artifacts = list()
         for artifact_name in artifacts:
