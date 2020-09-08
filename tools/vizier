@@ -9,6 +9,13 @@ mkdir -p "$USER_DATA_DIR"
 APP_RESOURCES_DIR=$RUNNER_DIR/../
 STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
 
+if [ ! -d "$STATIC_UI_FILES_DIR" ]
+  then
+    APP_RESOURCES_DIR=$(python3 -m site --user-base)
+    APP_RESOURCES_DIR=${APP_RESOURCES_DIR}/
+    STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
+fi
+
 MIMIR_DEV="false"
 UI_DEV="false"
 TESTING="false"
@@ -213,6 +220,7 @@ api_up = False
 print("Waiting for services to start...")
 while not (mimir_up and api_up):
     time.sleep( 2 )
+    print(".", end='')
     try:
         if not mimir_up:
             mimir_up = requests.get('${MIMIR_URL}lens').status_code == 200
