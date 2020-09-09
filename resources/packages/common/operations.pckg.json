@@ -1,0 +1,934 @@
+{
+    "operations": {
+        "command": [
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DESCRIBE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "describeDataset",
+                "name": "Describe",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 1,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "UPDATE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COLUMN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "CASE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "TO"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "case"
+                    }
+                ],
+                "id": "changeCase",
+                "name": "Change Case",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 2,
+                        "name": "New Dataset Name",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "case",
+                        "index": 3,
+                        "name": "New Case",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Lower",
+                                "value": "lower"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Title",
+                                "value": "title"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Upper",
+                                "value": "upper"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "REPLACE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "value"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "IN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COLUMN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "WITH"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "newValue"
+                    }
+                ],
+                "id": "stringReplace",
+                "name": "Replace",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 2,
+                        "name": "New Dataset Name",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "Current Value",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "newValue",
+                        "index": 4,
+                        "name": "New Value",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "SPLIT"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COLUMN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "ON"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "value"
+                    }
+                ],
+                "id": "stringSplit",
+                "name": "Split",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 2,
+                        "name": "New Dataset Name",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "On",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FILL"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "NULLS"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "WITH"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "value"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "IN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COLUMN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "fillNa",
+                "name": "Fill Nulls",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 2,
+                        "name": "New Dataset Name",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "Fill Value",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DROP"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "NULLS"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FROM"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "COLUMN"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "dropNa",
+                "name": "Drop Nulls",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 2,
+                        "name": "New Dataset Name",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "How",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "All",
+                                "value": "all"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Any",
+                                "value": "any"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "CONCATENATE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "lColumn"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "AND"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "rColumn"
+                    }
+                ],
+                "id": "concat",
+                "name": "Concatenate",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "lColumn",
+                        "index": 1,
+                        "name": "Left",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 2,
+                        "name": "Delimiter",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "rColumn",
+                        "index": 3,
+                        "name": "Right",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 4,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "CONCATENATE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "lColumn"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "AND"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "rColumn"
+                    }
+                ],
+                "id": "concat",
+                "name": "Concatenate",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "lColumn",
+                        "index": 1,
+                        "name": "Left Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 2,
+                        "name": "Delimiter",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "rColumn",
+                        "index": 3,
+                        "name": "Right Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 4,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "arithmeticOperation"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "lColumn"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "AND"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "value"
+                    }
+                ],
+                "id": "arithmetic",
+                "name": "Arithmetic",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "arithmeticOperation",
+                        "index": 1,
+                        "name": "Operator",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Add",
+                                "value": "ADD"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Subtract",
+                                "value": "SUB"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Multiply",
+                                "value": "MUL"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Divide",
+                                "value": "DIV"
+                            }
+                        ]
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "lColumn",
+                        "index": 2,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "scalar",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 3,
+                        "name": "Value",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 4,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "arithmeticOperation"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "lColumn"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "AND"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "rColumn"
+                    }
+                ],
+                "id": "columnArithmetic",
+                "name": "Column Arithmetic",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "arithmeticOperation",
+                        "index": 1,
+                        "name": "Operator",
+                        "required": true,
+                        "values": [
+                            {
+                                "isDefault": true,
+                                "text": "Add",
+                                "value": "ADD"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Subtract",
+                                "value": "SUB"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Multiply",
+                                "value": "MUL"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Divide",
+                                "value": "DIV"
+                            }
+                        ]
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "lColumn",
+                        "index": 2,
+                        "name": "Left Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "rColumn",
+                        "index": 3,
+                        "name": "Right Column",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 4,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "FILTER"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "column"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "ON"
+                    },
+                    {
+                        "format": [
+                            {
+                                "lspace": true,
+                                "rspace": true,
+                                "type": "var",
+                                "value": "newValue"
+                            }
+                        ],
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "value"
+                    }
+                ],
+                "id": "filterByValue",
+                "name": "Filter By Value",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    },
+                    {
+                        "datatype": "colid",
+                        "hidden": false,
+                        "id": "column",
+                        "index": 1,
+                        "name": "Column",
+                        "required": true
+                    },
+                    {
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "value",
+                        "index": 2,
+                        "name": "Values",
+                        "required": true
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "newValue",
+                        "index": 3,
+                        "name": "Value",
+                        "parent": "value",
+                        "required": false
+                    },
+                    {
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "name",
+                        "index": 4,
+                        "name": "New Dataset Name",
+                        "required": true
+                    }
+                ]
+            }
+        ],
+        "id": "operations",
+        "category": "data_p"
+    }
+}

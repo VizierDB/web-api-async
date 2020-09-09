@@ -23,7 +23,7 @@ import os
 
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.engine.packages.pycell.client.base import VizierDBClient
+from vizier.engine.packages.pycell.client.pandas import VizierDBClient
 from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
 from vizier.viztrail.module.output import ModuleOutputs, HtmlOutput, TextOutput

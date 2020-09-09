@@ -24,6 +24,7 @@ import vizier.engine.packages.base as pckg
 # Package name
 PACKAGE_DATA = 'data'
 PACKAGE_VIZUAL = 'vizual'
+PACKAGE_OPERATIONS = 'operations'
 
 # Package-specific identifier for VizUAL commands
 VIZUAL_DEL_COL = 'deleteColumn'
@@ -42,6 +43,16 @@ VIZUAL_REN_COL = 'renameColumn'
 VIZUAL_REN_DS = 'renameDataset'
 VIZUAL_SORT = 'sortDataset'
 VIZUAL_UPD_CELL = 'updateCell'
+VIZUAL_DESCRIBE = 'describeDataset'
+VIZUAL_STRING_CASE = 'changeCase'
+VIZUAL_STRING_REPLACE = 'stringReplace'
+VIZUAL_STRING_SPLIT = 'stringSplit'
+VIZUAL_FILL_NULLS = 'fillNa'
+VIZUAL_DROP_NULLS = 'dropNa'
+VIZUAL_CONCAT = 'concat'
+VIZUAL_ARITHMETIC = 'arithmetic'
+VIZUAL_COLUMN_ARITHMETIC = 'columnArithmetic'
+VIZUAL_FILTER_BY_VALUE = 'filterByValue'
 
 # VizUAL command arguments
 PARA_COLUMNS = 'columns'
@@ -61,6 +72,12 @@ PARA_ORDER = 'order'
 PARA_POSITION = 'position'
 PARA_ROW = 'row'
 PARA_VALUE = 'value'
+PARA_CASE = 'case'
+PARA_NEW_VALUE = 'newValue'
+PARA_LEFT_COLUMN = 'lColumn'
+PARA_RIGHT_COLUMN = 'rColumn'
+PARA_OPERATION = 'arithmeticOperation'
+
 # Concatenation of parameter keys
 PARA_COLUMNS_COLUMN = PARA_COLUMNS + '_' + pckg.PARA_COLUMN
 PARA_COLUMNS_ORDER = PARA_COLUMNS + '_' + PARA_ORDER
@@ -69,6 +86,21 @@ PARA_COLUMNS_RENAME = PARA_COLUMNS + '_' + pckg.PARA_NAME
 #Values for sort order.
 SORT_ASC = 'ASC'
 SORT_DESC = 'DESC'
+
+#Values for changeCase
+STR_CASE_UPPER = 'upper'
+STR_CASE_LOWER = 'lower'
+STR_CASE_TITLE = 'title'
+
+#Values for dropNa
+DROP_ALL = 'all'
+DROP_ANY = 'any'
+
+#Values for Arithmetics
+OP_SUM = 'ADD'
+OP_SUB = 'SUB'
+OP_MUL = 'MUL'
+OP_DIV = 'DIV'
 
 
 """VizUAL command specification schema."""
@@ -554,6 +586,399 @@ VIZUAL_COMMANDS = pckg.package_declaration(
                 pckg.constant_format(']', lspace=False),
                 pckg.constant_format('='),
                 pckg.variable_format(PARA_VALUE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_DESCRIBE,
+            name='Describe',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=1
+                )
+            ],
+            format=[
+                pckg.constant_format('DESCRIBE'),
+                pckg.variable_format(pckg.PARA_DATASET)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_STRING_CASE,
+            name='Change Case',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.para_column(1),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_CASE,
+                    name='New Case',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    values=[
+                        pckg.enum_value(value=STR_CASE_LOWER, text='Lower', is_default=True),
+                        pckg.enum_value(value=STR_CASE_TITLE, text='Title'),
+                        pckg.enum_value(value=STR_CASE_UPPER, text='Upper')
+                    ],
+                    required=True
+                )
+            ],
+            format=[
+                pckg.constant_format('UPDATE'),
+                pckg.constant_format('COLUMN'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('CASE'),
+                pckg.constant_format('TO'),
+                pckg.variable_format(PARA_CASE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_STRING_REPLACE,
+            name='Replace',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.para_column(1),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Current Value',
+                    data_type=pckg.DT_STRING,
+                    index=3
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_NEW_VALUE,
+                    name='New Value',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                )
+            ],
+            format=[
+                pckg.constant_format('REPLACE'),
+                pckg.variable_format(PARA_VALUE),
+                pckg.constant_format('IN'),
+                pckg.constant_format('COLUMN'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('WITH'),
+                pckg.variable_format(PARA_NEW_VALUE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_STRING_SPLIT,
+            name='Split',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.para_column(1),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='On',
+                    data_type=pckg.DT_STRING,
+                    index=3
+                ),
+            ],
+            format=[
+                pckg.constant_format('SPLIT'),
+                pckg.constant_format('COLUMN'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET),
+                pckg.constant_format('ON'),
+                pckg.variable_format(PARA_VALUE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_FILL_NULLS,
+            name='Fill Nulls',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.para_column(1),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Fill Value',
+                    data_type=pckg.DT_STRING,
+                    index=3
+                ),
+            ],
+            format=[
+                pckg.constant_format('FILL'),
+                pckg.constant_format('NULLS'),
+                pckg.constant_format('WITH'),
+                pckg.variable_format(PARA_VALUE),
+                pckg.constant_format('IN'),
+                pckg.constant_format('COLUMN'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET),
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_DROP_NULLS,
+            name='Drop Nulls',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.para_column(1),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='How',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    values=[
+                        pckg.enum_value(value=DROP_ALL, text='All', is_default=True),
+                        pckg.enum_value(value=DROP_ANY, text='Any'),
+                    ],
+                    required=True
+                )
+            ],
+            format=[
+                pckg.constant_format('DROP'),
+                pckg.constant_format('NULLS'),
+                pckg.constant_format('FROM'),
+                pckg.constant_format('COLUMN'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_CONCAT,
+            name='Concatenate',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_LEFT_COLUMN,
+                    name='Left',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Delimiter',
+                    data_type=pckg.DT_STRING,
+                    index=2,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_RIGHT_COLUMN,
+                    name='Right',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=3
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                ),
+            ],
+            format=[
+                pckg.constant_format('CONCATENATE'),
+                pckg.variable_format(PARA_LEFT_COLUMN),
+                pckg.constant_format('AND'),
+                pckg.variable_format(PARA_RIGHT_COLUMN),
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_CONCAT,
+            name='Concatenate',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_LEFT_COLUMN,
+                    name='Left Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Delimiter',
+                    data_type=pckg.DT_STRING,
+                    index=2,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_RIGHT_COLUMN,
+                    name='Right Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=3
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                ),
+            ],
+            format=[
+                pckg.constant_format('CONCATENATE'),
+                pckg.variable_format(PARA_LEFT_COLUMN),
+                pckg.constant_format('AND'),
+                pckg.variable_format(PARA_RIGHT_COLUMN),
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_ARITHMETIC,
+            name='Arithmetic',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_OPERATION,
+                    name='Operator',
+                    data_type=pckg.DT_STRING,
+                    values=[
+                        pckg.enum_value(value=OP_SUM, text='Add', is_default=True),
+                        pckg.enum_value(value=OP_SUB, text='Subtract'),
+                        pckg.enum_value(value=OP_MUL, text='Multiply'),
+                        pckg.enum_value(value=OP_DIV, text='Divide'),
+                    ],
+                    index=1,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_LEFT_COLUMN,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    PARA_VALUE,
+                    name='Value',
+                    data_type=pckg.DT_SCALAR,
+                    index=3,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                ),
+            ],
+            format=[
+                pckg.variable_format(PARA_OPERATION),
+                pckg.variable_format(PARA_LEFT_COLUMN),
+                pckg.constant_format('AND'),
+                pckg.variable_format(PARA_VALUE)
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_COLUMN_ARITHMETIC,
+            name='Column Arithmetic',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=PARA_OPERATION,
+                    name='Operator',
+                    data_type=pckg.DT_STRING,
+                    values=[
+                        pckg.enum_value(value=OP_SUM, text='Add', is_default=True),
+                        pckg.enum_value(value=OP_SUB, text='Subtract'),
+                        pckg.enum_value(value=OP_MUL, text='Multiply'),
+                        pckg.enum_value(value=OP_DIV, text='Divide'),
+                    ],
+                    index=1,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_LEFT_COLUMN,
+                    name='Left Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=2
+                ),
+                pckg.parameter_declaration(
+                    name='Right Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=3,
+                    identifier=PARA_RIGHT_COLUMN,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                ),
+            ],
+            format=[
+                pckg.variable_format(PARA_OPERATION),
+                pckg.variable_format(PARA_LEFT_COLUMN),
+                pckg.constant_format('AND'),
+                pckg.variable_format(PARA_RIGHT_COLUMN),
+            ]
+        ),
+        pckg.command_declaration(
+            identifier=VIZUAL_FILTER_BY_VALUE,
+            name='Filter By Value',
+            parameters=[
+                pckg.para_dataset(0),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_COLUMN,
+                    name='Column',
+                    data_type=pckg.DT_COLUMN_ID,
+                    index=1
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_VALUE,
+                    name='Values',
+                    data_type=pckg.DT_LIST,
+                    index=2,
+                    required=True
+                ),
+                pckg.parameter_declaration(
+                    identifier=PARA_NEW_VALUE,
+                    name='Value',
+                    data_type=pckg.DT_STRING,
+                    index=3,
+                    parent=PARA_VALUE,
+                    required=False
+                ),
+                pckg.parameter_declaration(
+                    identifier=pckg.PARA_NAME,
+                    name='New Dataset Name',
+                    data_type=pckg.DT_STRING,
+                    index=4
+                ),
+            ],
+            format=[
+                pckg.constant_format('FILTER'),
+                pckg.variable_format(pckg.PARA_COLUMN),
+                pckg.constant_format('ON'),
+                pckg.group_format(
+                    PARA_VALUE,
+                    format=[pckg.variable_format(PARA_NEW_VALUE)]
+                )
             ]
         )
     ]

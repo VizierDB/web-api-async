@@ -159,8 +159,563 @@ class VizualTaskProcessor(TaskProcessor):
                 args=arguments,
                 context=context
             )
+        elif command_id == cmd.VIZUAL_DESCRIBE:
+            return self.compute_describe_dataset(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_STRING_CASE:
+            return self.compute_change_case(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_STRING_REPLACE:
+            return self.compute_string_replace(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_STRING_SPLIT:
+            return self.compute_string_split(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_FILL_NULLS:
+            return self.compute_fill_nulls(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_DROP_NULLS:
+            return self.compute_drop_nulls(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_CONCAT:
+            return self.compute_concatenate(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_ARITHMETIC:
+            return self.compute_arithmetic(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_COLUMN_ARITHMETIC:
+            return self.compute_arithmetic(
+                args=arguments,
+                context=context,
+            )
+        elif command_id == cmd.VIZUAL_FILTER_BY_VALUE:
+            return self.compute_filter_by_value(
+                args=arguments,
+                context=context,
+            )
         else:
             raise ValueError("unknown vizual command '{}'".format(command_id))
+
+    def compute_filter_by_value(self, args, context):
+        """filter the column by values.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column = args.get_value(pckg.PARA_COLUMN)
+        value = args.get_value(cmd.PARA_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column].name
+
+        serial_values = list()
+        for val in value:
+            serial_values.append(val.get_value(cmd.PARA_NEW_VALUE))
+
+
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.filter_by_value(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column=column_name,
+            value=serial_values,
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_arithmetic(self, args, context):
+        """compute column arithmetic.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        left = args.get_value(cmd.PARA_LEFT_COLUMN)
+        operation = args.get_value(cmd.PARA_OPERATION)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        left_name = ds.columns[left].name
+
+        try:
+            value = float(args.get_value(cmd.PARA_VALUE))
+            scalar = True
+        except:
+            right = args.get_value(cmd.PARA_RIGHT_COLUMN)
+            scalar = False
+            value = ds.columns[right].name
+
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.arithmetic(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            left=left_name,
+            operation=operation,
+            right=value,
+            scalar=scalar
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_concatenate(self, args, context):
+        """Execute the pandas concatenate command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        left = args.get_value(cmd.PARA_LEFT_COLUMN)
+        right = args.get_value(cmd.PARA_RIGHT_COLUMN)
+        delimiter = args.get_value(cmd.PARA_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        left_name = ds.columns[left].name
+        right_name = ds.columns[right].name
+
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.concatenate(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            left=left_name,
+            right=right_name,
+            delimiter=delimiter
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_fill_nulls(self, args, context):
+        """Execute fillna command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column_id = args.get_value(pckg.PARA_COLUMN)
+        new_value = args.get_value(cmd.PARA_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column_id].name
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.fill_nulls(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column_name=column_name,
+            new_value=new_value,
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_drop_nulls(self, args, context):
+        """Execute drop nulls command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column_id = args.get_value(pckg.PARA_COLUMN)
+        how = args.get_value(cmd.PARA_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column_id].name
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.drop_nulls(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column_name=column_name,
+            how=how,
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_string_split(self, args, context):
+        """Execute string split command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column_id = args.get_value(pckg.PARA_COLUMN)
+        on = args.get_value(cmd.PARA_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column_id].name
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.string_split(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column_name=column_name,
+            on=on,
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_string_replace(self, args, context):
+        """Execute string replace command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column_id = args.get_value(pckg.PARA_COLUMN)
+        old_value = args.get_value(cmd.PARA_VALUE)
+        new_value = args.get_value(cmd.PARA_NEW_VALUE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column_id].name
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.string_replace(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column_name=column_name,
+            old_value=old_value,
+            new_value=new_value
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_change_case(self, args, context):
+        """Execute change case command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+        column_id = args.get_value(pckg.PARA_COLUMN)
+        to_case = args.get_value(cmd.PARA_CASE)
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+        column_name = ds.columns[column_id].name
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.change_case(
+            identifier=ds.identifier,
+            datastore=context.datastore,
+            column_name=column_name,
+            to_case=to_case
+        )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
+
+    def compute_describe_dataset(self, args, context):
+        """Execute describe dataset command.
+
+        Parameters
+        ----------
+        args: vizier.viztrail.command.ModuleArguments
+            User-provided command arguments
+        context: vizier.engine.task.base.TaskContext
+            Context in which a task is being executed
+
+        Returns
+        -------
+        vizier.engine.task.processor.ExecResult
+        """
+        # Get dataset name and column identifier.
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        new_name = args.get_value(pckg.PARA_NAME).lower()
+
+        if not is_valid_name(ds_name):
+            raise ValueError('invalid dataset name \'' + ds_name + '\'')
+
+        if not is_valid_name(new_name):
+            raise ValueError('invalid dataset name \'' + new_name + '\'')
+
+        #  Get dataset. Raises exception if the dataset does not exist.
+        ds = context.get_dataset(ds_name)
+
+        # Execute pandas command
+        # todo vizual.api.mimir
+        result = self.api.describe_dataset(
+                identifier=ds.identifier,
+                datastore=context.datastore
+            )
+
+        # Create result object
+        ds_output = server.api.datasets.get_dataset(
+            project_id=context.project_id,
+            dataset_id=result.dataset.identifier,
+            offset=0,
+            limit=10
+        )
+        ds_output['name'] = new_name
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[DatasetOutput(ds_output)]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={new_name: result.dataset},
+            )
+        )
 
     def compute_delete_column(self, args, context):
         """Execute delete column command.

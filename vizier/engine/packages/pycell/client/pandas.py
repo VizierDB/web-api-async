@@ -557,7 +557,8 @@ def dataframe(dataset):
     # Create list of row values and row identifiers.
     data, rowids = list(), list()
     for row in dataset.fetch_rows():
-        data.append(row.values)
+        row_values = [x if x is not '' else np.nan for x in row.values]
+        data.append(row_values)
         rowids.append(row.identifier)
     # Create instances of the columns class that extends the Python string with
     # a reference to the Vizier column indentifier.

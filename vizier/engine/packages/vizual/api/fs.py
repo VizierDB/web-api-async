@@ -672,3 +672,332 @@ class DefaultVizualApi(VizualApi):
             annotations=dataset.annotations
         )
         return VizualApiResult(ds)
+
+    def filter_by_value(self, identifier, datastore, column, value):
+        """Filter by value.
+
+        Raises ValueError if no dataset with given identifier exists or if the
+        specified cell is outside of the current dataset ranges.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column: string
+            Column name to filter
+        value: list
+            values to filter on
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        df = df[df[column].isin(value)]
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def arithmetic(self, identifier, datastore, left, operation, right, scalar):
+        """Perform arithmetic operations.
+
+        Raises ValueError if no dataset with given identifier exists or if the
+        specified cell is outside of the current dataset ranges.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        left: string
+            Column name on left side of the operation
+        operation: str
+            The operation to perform
+        right: string or float
+            value on the right side of the equation. could be a scalar, or a column name
+        scalar: bool
+            whether the value is a column name or a scalar value
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        if scalar:
+            value = right
+        else:
+            value = df[right]
+
+        if operation == 'ADD':
+            df[left] += value
+        elif operation == 'SUB':
+            df[left] -= value
+        elif operation == 'MUL':
+            df[left] *= value
+        elif operation == 'DIV':
+            df[left] /= value
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def string_split(self, identifier, datastore, column_name, on):
+        """Split columns.
+
+        Raises ValueError if no dataset with given identifier exists or if the
+        specified cell is outside of the current dataset ranges.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column_name: string
+            Column name to split
+        on: string
+            value to split on
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+        cols = list(df.columns)
+        split_cols = df[column_name].str.split(on, expand=True)
+        new_col_names = list()
+        [new_col_names.append(column_name+'_'+str(i)) for i in split_cols.columns]
+        df[new_col_names] = split_cols
+        orig_position = cols.index(column_name)
+        df = df[cols[:orig_position] + new_col_names + cols[orig_position+1:]]
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def fill_nulls(self, identifier, datastore, column_name, new_value):
+        """Fill nulls with value.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column_name: string
+            Column name to fill nulls of
+        new_value: string
+            value to replace nulls with
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        df[column_name] = df[column_name].fillna(new_value)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def drop_nulls(self, identifier, datastore, column_name, how):
+        """Drop nulls.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column_name: string
+            Column name to drop nulls rows of
+        how: string
+            'any' or 'all' (drop if any value is null or all values are)
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        df = df.dropna(subset=[column_name], how=how)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def concatenate(self, identifier, datastore, left, right, delimiter):
+        """concatenate columns.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        left: string
+            left column in concatenation
+        right: string
+            right column in concatenation
+        delimiter: string
+            delimiter in between
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+        new_col = left+'_'+right
+
+        df[new_col] = df[left].astype(str) + delimiter + df[right].astype(str)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def string_replace(self, identifier, datastore, column_name, old_value, new_value):
+        """Replace string.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column_name: string
+            Column name to change case of
+        old_value: string
+            value to replace
+        new_value: string
+            value to replace old_value with
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        df[column_name] = df[column_name].str.replace(old_value, new_value)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def change_case(self, identifier, datastore, column_name, to_case):
+        """Change column case.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+        column_name: string
+            Column name to change case of
+        to_case: string
+            New case
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        new_case = str.upper if to_case == 'upper' else str.title if to_case == 'title' else str.lower
+        df[column_name] = df[column_name].apply(new_case)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=df)
+        return VizualApiResult(ds)
+
+
+    def describe_dataset(self, identifier, datastore):
+        """Describe a dataset.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+
+        Returns
+        -------
+        vizier.engine.packages.vizual.api.VizualApiResult
+        """
+
+        df = self.get_dataframe(datastore=datastore, identifier=identifier)
+
+        result = df.describe().reset_index().astype(str)
+        result.columns = ['MEASURE'] + list(result.columns[1:])
+        result['MEASURE'] = result['MEASURE'].apply(str.upper)
+
+        ds = self.dataframe_to_dataset(datastore=datastore, dataframe=result)
+        return VizualApiResult(ds)
+
+
+    def get_dataframe(self, datastore, identifier):
+        """
+        Returns a pandas dataframe of the identified dataset
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        from vizier.engine.packages.pycell.client.pandas import dataframe
+
+        # Get dataset. Raise exception if dataset is unknown
+        dataset = datastore.get_dataset(identifier)
+        if dataset is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        return dataframe(dataset=dataset)
+
+
+    def dataframe_to_dataset(self, datastore, dataframe):
+        """
+        Returns a Dataset Descriptor after creating a new dataset from the given pandas dataframe
+
+        Parameters
+        ----------
+        dataframe : pandas.DataFrame
+            Pandas DataFrame to convert
+        datastore : vizier.datastore.fs.base.FileSystemDatastore
+            Datastore to retireve and update datasets
+
+        Returns
+        -------
+        vizier.datastore.dataset.DatasetDescriptor
+        """
+        from vizier.engine.packages.pycell.client.pandas import coltype
+
+        columns = list()
+        for col_name in dataframe.columns:
+            columns.append(
+                DatasetColumn(
+                    identifier=len(columns),
+                    name=col_name.strip(),
+                    data_type=coltype(dataframe.dtypes[col_name])
+                )
+            )
+        rows = []
+        for rowid, values in dataframe.iterrows():
+            rows.append(DatasetRow(identifier=rowid, values=list(values)))
+
+        ds = datastore.create_dataset(
+            columns=columns,
+            rows=rows,
+        )
+        return ds

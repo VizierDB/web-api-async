@@ -330,7 +330,7 @@ class ModuleArguments(object):
                     raise ValueError('expected list for \'' + str(arg_id) + '\'')
                 arg_value.validate(parameters)
             else:
-                raise RuntimeError('unknonw data type \'' + str(datatype) + '\'')
+                raise RuntimeError('unknown data type \'' + str(datatype) + '\'')
             keys.add(arg_id)
         # Ensure that all mandatory arguments are given
         for key in required_key_values:
