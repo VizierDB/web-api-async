@@ -47,7 +47,7 @@ ATTRIBUTE_TYPES = [BOOL, FLOAT, INTEGER, LIST, STRING]
 
 """Configuration default values for various properties."""
 DEFAULT_MAX_ROW_LIMIT = 1000
-
+DEFAULT_MAX_DOWNLOAD_ROW_LIMIT = 5000
 
 class ConfigObject(object):
     """Object whose attributes contain the values of environment variables that
