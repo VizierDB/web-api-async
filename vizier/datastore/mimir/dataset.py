@@ -267,7 +267,10 @@ class MimirDatasetHandle(DatasetHandle):
 
     def get_row_count(self) -> int:
         if self._row_count is None:
-            self._row_count = mimir.countRows(self.identifier)
+            # try to use the count property if present
+            self._row_count = self.get_properties().get("count", None)
+            if self._row_count is None:
+                self._row_count = mimir.countRows(self.identifier)
         return self._row_count
 
     def get_properties(self) -> Dict[str, Any]:

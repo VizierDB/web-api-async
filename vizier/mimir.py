@@ -265,7 +265,7 @@ def getTable(
       offset: Optional[int] = None, 
       offset_to_rowid: Optional[str] = None, 
       limit: Optional[int] = None, 
-      include_uncertainty: Optional[bool] = None): 
+      include_uncertainty: Optional[bool] = None) -> Dict[str, Any]: 
     req_json: Dict[str, Any] = { "table" : table }
     if columns is not None:
       req_json["columns"] = columns
@@ -314,6 +314,7 @@ def getTableInfo(table: str) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
       "table": table
     }
     resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
+    # print("TABLEINFO: {}".format(resp))
     return (
       cast(List[Dict[str,str]], resp['schema']), 
       cast(Dict[str,Any], resp['properties'])

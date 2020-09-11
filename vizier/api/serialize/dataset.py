@@ -120,6 +120,7 @@ def DATASET_DESCRIPTOR(
     -------
     dict
     """
+
     obj = {
         labels.ID: dataset.identifier,
         labels.COLUMNS: [DATASET_COLUMN(col) for col in dataset.columns]#,
@@ -130,7 +131,7 @@ def DATASET_DESCRIPTOR(
     elif not dataset.name is None:
         obj[labels.NAME] = dataset.name
     # Add self reference if the project and url factory are given
-    if not project is None and not urls is None:
+    if project is not None and urls is not None:
         project_id = project.identifier
         dataset_id = dataset.identifier
         dataset_url = urls.get_dataset(
@@ -195,6 +196,7 @@ def DATASET_HANDLE(
     obj[labels.ROWS] = serialized_rows
     obj[labels.ROWCOUNT] = dataset.row_count
     obj[labels.OFFSET] = offset
+    obj[labels.PROPERTIES] = dataset.get_properties()
     # Add pagination references
     links = obj[labels.LINKS]
     # Max. number of records shown
