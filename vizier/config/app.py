@@ -87,6 +87,8 @@ VIZIERSERVER_ROW_LIMIT = 'VIZIERSERVER_ROW_LIMIT'
 VIZIERSERVER_MAX_ROW_LIMIT = 'VIZIERSERVER_MAX_ROW_LIMIT'
 # Maximum size for file uploads in byte (DEFAULT: 16777216)
 VIZIERSERVER_MAX_UPLOAD_SIZE = 'VIZIERSERVER_MAX_UPLOAD_SIZE'
+# Maximum size for file download in rows (DEFAULT: 5000)
+VIZIERSERVER_MAX_DOWNLOAD_ROW_LIMIT = 'VIZIERSERVER_MAX_DOWNLOAD_ROW_LIMIT'
 
 """Workflow Execution Engine"""
 # Name of the workflow execution engine (DEFAULT: DEV_LOCAL)
@@ -134,6 +136,7 @@ DEFAULT_SETTINGS = {
     VIZIERSERVER_APP_PATH: '/vizier-db/api/v1',
     VIZIERSERVER_ROW_LIMIT: 25,
     VIZIERSERVER_MAX_ROW_LIMIT: base.DEFAULT_MAX_ROW_LIMIT,
+    VIZIERSERVER_MAX_DOWNLOAD_ROW_LIMIT: base.DEFAULT_MAX_DOWNLOAD_ROW_LIMIT,
     VIZIERSERVER_MAX_UPLOAD_SIZE: 64 * 1024 * 1024,
     VIZIERSERVER_ENGINE: base.MIMIR_ENGINE,
     VIZIERSERVER_PACKAGE_PATH: './resources/packages/common:./resources/packages/mimir',
@@ -182,6 +185,7 @@ class AppConfig(object):
                 row_limit
                 max_row_limit
                 max_file_size
+                max_download_row_limit
         engine:
             identifier
             data_dir
@@ -224,7 +228,8 @@ class AppConfig(object):
             attributes=[
                 ('row_limit', VIZIERSERVER_ROW_LIMIT, base.INTEGER),
                 ('max_row_limit', VIZIERSERVER_MAX_ROW_LIMIT, base.INTEGER),
-                ('max_file_size', VIZIERSERVER_MAX_UPLOAD_SIZE, base.INTEGER)
+                ('max_file_size', VIZIERSERVER_MAX_UPLOAD_SIZE, base.INTEGER),
+                ('max_download_row_limit', VIZIERSERVER_MAX_DOWNLOAD_ROW_LIMIT, base.INTEGER)
             ],
             default_values=default_values
         )
