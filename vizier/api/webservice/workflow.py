@@ -225,7 +225,7 @@ class VizierWorkflowApi(object):
                 workflow = branch.head
             else:
                 workflow = branch.get_workflow(workflow_id)
-            if not workflow is None:
+            if workflow is not None:
                 return serialwf.WORKFLOW_HANDLE(
                     project=project,
                     branch=branch,

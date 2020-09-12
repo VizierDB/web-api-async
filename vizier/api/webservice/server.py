@@ -401,7 +401,7 @@ def get_branch_head(project_id, branch_id):
     # Get the workflow handle. The result is None if the project, branch or
     # workflow do not exist.
     workflow = api.workflows.get_workflow(project_id=project_id, branch_id=branch_id)
-    if not workflow is None:
+    if workflow is not None:
         return jsonify(workflow)
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' or branch \'' + branch_id + '\'')
 
