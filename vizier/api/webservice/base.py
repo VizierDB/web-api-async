@@ -163,7 +163,8 @@ class VizierApi(object):
             'name': self.config.webservice.name,
             'startedAt': get_current_time().isoformat(),
             'defaults': {
-                'maxFileSize': self.config.webservice.defaults.max_file_size
+                'maxFileSize': self.config.webservice.defaults.max_file_size,
+                'maxDownloadRowLimit': self.config.webservice.defaults.max_download_row_limit
             },
             'environment': {
                 'name': self.engine.name,
