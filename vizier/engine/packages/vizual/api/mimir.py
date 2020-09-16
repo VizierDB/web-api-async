@@ -21,11 +21,13 @@ from typing import List, Dict, Any, Optional, Tuple
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.base import get_index_for_column
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 from vizier.datastore.base import Datastore
 from vizier.datastore.mimir.store import MimirDatastore
 from vizier.filestore.base import Filestore
+from vizier.filestore.fs.base import FileSystemFilestore
 
 import vizier.engine.packages.vizual.api.base as base
 import vizier.mimir as mimir
@@ -421,7 +423,13 @@ class MimirVizualApi(VizualApi):
         )
 
     def unload_dataset(
-        self, dataset, datastore, filestore, unload_format='csv', options=[], resources=None
+        self, 
+        dataset: DatasetDescriptor, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        unload_format: str = 'csv', 
+        options: List[Dict[str, Any]] = [], 
+        resources: Dict[str, Any] = None
     ):
         """Export (or unload) a dataset to a given file format. 
 
@@ -450,6 +458,9 @@ class MimirVizualApi(VizualApi):
         """
         f_handles = None
         result_resources = dict()
+
+        assert(isinstance(datastore, MimirDatastore))
+        assert(isinstance(filestore, FileSystemFilestore))
 
         if dataset is not None:
             f_handles = datastore.unload_dataset(

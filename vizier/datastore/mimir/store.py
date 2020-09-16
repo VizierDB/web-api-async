@@ -327,7 +327,13 @@ class MimirDatastore(DefaultDatastore):
         return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties, human_readable_name)
 
 
-    def unload_dataset(self, filepath, dataset_name, format='csv', options=[], filename=""):
+    def unload_dataset(self, 
+            filepath: str, 
+            dataset_name: str, 
+            format: str = 'csv', 
+            options: List[Dict[str, Any]]=[], 
+            filename=""
+        ):
         """Export a dataset from a given name.
         Raises ValueError if the given dataset could not be exported.
         Parameters

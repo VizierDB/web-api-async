@@ -175,7 +175,13 @@ class Datastore(object):
         raise NotImplementedError
     
     @abstractmethod
-    def unload_dataset(self, f_handle):
+    def unload_dataset(self, 
+            filepath: str, 
+            dataset_name: str, 
+            format: str = 'csv', 
+            options: List[Dict[str, Any]]=[], 
+            filename=""
+        ):
         """Create a new dataset from a given file.
 
         Raises ValueError if the given file could not be loaded as a dataset.

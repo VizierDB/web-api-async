@@ -772,7 +772,7 @@ class CommandDeclaration(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def export_package(filename, package_key, package_def, format='YAML'):
+def export_package(filename: str, package_key: str, package_def: Dict[str, Any], format: str ='YAML'):
     """Write the package definition to to the given file in Yaml format.
 
     Parameters

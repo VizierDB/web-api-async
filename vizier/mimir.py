@@ -181,7 +181,12 @@ def loadDataInline(
     return (resp['name'], resp['schema'])
 
     
-def unloadDataSource(dataset_name, abspath, format='csv', backend_options = []):
+def unloadDataSource(
+      dataset_name: str, 
+      abspath: str, 
+      format: str = 'csv', 
+      backend_options: List[Dict[str, Any]] = []
+    ) -> List[str]:
     req_json ={
       "input":dataset_name,
       "file":abspath,

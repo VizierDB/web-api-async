@@ -305,7 +305,13 @@ class VizualApi(object):
     
     @abstractmethod
     def unload_dataset(
-        self, dataset, datastore, filestore, unload_format='csv', options=[], resources=None
+        self, 
+        dataset: DatasetDescriptor, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        unload_format: str = 'csv', 
+        options: List[Dict[str, Any]] = [], 
+        resources: Dict[str, Any] = None
     ):
         """Export (or unload) a dataset to a given file format. 
 
