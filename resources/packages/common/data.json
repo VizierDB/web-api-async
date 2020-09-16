@@ -1,5 +1,6 @@
 {
     "data": {
+        "category": "code",
         "command": [
             {
                 "format": [
@@ -189,7 +190,7 @@
                                 "text": "byte",
                                 "value": "byte"
                             }
-                         ]
+                        ]
                     },
                     {
                         "datatype": "bool",
@@ -275,7 +276,6 @@
                 ],
                 "id": "empty",
                 "name": "Empty Dataset",
-                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "string",
@@ -285,7 +285,8 @@
                         "name": "Dataset Name",
                         "required": true
                     }
-                ]
+                ],
+                "suggest": false
             },
             {
                 "format": [
@@ -320,9 +321,8 @@
                         "value": "name"
                     }
                 ],
-                "id": "clone", 
+                "id": "clone",
                 "name": "Clone Dataset",
-                "suggest": false,
                 "parameter": [
                     {
                         "datatype": "dataset",
@@ -336,11 +336,12 @@
                         "datatype": "string",
                         "hidden": false,
                         "id": "name",
-                        "index": 0,
+                        "index": 1,
                         "name": "Name of Copy",
                         "required": true
                     }
-                ]
+                ],
+                "suggest": false
             },
             {
                 "format": [
@@ -348,7 +349,7 @@
                         "lspace": true,
                         "rspace": true,
                         "type": "const",
-                        "value": "UNLOAD"
+                        "value": "EXPORT"
                     },
                     {
                         "lspace": true,
@@ -369,103 +370,102 @@
                         "value": "unloadFormat"
                     }
                 ],
-                "id": "unload", 
-                "name": "Unload Dataset",
-                "suggest": false,
+                "id": "unload",
+                "name": "Export Dataset",
                 "parameter": [
                     {
-                        "datatype": "dataset", 
-                        "hidden": false, 
-                        "id": "dataset", 
-                        "index": 0, 
-                        "name": "Dataset", 
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
                         "required": true
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "unloadFormat", 
-                        "index": 1, 
-                        "name": "Unload Format", 
-                        "required": true, 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "unloadFormat",
+                        "index": 1,
+                        "name": "Unload Format",
+                        "required": true,
                         "values": [
                             {
-                                "isDefault": true, 
-                                "text": "CSV", 
+                                "isDefault": true,
+                                "text": "CSV",
                                 "value": "csv"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "JSON", 
+                                "isDefault": false,
+                                "text": "JSON",
                                 "value": "json"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "Google Sheet", 
+                                "isDefault": false,
+                                "text": "Google Sheet",
                                 "value": "mimir.exec.spark.datasource.google.spreadsheet"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "XML", 
+                                "isDefault": false,
+                                "text": "XML",
                                 "value": "com.databricks.spark.xml"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "Excel", 
+                                "isDefault": false,
+                                "text": "Excel",
                                 "value": "com.crealytics.spark.excel"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "JDBC Source", 
+                                "isDefault": false,
+                                "text": "JDBC Source",
                                 "value": "jdbc"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "Text", 
+                                "isDefault": false,
+                                "text": "Text",
                                 "value": "text"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "Parquet", 
+                                "isDefault": false,
+                                "text": "Parquet",
                                 "value": "parquet"
-                            }, 
+                            },
                             {
-                                "isDefault": false, 
-                                "text": "ORC", 
+                                "isDefault": false,
+                                "text": "ORC",
                                 "value": "orc"
                             }
                         ]
-                    }, 
+                    },
                     {
-                        "datatype": "list", 
-                        "hidden": false, 
-                        "id": "unloadOptions", 
-                        "index": 2, 
-                        "name": "Unload Options", 
+                        "datatype": "list",
+                        "hidden": false,
+                        "id": "unloadOptions",
+                        "index": 2,
+                        "name": "Unload Options",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "unloadOptionKey", 
-                        "index": 3, 
-                        "name": "Option Key", 
-                        "parent": "unloadOptions", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "unloadOptionKey",
+                        "index": 3,
+                        "name": "Option Key",
+                        "parent": "unloadOptions",
                         "required": false
-                    }, 
+                    },
                     {
-                        "datatype": "string", 
-                        "hidden": false, 
-                        "id": "unloadOptionValue", 
-                        "index": 4, 
-                        "name": "Option Value", 
-                        "parent": "unloadOptions", 
+                        "datatype": "string",
+                        "hidden": false,
+                        "id": "unloadOptionValue",
+                        "index": 4,
+                        "name": "Option Value",
+                        "parent": "unloadOptions",
                         "required": false
                     }
-                ]
+                ],
+                "suggest": false
             }
-        ], 
-        "id": "data",
-        "category": "code"
+        ],
+        "id": "data"
     }
 }

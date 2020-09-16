@@ -34,13 +34,14 @@ from vizier.engine.packages.scala.base import export_package as export_scala
 from vizier.engine.packages.r.base import export_package as export_r
 from vizier.engine.packages.sql.base import export_package as export_sql
 from vizier.engine.packages.vizual.base import export_package as export_vizual
+from vizier.engine.packages.vizual.data import export_package as export_data
 
 
 if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) < 1 or len(args) > 3:
         print("""Usage:
-  <package-name> [ MIMIR | PLOT | PYTHON | SCALA | R | SQL | VIZUAL ]
+  <package-name> [ MIMIR | PLOT | PYTHON | SCALA | R | SQL | VIZUAL | DATA ]
   <file-name>
   {<format> [YAML | JSON]}""")
         sys.exit(-1)
@@ -66,6 +67,8 @@ if __name__ == '__main__':
         export_sql(filename, format=format)
     elif name.upper() == 'VIZUAL':
         export_vizual(filename, format=format)
+    elif name.upper() == 'DATA':
+        export_data(filename, format=format)
     else:
         print('Unknown package name: ' + str(name))
         sys.exit(-1)
