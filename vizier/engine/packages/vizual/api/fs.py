@@ -274,6 +274,10 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
+    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+        raise Exception("Import not (yet) supported in the FS backend")
+
+
     def load_dataset(self, 
         datastore: Datastore, 
         filestore: Filestore, 

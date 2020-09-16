@@ -111,6 +111,11 @@
                                 "isDefault": false,
                                 "text": "ORC",
                                 "value": "orc"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Published Dataset",
+                                "value": "org.vizierdb.publish.source"
                             }
                         ]
                     },
@@ -386,7 +391,7 @@
                         "hidden": false,
                         "id": "unloadFormat",
                         "index": 1,
-                        "name": "Unload Format",
+                        "name": "Format",
                         "required": true,
                         "values": [
                             {
@@ -433,6 +438,11 @@
                                 "isDefault": false,
                                 "text": "ORC",
                                 "value": "orc"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Publish Locally",
+                                "value": "info.vizierdb.publish.local"
                             }
                         ]
                     },
@@ -441,7 +451,7 @@
                         "hidden": false,
                         "id": "unloadOptions",
                         "index": 2,
-                        "name": "Unload Options",
+                        "name": "Options",
                         "required": false
                     },
                     {

@@ -243,6 +243,19 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
+    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+        from vizier.api.webservice.server import api
+        # Mimir doesn't actually need to use the project ID (yet), but let's check the
+        # URL for safety anyway
+        project = api.projects.projects.get_project(project_id)
+        if project is None: 
+            raise Exception("No Such Project: {}".format(project_id))
+        # Get the actual dataset
+        dataset = datastore.get_dataset(dataset_id)
+        if dataset is None:
+            raise Exception("No Such Dataset: {}".format(dataset_id))
+        return VizualApiResult(dataset, {})
+
 
     def load_dataset(self, 
         datastore: Datastore, 
@@ -437,7 +450,7 @@ class MimirVizualApi(VizualApi):
         """
         f_handles = None
         result_resources = dict()
-        
+
         if dataset is not None:
             f_handles = datastore.unload_dataset(
                 filepath=filestore.get_file_dir(get_unique_identifier() ) ,

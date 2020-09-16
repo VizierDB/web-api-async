@@ -15,13 +15,14 @@
 # limitations under the License.
 
 """Task processor for commands in the vizual package."""
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+import re 
 
 from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
-from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput
+from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
@@ -454,22 +455,36 @@ class VizualTaskProcessor(TaskProcessor):
             in args.get_value(cmd.PARA_SCHEMA, raise_error=False, default_value=[])
         ]
         # Execute load command.
-        result: VizualApiResult = self.api.load_dataset(
-            datastore=context.datastore,
-            filestore=context.filestore,
-            file_id=file_id,
-            url=url,
-            detect_headers=detect_headers,
-            infer_types=infer_types,
-            load_format=load_format,
-            options=m_opts,
-            username=username,
-            password=password,
-            resources=context.resources,
-            reload=reload,
-            human_readable_name = ds_name.upper(),
-            proposed_schema = proposed_schema
-        )
+
+        result: VizualApiResult
+        if load_format == "org.vizierdb.publish.source":
+            if url is None:
+                raise Exception("Missing Published Dataset URL")
+            match = re.match("^vizier://ds/([^/]+)/([^/]+)$", url)
+            if match is None:
+                raise Exception("Invalid URL: '{}' / Malformed".format(url))
+            result = self.api.import_dataset(
+                datastore = context.datastore, 
+                project_id = match.group(1),
+                dataset_id = match.group(2)
+            )
+        else:
+            result = self.api.load_dataset(
+                datastore=context.datastore,
+                filestore=context.filestore,
+                file_id=file_id,
+                url=url,
+                detect_headers=detect_headers,
+                infer_types=infer_types,
+                load_format=load_format,
+                options=m_opts,
+                username=username,
+                password=password,
+                resources=context.resources,
+                reload=reload,
+                human_readable_name = ds_name.upper(),
+                proposed_schema = proposed_schema
+            )
 
         actual_schema = [
                 ModuleArguments([
@@ -589,7 +604,7 @@ class VizualTaskProcessor(TaskProcessor):
         )
 
         
-    def compute_unload_dataset(self, args, context):
+    def compute_unload_dataset(self, args: ModuleArguments, context: TaskContext) -> ExecResult:
         """Execute unload dataset command.
 
         Parameters
@@ -622,29 +637,51 @@ class VizualTaskProcessor(TaskProcessor):
                 m_opts.append({'name':unload_opt_key, 'value':unload_opt_val})
         # Execute load command.
         dataset = context.get_dataset(ds_name)
-        result = self.api.unload_dataset(
-            dataset=dataset,
-            datastore=context.datastore,
-            filestore=context.filestore,
-            unload_format=unload_format,
-            options=m_opts,
-            resources=context.resources
-        )
-        # Delete the uploaded file (of load was from file). A reference to the
-        # created dataset is in the resources and will be used if the module is
-        # re-executed.
-        #file_id = result.resources[apibase.RESOURCE_FILEID]
-        #if not file_id is None:
-        #    context.filestore.delete_file(file_id)
-        # Create result object
-        outputhtml = HtmlOutput(''.join(["<div><a href=\""+ self.config.webservice.app_path+"/projects/"+str(context.project_id)+"/files/"+ out_file.identifier +"\" download=\""+out_file.name+"\">Download "+out_file.name+"</a></div>" for out_file in result.resources[apibase.RESOURCE_FILEID]]))
+
+        output: List[OutputObject]
+
+        if unload_format == "info.vizierdb.publish.local":
+            output = [
+                HtmlOutput("Use the following URL with the Published Dataset option in <tt>LOAD DATASET</tt>"),
+                TextOutput("vizier://ds/{}/{}".format(
+                    context.project_id,
+                    dataset.identifier
+                ))
+            ]
+        else:
+            result = self.api.unload_dataset(
+                dataset=dataset,
+                datastore=context.datastore,
+                filestore=context.filestore,
+                unload_format=unload_format,
+                options=m_opts,
+                resources=context.resources
+            )
+            output = [HtmlOutput(
+                ''.join([
+                    "<div><a href=\""+ 
+                        self.config.webservice.app_path+
+                        "/projects/"+
+                        str(context.project_id)+
+                        "/files/"+ 
+                        out_file.identifier +
+                        "\" download=\""+
+                        out_file.name+
+                        "\">Download "+
+                        out_file.name+
+                        "</a></div>" 
+                    for out_file in 
+                    result.resources[apibase.RESOURCE_FILEID]
+                ]))
+            ]
+        
         return ExecResult(
             outputs=ModuleOutputs( 
-                stdout=[outputhtml]
+                stdout=output
             ),
             provenance=ModuleProvenance(
                 read= { 
-                    ds_name: context.datasets.get(ds_name.lower(), None)
+                    ds_name: dataset.identifier
                 },
                 write=dict()
             )

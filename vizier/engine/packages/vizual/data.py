@@ -64,7 +64,8 @@ DATA_COMMANDS = pckg.package_declaration(
                         pckg.enum_value(value='jdbc', text='JDBC Source'),
                         pckg.enum_value(value='text', text='Text'),
                         pckg.enum_value(value='parquet', text='Parquet'),
-                        pckg.enum_value(value='orc', text='ORC')
+                        pckg.enum_value(value='orc', text='ORC'),
+                        pckg.enum_value(value='org.vizierdb.publish.source', text='Published Dataset')
                     ],
                     index=2,
                     required=True
@@ -213,7 +214,7 @@ DATA_COMMANDS = pckg.package_declaration(
                 pckg.para_dataset(0),
                 pckg.parameter_declaration(
                     PARA_UNLOAD_FORMAT,
-                    name='Unload Format',
+                    name='Format',
                     data_type=pckg.DT_STRING,
                     values=[
                         pckg.enum_value(value='csv', text='CSV', is_default=True),
@@ -224,14 +225,15 @@ DATA_COMMANDS = pckg.package_declaration(
                         pckg.enum_value(value='jdbc', text='JDBC Source'),
                         pckg.enum_value(value='text', text='Text'),
                         pckg.enum_value(value='parquet', text='Parquet'),
-                        pckg.enum_value(value='orc', text='ORC')
+                        pckg.enum_value(value='orc', text='ORC'),
+                        pckg.enum_value(value='info.vizierdb.publish.local', text='Publish Locally')
                     ],
                     index=1,
                     required=True
                 ),
                 pckg.parameter_declaration(
                     PARA_UNLOAD_OPTIONS,
-                    name='Unload Options',
+                    name='Options',
                     data_type=pckg.DT_LIST,
                     index=2,
                     required=False

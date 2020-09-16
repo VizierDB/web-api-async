@@ -201,6 +201,18 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
+    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+        """Import a published dataset from another project.
+
+        The URL is expected to have the format
+            vizier://ds/[package_id]/[dataset_id]
+            or 
+            vizier://view/[package_id]/[branch_id]/[workflow_id or 'head']/[dataset name]
+        """
+        raise NotImplementedError
+
+
+    @abstractmethod
     def load_dataset(self, 
         datastore: Datastore, 
         filestore: Filestore, 
