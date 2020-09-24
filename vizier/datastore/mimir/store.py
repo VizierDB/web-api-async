@@ -24,7 +24,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import FileHandle
 from vizier.datastore.base import DefaultDatastore
-from vizier.datastore.dataset import DatasetRow, DatasetColumn
+from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
@@ -378,3 +378,19 @@ class MimirDatastore(DefaultDatastore):
             write_metadata_file(file_dir,f_handle)
         return file_handles
         
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
+        """
+        views = dict(
+            (view, datasets[view].identifier)
+            for view in datasets
+        )
+        result = mimir.sqlQuery(
+                        query = query, 
+                        views = views
+                )
+        return result

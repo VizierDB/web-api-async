@@ -267,7 +267,6 @@ def update_project(project_id):
         raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\'')
 
-
 # ------------------------------------------------------------------------------
 # Branches
 # ------------------------------------------------------------------------------
@@ -580,6 +579,21 @@ def replace_workflow_module(project_id, branch_id, module_id):
         raise srv.InvalidRequest(str(ex))
     raise srv.ResourceNotFound('unknown project \'' + project_id + '\' branch \'' + branch_id + '\' or module \'' + module_id + '\'')
 
+@bp.route('/projects/<string:project_id>/branches/<string:branch_id>/head/sql', methods=['GET', 'POST'])
+def query_workflow_head(project_id, branch_id):
+    """Pose a SQL query against the datasets at the current workflow head
+    
+    Request
+    -------
+    GET: ?query=... 
+    POST: [sql query in the data]
+    """
+
+    query = request.args.get('query', None)
+    if query is None: 
+        query = request.data.decode()
+    result = api.workflows.query_workflow(query, project_id, branch_id)
+    return result
 
 # ------------------------------------------------------------------------------
 # Tasks

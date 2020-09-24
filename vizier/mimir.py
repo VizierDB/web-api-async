@@ -249,20 +249,31 @@ def explainEverythingJson(query: str) -> List[DatasetCaveat]:
       for caveat in resp['reasons']
     ]
 
+def sqlQuery(
+      query: str, 
+      include_uncertainty: bool = True, 
+      views: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]: 
+    req_json = {
+      "query": query,
+      "includeUncertainty": include_uncertainty,
+    } 
+    if views is not None:
+      req_json['views'] = views
+    resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
+    return resp
+
 def vistrailsQueryMimirJson(
       query: str, 
       include_uncertainty: bool, 
       include_reasons: bool, 
-      input: str = ''
+      input: str = '',
+      views: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]: 
-    req_json = {
-      "input": input,
-      "query": query,
-      "includeUncertainty": include_uncertainty,
-      "includeReasons": include_reasons
-    } 
-    resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
-    return resp
+  return sqlQuery(
+    query = query, 
+    include_uncertainty = include_uncertainty, 
+  )
 
 def getTable(
       table: str, 

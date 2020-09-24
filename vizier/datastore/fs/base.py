@@ -389,6 +389,17 @@ class FileSystemDatastore(DefaultDatastore):
         from vizier.datastore.mimir.store import DATA_OBJECT_FILE
         return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
+
+        Not supported by FS
+        """
+        raise NotImplementedError
+
 # ------------------------------------------------------------------------------
 # Helper Methods
 # ------------------------------------------------------------------------------

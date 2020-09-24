@@ -224,6 +224,16 @@ class Datastore(object):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
+        """
+        raise NotImplementedError
+
 
 class DefaultDatastore(Datastore):
     """Implementation of Vizier data store. Uses the file system to maintain

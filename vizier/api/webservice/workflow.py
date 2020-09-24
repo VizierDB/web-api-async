@@ -17,7 +17,7 @@
 """Vizier Workflow API - Implements all methods of the API to interact with
 workflows in vizier projects.
 """
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional, Dict, Any
 if TYPE_CHECKING:
     from vizier.view.chart import ChartViewHandle
     from vizier.viztrail.workflow import WorkflowHandle
@@ -399,6 +399,34 @@ class VizierWorkflowApi(object):
                 urls=self.urls
             )
         return None
+
+    def query_workflow(self, 
+            query: str, 
+            project_id: str, 
+            branch_id: str, 
+            workflow_id: Optional[str] = None
+        ) -> Dict[str, Any]:
+        """Run a SQL query against the state of the workflow at its
+        tail.  Analous to creating a SQL cell, but just a read-only
+        interrogation of the state rather than a mutation
+
+        returns a Mimir Data Container
+        """
+        project = self.engine.projects.get_project(project_id)
+        if project is None:
+            raise Exception("Unknown project id: {}".format(project_id))
+        branch = project.viztrail.get_branch(branch_id)
+        if branch is None:
+            raise Exception("Unknown branch id: {}".format(branch_id))
+        if workflow_id is None:
+            workflow = branch.get_head()
+        else:
+            workflow = branch.get_workflow(workflow_id)
+            if workflow is None:
+                raise Exception("Unknown workflow id {}".format(workflow_id))
+
+        return project.datastore.query(query, workflow.tail_datasets)
+
 
 
 # ------------------------------------------------------------------------------
