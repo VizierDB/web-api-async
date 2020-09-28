@@ -18,6 +18,8 @@
 a datastore from within a python script.
 """
 
+from typing import Callable, Tuple, Optional, Dict
+
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
@@ -288,7 +290,7 @@ class VizierDBClient(object):
         # Dataset names are case insensitive
         return name.lower() in self.datasets
 
-    def new_dataset(self):
+    def new_dataset(self) -> DatasetClient:
         """Get a dataset client instance for a new dataset.
 
         Returns
@@ -413,7 +415,16 @@ class VizierDBClient(object):
             existing_name = name.lower()
         )
         
-    def dataset_from_s3(self, bucket, folder, file, line_extracter = lambda rematch, line: ('col0', line), additional_col_gen = None, delimeter = ",", line_delimeter = "\n"):
+    def dataset_from_s3(self, 
+        bucket: str, 
+        folder: str, 
+        file: str, 
+        line_extracter: Callable[[re.Match, str], Tuple[str, str]]
+          = lambda rematch, line: ('col0', line), 
+        additional_col_gen: Optional[Callable[[re.Match, str], Tuple[str, str]]] = None, 
+        delimeter: str = ",", 
+        line_delimeter: str = "\n"
+    ) -> Optional[DatasetClient]:
         client = Minio(os.environ.get('S3A_ENDPOINT', 's3.vizier.app'),
                access_key=os.environ.get('AWS_ACCESS_KEY_ID', "----------------------"),
                secret_key=os.environ.get('AWS_SECRET_ACCESS_KEY', "---------------------------"))
@@ -431,6 +442,7 @@ class VizierDBClient(object):
             for logObj in subObjs:
                 log = logObj.object_name 
                 result = re.match(file, log)
+                active_keys = set()
                 # Check file name suffix is .log
                 if result: 
                     data = client.get_object(bucket, log)
@@ -439,24 +451,39 @@ class VizierDBClient(object):
                         rdat.write(str(d.decode('utf-8')))
                     lines = rdat.getvalue().split(line_delimeter)
                     
-                    entry = {}
+                    entry: Dict[str,str] = {}
                     if additional_col_gen is not None:
                         entry = dict({ additional_col_gen(result, line) for line  in lines })
                     line_entries =  dict({ line_extracter(result,line) for line  in lines })
                     entry = {**entry , **line_entries}
-                    entry.pop(None, None)
+                    # The following line seems to be OK only because
+                    # the preceding line is a { ** } constructor.  
+                    # I have absolutely no clue why the following works,
+                    # otherwise.  Either way, let's shut mypy up for now
+                    # -OK
+                    entry.pop(None, None) # type: ignore
                     
-                    # Append the dictionary to the list
-                    if len(ds.columns) == 0:
-                        {ds.insert_column(attr) for attr in entry.keys()}
+                    # Append unknown dictionary keys to the list
+                    for attr in entry.keys():
+                        if attr not in active_keys:
+                            ds.insert_column(attr)
+                            active_keys.add(attr)
+
+                    # Make sure the record is in the right order
+                    row = [
+                        entry.get(col.name, None)
+                        for col in ds.columns
+                    ]
                     
-                    ds.insert_row(values=entry.values())
+                    ds.insert_row(values=row)
         
             return ds
                     
         except SelectCRCValidationError:
+            return None
             pass
         except ResponseError:
+            return None
             pass
         
       
