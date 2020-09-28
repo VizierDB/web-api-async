@@ -20,7 +20,7 @@ import re
 
 from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
-from vizier.datastore.dataset import DatasetDescriptor
+from vizier.datastore.dataset import DatasetDescriptor, ArtifactDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -179,7 +179,10 @@ class VizualTaskProcessor(TaskProcessor):
         else:
             raise ValueError('unknown vizual command \'' + str(command_id) + '\'')
 
-    def compute_delete_column(self, args, context):
+    def compute_delete_column(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute delete column command.
 
         Parameters
@@ -213,7 +216,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_delete_row(self, args, context):
+    def compute_delete_row(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute delete row command.
 
         Parameters
@@ -247,7 +253,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_drop_dataset(self, args, context):
+    def compute_drop_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute drop dataset command.
 
         Parameters
@@ -278,11 +287,14 @@ class VizualTaskProcessor(TaskProcessor):
             provenance=ModuleProvenance(
                 read=dict(),
                 write=dict(),
-                delete=[ds_name]
+                delete=set([ds_name])
             )
         )
 
-    def compute_filter_columns(self, args, context):
+    def compute_filter_columns(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute projection command.
 
         Parameters
@@ -330,7 +342,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_insert_column(self, args, context):
+    def compute_insert_column(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute insert column command.
 
         Parameters
@@ -366,7 +381,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_insert_row(self, args, context):
+    def compute_insert_row(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute insert row command.
 
         Parameters
@@ -400,7 +418,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_load_dataset(self, args: ModuleArguments, context: TaskContext) -> ExecResult:
+    def compute_load_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute load dataset command.
 
         Parameters
@@ -532,7 +553,10 @@ class VizualTaskProcessor(TaskProcessor):
             updated_arguments = updated_args
         )
 
-    def compute_empty_dataset(self, args, context):
+    def compute_empty_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute empty dataset command.
 
         Parameters
@@ -559,11 +583,7 @@ class VizualTaskProcessor(TaskProcessor):
             )
             provenance = ModuleProvenance(
                 write={
-                    ds_name: DatasetDescriptor(
-                        identifier=result.identifier,
-                        name=ds_name,
-                        columns=result.columns
-                    )
+                    ds_name: result.dataset
                 },
                 read=dict() # Need to explicitly declare a lack of dependencies.
             )
@@ -577,7 +597,10 @@ class VizualTaskProcessor(TaskProcessor):
             provenance=provenance
         )
 
-    def compute_clone_dataset(self, args, context):
+    def compute_clone_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute empty dataset command.
 
         Parameters
@@ -615,7 +638,10 @@ class VizualTaskProcessor(TaskProcessor):
         )
 
         
-    def compute_unload_dataset(self, args: ModuleArguments, context: TaskContext) -> ExecResult:
+    def compute_unload_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute unload dataset command.
 
         Parameters
@@ -698,7 +724,10 @@ class VizualTaskProcessor(TaskProcessor):
             )
         )
 
-    def compute_move_column(self, args, context):
+    def compute_move_column(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute move column command.
 
         Parameters
@@ -734,7 +763,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_move_row(self, args, context):
+    def compute_move_row(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute move row command.
 
         Parameters
@@ -770,7 +802,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_rename_column(self, args, context):
+    def compute_rename_column(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute rename column command.
 
         Parameters
@@ -806,7 +841,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_rename_dataset(self, args, context):
+    def compute_rename_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute rename dataset command.
 
         Parameters
@@ -846,11 +884,14 @@ class VizualTaskProcessor(TaskProcessor):
                         columns=ds.columns
                     )
                 },
-                delete=[ds_name]
+                delete=set([ds_name])
             )
         )
 
-    def compute_sort_dataset(self, args, context):
+    def compute_sort_dataset(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute sort dataset command.
 
         Parameters
@@ -895,7 +936,10 @@ class VizualTaskProcessor(TaskProcessor):
             database_state=context.datasets
         )
 
-    def compute_update_cell(self, args, context):
+    def compute_update_cell(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
         """Execute update cell command.
 
         Parameters
@@ -937,8 +981,13 @@ class VizualTaskProcessor(TaskProcessor):
         )
 
     def create_exec_result(
-        self, dataset_name, input_dataset=None, output_dataset=None,
-        database_state=None, stdout=None, resources=None
+        self, 
+        dataset_name: str, 
+        input_dataset: Optional[DatasetDescriptor]=None, 
+        output_dataset: Optional[DatasetDescriptor]=None,
+        database_state: Optional[Dict[str, ArtifactDescriptor]]=None, 
+        stdout: Optional[List[str]]=None, 
+        resources: Optional[Dict[str, Any]]=None
     ):
         """Create execution result object for a successfully completed task.
         Assumes that a single datasets has been modified.
@@ -966,6 +1015,7 @@ class VizualTaskProcessor(TaskProcessor):
         -------
         vizier.engine.task.processor.ExecResult
         """
+        ds: Optional[DatasetDescriptor]
         if not output_dataset is None:
             ds = DatasetDescriptor(
                 identifier=output_dataset.identifier,
@@ -975,11 +1025,18 @@ class VizualTaskProcessor(TaskProcessor):
         else:
             ds = None
         return ExecResult(
-            outputs=ModuleOutputs(stdout=[TextOutput(line) for line in stdout]),
+            outputs=ModuleOutputs(stdout=[
+                TextOutput(line) 
+                for line in (stdout if stdout is not None else [])
+            ]),
             provenance=ModuleProvenance(
-                read={dataset_name: input_dataset.identifier} if not input_dataset is None else None,
-                write={dataset_name: ds},
-                resources=resources
+                read={
+                    dataset_name: input_dataset.identifier
+                } if not input_dataset is None else {},
+                write={
+                    dataset_name: ds
+                } if ds is not None else {},
+                resources=resources if resources is not None else {}
             )
         )
 
