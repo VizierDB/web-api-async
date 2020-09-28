@@ -27,11 +27,13 @@ from vizier.viztrail.module.provenance import ModuleProvenance
 
 import vizier.engine.packages.base as pckg
 import vizier.engine.packages.vizual.base as cmd
+import vizier.engine.packages.vizual.data as data_cmd
 import vizier.engine.packages.vizual.api.base as apibase
 from vizier.viztrail.command import ARG_ID, ARG_VALUE, ModuleArguments
 from vizier.config.app import AppConfig
 from vizier.engine.task.base import TaskContext
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
+
 
 """Property defining the API class if instantiated from dictionary."""
 PROPERTY_API = 'api'
@@ -67,7 +69,11 @@ class VizualTaskProcessor(TaskProcessor):
         else:
             raise ValueError("VizualTaskProcessor expects either `properties` or `api`")
 
-    def compute(self, command_id, arguments, context):
+    def compute(self, 
+            command_id: str, 
+            arguments: ModuleArguments, 
+            context: TaskContext
+        ) -> ExecResult:
         """Compute results for the given vizual command using the set of user-
         provided arguments and the current database state. Return an execution
         result is case of success or error.
@@ -162,6 +168,11 @@ class VizualTaskProcessor(TaskProcessor):
             )
         elif command_id == cmd.VIZUAL_UPD_CELL:
             return self.compute_update_cell(
+                args=arguments,
+                context=context
+            )
+        elif command_id == data_cmd.DATA_MATERIALIZE:
+            return self.compute_materialize(
                 args=arguments,
                 context=context
             )
@@ -969,5 +980,22 @@ class VizualTaskProcessor(TaskProcessor):
                 read={dataset_name: input_dataset.identifier} if not input_dataset is None else None,
                 write={dataset_name: ds},
                 resources=resources
+            )
+        )
+
+    def compute_materialize(self, 
+        args: ModuleArguments, 
+        context: TaskContext
+    ) -> ExecResult:
+        ds_name = args.get_value(pckg.PARA_DATASET).lower()
+        ds = context.get_dataset(ds_name)
+        result = self.api.materialize_dataset(ds.identifier, context.datastore)
+        return ExecResult(
+            outputs=ModuleOutputs(stdout=[
+                TextOutput("{} materialized".format(ds_name))
+            ]),
+            provenance=ModuleProvenance(
+                read={ds_name: ds.identifier},
+                write={ds_name: result.dataset}
             )
         )

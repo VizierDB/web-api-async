@@ -488,7 +488,7 @@ def get_column_index(columns, column_id):
             raise ValueError('not a unique column name \'' + str(column_id) + '\'')
 
 
-def get_index_for_column(dataset, col_id):
+def get_index_for_column(dataset: DatasetDescriptor, col_id: int):
     """Get index position for column with given id in dataset schema.
 
     Raises ValueError if no column with col_id exists.

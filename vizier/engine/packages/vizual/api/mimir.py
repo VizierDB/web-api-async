@@ -17,15 +17,14 @@
 """Implementation of the vizual API for configurations that use Mimir as the
 storage backend.
 """
-from typing import List, Dict, Any, Optional, Tuple
+from typing import cast, List, Dict, Any, Optional, Tuple
 
 from vizier.core.util import is_valid_name, get_unique_identifier
-from vizier.datastore.base import get_index_for_column
-from vizier.datastore.dataset import DatasetDescriptor
+from vizier.datastore.base import get_index_for_column, Datastore
+from vizier.datastore.dataset import DatasetDescriptor, DatasetRow
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
-from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
-from vizier.datastore.base import Datastore
 from vizier.datastore.mimir.store import MimirDatastore
+from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 from vizier.filestore.base import Filestore
 from vizier.filestore.fs.base import FileSystemFilestore
 
@@ -39,7 +38,11 @@ class MimirVizualApi(VizualApi):
     commands into SQL queries.
     """
 
-    def delete_column(self, identifier, column_id, datastore):
+    def delete_column(self, 
+        identifier: str, 
+        column_id: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -72,7 +75,11 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response, identifier)
 
-    def delete_row(self, identifier, row_index, datastore):
+    def delete_row(self, 
+        identifier: str, 
+        row_index: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -95,10 +102,12 @@ class MimirVizualApi(VizualApi):
         dataset = datastore.get_dataset(identifier)
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
+        assert(isinstance(dataset, MimirDatasetHandle))
         
         # Create a view for the modified dataset
         col_list = []
         for col in dataset.columns:
+            assert(isinstance(col, MimirDatasetColumn))
             col_list.append(col.name_in_rdb)
         command = {
             "id" : "deleteRow",
@@ -107,7 +116,12 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def filter_columns(self, identifier, columns, names, datastore):
+    def filter_columns(self, 
+        identifier: str, 
+        columns: List[int], 
+        names: List[str], 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Dataset projection operator. Returns a copy of the dataset with the
         given identifier that contains only those columns listed in columns.
         The list of names contains optional new names for the filtered columns.
@@ -168,7 +182,12 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def insert_column(self, identifier, position, name, datastore):
+    def insert_column(self, 
+        identifier: str, 
+        position: int, 
+        name: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert column with given name at given position in dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -214,7 +233,11 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def insert_row(self, identifier, position, datastore):
+    def insert_row(self, 
+        identifier: str, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert row at given position in a dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -245,7 +268,11 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+    def import_dataset(self, 
+        datastore: Datastore, 
+        project_id: str, 
+        dataset_id: str
+    ) -> VizualApiResult:
         from vizier.api.webservice.server import api
         # Mimir doesn't actually need to use the project ID (yet), but let's check the
         # URL for safety anyway
@@ -383,9 +410,11 @@ class MimirVizualApi(VizualApi):
             raise ValueError('unknown file \'' + file_id + '\'')
         # Create dataset and return handle
 
-    def empty_dataset(
-        self, datastore, filestore, initial_columns = [ ("''", "unnamed_column") ]
-    ):
+    def empty_dataset(self,
+        datastore: Datastore, 
+        filestore: Filestore, 
+        initial_columns: List[Tuple[str,str]] = [ ("''", "unnamed_column") ]
+    ) -> VizualApiResult:
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
         one of them will be None. The user name and password may only be given
@@ -407,13 +436,26 @@ class MimirVizualApi(VizualApi):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
+        assert(isinstance(datastore, MimirDatastore))
         ds = datastore.create_dataset(
             columns = [
-                MimirDatasetColumn(col, "varchar")
-                for default, col in initial_columns
+                MimirDatasetColumn(
+                    identifier = id,
+                    name_in_dataset = col, 
+                    data_type = "varchar"
+                )
+                for id, (default, col) in enumerate(initial_columns)
             ],
             rows = [
-                [ default for default, col in initial_columns ]
+                DatasetRow(
+                    identifier = str(id),
+                    values = [ 
+                        default
+                        for default, col
+                        in initial_columns
+                    ]
+                  )
+                for id in range(1,2)
             ],
             human_readable_name = "Empty Table",
         )
@@ -477,7 +519,12 @@ class MimirVizualApi(VizualApi):
 
        
 
-    def move_column(self, identifier, column_id, position, datastore):
+    def move_column(self, 
+        identifier: str, 
+        column_id: int, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -520,7 +567,12 @@ class MimirVizualApi(VizualApi):
         else:
             return VizualApiResult(dataset)
 
-    def move_row(self, identifier, row_id, position, datastore):
+    def move_row(self, 
+        identifier: str, 
+        row_id: str, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -554,7 +606,12 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def rename_column(self, identifier, column_id, name, datastore):
+    def rename_column(self, 
+        identifier: str, 
+        column_id: int, 
+        name: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -593,7 +650,12 @@ class MimirVizualApi(VizualApi):
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
 
-    def sort_dataset(self, identifier, columns, reversed, datastore):
+    def sort_dataset(self, 
+        identifier: str, 
+        columns: List[int], 
+        reversed: List[bool], 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Sort the dataset with the given identifier according to the order by
         statement. The order by statement is a pair of lists. The first list
         contains the identifier of columns to sort on. The second list contains
@@ -624,13 +686,14 @@ class MimirVizualApi(VizualApi):
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = datastore.get_dataset(identifier)
+        assert(isinstance(dataset, MimirDatasetHandle))
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Create order by clause based on columns and reversed flags
         order_by_clause = list()
         for i in range(len(columns)):
             col_id = columns[i]
-            stmt = dataset.column_by_id(col_id).name_in_rdb
+            stmt = cast(MimirDatasetColumn, dataset.column_by_id(col_id)).name_in_rdb
             if reversed[i]:
                 stmt += ' DESC'
             order_by_clause.append(stmt)
@@ -640,7 +703,13 @@ class MimirVizualApi(VizualApi):
         ds = MimirDatasetHandle.from_mimir_result(view_name, schema, properties)
         return VizualApiResult(ds)
 
-    def update_cell(self, identifier, column_id, row_id, value, datastore):
+    def update_cell(self, 
+        identifier: str, 
+        column_id: int, 
+        row_id: str, 
+        value: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
