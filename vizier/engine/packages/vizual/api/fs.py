@@ -741,3 +741,18 @@ class DefaultVizualApi(VizualApi):
             properties={}
         )
         return VizualApiResult(ds)
+    
+    def materialize_dataset(self, 
+            identifier: str, 
+            datastore: Datastore
+        ) -> VizualApiResult:
+        """Create a materialized snapshot of the dataset for faster
+        execution.
+    
+        This is a no-op for the FS Backend
+        """
+        dataset = datastore.get_dataset(identifier)
+        if dataset is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        return VizualApiResult(dataset)
+        

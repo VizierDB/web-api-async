@@ -478,4 +478,11 @@ def getAvailableLensTypes():
 def getAvailableAdaptiveSchemas():
     return requests.get(_mimir_url + 'adaptive').json()['adaptiveSchemaTypes']
 
-       
+def materialize(identifier, result_name = None): 
+  req_json = {
+    "table": identifier
+  }
+  if result_name is not None:
+    req_json["resultName"] = result_name
+  resp = readResponse(requests.post(_mimir_url + 'view/materialize', json=req_json))
+  return resp

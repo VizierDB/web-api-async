@@ -748,3 +748,23 @@ class MimirVizualApi(VizualApi):
         }
         response = mimir.vizualScript(dataset.identifier, command)
         return VizualApiResult.from_mimir(response)
+
+    def materialize_dataset(self, 
+            identifier: str, 
+            datastore: Datastore
+        ) -> VizualApiResult:
+        """Create a materialized snapshot of the dataset for faster
+        execution."""
+        input_dataset = datastore.get_dataset(identifier)
+        if input_dataset is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        cast(MimirDatasetHandle, input_dataset)
+        response = mimir.materialize(input_dataset.identifier)
+        output_ds = MimirDatasetHandle(
+                identifier = response["name"],
+                columns = cast(List[MimirDatasetColumn], input_dataset.columns),
+                properties = input_dataset.get_properties(),
+                name = input_dataset.name if input_dataset.name is not None else "untitled dataset"
+            )
+        return VizualApiResult(output_ds)
+
