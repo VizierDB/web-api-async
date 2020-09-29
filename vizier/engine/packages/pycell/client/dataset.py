@@ -156,7 +156,11 @@ class DatasetClient(object):
                 return col
         return None
 
-    def insert_column(self, name, data_type = "varchar", position=None):
+    def insert_column(self, 
+        name: str, 
+        data_type: str = "varchar", 
+        position: Optional[int] = None
+    ) -> DatasetColumn:
         """Add a new column to the dataset schema.
 
         Parameters
@@ -184,7 +188,10 @@ class DatasetClient(object):
                 row.values.append(None)
         return column
 
-    def insert_row(self, values=None, position=None):
+    def insert_row(self, 
+        values: Optional[List[Any]] = None, 
+        position: Optional[int] = None
+    ) -> DatasetRow:
         """Add a new row to the dataset. Expects a list of string values, one
         for each of the columns.
 
@@ -419,7 +426,11 @@ class MutableDatasetRow(DatasetRow):
     values : list(string)
         List of column values in the row
     """
-    def __init__(self, identifier=None, values=None, dataset=None):
+    def __init__(self, 
+        identifier: Optional[str] = None, 
+        values: Optional[List[Any]] = None, 
+        dataset: Optional[DatasetClient] = None
+        ):
         """Initialize the row object.
 
         Parameters
@@ -431,6 +442,7 @@ class MutableDatasetRow(DatasetRow):
         dataset : vizier.datastore.client.DatasetClient, optional
             Reference to dataset that contains the row
         """
+        identifier = "-1" if identifier is None else identifier
         super(MutableDatasetRow, self).__init__(
             identifier=identifier,
             values=values
