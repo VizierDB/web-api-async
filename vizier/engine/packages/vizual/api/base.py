@@ -82,7 +82,11 @@ class VizualApi(object):
     for different storage backends.
     """
     @abstractmethod
-    def delete_column(self, identifier, column_id, datastore):
+    def delete_column(self, 
+        identifier: str, 
+        column_id: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -104,7 +108,11 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_row(self, identifier, row_index, datastore):
+    def delete_row(self, 
+        identifier: str, 
+        row_index: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -126,7 +134,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def filter_columns(self, identifier, columns, names, datastore):
+    def filter_columns(self, 
+        identifier: str, 
+        columns: List[int], 
+        names: List[str], 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Dataset projection operator. Returns a copy of the dataset with the
         given identifier that contains only those columns listed in columns.
         The list of names contains optional new names for the filtered columns.
@@ -154,7 +167,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_column(self, identifier, position, name, datastore):
+    def insert_column(self, 
+        identifier: str, 
+        position: int, 
+        name: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert column with given name at given position in dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -179,7 +197,11 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def insert_row(self, identifier, position, datastore):
+    def insert_row(self, 
+        identifier: str, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert row at given position in a dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -201,7 +223,11 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+    def import_dataset(self, 
+        datastore: Datastore, 
+        project_id: str, 
+        dataset_id: str
+    ) -> VizualApiResult:
         """Import a published dataset from another project.
 
         The URL is expected to have the format
@@ -275,9 +301,11 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def empty_dataset(
-        self, datastore, filestore, initial_columns = [ ("''", "unnamed_column") ]
-    ):
+    def empty_dataset(self, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        initial_columns: List[Tuple[str, str]] = [ ("''", "unnamed_column") ]
+    ) -> VizualApiResult:
         """Create (or load) a new dataset from a given file or Uri. It is
         guaranteed that either the file identifier or the url are not None but
         one of them will be None. The user name and password may only be given
@@ -341,7 +369,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_column(self, identifier, column_id, position, datastore):
+    def move_column(self, 
+            identifier: str, 
+            column_id: int, 
+            position: int, 
+            datastore: Datastore
+        ) -> VizualApiResult:
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -365,7 +398,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def move_row(self, identifier, row_index, position, datastore):
+    def move_row(self, 
+            identifier: str, 
+            row_index: str, 
+            position: int, 
+            datastore: Datastore
+        ) -> VizualApiResult:
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -389,7 +427,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def rename_column(self, identifier, column_id, name, datastore):
+    def rename_column(self, 
+            identifier: str, 
+            column_id: int, 
+            name: str, 
+            datastore: Datastore
+        ):
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -413,7 +456,12 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def sort_dataset(self, identifier, columns, reversed, datastore):
+    def sort_dataset(self, 
+            identifier: str, 
+            columns: List[int], 
+            reversed: List[bool], 
+            datastore: Datastore
+        ) -> VizualApiResult:
         """Sort the dataset with the given identifier according to the order by
         statement. The order by statement is a pair of lists. The first list
         contains the identifier of columns to sort on. The second list contains
@@ -445,7 +493,13 @@ class VizualApi(object):
         raise NotImplementedError
 
     @abstractmethod
-    def update_cell(self, identifier, column_id, row_id, value, datastore):
+    def update_cell(self, 
+            identifier:str, 
+            column_id: int, 
+            row_id: str, 
+            value: str, 
+            datastore: Datastore
+        ) -> VizualApiResult:
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -468,4 +522,13 @@ class VizualApi(object):
         -------
         vizier.engine.packages.vizual.api.VizualApiResult
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def materialize_dataset(self, 
+            identifier: str, 
+            datastore: Datastore
+        ) -> VizualApiResult:
+        """Create a materialized snapshot of the dataset for faster
+        execution."""
         raise NotImplementedError

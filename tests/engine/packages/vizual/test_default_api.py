@@ -283,7 +283,7 @@ class TestDefaultVizualApi(unittest.TestCase):
             self.assertIsNone(row.values[i])
         # Ensure that row ids haven't changed
         for i in range(len(ds_rows)):
-            self.assertEqual(ds_rows[i].identifier, row_ids[i])
+            self.assertEqual(ds_rows[i].identifier, str(row_ids[i]))
         # Make sure column identifier haven't changed
         for i in range(len(ds.columns)):
             self.assertEqual(ds.columns[i].identifier, col_ids[i])
@@ -666,7 +666,7 @@ class TestDefaultVizualApi(unittest.TestCase):
         self.assertEqual([col.identifier for col in ds.columns], [0, 3, 2])
         self.assertEqual(len(ds_rows), 1)
         self.assertEqual(ds_rows[0].values, ['Carla', '160', '56K'])
-        self.assertEqual(ds_rows[0].identifier, 2)
+        self.assertEqual(ds_rows[0].identifier, '2')
 
     def test_sort_dataset(self):
         """Test sorting a dataset."""

@@ -474,6 +474,41 @@
                     }
                 ],
                 "suggest": false
+            },
+            {
+                "format": [
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "MATERIALIZE"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "const",
+                        "value": "DATASET"
+                    },
+                    {
+                        "lspace": true,
+                        "rspace": true,
+                        "type": "var",
+                        "value": "dataset"
+                    }
+                ],
+                "id": "materialize",
+                "name": "Materialize Dataset",
+                "parameter": [
+                    {
+                        "datatype": "dataset",
+                        "hidden": false,
+                        "id": "dataset",
+                        "index": 0,
+                        "name": "Dataset",
+                        "required": true
+                    }
+                ],
+                "suggest": false
             }
         ],
         "id": "data"
