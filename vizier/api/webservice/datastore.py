@@ -181,9 +181,9 @@ class VizierDatastoreApi(object):
         else:
             result_size = self.defaults.row_limit
         if result_size < 0 and self.defaults.max_row_limit > 0:
-            result_size = self.defaults.max_row_limit
+            result_size = self.defaults.max_download_row_limit
         elif self.defaults.max_row_limit >= 0:
-            result_size = min(result_size, self.defaults.max_row_limit)
+            result_size = min(result_size, self.defaults.max_download_row_limit)
         # Serialize the dataset schema and cells
         return serialize.DATASET_HANDLE(
             project=project,
