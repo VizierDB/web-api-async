@@ -43,16 +43,16 @@ def format_stack_trace(ex: Exception) -> str:
     trace_text = list([
         "{} {} line {}{}".format(
             # Function Name
-            "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)", 
+            "<Python Cell>" if element[2] == "<module>" else element[2]+"(...)",
 
             # File
-            "on" if element[0] == "<string>" else "in "+element[0]+", ", 
+            "on" if element[0] == "<string>" else "in "+element[0]+", ",
 
             # Line #
             element[1],
 
             # Line Content
-            "\n    "+element[3] if element[3] != "" else ""  
+            "\n    "+element[3] if element[3] != "" else ""
         )
         for element in trace_frames
     ])
@@ -255,7 +255,7 @@ def CHART_VIEW_DATA(view, rows, caveats):
     # Create a list of series indexes. Then remove the series that contains the
     # x-axis labels (if given). Keep x-axis data in a separate list
     series = list(range(len(view.data)))
-    if not view.x_axis is None:
+    if view.x_axis is not None:
         obj['xAxis'] = {'data': [row[view.x_axis] for row in rows]}
         del series[view.x_axis]
     obj['series'] = list()

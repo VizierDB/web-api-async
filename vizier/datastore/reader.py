@@ -70,7 +70,7 @@ class DatasetReader(object):
     @abstractmethod
     def close(self):
         """Signal the reader that no more rows will be read."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def __next__(self) -> DatasetRow:
@@ -81,7 +81,7 @@ class DatasetReader(object):
         -------
         vizier.datastore.base.DatasetRow
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def next(self) -> DatasetRow:
         return self.__next__()
@@ -95,12 +95,15 @@ class DatasetReader(object):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DelimitedFileReader(DatasetReader):
     """Dataset reader for delimited files (CSV or TSV)."""
-    def __init__(self, filename, compressed=False, delimiter=',', quotechar='"', has_row_ids=False):
+    def __init__(
+        self, filename, compressed=False, delimiter=',', quotechar='"',
+        has_row_ids=False
+    ):
         """Initialize information about the delimited file and the file format.
 
         Parameters
@@ -281,9 +284,9 @@ class DefaultJsonDatasetReader(DatasetReader):
                 self.fh = gzip.open(self.filename, 'rb')
             else:
                 self.fh = open(self.filename, 'r')
-            # Read the Json file and get the array of rows. Depending on whether
-            # offset or limit arguments were given we may select only a subset
-            # of the rows in the file.
+            # Read the Json file and get the array of rows. Depending on
+            # whether the offset or limit arguments are given we may select
+            # only a subset of the rows in the file.
             ds_rows = json.loads(self.fh.read())[KEY_ROWS]
             if self.offset > 0 or self.limit is not None:
                 self.rows = list()
@@ -338,8 +341,8 @@ class InMemDatasetReader(DatasetReader):
             List of rows in the dataset
         """
         # Variables that maintain the internal state of the reader, i.e., the
-        # list of rows and the row read index. The is_open flag indicates if the
-        # read_index has a valid value
+        # list of rows and the row read index. The is_open flag indicates if
+        # the read_index has a valid value
         self.is_open = False
         self.read_index = None
         self.rows = rows

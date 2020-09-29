@@ -19,7 +19,7 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Optional, List, Dict, Any, Tuple
 
 import os
@@ -32,7 +32,7 @@ from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescripto
 METADATA_FILE = 'annotations.json'
 
 
-class Datastore(object):
+class Datastore(metaclass=ABCMeta):
     """Abstract API to store and retireve datasets."""
     @abstractmethod
     def create_dataset(self, 
@@ -58,12 +58,16 @@ class Datastore(object):
             List of dataset rows.
         properties: dict(string, any), optional
             Annotations for dataset components
+        backend_options: list
+            TODO: Add description.
+        dependencies: string
+            TODO: Add description.
 
         Returns
         -------
         vizier.datastore.dataset.DatasetDescriptor
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_caveats(self, 
@@ -74,9 +78,9 @@ class Datastore(object):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -120,7 +124,7 @@ class Datastore(object):
         -------
         bytes
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
@@ -136,12 +140,13 @@ class Datastore(object):
         -------
         vizier.datastore.base.DatasetHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_descriptor(self, identifier: str) -> DatasetDescriptor:
         """Get the descriptor for the dataset with given identifier from the
-        data store. Returns None if no dataset with the given identifier exists.
+        data store. Returns None if no dataset with the given identifier
+        exists.
 
         Parameters
         ----------
@@ -150,14 +155,21 @@ class Datastore(object):
 
         Returns
         -------
-        vizier.datastore.base.DatasetDescriptor
+        vizier.datastore.dataset.DatasetDescriptor
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
-    def load_dataset(self, 
-            f_handle: FileHandle, 
-            proposed_schema: List[Tuple[str, str]] = []
+    def load_dataset(self,
+            f_handle: Optional[FileHandle] = None, 
+            proposed_schema: List[Tuple[str,str]] = [],
+            url: Optional[str] = None, 
+            detect_headers: bool = True, 
+            infer_types: bool = True, 
+            properties: Dict[str,Any] = {},
+            load_format: str ='csv', 
+            options: List[Dict[str,str]] = [], 
+            human_readable_name: Optional[str] = None
         ) -> DatasetHandle:
         """Create a new dataset from a given file.
 
@@ -182,8 +194,20 @@ class Datastore(object):
 
         Parameters
         ----------
-        f_handle : vizier.filestore.base.FileHandle
+        f_handle : vizier.filestore.base.FileHandle, optional
             handle for an uploaded file on the associated file server.
+        url: string, optional, optional
+            Url for the file source
+        detect_headers: bool, optional
+            Detect column names in loaded file if True
+        infer_types: string, optional
+            Infer column types for loaded dataset if selected a profiler.
+        load_format: string, optional
+            Format identifier
+        options: list, optional
+            Additional options for Mimirs load command
+        human_readable_name: string, optional
+            Optional human readable name for the resulting table
 
         Returns
         -------
@@ -216,14 +240,39 @@ class Datastore(object):
         -------
         identifier
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def unload_dataset(
+        self, filepath, dataset_name, format='csv', options=[], filename=''
+    ):
+        """Export a dataset from a given name.
+
+        Raises ValueError if the given dataset could not be exported.
+
+        Parameters
+        ----------
+        dataset_name: string
+            Name of the dataset to unload
+        format: string
+            Format for output (csv, json, ect.)
+        options: dict
+            Options for data unload
+        filename: string
+            The output filename - may be empty if outputting to a database
+
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        raise NotImplementedError()
 
 
 class DefaultDatastore(Datastore):
     """Implementation of Vizier data store. Uses the file system to maintain
-    datasets. For each dataset a new subfolder is created. Within the folder the
-    dataset information is split across three files containing the descriptor,
-    annotation, and the dataset rows.
+    datasets. For each dataset a new subfolder is created. Within the folder
+    the dataset information is split across three files containing the
+    descriptor, annotation, and the dataset rows.
     """
     def __init__(self, base_path):
         """Initialize the base directory that contains datasets. Each dataset is
@@ -243,9 +292,9 @@ class DefaultDatastore(Datastore):
         """Get list of annotations for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the
-        specified row are returned. Otherwise, all annotations for the specified
-        cell are returned. If both identifier are None all annotations for the
-        dataset are returned.
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
 
         Parameters
         ----------
@@ -323,7 +372,8 @@ class DefaultDatastore(Datastore):
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the
-        data store. Returns None if no dataset with the given identifier exists.
+        data store. Returns None if no dataset with the given identifier
+        exists.
 
         Parameters
         ----------
@@ -334,7 +384,7 @@ class DefaultDatastore(Datastore):
         -------
         vizier.datastore.base.DatasetDescriptor
         """
-        return self.get_dataset(identifier)
+        return self.get_dataset(identifier).descriptor()
 
     def get_properties_filename(self, identifier: str) -> str:
         """Get filename of meatdata file for the dataset with the given
@@ -390,7 +440,9 @@ def collabel_2_index(label):
     """Convert a column label into a column index (based at 0), e.g., 'A'-> 1,
     'B' -> 2, ..., 'AA' -> 27, etc.
 
-    Returns -1 if the given labe is not composed only of upper case letters A-Z.
+    Returns -1 if the given labe is not composed only of upper case letters
+    A-Z.
+
     Parameters
     ----------
     label : string
@@ -401,7 +453,7 @@ def collabel_2_index(label):
     int
     """
     # The following code is adopted from
-    # https://stackoverflow.com/questions/7261936/convert-an-excel-or-spreadsheet-column-letter-to-its-number-in-pythonic-fashion
+    # https://stackoverflow.com/questions/7261936
     num = 0
     for c in label:
         if ord('A') <= ord(c) <= ord('Z'):
@@ -467,9 +519,9 @@ def get_column_index(columns, column_id):
         if name_index >= 0:
             return name_index
         elif name_index == -1:
-            raise ValueError('unknown column \'' + str(column_id) + '\'')
+            raise ValueError("unknown column '{}'".format(column_id))
         else:
-            raise ValueError('not a unique column name \'' + str(column_id) + '\'')
+            raise ValueError("duplicate column name '{}'".format(column_id))
 
 
 def get_index_for_column(dataset, col_id):

@@ -151,7 +151,7 @@ class PyCellTaskProcessor(TaskProcessor):
                 outputs.stdout.append(OutputObject(value = text, type = client.output_format))
             for text in resdata['stderr']:
                 outputs.stderr.append(TextOutput(text))
-                is_success = False        
+                is_success = False
         else:
             for tag, text in stream:
                 text = ''.join(text).strip()
@@ -185,7 +185,7 @@ class PyCellTaskProcessor(TaskProcessor):
             for name in client.write:
                 if not isinstance(name, str):
                     raise RuntimeError('invalid key for mapping dictionary')
-                
+
                 if name in client.datasets:
                     write_descriptor = client.datasets[name]
                     if not isinstance(write_descriptor, ArtifactDescriptor):
@@ -220,10 +220,10 @@ class PyCellTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
-        
+
 class DotDict(dict):
     def __getattr__(self,val):
         return self[val]
-    
+
     def setattr(self, attr_name, val):
         self[attr_name] = val

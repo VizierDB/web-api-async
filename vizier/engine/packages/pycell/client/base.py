@@ -84,18 +84,18 @@ class VizierDBClient(object):
             result = original_func(*args, **kwargs)
             return result
         return wrapper
-    
+
     def wrap_variable(self, original_variable, name):
         self.read.add(name)
         return original_variable
-    
+
     def export_module(self, exp):
         if inspect.isclass(exp):
             exp_name = exp.__name__
         elif callable(exp):
             exp_name = exp.__name__
         else:
-            # If its a variable we grab the original name from the stack 
+            # If its a variable we grab the original name from the stack
             lcls = inspect.stack()[1][0].f_locals
             for name in lcls:
                 if lcls[name] == exp:
@@ -130,7 +130,7 @@ class VizierDBClient(object):
         if not key in self.dataobjects:
             raise ValueError('unknown dataobject \'' + name + '\'')
         return self.dataobjects[key]
-    
+
     def set_dataobject_identifier(self, name, identifier):
         """Sets the identifier to which the given dataset name points.
 
@@ -389,7 +389,7 @@ class VizierDBClient(object):
         
         #gather up the read dependencies so that we can pass them to mimir 
         # so that we can at least track coarse grained provenance.
-        # TODO: we are asumming mimir dataset and datastore 
+        # TODO: we are asumming mimir dataset and datastore
         #       here and need to generalize this
         read_dep = []
         for dept_name in self.read:
@@ -522,7 +522,7 @@ class Analyzer(ast.NodeVisitor):
             self.source = "{} = vizierdb.wrap_variable({}, '{}')".format( self.name, astor.to_source(node.value), self.name)
             self.generic_visit(target)
         self.context.pop()
-        
+
     def visit_ClassDef(self, node):
         self.context.append(('class', ()))
         if node.name == self.name:

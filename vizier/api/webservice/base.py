@@ -144,7 +144,7 @@ class VizierApi(object):
         package_listing = list()
         for pckg in self.engine.packages.values():
             pckg_obj = {'id': pckg.identifier, 'name': pckg.name, 'category': pckg.category}
-            if not pckg.description is None:
+            if pckg.description is not None:
                 pckg_obj['description'] = pckg.description
             pckg_commands = list()
             for cmd in list(pckg.commands.values()):
@@ -181,10 +181,11 @@ class VizierApi(object):
             })
         }
 
+
 class DotDict(dict):
-    def __getattr__(self,val):
+    def __getattr__(self, val):
         return self[val]
-    
+
     def setattr(self, attr_name, val):
         self[attr_name] = val
 
@@ -215,7 +216,7 @@ def get_engine(config: AppConfig) -> VizierEngine:
     # Get backend identifier. Raise ValueError if value does not identify
     # a valid backend.
     backend_id = config.engine.backend.identifier
-    if not backend_id in base.BACKENDS:
+    if backend_id not in base.BACKENDS:
         raise ValueError('unknown backend \'' + str(backend_id) + '\'')
     # Get the identifier factory for the viztrails repository and create
     # the object store. At this point we use the default object store only.
@@ -246,6 +247,9 @@ def get_engine(config: AppConfig) -> VizierEngine:
         datastore_factory: DatastoreFactory
         if config.engine.identifier == base.DEV_ENGINE:
             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
+        elif config.engine.identifier == base.HISTORE_ENGINE:
+            import vizier.datastore.histore.factory as histore
+            datastore_factory = histore.HistoreDatastoreFactory(datastores_dir)
         else:
             datastore_factory = MimirDatastoreFactory(datastores_dir)
         # The default engine uses a common project cache.
@@ -262,7 +266,7 @@ def get_engine(config: AppConfig) -> VizierEngine:
             commands:Dict[str,Dict[str,TaskProcessor]] = dict()
             for el in sync_commands_list.split(':'):
                 package_id, command_id = el.split('.')
-                if not package_id in commands:
+                if package_id not in commands:
                     commands[package_id] = dict()
                 commands[package_id][command_id] = processors[package_id]
             synchronous: TaskExecEngine = SynchronousTaskEngine(

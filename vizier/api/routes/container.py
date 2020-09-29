@@ -190,6 +190,22 @@ class ContainerApiUrlFactory(UrlFactory):
         """
         return self.get_dataset(project_id, dataset_id) + '/annotations'
 
+    def get_dataset_profiling(self, project_id, dataset_id):
+        """Url to retrieve dataset profiling results.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.get_dataset(project_id, dataset_id) + '/profiling'
+
     # --------------------------------------------------------------------------
     # Files
     # --------------------------------------------------------------------------

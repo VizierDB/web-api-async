@@ -19,10 +19,14 @@ and need to keep as a local copy because they are not accessible via an Url.
 """
 from typing import Optional, IO, Dict, Any
 
+import csv
 import gzip
 import mimetypes
+import os
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
+
+import vizier.core.util as util
 
 
 """File format identifier."""
@@ -40,6 +44,7 @@ class FileHandle(object):
             file_name: str, 
             mimetype: Optional[str] = None, 
             encoding: Optional[str] = None):
+            # quotechar='"', quoting=csv.QUOTE_MINIMAL
         """Initialize the file identifier, the (full) file path, the file
         format, and the file encoding (for compressed files).
 
@@ -70,6 +75,8 @@ class FileHandle(object):
         else:
             self.mimetype = mimetype
             self.encoding = encoding
+        # self.quotechar = quotechar
+        # self.quoting = quoting
 
     @property
     def compressed(self):
@@ -132,7 +139,7 @@ class FileHandle(object):
             return open(self.filepath, 'r')
 
 
-class Filestore(object):
+class Filestore(metaclass=ABCMeta):
     """Abstract API to upload and retrieve files."""
 
     @abstractmethod
@@ -149,7 +156,7 @@ class Filestore(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def download_file(self, 
@@ -172,7 +179,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_file(self, identifier: str) -> FileHandle:
@@ -188,7 +195,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_files(self):
@@ -198,7 +205,7 @@ class Filestore(object):
         -------
         list(vizier.filestore.base.FileHandle)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def upload_file(self, filename):
@@ -216,7 +223,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def upload_stream(self, file, file_name):
@@ -233,7 +240,7 @@ class Filestore(object):
         -------
         vizier.filestore.base.FileHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------
@@ -265,3 +272,22 @@ def get_download_filename(url: str, info: Dict[str,Any]) -> str:
                 filename = content[content.rfind('filename="') + 11:]
                 return filename[:filename.find('"')]
     return 'download'
+
+
+def CSV(filename):
+    """Return a file handle object for a CSV file on disk.
+
+    Parameters
+    ----------
+    filename: string
+        Path to file on the local file system.
+
+    Returns
+    -------
+    vizier.filestore.base.Filehandle
+    """
+    return FileHandle(
+        identifier=util.get_unique_identifier(),
+        filepath=filename,
+        file_name=os.path.basename(filename)
+    )

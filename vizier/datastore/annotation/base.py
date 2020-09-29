@@ -53,7 +53,7 @@ class DatasetCaveat(object):
         family: scalar
             Opaque grouping key, used to associate sets of caveats together
         """
-        #if column_id is None and row_id is None:
+        # if column_id is None and row_id is None:
         #    raise ValueError('invalid dataset resource identifier')
         self.key = key
         self.message = message

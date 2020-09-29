@@ -241,6 +241,15 @@ class MimirDatasetHandle(DatasetHandle):
         self._row_count: Optional[int] = None
         self._properties = properties
 
+    def descriptor(self):
+        """Get the descriptor for this dataset.
+
+        Returns
+        -------
+        vizier.datastore.base.DatasetDescriptor
+        """
+        return self
+
     @staticmethod
     def from_mimir_result(
             table_name: str, 
@@ -317,6 +326,15 @@ class MimirDatasetHandle(DatasetHandle):
             sql = 'SELECT * '
             sql += 'FROM ' + self.identifier + ' '
             return mimir.explainCell(sql, column.name_in_rdb, str(row_id))
+
+    def get_profiling(self):
+        """Get profiling results for the dataset.
+
+        Returns
+        -------
+        dict
+        """
+        return dict()
 
     def reader(self, offset=0, limit=None, rowid=None):
         """Get reader for the dataset to access the dataset rows. The optional
