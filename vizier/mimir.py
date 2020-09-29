@@ -478,7 +478,7 @@ def getAvailableLensTypes():
 def getAvailableAdaptiveSchemas():
     return requests.get(_mimir_url + 'adaptive').json()['adaptiveSchemaTypes']
 
-def materialize(identifier, result_name = None): 
+def materialize(identifier, result_name = None) -> Dict[str, Any]: 
   req_json = {
     "table": identifier
   }

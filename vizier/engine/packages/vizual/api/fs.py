@@ -24,7 +24,7 @@ from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescripto
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 from vizier.datastore.base import Datastore
 from vizier.filestore.base import Filestore
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.fs.base import FileSystemDatastore, FileSystemDatasetHandle
 from vizier.filestore.fs.base import FileSystemFilestore
 
 import vizier.engine.packages.vizual.api.base as base
@@ -275,9 +275,10 @@ class DefaultVizualApi(VizualApi):
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = datastore.get_dataset(identifier)
-        assert(isinstance(dataset, FileSystemDatastore))
+        print('---------------' + str(dataset.__class__.__name__))
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
+        assert(isinstance(dataset, FileSystemDatasetHandle))
         # Make sure that position is a valid row index in the new dataset
         if position < 0 or position > dataset.row_count:
             raise ValueError('invalid row index \'' + str(position) + '\'')
@@ -286,7 +287,7 @@ class DefaultVizualApi(VizualApi):
         rows.insert(
             position,
             DatasetRow(
-                identifier=dataset.max_row_id() + 1,
+                identifier=str(dataset.max_row_id() + 1),
                 values=[None] * len(dataset.columns)
             )
         )
