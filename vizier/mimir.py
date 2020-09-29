@@ -17,7 +17,7 @@
 """Initialize the Python gateway to the JVM for access to Mimir datastore and
 lenses.
 """
-from typing import cast, Optional, List, Dict, Any, Tuple
+from typing import cast, Optional, List, Dict, Any, Tuple, Union
 
 import requests
 import os
@@ -103,7 +103,11 @@ def createLens(dataset, params, type, materialize, human_readable_name = None, p
     resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
     return resp
 
-def createView(dataset, query, properties = {}):
+def createView(dataset, 
+    query: str, 
+    properties: Optional[Dict[str, Any]] = None
+  ):
+    properties = {} if properties is None else properties
     depts = None
     if isinstance(dataset, dict):
         depts = dataset
@@ -392,7 +396,12 @@ def createSample(
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
   return (resp['name'], resp['schema'])
 
-def vizualScript(inputds, script, script_needs_compile = False, properties = {}):
+def vizualScript(
+  inputds: str, 
+  script: Union[List[Dict[str, Any]], Dict[str, Any]], 
+  script_needs_compile: bool = False, 
+  properties: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
   """
     Create a view that implements a sequence of vizual commands over a fixed input table
 
@@ -416,13 +425,17 @@ def vizualScript(inputds, script, script_needs_compile = False, properties = {})
       - "script": The compiled version of the script (or just script if 
                   script_needs_compile = False)
   """
+  properties = {} if properties is None else properties
 
-  if type(script) is not list:
-    script = [script]
+  script_list: List[Dict[str, Any]]
+  if type(script) is list:
+    script_list = cast(List[Dict[str, Any]], script)
+  else:
+    script_list = [cast(Dict[str, Any], script)]
 
   req_json = {
     "input" : inputds,
-    "script" : script,
+    "script" : script_list,
     # "resultName": Option[String],
     "compile": script_needs_compile, 
     "properties" : properties
@@ -465,4 +478,11 @@ def getAvailableLensTypes():
 def getAvailableAdaptiveSchemas():
     return requests.get(_mimir_url + 'adaptive').json()['adaptiveSchemaTypes']
 
-       
+def materialize(identifier, result_name = None): 
+  req_json = {
+    "table": identifier
+  }
+  if result_name is not None:
+    req_json["resultName"] = result_name
+  resp = readResponse(requests.post(_mimir_url + 'view/materialize', json=req_json))
+  return resp
