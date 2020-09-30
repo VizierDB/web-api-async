@@ -574,4 +574,8 @@ class Analyzer(ast.NodeVisitor):
             
     def get_Source(self):
         return self.source
-    
+
+    def s3(self):
+        return Minio(os.environ.get('S3A_ENDPOINT', 's3.vizier.app'),
+                       access_key=os.environ.get('AWS_ACCESS_KEY_ID', "----------------------"),
+                       secret_key=os.environ.get('AWS_SECRET_ACCESS_KEY', "---------------------------"))
