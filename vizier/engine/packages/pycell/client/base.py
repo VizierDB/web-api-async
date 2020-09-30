@@ -439,10 +439,10 @@ class VizierDBClient(object):
             for obj in objects:
                 subObjs.append(obj)
                    
+            active_keys = set()
             for logObj in subObjs:
                 log = logObj.object_name 
                 result = re.match(file, log)
-                active_keys = set()
                 # Check file name suffix is .log
                 if result: 
                     data = client.get_object(bucket, log)
