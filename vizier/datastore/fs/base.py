@@ -230,7 +230,7 @@ class FileSystemDatastore(DefaultDatastore):
                     shutil.rmtree(temp_dir)
                 raise ex
 
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier, force_profiler: Optional[bool] = None):
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 

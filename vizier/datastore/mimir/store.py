@@ -124,7 +124,11 @@ class MimirDatastore(DefaultDatastore):
             name = human_readable_name
         )
 
-    def get_dataset(self, identifier: str, name: Optional[str] = None) -> MimirDatasetHandle:
+    def get_dataset(self, 
+            identifier: str, 
+            force_profiler: Optional[bool] = None, 
+            name: Optional[str] = None
+        ) -> MimirDatasetHandle:
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -138,7 +142,7 @@ class MimirDatastore(DefaultDatastore):
         vizier.datastore.mimir.dataset.MimirDatasetHandle
         """
         # Return None if the dataset file does not exist
-        schema, properties = mimir.getTableInfo(identifier)
+        schema, properties = mimir.getTableInfo(identifier, force_profiler = force_profiler)
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
     def get_caveats(self, 
