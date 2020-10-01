@@ -442,7 +442,6 @@ class VizierDBClient(object):
             for logObj in subObjs:
                 log = logObj.object_name 
                 result = re.match(file, log)
-                active_keys = set()
                 # Check file name suffix is .log
                 if result: 
                     data = client.get_object(bucket, log)
@@ -464,11 +463,9 @@ class VizierDBClient(object):
                     entry.pop(None, None) # type: ignore
                     
                     # Append unknown dictionary keys to the list
-                    for attr in entry.keys():
-                        if attr not in active_keys:
-                            ds.insert_column(attr)
-                            active_keys.add(attr)
-
+                    for attr in list(set(entry.keys())-set([col.name for col in ds.columns])):
+                        ds.insert_column(attr)
+                            
                     # Make sure the record is in the right order
                     row = [
                         entry.get(col.name, None)
