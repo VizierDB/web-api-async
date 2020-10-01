@@ -29,7 +29,7 @@ from vizier.viztrail.named_object import PROPERTY_NAME
 
 class ServerRequestException(Exception):
     """Base class for API exceptions."""
-    def __init__(self, message, status_code):
+    def __init__(self, message: str, status_code: int):
         """Initialize error message and status code.
 
         Parameters
@@ -55,7 +55,7 @@ class ServerRequestException(Exception):
 
 class InvalidRequest(ServerRequestException):
     """Exception for invalid requests that have status code 400."""
-    def __init__(self, message):
+    def __init__(self, message: str):
         """Initialize the message and status code (400) of super class.
 
         Parameters
@@ -77,7 +77,7 @@ class NoJsonInRequest(InvalidRequest):
 
 class ResourceNotFound(ServerRequestException):
     """Exception for file not found situations that have status code 404."""
-    def __init__(self, message):
+    def __init__(self, message: str):
         """Initialize the message and status code (404) of super class.
 
         Parameters
