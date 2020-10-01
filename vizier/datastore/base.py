@@ -33,6 +33,10 @@ METADATA_FILE = 'annotations.json'
 
 
 class Datastore(object):
+
+    def __init__(self):
+        self.base_path: Optional[str] = None
+
     """Abstract API to store and retireve datasets."""
     @abstractmethod
     def create_dataset(self, 

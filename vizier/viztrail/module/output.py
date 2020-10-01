@@ -35,7 +35,7 @@ OUTPUT_HTML = 'text/html'
 OUTPUT_MARKDOWN = 'text/markdown'
 OUTPUT_DATASET = 'dataset/view'
 
-def format_stack_trace(ex: Exception) -> str:
+def format_stack_trace(ex: Exception, offset_lines: int = 0) -> str:
     trace_frames: Iterable[traceback.FrameSummary] = traceback.extract_tb(ex.__traceback__, limit = 30)
     # print("{}".format(trace))
     if not debug_is_on():
@@ -49,7 +49,7 @@ def format_stack_trace(ex: Exception) -> str:
             "on" if element[0] == "<string>" else "in "+element[0]+", ", 
 
             # Line #
-            element[1],
+            element[1] + (offset_lines if element[0] == "<string>" else 0),
 
             # Line Content
             "\n    "+element[3] if element[3] != "" else ""  
@@ -302,7 +302,7 @@ class ModuleOutputs(object):
             ret = ret + ["----- STDERR ------"] + [ str(output) for output in self.stderr ]
         return "\n".join(ret)
 
-    def error(self, ex: Exception) -> "ModuleOutputs":
+    def error(self, ex: Exception, offset_lines: int = 0) -> "ModuleOutputs":
         """Add stack trace for execution error to STDERR stream of the output
         object.
 
@@ -327,13 +327,13 @@ class ModuleOutputs(object):
                     message = message + "\nDEBUG IS ON"
                     if "stackTrace" in err_data:
                         message = "{}\n{}\n--------".format(message, err_data["stackTrace"])
-                    message = "{}\n{}".format(message, format_stack_trace(ex)) 
+                    message = "{}\n{}".format(message, format_stack_trace(ex, offset_lines = offset_lines)) 
             elif type(ex) is ConnectionError:
                 message = "Couldn't connect to Mimir (Vizier's dataflow layer).  Make sure it's running."
             elif type(ex) is SyntaxError:
                 context, line, pos, content = ex.args[1]
                 message = "Syntax error (line {}:{})\n{}{}^-- {}".format(
-                              line, pos, 
+                              line + offset_lines, pos, 
                               content,
                               " " * pos,
                               ex.args[0]
@@ -341,18 +341,18 @@ class ModuleOutputs(object):
             elif type(ex) is NameError:
                 message = "{}\n{}".format(
                                 ex.args[0],
-                                format_stack_trace(ex)
+                                format_stack_trace(ex, offset_lines = offset_lines)
                             )
             else:
                 message = "{}{}\n{}".format(
                     type(ex).__name__, 
                     ( (": " + "; ".join(str(arg) for arg in ex.args)) if ex.args is not None else "" ), 
-                    format_stack_trace(ex)
+                    format_stack_trace(ex, offset_lines = offset_lines)
                 )
         except Exception as e:
             message = "{0}:{1!r}".format(type(e).__name__, e.args)
             if debug_is_on():
-                message += "\n"+format_stack_trace(e)
+                message += "\n"+format_stack_trace(e, offset_lines = offset_lines)
 
         self.stderr.append(TextOutput(message))
         return self
