@@ -144,7 +144,8 @@ class VizierDatastoreApi(object):
             project_id: str, 
             dataset_id: str, 
             offset: int = 0, 
-            limit: int = -1
+            limit: int = -1,
+            force_profiler: Optional[bool] = None
         ) -> Optional[Dict[str, Any]]:
         """Get dataset with given identifier. The result is None if no dataset
         with the given identifier exists.
@@ -166,7 +167,11 @@ class VizierDatastoreApi(object):
         """
         # Retrieve the dataset. The result is None if the dataset or the project
         # do not exist.
-        project, dataset = self.get_dataset_handle(project_id, dataset_id)
+        project, dataset = self.get_dataset_handle(
+                                        project_id, 
+                                        dataset_id, 
+                                        force_profiler = force_profiler
+                                )
         if dataset is None:
             return None
         # Determine offset and limits
@@ -181,9 +186,9 @@ class VizierDatastoreApi(object):
         else:
             result_size = self.defaults.row_limit
         if result_size < 0 and self.defaults.max_row_limit > 0:
-            result_size = self.defaults.max_row_limit
+            result_size = self.defaults.max_download_row_limit
         elif self.defaults.max_row_limit >= 0:
-            result_size = min(result_size, self.defaults.max_row_limit)
+            result_size = min(result_size, self.defaults.max_download_row_limit)
         # Serialize the dataset schema and cells
         return serialize.DATASET_HANDLE(
             project=project,
@@ -228,7 +233,8 @@ class VizierDatastoreApi(object):
 
     def get_dataset_handle(self, 
             project_id: str, 
-            dataset_id: str
+            dataset_id: str,
+            force_profiler: Optional[bool] = None
         ) -> Tuple[ProjectHandle, Optional[DatasetHandle]]:
         """Get handle for dataset with given identifier. The result is None if
         the dataset or the project do not exist.
@@ -250,5 +256,9 @@ class VizierDatastoreApi(object):
         project = self.projects.get_project(project_id)
         if project is None:
             return None, None
-        return project, project.datastore.get_dataset(dataset_id)
+        dataset = project.datastore.get_dataset(
+                                        dataset_id, 
+                                        force_profiler = force_profiler
+                                    )
+        return project, dataset
 

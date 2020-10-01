@@ -285,7 +285,9 @@ def getTable(
       offset: Optional[int] = None, 
       offset_to_rowid: Optional[str] = None, 
       limit: Optional[int] = None, 
-      include_uncertainty: Optional[bool] = None) -> Dict[str, Any]: 
+      include_uncertainty: Optional[bool] = None,
+      force_profiler: Optional[bool] = None
+    ) -> Dict[str, Any]: 
     req_json: Dict[str, Any] = { "table" : table }
     if columns is not None:
       req_json["columns"] = columns
@@ -301,6 +303,8 @@ def getTable(
       req_json["limit"] = limit
     if include_uncertainty is not None:
       req_json["includeUncertainty"] = include_uncertainty
+    if force_profiler is not None:
+      req_json["profile"] = force_profiler
 
     resp = readResponse(requests.post(_mimir_url + 'query/table', json=req_json))
     return resp
@@ -329,10 +333,12 @@ def evalR(inputs, source):
     resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
-def getTableInfo(table: str) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
-    req_json = {
+def getTableInfo(table: str, force_profiler: Optional[bool] = None) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
+    req_json: Dict[str, Any] = {
       "table": table
     }
+    if force_profiler is not None:
+      req_json["profile"] = force_profiler
     resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
     # print("TABLEINFO: {}".format(resp))
     return (
