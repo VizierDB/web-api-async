@@ -178,9 +178,10 @@ class WorkflowHandle(object):
         """
         datasets:Dict[str, ArtifactDescriptor] = dict()
         for m in self.modules:
-            for artifact_name in m.provenance.write:
-                artifact = m.provenance.write[artifact_name]
-                datasets[artifact_name] = artifact
+            if m.provenance.write is not None:
+                for artifact_name in m.provenance.write:
+                    artifact = m.provenance.write[artifact_name]
+                    datasets[artifact_name] = artifact
         return datasets
 
     @property
@@ -192,8 +193,9 @@ class WorkflowHandle(object):
         """
         datasets:Dict[str, DatasetDescriptor] = dict()
         for m in self.modules:
-            for artifact_name in m.provenance.write:
-                artifact = m.provenance.write[artifact_name]
-                if artifact.is_dataset:
-                    datasets[artifact_name] = cast(DatasetDescriptor, artifact)
+            if m.provenance.write is not None:
+                for artifact_name in m.provenance.write:
+                    artifact = m.provenance.write[artifact_name]
+                    if artifact.is_dataset:
+                        datasets[artifact_name] = cast(DatasetDescriptor, artifact)
         return datasets
