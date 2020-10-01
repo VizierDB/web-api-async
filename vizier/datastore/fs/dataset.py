@@ -160,7 +160,7 @@ class FileSystemDatasetHandle(DatasetHandle):
         ) -> List[DatasetCaveat]:
         return []
 
-    def max_row_id(self):
+    def max_row_id(self) -> int:
         """Get maximum identifier for all rows in the dataset. If the dataset
         is empty the result is -1.
 

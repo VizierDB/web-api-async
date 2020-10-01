@@ -17,14 +17,15 @@
 """Default implementation of the vizual API. Uses the file system based
 filestore and datastore to persist files and datasets.
 """
-from typing import Optional, List, Tuple, Dict, Any
+from typing import cast, Optional, List, Tuple, Dict, Any
 
 from vizier.core.util import is_valid_name, get_unique_identifier
-from vizier.datastore.dataset import DatasetColumn, DatasetRow
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetDescriptor
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult
 from vizier.datastore.base import Datastore
 from vizier.filestore.base import Filestore
-from vizier.datastore.fs.base import FileSystemDatastore
+from vizier.datastore.fs.base import FileSystemDatastore, FileSystemDatasetHandle
+from vizier.filestore.fs.base import FileSystemFilestore
 
 import vizier.engine.packages.vizual.api.base as base
 
@@ -34,7 +35,11 @@ class DefaultVizualApi(VizualApi):
     Expects an instance of the vizier.datastore.fs.base.FileSystemDatastore to
     persist datasets.
     """
-    def delete_column(self, identifier, column_id, datastore):
+    def delete_column(self, 
+        identifier: str, 
+        column_id: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -77,7 +82,11 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def delete_row(self, identifier, row_index, datastore):
+    def delete_row(self, 
+        identifier: str, 
+        row_index: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Delete a row in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -114,7 +123,12 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def filter_columns(self, identifier, columns, names, datastore):
+    def filter_columns(self, 
+        identifier: str, 
+        columns: List[int], 
+        names: List[str], 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Dataset projection operator. Returns a copy of the dataset with the
         given identifier that contains only those columns listed in columns.
         The list of names contains optional new names for the filtered columns.
@@ -178,7 +192,12 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def insert_column(self, identifier, position, name, datastore):
+    def insert_column(self, 
+        identifier: str, 
+        position: int, 
+        name: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert column with given name at given position in dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -231,7 +250,11 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def insert_row(self, identifier, position, datastore):
+    def insert_row(self, 
+        identifier: str, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Insert row at given position in a dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -252,8 +275,10 @@ class DefaultVizualApi(VizualApi):
         """
         # Get dataset. Raise exception if dataset is unknown
         dataset = datastore.get_dataset(identifier)
+        print('---------------' + str(dataset.__class__.__name__))
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
+        assert(isinstance(dataset, FileSystemDatasetHandle))
         # Make sure that position is a valid row index in the new dataset
         if position < 0 or position > dataset.row_count:
             raise ValueError('invalid row index \'' + str(position) + '\'')
@@ -262,7 +287,7 @@ class DefaultVizualApi(VizualApi):
         rows.insert(
             position,
             DatasetRow(
-                identifier=dataset.max_row_id() + 1,
+                identifier=str(dataset.max_row_id() + 1),
                 values=[None] * len(dataset.columns)
             )
         )
@@ -274,7 +299,11 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def import_dataset(self, datastore: Datastore, project_id: str, dataset_id: str) -> VizualApiResult:
+    def import_dataset(self, 
+        datastore: Datastore, 
+        project_id: str, 
+        dataset_id: str
+    ) -> VizualApiResult:
         raise Exception("Import not (yet) supported in the FS backend")
 
 
@@ -384,8 +413,13 @@ class DefaultVizualApi(VizualApi):
             resources=result_resources
         )
 
-    def unload_dataset(
-        self, dataset, datastore, filestore, unload_format='csv', options=[], resources=None
+    def unload_dataset(self, 
+        dataset: DatasetDescriptor, 
+        datastore: Datastore, 
+        filestore: Filestore, 
+        unload_format='csv', 
+        options=[], 
+        resources=None
     ):
         """Export (or unload) a dataset to a given file format. 
 
@@ -414,7 +448,7 @@ class DefaultVizualApi(VizualApi):
         """
         f_handles = None
         result_resources = dict()
-        
+        assert(isinstance(filestore, FileSystemFilestore))
         if dataset is not None:
             f_handles = datastore.unload_dataset(
                 filepath=filestore.get_file_dir(get_unique_identifier() ) ,
@@ -428,7 +462,12 @@ class DefaultVizualApi(VizualApi):
             resources=result_resources
         )
 
-    def move_column(self, identifier, column_id, position, datastore):
+    def move_column(self, 
+        identifier: str, 
+        column_id: int, 
+        position: int, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Move a column within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -477,7 +516,12 @@ class DefaultVizualApi(VizualApi):
         else:
             return VizualApiResult(dataset)
 
-    def move_row(self, identifier, row_index, position, datastore):
+    def move_row(self, 
+        identifier: str, 
+        row_index: str, 
+        position: int, 
+        datastore: Datastore
+    ):
         """Move a row within a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -522,7 +566,12 @@ class DefaultVizualApi(VizualApi):
         else:
             return VizualApiResult(dataset)
 
-    def rename_column(self, identifier, column_id, name, datastore):
+    def rename_column(self, 
+        identifier: str, 
+        column_id: int, 
+        name: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Rename column in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists, if the
@@ -574,7 +623,12 @@ class DefaultVizualApi(VizualApi):
         else:
             return VizualApiResult(dataset)
 
-    def sort_dataset(self, identifier, columns, reversed, datastore):
+    def sort_dataset(self, 
+        identifier: str, 
+        columns: List[int], 
+        reversed: List[bool], 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Sort the dataset with the given identifier according to the order by
         statement. The order by statement is a pair of lists. The first list
         contains the identifier of columns to sort on. The second list contains
@@ -617,10 +671,11 @@ class DefaultVizualApi(VizualApi):
             col_idx = dataset.get_index(col_id)
             # print("SORT: {}".format(col_idx))
             # print("\n".join(", ".join("'{}':{}".format(v, type(v)) for v in row.values) for row in rows))
+            reverse = reversed[l_idx]
             if col_idx is None:
                 raise ValueError('unknown column identifier \'' + str(col_id) + '\'')
-            reverse = reversed[l_idx]
-            rows.sort(key=lambda row: row.values[col_idx], reverse=reverse)
+            else:
+                rows.sort(key=lambda row: row.values[cast(int, col_idx)], reverse=reverse)
         # Store updated dataset to get new identifier
         ds = datastore.create_dataset(
             columns=dataset.columns,
@@ -629,7 +684,13 @@ class DefaultVizualApi(VizualApi):
         )
         return VizualApiResult(ds)
 
-    def update_cell(self, identifier, column_id, row_id, value, datastore):
+    def update_cell(self, 
+        identifier: str, 
+        column_id: int, 
+        row_id: str, 
+        value: str, 
+        datastore: Datastore
+    ) -> VizualApiResult:
         """Update a cell in a given dataset.
 
         Raises ValueError if no dataset with given identifier exists or if the
@@ -681,3 +742,18 @@ class DefaultVizualApi(VizualApi):
             properties={}
         )
         return VizualApiResult(ds)
+    
+    def materialize_dataset(self, 
+            identifier: str, 
+            datastore: Datastore
+        ) -> VizualApiResult:
+        """Create a materialized snapshot of the dataset for faster
+        execution.
+    
+        This is a no-op for the FS Backend
+        """
+        dataset = datastore.get_dataset(identifier)
+        if dataset is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        return VizualApiResult(dataset)
+        

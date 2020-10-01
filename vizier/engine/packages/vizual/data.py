@@ -28,6 +28,7 @@ from .base import VIZUAL_LOAD, VIZUAL_UNLOAD, VIZUAL_EMPTY_DS, VIZUAL_CLONE_DS
 
 # Package name
 PACKAGE_DATA = 'data'
+DATA_MATERIALIZE = 'materialize'
 
 DATA_COMMANDS = pckg.package_declaration(
     identifier=PACKAGE_DATA,
@@ -260,6 +261,19 @@ DATA_COMMANDS = pckg.package_declaration(
                 pckg.variable_format(pckg.PARA_DATASET),
                 pckg.constant_format('TO'),
                 pckg.variable_format(PARA_UNLOAD_FORMAT)
+            ],
+            suggest=False
+        ),
+        pckg.command_declaration(
+            identifier=DATA_MATERIALIZE,
+            name='Materialize Dataset',
+            parameters=[
+                pckg.para_dataset(0),
+            ],
+            format=[
+                pckg.constant_format('MATERIALIZE'),
+                pckg.constant_format('DATASET'),
+                pckg.variable_format(pckg.PARA_DATASET),
             ],
             suggest=False
         ),
