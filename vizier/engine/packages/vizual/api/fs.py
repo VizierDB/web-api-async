@@ -518,7 +518,7 @@ class DefaultVizualApi(VizualApi):
 
     def move_row(self, 
         identifier: str, 
-        row_index: str, 
+        row_id: str, 
         position: int, 
         datastore: Datastore
     ):

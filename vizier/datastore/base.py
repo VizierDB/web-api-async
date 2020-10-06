@@ -127,7 +127,7 @@ class Datastore(object):
         raise NotImplementedError
 
     @abstractmethod
-    def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
+    def get_dataset(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DatasetHandle]:
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.
 
