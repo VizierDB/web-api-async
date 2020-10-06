@@ -782,14 +782,14 @@ class VizualTaskProcessor(TaskProcessor):
         """
         # Get dataset name, row index, and target index.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-        row_index = args.get_value(cmd.PARA_ROW)
+        row_id = args.get_value(cmd.PARA_ROW)
         position = args.get_value(cmd.PARA_POSITION)
         #  Get dataset. Raises exception if the dataset does not exist.
         ds = context.get_dataset(ds_name)
         # Execute move row command.
         result = self.api.move_row(
             identifier=ds.identifier,
-            row_index=row_index,
+            row_id=row_id,
             position=position,
             datastore=context.datastore
         )
