@@ -279,6 +279,20 @@ def vistrailsQueryMimirJson(
     include_uncertainty = include_uncertainty, 
   )
 
+def getDataframe(
+      query: str, 
+      include_uncertainty: bool = True, 
+      views: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]: 
+    req_json = {
+      "query": query,
+      "includeUncertainty": include_uncertainty,
+    } 
+    if views is not None:
+      req_json['views'] = views
+    resp = readResponse(requests.post(_mimir_url + 'query/dataframe', json=req_json))
+    return resp
+
 def getTable(
       table: str, 
       columns: Optional[List[str]] = None, 

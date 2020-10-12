@@ -415,6 +415,33 @@ class VizierDBClient(object):
             existing_name = name.lower()
         )
         
+    def get_dataset_frame(self, name):
+        """Get dataset with given name as a pandas dataframe.
+
+        Raises ValueError if the specified dataset does not exist.
+
+        Parameters
+        ----------
+        name : string
+            Unique dataset name
+
+        Returns
+        -------
+        pandas.Dataframe
+        """
+        # Make sure to record access idependently of whether the dataset exists
+        # or not. Ignore read access to datasets that have been written.
+        if not name.lower() in self.write:
+            self.read.add(name.lower())
+        # Get identifier for the dataset with the given name. Will raise an
+        # exception if the name is unknown
+        identifier = self.get_dataset_identifier(name)
+        # Read dataset from datastore and return it.
+        dataset_frame = self.datastore.get_dataset_frame(identifier)
+        if dataset_frame is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        return dataset_frame
+        
     def dataset_from_s3(self, 
         bucket: str, 
         folder: str, 

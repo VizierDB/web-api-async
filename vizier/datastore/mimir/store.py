@@ -32,6 +32,7 @@ import vizier.mimir as mimir
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
 import shutil
+from pandas import DataFrame
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -145,6 +146,20 @@ class MimirDatastore(DefaultDatastore):
         schema, properties = mimir.getTableInfo(identifier, force_profiler = force_profiler)
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        import pandas as pd
+        import pyarrow as pa
+        from pyspark.rdd import _load_from_socket
+        from pyspark.sql.pandas.serializers import ArrowCollectSerializer
+        
+        portSecret = mimir.getDataframe(query = 'SELECT * FROM {}'.format(identifier))
+        results = list(_load_from_socket((portSecret['port'], portSecret['secret']), ArrowCollectSerializer()))
+        batches = results[:-1]
+        batch_order = results[-1]
+        ordered_batches = [batches[i] for i in batch_order]
+        table = pa.Table.from_batches(ordered_batches)
+        return table.to_pandas()
+      
     def get_caveats(self, 
             identifier: str, 
             column_id: Optional[int] = None, 

@@ -37,7 +37,7 @@ from vizier.datastore.fs.dataset import FileSystemDatasetHandle
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
-
+from pandas import DataFrame
 
 """Constants for data file names."""
 DATA_FILE = 'data.json'
@@ -254,6 +254,9 @@ class FileSystemDatastore(DefaultDatastore):
             data_file=os.path.join(dataset_dir, DATA_FILE),
             properties_filename=self.get_properties_filename(identifier)
         )
+        
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        return None
 
     def load_dataset(self, 
             f_handle: FileHandle, 
