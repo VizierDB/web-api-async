@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from bokeh.util.sampledata import DataFrame
 
 """Vizier DB - Database - Collection of objects and methods to maintain and
 manipulate different versions of datasets that are manipulated by data curation
@@ -26,7 +27,7 @@ import os
 from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor, DatasetHandle
-
+from pandas import DataFrame
 
 """Metadata file name for datasets in the the default datastore."""
 METADATA_FILE = 'annotations.json'
@@ -139,6 +140,22 @@ class Datastore(object):
         Returns
         -------
         vizier.datastore.base.DatasetHandle
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        """Get a pandas DataFrame for the dataset with given identifier from the data
+        store. Returns None if no dataset with the given identifier exists.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        pandas.DataFrame
         """
         raise NotImplementedError
 
