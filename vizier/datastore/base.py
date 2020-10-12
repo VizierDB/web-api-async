@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from bokeh.util.sampledata import DataFrame
 
 """Vizier DB - Database - Collection of objects and methods to maintain and
 manipulate different versions of datasets that are manipulated by data curation

@@ -147,7 +147,6 @@ class MimirDatastore(DefaultDatastore):
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
     def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
-        import pandas as pd
         import pyarrow as pa
         from pyspark.rdd import _load_from_socket
         from pyspark.sql.pandas.serializers import ArrowCollectSerializer

@@ -547,15 +547,15 @@ class DefaultVizualApi(VizualApi):
         if dataset is None:
             raise ValueError('unknown dataset \'' + identifier + '\'')
         # Make sure that row is within dataset bounds
-        if int(row_index) < 0 or int(row_index) >= dataset.row_count:
-            raise ValueError('invalid source row \'' + str(row_index) + '\'')
+        if int(row_id) < 0 or int(row_id) >= dataset.row_count:
+            raise ValueError('invalid source row \'' + str(row_id) + '\'')
         # Make sure that position is a valid row index in the new dataset
         if position < 0 or position > dataset.row_count:
             raise ValueError('invalid target position \'' + str(position) + '\'')
         # No need to do anything if source position equals target position
-        if row_index != position:
+        if row_id != position:
             rows = dataset.fetch_rows()
-            rows.insert(position, rows.pop(int(row_index)))
+            rows.insert(position, rows.pop(int(row_id)))
             # Store updated dataset to get new identifier
             ds = datastore.create_dataset(
                 columns=dataset.columns,
