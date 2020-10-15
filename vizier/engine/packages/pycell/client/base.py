@@ -509,7 +509,10 @@ class VizierDBClient(object):
         except ResponseError:
             return None
             pass
-        
+    
+    def pycell_open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        print("***File access may not be reproducible because filesystem resources are transient***")
+        return open(file, mode, buffering, encoding, errors, newline, closefd, opener)    
       
     def set_output_format(self, mime_type):
         self.output_format = mime_type

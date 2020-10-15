@@ -36,6 +36,7 @@ import vizier.engine.packages.pycell.base as cmd
 
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
+VARS_OPEN = 'open'
 
 SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', "False")
 SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
@@ -121,7 +122,7 @@ class PyCellTaskProcessor(TaskProcessor):
             project_id=context.project_id,
             output_format=args.get_value(cmd.OUTPUT_FORMAT, default_value = OUTPUT_TEXT)
         )
-        variables = {VARS_DBCLIENT: client}
+        variables = {VARS_DBCLIENT: client, VARS_OPEN: client.pycell_open}
         # Redirect standard output and standard error streams
         out = sys.stdout
         err = sys.stderr
@@ -246,6 +247,7 @@ class PyCellTaskProcessor(TaskProcessor):
             provenance=provenance
         )
         
+    
 class DotDict(dict):
     def __getattr__(self,val):
         return self[val]
