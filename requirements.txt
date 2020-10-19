@@ -15,4 +15,5 @@ bokeh==2.0.1
 shapely
 astor
 minio
-pyarrow
+pyarrowdata-science-types
+pyspark

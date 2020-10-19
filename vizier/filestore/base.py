@@ -17,7 +17,7 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
-from typing import Optional, IO, Dict, Any
+from typing import cast, Optional, IO, Dict, Any
 
 import gzip
 import mimetypes
@@ -127,7 +127,7 @@ class FileHandle(object):
         """
         # The open method depends on the compressed flag
         if self.compressed:
-            return gzip.open(self.filepath, 'rb')
+            return cast(IO, gzip.open(self.filepath, 'rb'))
         else:
             return open(self.filepath, 'r')
 

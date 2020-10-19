@@ -18,7 +18,7 @@
 a datastore from within a python script.
 """
 
-from typing import Callable, Tuple, Optional, Dict
+from typing import Callable, Tuple, Optional, Dict, Set, List, Any
 
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetColumn
@@ -41,13 +41,22 @@ from bokeh.models.layouts import LayoutDOM as BokehLayout # type: ignore[import]
 from matplotlib.figure import Figure as MatplotlibFigure # type: ignore[import]
 from matplotlib.axes import Axes as MatplotlibAxes # type: ignore[import]
 from vizier.engine.packages.pycell.plugins import vizier_bokeh_render, vizier_matplotlib_render
+from vizier.datastore.base import Datastore
+from vizier.datastore.dataset import DatasetDescriptor
         
     
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
     a unique name. The client is a wrapper around a given database state.
     """
-    def __init__(self, datastore, datasets, source, dataobjects, project_id, output_format = OUTPUT_TEXT):
+    def __init__(self, 
+            datastore: Datastore, 
+            datasets: Dict[str, DatasetDescriptor], 
+            source: str, 
+            dataobjects: Dict[str, ArtifactDescriptor], 
+            project_id: str, 
+            output_format: str = OUTPUT_TEXT
+        ):
         """Initialize the reference to the workflow context and the datastore.
 
         Parameters
@@ -71,11 +80,11 @@ class VizierDBClient(object):
         self.dataobjects = dict(dataobjects)
         self.source = source
         # Keep track of datasets that are read and written, deleted and renamed.
-        self.read = set()
-        self.write = set()
-        self.delete = set()
+        self.read: Set[str] = set()
+        self.write: Set[str] = set()
+        self.delete: Set[str] = set()
         self.output_format = output_format
-        self.stdout = list()
+        self.stdout: List[str] = list()
 
     def __getitem__(self, key):
         return self.get_dataset(key)
@@ -91,7 +100,7 @@ class VizierDBClient(object):
         self.read.add(name)
         return original_variable
     
-    def export_module(self, exp):
+    def export_module(self, exp: Any, return_type: Any = None):
         if inspect.isclass(exp):
             exp_name = exp.__name__
         elif callable(exp):
@@ -106,6 +115,19 @@ class VizierDBClient(object):
         analyzer = Analyzer(exp_name)
         analyzer.visit(src_ast)
         src = analyzer.get_Source()
+        if return_type is not None:
+            if type(return_type) is type:
+                if return_type is int:
+                    return_type = "pyspark_types.IntegerType()"
+                if return_type is str:
+                    return_type = "pyspark_types.StringType()"
+                if return_type is float:
+                    return_type = "pyspark_types.FloatType()"
+                if return_type is bool:
+                    return_type = "pyspark_types.BoolType()"
+            else:
+                return_type = str(return_type)
+            src = "@return_type({})\n{}".format(return_type, src)
         
         identifier = self.datastore.create_object(value=src,
                                                   obj_type=ARTIFACT_TYPE_PYTHON)
@@ -399,7 +421,8 @@ class VizierDBClient(object):
                 raise RuntimeError('invalid read name')
             dept_id = self.get_dataset_identifier(dept_name)
             dept_dataset = self.datastore.get_dataset(dept_id)
-            read_dep.append(dept_dataset.identifier)
+            if dept_dataset is not None:
+                read_dep.append(dept_dataset.identifier)
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,

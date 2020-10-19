@@ -103,23 +103,22 @@ def createLens(dataset, params, type, materialize, human_readable_name = None, p
     resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
     return resp
 
-def createView(dataset, 
+def createView(
+    datasets: Dict[str, str], 
     query: str, 
-    properties: Optional[Dict[str, Any]] = None
-  ):
+    properties: Optional[Dict[str, Any]] = None,
+    functions: Optional[Dict[str, str]] = None
+  ) -> Tuple[str, List[str], List[Dict[str, Any]], Dict[str, Any], List[str]]:
     properties = {} if properties is None else properties
-    depts = None
-    if isinstance(dataset, dict):
-        depts = dataset
-    else:
-        depts = {dataset:dataset}
     req_json = {
-      "input": depts,
+      "input": datasets,
       "query": query,
       "properties" : properties
     }
+    if functions is not None:
+      req_json["functions"] = functions
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'])
+    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'], resp['functions'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {

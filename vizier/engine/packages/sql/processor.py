@@ -16,11 +16,15 @@
 
 """Implementation of the task processor for the SQL package."""
 
+from typing import cast, Dict, Union
 from vizier.datastore.dataset import DatasetDescriptor
 from vizier.datastore.mimir.dataset import MimirDatasetHandle
+from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult, TaskProcessor
+from vizier.viztrail.command import ModuleArguments
 from vizier.viztrail.module.output import ModuleOutputs, DatasetOutput, TextOutput
 from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
 
 import vizier.engine.packages.sql.base as cmd
 import vizier.mimir as mimir
@@ -28,7 +32,11 @@ import vizier.mimir as mimir
 
 class SQLTaskProcessor(TaskProcessor):
     """Implementation of the task processor for the SQL package."""
-    def compute(self, command_id, arguments, context):
+    def compute(self, 
+            command_id: str, 
+            arguments: ModuleArguments, 
+            context: TaskContext
+        ) -> ExecResult:
         """Execute the SQL query that is contained in the given arguments.
 
         Parameters
@@ -52,7 +60,10 @@ class SQLTaskProcessor(TaskProcessor):
         else:
             raise ValueError('unknown sql command \'' + str(command_id) + '\'')
 
-    def execute_query(self, args, context):
+    def execute_query(self, 
+            args: ModuleArguments, 
+            context: TaskContext
+         ) -> ExecResult:
         """Execute a SQL query in the given context.
 
         Parameters
@@ -84,11 +95,17 @@ class SQLTaskProcessor(TaskProcessor):
         # Module outputs
         outputs = ModuleOutputs()
         is_success = True
+        functions = {
+            name: context.dataobjects[name].identifier
+            for name in context.dataobjects
+            if context.dataobjects[name].obj_type == ARTIFACT_TYPE_PYTHON
+        }
         try:
             # Create the view from the SQL source
-            view_name, dependencies, mimirSchema, properties = mimir.createView(
-                mimir_table_names,
-                source
+            view_name, dependencies, mimirSchema, properties, functionDeps = mimir.createView(
+                datasets = mimir_table_names,
+                query = source,
+                functions = dict(functions)
             )
             ds = MimirDatasetHandle.from_mimir_result(view_name, mimirSchema, properties, ds_name)
 
@@ -111,10 +128,22 @@ class SQLTaskProcessor(TaskProcessor):
                 ds_output['name'] = ds_name
                 outputs.stdout.append(DatasetOutput(ds_output))
 
-            dependencies = dict(
-                (dep_name.lower(), context.datasets.get(dep_name.lower(), None))
-                for dep_name in dependencies
-            )
+            dependenciesDict: Dict[str, str] = {
+                dep_name.lower(): get_artifact_id(dep)
+                for dep_name, dep in [
+                    (dep_name, context.datasets.get(dep_name.lower(), None))
+                    for dep_name in dependencies
+                ]
+                if dep is not None
+            }
+            functionDepDict: Dict[str, str] = {
+                dep_name.lower(): get_artifact_id(dep)
+                for dep_name, dep in [
+                    (dep_name, context.dataobjects.get(dep_name.lower(), None))
+                    for dep_name in dependencies
+                ]
+                if dep is not None
+            }
             # print("---- SQL DATASETS ----\n{}\n{}".format(context.datasets, dependencies))
 
             provenance = ModuleProvenance(
@@ -125,7 +154,7 @@ class SQLTaskProcessor(TaskProcessor):
                         columns=ds.columns
                     )
                 },
-                read=dependencies
+                read={ **dependenciesDict, **functionDepDict }
             )
         except Exception as ex:
             provenance = ModuleProvenance()
@@ -137,3 +166,11 @@ class SQLTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
+
+def get_artifact_id(artifact: Union[str, ArtifactDescriptor, None]) -> str:
+    assert(artifact is not None)
+    if type(artifact) is str:
+        return cast(str, artifact)
+    elif type(artifact) is ArtifactDescriptor:
+        return cast(ArtifactDescriptor, artifact).identifier
+    assert(False)

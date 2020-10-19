@@ -25,7 +25,7 @@ import csv
 import gzip
 import json
 from io import TextIOWrapper
-from typing import List, Optional
+from typing import cast, List, Optional, IO
 
 from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.base import DatasetColumn
@@ -311,7 +311,7 @@ class DefaultJsonDatasetReader(DatasetReader):
         """
         # Open file handle
         if self.compressed:
-            fh = gzip.open(self.filename, 'wb')
+            fh = cast(IO, gzip.open(self.filename, 'wb'))
         else:
             fh = open(self.filename, 'w')
 

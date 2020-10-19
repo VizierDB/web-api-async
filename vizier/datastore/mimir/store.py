@@ -66,10 +66,10 @@ class MimirDatastore(DefaultDatastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {},
-            human_readable_name: str = "Untitled Dataset", 
-            backend_options: List[Tuple[str, str]] = [], 
-            dependencies: List[str] = []
+            properties: Dict[str, Any] = None,
+            human_readable_name: str = "Untitled Dataset",
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> MimirDatasetHandle:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -89,6 +89,9 @@ class MimirDatastore(DefaultDatastore):
         vizier.datastore.dataset.DatasetDescriptor
         """
         # Get unique identifier for new dataset
+        properties = {} if properties is None else properties
+        backend_options = [] if backend_options is None else backend_options
+        dependencies = [] if dependencies is None else dependencies
         identifier = 'DS_' + get_unique_identifier()
         columns = [
             col if isinstance(col, MimirDatasetColumn) else MimirDatasetColumn(
@@ -147,9 +150,9 @@ class MimirDatastore(DefaultDatastore):
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
     def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
-        import pyarrow as pa
-        from pyspark.rdd import _load_from_socket
-        from pyspark.sql.pandas.serializers import ArrowCollectSerializer
+        import pyarrow as pa #type: ignore
+        from pyspark.rdd import _load_from_socket #type: ignore
+        from pyspark.sql.pandas.serializers import ArrowCollectSerializer #type: ignore
         
         portSecret = mimir.getDataframe(query = 'SELECT * FROM {}'.format(identifier))
         results = list(_load_from_socket((portSecret['port'], portSecret['secret']), ArrowCollectSerializer()))

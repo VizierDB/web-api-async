@@ -64,10 +64,10 @@ class FileSystemDatastore(DefaultDatastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {}, 
+            properties: Optional[Dict[str, Any]] = None, 
             human_readable_name: str = "Untitled Dataset", 
-            backend_options: Optional[List[Dict[str, str]]] = None, 
-            dependencies: List[str] = []
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -95,6 +95,8 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
+        properties = {} if properties is None else properties
+        dependencies = [] if dependencies is None else dependencies
         identifiers = set(
             int(row.identifier)
             for row in rows 

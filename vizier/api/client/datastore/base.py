@@ -19,7 +19,7 @@ datastore is for example used by python cell processors that do not have access
 to a shared file system, e.g., processors that are sandboxed in containers.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import json
 import requests
 
@@ -52,7 +52,10 @@ class DatastoreClient(Datastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Optional[Dict[str, Any]] =None
+            properties: Optional[Dict[str, Any]] = None,
+            human_readable_name: str = "Untitled Dataset", 
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the project datastore using the API. Expects
         a list of columns and the rows for the dataset. All columns and rows

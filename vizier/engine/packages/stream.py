@@ -15,13 +15,13 @@
 # limitations under the License.
 
 """Class to redirect output streams during script execution."""
-
+from typing import List, Tuple
 
 class OutputStream(object):
     """Output stream for standard output and standard error streams when
     executing scripts in a notebook cell.
     """
-    def __init__(self, tag, stream):
+    def __init__(self, tag: str, stream: List[Tuple[str,str]]):
         self.closed = False
         self._tag = tag
         self._stream = stream
