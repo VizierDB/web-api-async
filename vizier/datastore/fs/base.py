@@ -38,7 +38,7 @@ from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
 from pandas import DataFrame
-
+import datamart_profiler
 """Constants for data file names."""
 DATA_FILE = 'data.json'
 DESCRIPTOR_FILE = 'descriptor.json'
@@ -250,6 +250,404 @@ class FileSystemDatastore(DefaultDatastore):
         dataset_dir = self.get_dataset_dir(identifier)
         if not os.path.isdir(dataset_dir):
             return None
+        if force_profiler:
+            # Get dataset. Raise exception if dataset is unknown
+            dataset = FileSystemDatasetHandle.from_file(
+                descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                properties_filename=self.get_properties_filename(identifier)
+            )
+            properties_local = {
+      "is_profiled": [
+        "mimir"
+      ],
+      "count": 16,
+      "columns": [
+        {
+          "column": {
+            "id": 0,
+            "name": "id",
+            "type": "string"
+          },
+          "count": 16,
+          "distinctValueCount": 15,
+          "values": [
+            {
+              "name": "place10",
+              "count": 1
+            },
+            {
+              "name": "place05",
+              "count": 1
+            },
+            {
+              "name": "place00",
+              "count": 1
+            },
+            {
+              "name": "place08",
+              "count": 1
+            },
+            {
+              "name": "place13",
+              "count": 1
+            },
+            {
+              "name": "place04",
+              "count": 1
+            },
+            {
+              "name": "place01",
+              "count": 1
+            },
+            {
+              "name": "place14",
+              "count": 1
+            },
+            {
+              "name": "place03",
+              "count": 1
+            },
+            {
+              "name": "place07",
+              "count": 1
+            },
+            {
+              "name": "place12",
+              "count": 1
+            },
+            {
+              "name": "place15",
+              "count": 1
+            },
+            {
+              "name": "place02",
+              "count": 1
+            },
+            {
+              "name": "place06",
+              "count": 1
+            },
+            {
+              "name": "place11",
+              "count": 1
+            },
+            {
+              "name": "place09",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "count": 16,
+          "mean": 40.72944259643555,
+          "min": 40.72294616699219,
+          "max": 40.735107421875,
+          "values": [
+            {
+              "name": "40.72294616699219",
+              "count": 2
+            },
+            {
+              "name": "40.72416229248047",
+              "count": 0
+            },
+            {
+              "name": "40.72537841796875",
+              "count": 1
+            },
+            {
+              "name": "40.72659454345703",
+              "count": 2
+            },
+            {
+              "name": "40.72781066894531",
+              "count": 4
+            },
+            {
+              "name": "40.729026794433594",
+              "count": 1
+            },
+            {
+              "name": "40.73024291992188",
+              "count": 1
+            },
+            {
+              "name": "40.731459045410155",
+              "count": 1
+            },
+            {
+              "name": "40.73267517089844",
+              "count": 1
+            },
+            {
+              "name": "40.733891296386716",
+              "count": 3
+            }
+          ],
+          "column": {
+            "id": 1,
+            "name": "lt_coord",
+            "type": "float"
+          },
+          "distinctValueCount": 16,
+          "stdDev": 0.003728920826688409,
+          "sum": 651.6710815429688
+        },
+        {
+          "count": 16,
+          "mean": -73.99964141845703,
+          "min": -74.0058364868164,
+          "max": -73.99099731445312,
+          "values": [
+            {
+              "name": "-74.0058364868164",
+              "count": 2
+            },
+            {
+              "name": "-74.00435256958008",
+              "count": 0
+            },
+            {
+              "name": "-74.00286865234375",
+              "count": 5
+            },
+            {
+              "name": "-74.00138473510742",
+              "count": 2
+            },
+            {
+              "name": "-73.9999008178711",
+              "count": 2
+            },
+            {
+              "name": "-73.99841690063477",
+              "count": 1
+            },
+            {
+              "name": "-73.99693298339844",
+              "count": 2
+            },
+            {
+              "name": "-73.99544906616211",
+              "count": 0
+            },
+            {
+              "name": "-73.99396514892578",
+              "count": 1
+            },
+            {
+              "name": "-73.99248123168945",
+              "count": 1
+            }
+          ],
+          "column": {
+            "id": 2,
+            "name": "lg_coord",
+            "type": "float"
+          },
+          "distinctValueCount": 15,
+          "stdDev": 0.003987153060734272,
+          "sum": -1183.9942626953125
+        },
+        {
+          "count": 16,
+          "mean": 50.502777099609375,
+          "min": 12.730146408081055,
+          "max": 85.77256774902344,
+          "values": [
+            {
+              "name": "12.730146408081055",
+              "count": 1
+            },
+            {
+              "name": "20.03438835144043",
+              "count": 1
+            },
+            {
+              "name": "27.338630294799806",
+              "count": 0
+            },
+            {
+              "name": "34.64287223815918",
+              "count": 3
+            },
+            {
+              "name": "41.94711418151856",
+              "count": 4
+            },
+            {
+              "name": "49.25135612487793",
+              "count": 2
+            },
+            {
+              "name": "56.5555980682373",
+              "count": 1
+            },
+            {
+              "name": "63.859840011596674",
+              "count": 2
+            },
+            {
+              "name": "71.16408195495606",
+              "count": 0
+            },
+            {
+              "name": "78.46832389831543",
+              "count": 2
+            }
+          ],
+          "column": {
+            "id": 3,
+            "name": "height",
+            "type": "float"
+          },
+          "distinctValueCount": 16,
+          "stdDev": 19.368974685668945,
+          "sum": 808.04443359375
+        },
+        {
+          "count": 16,
+          "mean": 7.875,
+          "min": 1,
+          "max": 12,
+          "values": [
+            {
+              "name": "1.0",
+              "count": 2
+            },
+            {
+              "name": "2.1",
+              "count": 0
+            },
+            {
+              "name": "3.2",
+              "count": 1
+            },
+            {
+              "name": "4.3",
+              "count": 1
+            },
+            {
+              "name": "5.4",
+              "count": 2
+            },
+            {
+              "name": "6.5",
+              "count": 1
+            },
+            {
+              "name": "7.6",
+              "count": 1
+            },
+            {
+              "name": "8.7",
+              "count": 1
+            },
+            {
+              "name": "9.8",
+              "count": 2
+            },
+            {
+              "name": "10.9",
+              "count": 5
+            }
+          ],
+          "column": {
+            "id": 4,
+            "name": "stmo",
+            "type": "short"
+          },
+          "distinctValueCount": 11,
+          "stdDev": 3.5939764976501465,
+          "sum": 126
+        },
+        {
+          "column": {
+            "id": 5,
+            "name": "country",
+            "type": "string"
+          },
+          "count": 16,
+          "distinctValueCount": 3,
+          "values": [
+            {
+              "name": "peru, brasil",
+              "count": 11
+            },
+            {
+              "name": "hawaii",
+              "count": 1
+            },
+            {
+              "name": "usa",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    }
+            columns_name = [col.name for col in dataset.columns]
+            rows = dataset.fetch_rows()
+            rows_values = [el.values for el in rows]
+            data_frame = DataFrame(rows_values, columns=columns_name)
+            print(data_frame)
+            dataset = FileSystemDatasetHandle(
+                identifier=identifier,
+                columns=dataset.columns,
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                row_count=dataset.row_count,
+                max_row_id=dataset.max_row_id,
+                properties=properties_local
+            )
+            if dataset is None:
+                raise ValueError('unknown dataset \'' + identifier + '\'')
+            # Fetch the full set of rows
+            print('dataset location')
+            print(os.path.join(dataset_dir, DATA_FILE))
+            # print(dataset.columns)
+            # # Sort multiple times, ones for each of the sort columns (in reverse
+            # # order of appearance in the order by clause)
+            # for i in range(len(columns)):
+            #     l_idx = len(columns) - (i + 1)
+            #     col_id = columns[l_idx]
+            #     col_idx = dataset.get_index(col_id)
+            #     # print("SORT: {}".format(col_idx))
+            #     # print("\n".join(", ".join("'{}':{}".format(v, type(v)) for v in row.values) for row in rows))
+            #     reverse = reversed[l_idx]
+            #     if col_idx is None:
+            #         raise ValueError('unknown column identifier \'' + str(col_id) + '\'')
+            #     else:
+            #         rows.sort(key=lambda row: row.values[cast(int, col_idx)], reverse=reverse)
+            # # Store updated dataset to get new identifier
+            # ds = datastore.create_dataset(
+            #     columns=dataset.columns,
+            #     rows=dataset.rows,
+            #     properties={}
+            # )
+
+
+
+            # dataset_dir = self.get_dataset_dir(identifier)
+            # # os.makedirs(dataset_dir)
+            # # Write rows to data file
+            # data_file = os.path.join(dataset_dir, DATA_FILE)
+            # DefaultJsonDatasetReader(data_file).write(rows)
+            # # Create dataset an write dataset file
+            # dataset = FileSystemDatasetHandle(
+            #     identifier=identifier,
+            #     columns=columns,
+            #     data_file=data_file,
+            #     row_count=len(rows),
+            #     max_row_id=max_row_id,
+            #     properties=properties
+            # )
+            # dataset.to_file(
+            #     descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
+            # )
+            # Write metadata file if annotations are given
+            if force_profiler:
+                dataset.write_properties_to_file(self.get_properties_filename(identifier))
         # Load the dataset handle
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
