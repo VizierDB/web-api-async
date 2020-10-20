@@ -618,12 +618,13 @@ class FileSystemDatastore(DefaultDatastore):
                         data_type=col_type
                     )
                 )
+
             dataset = FileSystemDatasetHandle(
                 identifier=identifier,
                 columns=columns,
                 data_file=os.path.join(dataset_dir, DATA_FILE),
                 row_count=dataset.row_count,
-                max_row_id=dataset.max_row_id,
+                max_row_id=dataset._max_row_id,
                 properties=properties_local
             )
             dataset.to_file(
@@ -632,50 +633,7 @@ class FileSystemDatastore(DefaultDatastore):
             # Write metadata file if annotations are given
             if properties_local != {}:
                 dataset.write_properties_to_file(self.get_properties_filename(identifier))
-            # Fetch the full set of rows
-            print('dataset location')
-            print(os.path.join(dataset_dir, DATA_FILE))
-            # print(dataset.columns)
-            # # Sort multiple times, ones for each of the sort columns (in reverse
-            # # order of appearance in the order by clause)
-            # for i in range(len(columns)):
-            #     l_idx = len(columns) - (i + 1)
-            #     col_id = columns[l_idx]
-            #     col_idx = dataset.get_index(col_id)
-            #     # print("SORT: {}".format(col_idx))
-            #     # print("\n".join(", ".join("'{}':{}".format(v, type(v)) for v in row.values) for row in rows))
-            #     reverse = reversed[l_idx]
-            #     if col_idx is None:
-            #         raise ValueError('unknown column identifier \'' + str(col_id) + '\'')
-            #     else:
-            #         rows.sort(key=lambda row: row.values[cast(int, col_idx)], reverse=reverse)
-            # # Store updated dataset to get new identifier
-            # ds = datastore.create_dataset(
-            #     columns=dataset.columns,
-            #     rows=dataset.rows,
-            #     properties={}
-            # )
 
-
-
-            # dataset_dir = self.get_dataset_dir(identifier)
-            # # os.makedirs(dataset_dir)
-            # # Write rows to data file
-            # data_file = os.path.join(dataset_dir, DATA_FILE)
-            # DefaultJsonDatasetReader(data_file).write(rows)
-            # # Create dataset an write dataset file
-            # dataset = FileSystemDatasetHandle(
-            #     identifier=identifier,
-            #     columns=columns,
-            #     data_file=data_file,
-            #     row_count=len(rows),
-            #     max_row_id=max_row_id,
-            #     properties=properties
-            # )
-            # dataset.to_file(
-            #     descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
-            # )
-            
         # Load the dataset handle
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
