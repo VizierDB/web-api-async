@@ -21,7 +21,8 @@ from typing import Optional, TYPE_CHECKING, Dict, Any, List
 if TYPE_CHECKING:
     from vizier.engine.packages.pycell.client.base import VizierDBClient
 
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle
+from vizier.datastore.base import get_column_index
 from bokeh.models.sources import ColumnDataSource # type: ignore[import]
 
 
