@@ -30,6 +30,9 @@ PROPERTIES_APIDOCURL = 'apiDocUrl'
 PAGE_LIMIT = 'limit'
 PAGE_OFFSET = 'offset'
 
+"""Profiling."""
+FORCE_PROFILER = 'profile'
+
 
 class UrlFactory(object):
     """Factory to create urls for all routes that the webservice supports."""
@@ -447,7 +450,7 @@ class UrlFactory(object):
         """
         return self.get_dataset(project_id, dataset_id) + '/csv'
 
-    def get_dataset(self, project_id: str, dataset_id: str) -> str:
+    def get_dataset(self, project_id: str, dataset_id: str, force_profiler: Optional[bool] = None) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -461,7 +464,10 @@ class UrlFactory(object):
         -------
         string
         """
-        return self.get_project(project_id) + '/datasets/' + dataset_id
+        url = self.get_project(project_id) + '/datasets/' + dataset_id
+        if force_profiler is not None and force_profiler:
+            url += "?{}=true".format(FORCE_PROFILER)
+        return url
 
     def get_dataset_caveats(self, project_id: str, dataset_id: str, column_id: Optional[int] = None, row_id: Optional[str]=None) -> str:
         """Url to retrieve dataset annotations.

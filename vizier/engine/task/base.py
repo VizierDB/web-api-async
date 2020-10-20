@@ -19,14 +19,14 @@ in which task are executed. The interface for task execution engines (i.e.,
 processors) is defined in the processor module.
 """
 
-from typing import Optional, Dict, Any
+from typing import cast, Optional, Dict, Any
 
 
 from vizier.engine.controller import WorkflowController
 from vizier.datastore.base import Datastore
 from vizier.filestore.base import Filestore
 from vizier.datastore.artifact import ArtifactDescriptor
-from vizier.datastore.dataset import DatasetHandle
+from vizier.datastore.dataset import DatasetHandle, DatasetDescriptor
 
 class TaskContext(object):
     """The task context contains references to the datastore and filestore that
@@ -72,9 +72,17 @@ class TaskContext(object):
         self.project_id = project_id
         self.datastore = datastore
         self.filestore = filestore
-        self.datasets = { name: artifacts[name] for name in artifacts if artifacts[name].is_dataset }
+        self.datasets: Dict[str, DatasetDescriptor] = { 
+            name: cast(DatasetDescriptor, artifacts[name]) 
+            for name in artifacts 
+            if artifacts[name].is_dataset 
+        }
         self.resources = resources
-        self.dataobjects = { name: artifacts[name] for name in artifacts if not artifacts[name].is_dataset }
+        self.dataobjects: Dict[str, ArtifactDescriptor] = { 
+            name: artifacts[name] 
+            for name in artifacts 
+            if not artifacts[name].is_dataset 
+        }
 
     def get_dataset(self, 
             name: str

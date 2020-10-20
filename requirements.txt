@@ -17,3 +17,5 @@ astor
 minio
 histore==0.1.1
 datamart-profiler
+pyarrowdata-science-types
+pyspark

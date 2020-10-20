@@ -24,7 +24,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from vizier.core.util import get_unique_identifier
 from vizier.filestore.base import FileHandle
 from vizier.datastore.base import DefaultDatastore
-from vizier.datastore.dataset import DatasetRow, DatasetColumn
+from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.mimir.dataset import MimirDatasetColumn, MimirDatasetHandle
 
@@ -32,6 +32,7 @@ import vizier.mimir as mimir
 import vizier.datastore.mimir.base as base
 from vizier.filestore.fs.base import DATA_FILENAME, write_metadata_file
 import shutil
+from pandas import DataFrame
             
 """Name of file storing dataset (schema) information."""
 DATASET_FILE = 'dataset.json'
@@ -65,10 +66,10 @@ class MimirDatastore(DefaultDatastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {},
-            human_readable_name: str = "Untitled Dataset", 
-            backend_options: List[Tuple[str, str]] = [], 
-            dependencies: List[str] = []
+            properties: Dict[str, Any] = None,
+            human_readable_name: str = "Untitled Dataset",
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> MimirDatasetHandle:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -88,6 +89,9 @@ class MimirDatastore(DefaultDatastore):
         vizier.datastore.dataset.DatasetDescriptor
         """
         # Get unique identifier for new dataset
+        properties = {} if properties is None else properties
+        backend_options = [] if backend_options is None else backend_options
+        dependencies = [] if dependencies is None else dependencies
         identifier = 'DS_' + get_unique_identifier()
         columns = [
             col if isinstance(col, MimirDatasetColumn) else MimirDatasetColumn(
@@ -124,7 +128,11 @@ class MimirDatastore(DefaultDatastore):
             name = human_readable_name
         )
 
-    def get_dataset(self, identifier: str, name: Optional[str] = None) -> MimirDatasetHandle:
+    def get_dataset(self, 
+            identifier: str, 
+            force_profiler: Optional[bool] = None, 
+            name: Optional[str] = None
+        ) -> MimirDatasetHandle:
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -138,9 +146,22 @@ class MimirDatastore(DefaultDatastore):
         vizier.datastore.mimir.dataset.MimirDatasetHandle
         """
         # Return None if the dataset file does not exist
-        schema, properties = mimir.getTableInfo(identifier)
+        schema, properties = mimir.getTableInfo(identifier, force_profiler = force_profiler)
         return MimirDatasetHandle.from_mimir_result(identifier, schema, properties, name)
 
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        import pyarrow as pa #type: ignore
+        from pyspark.rdd import _load_from_socket #type: ignore
+        from pyspark.sql.pandas.serializers import ArrowCollectSerializer #type: ignore
+        
+        portSecret = mimir.getDataframe(query = 'SELECT * FROM {}'.format(identifier))
+        results = list(_load_from_socket((portSecret['port'], portSecret['secret']), ArrowCollectSerializer()))
+        batches = results[:-1]
+        batch_order = results[-1]
+        ordered_batches = [batches[i] for i in batch_order]
+        table = pa.Table.from_batches(ordered_batches)
+        return table.to_pandas()
+      
     def get_caveats(self, 
             identifier: str, 
             column_id: Optional[int] = None, 
@@ -327,7 +348,13 @@ class MimirDatastore(DefaultDatastore):
         return MimirDatasetHandle.from_mimir_result(table_name, mimirSchema, properties, human_readable_name)
 
 
-    def unload_dataset(self, filepath, dataset_name, format='csv', options=[], filename=""):
+    def unload_dataset(self, 
+            filepath: str, 
+            dataset_name: str, 
+            format: str = 'csv', 
+            options: List[Dict[str, Any]]=[], 
+            filename=""
+        ):
         """Export a dataset from a given name.
         Raises ValueError if the given dataset could not be exported.
         Parameters
@@ -372,3 +399,19 @@ class MimirDatastore(DefaultDatastore):
             write_metadata_file(file_dir,f_handle)
         return file_handles
         
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
+        """
+        views = dict(
+            (view, datasets[view].identifier)
+            for view in datasets
+        )
+        result = mimir.sqlQuery(
+                        query = query, 
+                        views = views
+                )
+        return result

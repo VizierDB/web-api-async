@@ -21,12 +21,15 @@ Viztrails are collections of workflows (branches). A viztrail maintains not
 only the different workflows but also the history for each of them.
 """
 
-from typing import Optional, List
+from typing import cast, Optional, List, Dict
 from datetime import datetime
+
 
 from vizier.core.util import init_value
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.module.base import ModuleState, MODULE_SUCCESS, ModuleHandle
+from vizier.datastore.dataset import ArtifactDescriptor, DatasetDescriptor
+
 
 """Workflow modification action identifier."""
 ACTION_APPEND = 'apd'
@@ -165,3 +168,34 @@ class WorkflowHandle(object):
             return self.modules[-1].is_active
         else:
             return False
+
+    @property
+    def tail_artifacts(self) -> Dict[str, ArtifactDescriptor]:
+        """Retrieve a list of dataset mappings at the tail of this
+        workflow.  
+
+        Returns a map from dataset name to dataset identifier.
+        """
+        datasets:Dict[str, ArtifactDescriptor] = dict()
+        for m in self.modules:
+            if m.provenance.write is not None:
+                for artifact_name in m.provenance.write:
+                    artifact = m.provenance.write[artifact_name]
+                    datasets[artifact_name] = artifact
+        return datasets
+
+    @property
+    def tail_datasets(self) -> Dict[str, DatasetDescriptor]:
+        """Retrieve a list of dataset mappings at the tail of this
+        workflow.  
+
+        Returns a map from dataset name to dataset identifier.
+        """
+        datasets:Dict[str, DatasetDescriptor] = dict()
+        for m in self.modules:
+            if m.provenance.write is not None:
+                for artifact_name in m.provenance.write:
+                    artifact = m.provenance.write[artifact_name]
+                    if artifact.is_dataset:
+                        datasets[artifact_name] = cast(DatasetDescriptor, artifact)
+        return datasets

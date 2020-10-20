@@ -20,8 +20,8 @@ subfolder of a given base directory.
 """
 
 import csv
+import json
 import os
-import pandas as pd
 import shutil
 import tempfile
 import urllib.request
@@ -38,10 +38,9 @@ from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
-
 import vizier.datastore.profiling.datamart as datamart
 import vizier.datastore.util as util
-
+from pandas import DataFrame
 
 """Constants for data file names."""
 DATA_FILE = 'data.json'
@@ -68,10 +67,10 @@ class FileSystemDatastore(DefaultDatastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {}, 
+            properties: Optional[Dict[str, Any]] = None, 
             human_readable_name: str = "Untitled Dataset", 
-            backend_options: Optional[List[Dict[str, str]]] = None, 
-            dependencies: List[str] = []
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -105,6 +104,8 @@ class FileSystemDatastore(DefaultDatastore):
         # Validate (i) that each column has a unique identifier, (ii) each row
         # has a unique identifier, and (iii) that every row has exactly one
         # value per column.
+        properties = {} if properties is None else properties
+        dependencies = [] if dependencies is None else dependencies
         identifiers = set(
             int(row.identifier)
             for row in rows 
@@ -240,7 +241,7 @@ class FileSystemDatastore(DefaultDatastore):
                     shutil.rmtree(temp_dir)
                 raise ex
 
-    def get_dataset(self, identifier):
+    def get_dataset(self, identifier, force_profiler: Optional[bool] = None):
         """Read a full dataset from the data store. Returns None if no dataset
         with the given identifier exists.
 
@@ -258,12 +259,432 @@ class FileSystemDatastore(DefaultDatastore):
         dataset_dir = self.get_dataset_dir(identifier)
         if not os.path.isdir(dataset_dir):
             return None
+        
+        if force_profiler:
+            # Get dataset. Raise exception if dataset is unknown
+            dataset = FileSystemDatasetHandle.from_file(
+                descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                properties_filename=self.get_properties_filename(identifier)
+            )
+            if dataset is None:
+                raise ValueError('unknown dataset \'' + identifier + '\'')
+
+            properties_local = {
+      "is_profiled": [
+        "mimir"
+      ],
+      "count": 16,
+      "columns": [
+        {
+          "column": {
+            "id": 0,
+            "name": "id",
+            "type": "string"
+          },
+          "count": 16,
+          "distinctValueCount": 15,
+          "values": [
+            {
+              "name": "place10",
+              "count": 1
+            },
+            {
+              "name": "place05",
+              "count": 1
+            },
+            {
+              "name": "place00",
+              "count": 1
+            },
+            {
+              "name": "place08",
+              "count": 1
+            },
+            {
+              "name": "place13",
+              "count": 1
+            },
+            {
+              "name": "place04",
+              "count": 1
+            },
+            {
+              "name": "place01",
+              "count": 1
+            },
+            {
+              "name": "place14",
+              "count": 1
+            },
+            {
+              "name": "place03",
+              "count": 1
+            },
+            {
+              "name": "place07",
+              "count": 1
+            },
+            {
+              "name": "place12",
+              "count": 1
+            },
+            {
+              "name": "place15",
+              "count": 1
+            },
+            {
+              "name": "place02",
+              "count": 1
+            },
+            {
+              "name": "place06",
+              "count": 1
+            },
+            {
+              "name": "place11",
+              "count": 1
+            },
+            {
+              "name": "place09",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "count": 16,
+          "mean": 40.72944259643555,
+          "min": 40.72294616699219,
+          "max": 40.735107421875,
+          "values": [
+            {
+              "name": "40.72294616699219",
+              "count": 2
+            },
+            {
+              "name": "40.72416229248047",
+              "count": 0
+            },
+            {
+              "name": "40.72537841796875",
+              "count": 1
+            },
+            {
+              "name": "40.72659454345703",
+              "count": 2
+            },
+            {
+              "name": "40.72781066894531",
+              "count": 4
+            },
+            {
+              "name": "40.729026794433594",
+              "count": 1
+            },
+            {
+              "name": "40.73024291992188",
+              "count": 1
+            },
+            {
+              "name": "40.731459045410155",
+              "count": 1
+            },
+            {
+              "name": "40.73267517089844",
+              "count": 1
+            },
+            {
+              "name": "40.733891296386716",
+              "count": 3
+            }
+          ],
+          "column": {
+            "id": 1,
+            "name": "lt_coord",
+            "type": "float"
+          },
+          "distinctValueCount": 16,
+          "stdDev": 0.003728920826688409,
+          "sum": 651.6710815429688
+        },
+        {
+          "count": 16,
+          "mean": -73.99964141845703,
+          "min": -74.0058364868164,
+          "max": -73.99099731445312,
+          "values": [
+            {
+              "name": "-74.0058364868164",
+              "count": 2
+            },
+            {
+              "name": "-74.00435256958008",
+              "count": 0
+            },
+            {
+              "name": "-74.00286865234375",
+              "count": 5
+            },
+            {
+              "name": "-74.00138473510742",
+              "count": 2
+            },
+            {
+              "name": "-73.9999008178711",
+              "count": 2
+            },
+            {
+              "name": "-73.99841690063477",
+              "count": 1
+            },
+            {
+              "name": "-73.99693298339844",
+              "count": 2
+            },
+            {
+              "name": "-73.99544906616211",
+              "count": 0
+            },
+            {
+              "name": "-73.99396514892578",
+              "count": 1
+            },
+            {
+              "name": "-73.99248123168945",
+              "count": 1
+            }
+          ],
+          "column": {
+            "id": 2,
+            "name": "lg_coord",
+            "type": "float"
+          },
+          "distinctValueCount": 15,
+          "stdDev": 0.003987153060734272,
+          "sum": -1183.9942626953125
+        },
+        {
+          "count": 16,
+          "mean": 50.502777099609375,
+          "min": 12.730146408081055,
+          "max": 85.77256774902344,
+          "values": [
+            {
+              "name": "12.730146408081055",
+              "count": 1
+            },
+            {
+              "name": "20.03438835144043",
+              "count": 1
+            },
+            {
+              "name": "27.338630294799806",
+              "count": 0
+            },
+            {
+              "name": "34.64287223815918",
+              "count": 3
+            },
+            {
+              "name": "41.94711418151856",
+              "count": 4
+            },
+            {
+              "name": "49.25135612487793",
+              "count": 2
+            },
+            {
+              "name": "56.5555980682373",
+              "count": 1
+            },
+            {
+              "name": "63.859840011596674",
+              "count": 2
+            },
+            {
+              "name": "71.16408195495606",
+              "count": 0
+            },
+            {
+              "name": "78.46832389831543",
+              "count": 2
+            }
+          ],
+          "column": {
+            "id": 3,
+            "name": "height",
+            "type": "float"
+          },
+          "distinctValueCount": 16,
+          "stdDev": 19.368974685668945,
+          "sum": 808.04443359375
+        },
+        {
+          "count": 16,
+          "mean": 7.875,
+          "min": 1,
+          "max": 12,
+          "values": [
+            {
+              "name": "1.0",
+              "count": 2
+            },
+            {
+              "name": "2.1",
+              "count": 0
+            },
+            {
+              "name": "3.2",
+              "count": 1
+            },
+            {
+              "name": "4.3",
+              "count": 1
+            },
+            {
+              "name": "5.4",
+              "count": 2
+            },
+            {
+              "name": "6.5",
+              "count": 1
+            },
+            {
+              "name": "7.6",
+              "count": 1
+            },
+            {
+              "name": "8.7",
+              "count": 1
+            },
+            {
+              "name": "9.8",
+              "count": 2
+            },
+            {
+              "name": "10.9",
+              "count": 5
+            }
+          ],
+          "column": {
+            "id": 4,
+            "name": "stmo",
+            "type": "short"
+          },
+          "distinctValueCount": 11,
+          "stdDev": 3.5939764976501465,
+          "sum": 126
+        },
+        {
+          "column": {
+            "id": 5,
+            "name": "country",
+            "type": "string"
+          },
+          "count": 16,
+          "distinctValueCount": 3,
+          "values": [
+            {
+              "name": "peru, brasil",
+              "count": 11
+            },
+            {
+              "name": "hawaii",
+              "count": 1
+            },
+            {
+              "name": "usa",
+              "count": 4
+            }
+          ]
+        }
+      ]
+    }
+            column_names = [col.name for col in dataset.columns]
+            column_ids = [col.identifier for col in dataset.columns]
+            rows = dataset.fetch_rows()
+            rows_values = [el.values for el in rows]
+            df = DataFrame(rows_values, columns=column_names)
+            print(df)
+            metadata = datamart.run(df)
+            column_types = datamart.get_types(df, metadata)
+            # Create column and row objects for the dataset.
+            columns = []
+            for col_name, col_type, col_id in zip(column_names, column_types, column_ids):
+                columns.append(
+                    DatasetColumn(
+                        identifier=col_id,
+                        name=col_name.strip(),
+                        data_type=col_type
+                    )
+                )
+            dataset = FileSystemDatasetHandle(
+                identifier=identifier,
+                columns=columns,
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                row_count=dataset.row_count,
+                max_row_id=dataset.max_row_id,
+                properties=properties_local
+            )
+            dataset.to_file(
+                descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
+            )
+            # Write metadata file if annotations are given
+            if properties_local != {}:
+                dataset.write_properties_to_file(self.get_properties_filename(identifier))
+            # Fetch the full set of rows
+            print('dataset location')
+            print(os.path.join(dataset_dir, DATA_FILE))
+            # print(dataset.columns)
+            # # Sort multiple times, ones for each of the sort columns (in reverse
+            # # order of appearance in the order by clause)
+            # for i in range(len(columns)):
+            #     l_idx = len(columns) - (i + 1)
+            #     col_id = columns[l_idx]
+            #     col_idx = dataset.get_index(col_id)
+            #     # print("SORT: {}".format(col_idx))
+            #     # print("\n".join(", ".join("'{}':{}".format(v, type(v)) for v in row.values) for row in rows))
+            #     reverse = reversed[l_idx]
+            #     if col_idx is None:
+            #         raise ValueError('unknown column identifier \'' + str(col_id) + '\'')
+            #     else:
+            #         rows.sort(key=lambda row: row.values[cast(int, col_idx)], reverse=reverse)
+            # # Store updated dataset to get new identifier
+            # ds = datastore.create_dataset(
+            #     columns=dataset.columns,
+            #     rows=dataset.rows,
+            #     properties={}
+            # )
+
+
+
+            # dataset_dir = self.get_dataset_dir(identifier)
+            # # os.makedirs(dataset_dir)
+            # # Write rows to data file
+            # data_file = os.path.join(dataset_dir, DATA_FILE)
+            # DefaultJsonDatasetReader(data_file).write(rows)
+            # # Create dataset an write dataset file
+            # dataset = FileSystemDatasetHandle(
+            #     identifier=identifier,
+            #     columns=columns,
+            #     data_file=data_file,
+            #     row_count=len(rows),
+            #     max_row_id=max_row_id,
+            #     properties=properties
+            # )
+            # dataset.to_file(
+            #     descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
+            # )
+            
         # Load the dataset handle
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
             data_file=os.path.join(dataset_dir, DATA_FILE),
             properties_filename=self.get_properties_filename(identifier)
         )
+        
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        return None
 
     def get_objects(self, identifier=None, obj_type=None, key=None):
         """Get list of data objects for a resources of a given dataset. If only
@@ -288,46 +709,26 @@ class FileSystemDatastore(DefaultDatastore):
         """
         return DataObjectMetadata()
 
-    def load_dataset(self,
-            f_handle: Optional[FileHandle] = None, 
-            proposed_schema: List[Tuple[str,str]] = [],
-            url: Optional[str] = None, 
-            detect_headers: bool = True, 
-            infer_types: bool = True, 
-            properties: Dict[str,Any] = {},
-            load_format: str ='csv', 
-            options: List[Dict[str,str]] = [], 
-            human_readable_name: Optional[str] = None
-    ):
-        """Create a new dataset from a given file or Url.
-
+    def load_dataset(self, 
+            f_handle: FileHandle, 
+            proposed_schema: List[Tuple[str,str]] = []
+        ) -> FileSystemDatasetHandle:
+        """Create a new dataset from a given file.
+        Raises ValueError if the given file could not be loaded as a dataset.
         Parameters
         ----------
-        f_handle : vizier.filestore.base.FileHandle, optional
-            handle for an uploaded file on the associated file server.
-        url: string, default=None
-            Url for the file source. Included for API completeness.
-        detect_headers: bool, optional
-            Detect column names in loaded file if True
-        infer_types: boolean, optional
-            Infer column types for loaded dataset.
-        load_format: string, optional
-            Format identifier
-        options: list, optional
-            Additional options for Mimirs load command
-        human_readable_name: string, optional
-            Optional human readable name for the resulting table
-
+        f_handle : vizier.filestore.base.FileHandle
+            Handle for an uploaded file
         Returns
         -------
-        vizier.datastore.base.DatasetHandle
+        vizier.datastore.fs.dataset.FileSystemDatasetHandle
         """
         # The file handle might be None in which case an exception is raised
         if f_handle is None:
             raise ValueError('unknown file')
         # Expects a file in a supported tabular data format.
         if not f_handle.is_tabular:
-            raise ValueError('cannot load dataset from %s ' % (f_handle.name))
+            raise ValueError('cannot create dataset from file \'' + f_handle.name + '\'')
         # Open the file as a csv file. Expects that the first row contains the
         # column names. Read dataset schema and dataset rows into two separate
         # lists.
@@ -336,32 +737,15 @@ class FileSystemDatastore(DefaultDatastore):
         with f_handle.open() as csvfile:
             reader = csv.reader(csvfile, delimiter=f_handle.delimiter)
             for col_name in next(reader):
-                column_names.append(col_name.strip())
+                columns.append(
+                    DatasetColumn(
+                        identifier=len(columns),
+                        name=col_name.strip()
+                    )
+                )
             for row in reader:
                 values = [cast(v.strip()) for v in row]
-                rows.append(values)
-        if infer_types == 'datamartprofiler':
-            # Run the Datamart profiler if requested by the user.
-            df = pd.DataFrame(data=rows, columns=column_names)
-            metadata = datamart.run(df)
-            column_types = datamart.get_types(df, metadata)
-        else:
-            metadata = None
-            column_types = list()
-        # Create column and row objects for the dataset.
-        columns = []
-        for col_name, col_type in zip(column_names, column_types):
-            columns.append(
-                DatasetColumn(
-                    identifier=len(columns),
-                    name=col_name.strip(),
-                    data_type=col_type
-                )
-            )
-        rows = []
-        for rowid, values in df.iterrows():
-            rows.append(DatasetRow(identifier=rowid, values=list(values)))
-            # rows.append(DatasetRow(identifier=str(len(rows)), values=values))
+                rows.append(DatasetRow(identifier=str(len(rows)), values=values))
         # Get unique identifier and create subfolder for the new dataset
         identifier = get_unique_identifier()
         dataset_dir = self.get_dataset_dir(identifier)
@@ -369,7 +753,7 @@ class FileSystemDatastore(DefaultDatastore):
         # Write rows to data file
         data_file = os.path.join(dataset_dir, DATA_FILE)
         DefaultJsonDatasetReader(data_file).write(rows)
-        # Create dataset and write descriptor to file
+        # Create dataset an write descriptor to file
         dataset = FileSystemDatasetHandle(
             identifier=identifier,
             columns=columns,
@@ -381,6 +765,7 @@ class FileSystemDatastore(DefaultDatastore):
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         return dataset
+
 
     def create_object(
         self, value, obj_type="text/plain"
@@ -456,7 +841,7 @@ class FileSystemDatastore(DefaultDatastore):
         from vizier.datastore.mimir.store import DATA_OBJECT_FILE
         return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
-def unload_dataset(
+    def unload_dataset(
         self, filepath, dataset_name, format='csv', options=[], filename=''
     ):
         """Export a dataset from a given name.
@@ -477,6 +862,17 @@ def unload_dataset(
         """
         # TODO: Implementation needed
         raise NotImplementedError()
+
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
+
+        Not supported by FS
+        """
+        raise NotImplementedError
 
 # ------------------------------------------------------------------------------
 # Helper Methods

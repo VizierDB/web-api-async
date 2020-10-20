@@ -16,22 +16,27 @@
 
 """Implementation of the task processor for the Python cell package."""
 
+from typing import cast, List, Tuple, TextIO, Any, Dict
 import sys
 import requests
 import os
 
+from vizier.engine.task.base import TaskContext
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.engine.packages.pycell.client.base import VizierDBClient
 from vizier.engine.packages.pycell.plugins import python_cell_preload
 from vizier.engine.packages.stream import OutputStream
+from vizier.viztrail.command import ModuleArguments
 from vizier.viztrail.module.output import ModuleOutputs, OutputObject, TextOutput, OUTPUT_TEXT
 from vizier.viztrail.module.provenance import ModuleProvenance
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
+
 
 import vizier.engine.packages.pycell.base as cmd
 
 """Context variable name for Vizier DB Client."""
 VARS_DBCLIENT = 'vizierdb'
+VARS_OPEN = 'open'
 
 SANDBOX_PYTHON_EXECUTION = os.environ.get('SANDBOX_PYTHON_EXECUTION', "False")
 SANDBOX_PYTHON_URL = os.environ.get('SANDBOX_PYTHON_URL', 'http://127.0.0.1:5005/')
@@ -62,7 +67,10 @@ class PyCellTaskProcessor(TaskProcessor):
         else:
             raise ValueError('unknown pycell command \'' + str(command_id) + '\'')
 
-    def execute_script(self, args, context):
+    def execute_script(self, 
+            args: ModuleArguments, 
+            context: TaskContext
+        ) -> ExecResult:
         """Execute a Python script in the given context.
 
         Parameters
@@ -80,17 +88,37 @@ class PyCellTaskProcessor(TaskProcessor):
         cell_src = args.get_value(cmd.PYTHON_SOURCE)
 
         # prepend python objects exported in previous cells to the source
-        injected_source = "\n".join(
+        exported_methods = [
             context.datastore.get_object(descriptor.identifier).decode()
             for name, descriptor in context.dataobjects.items()
             if descriptor.artifact_type == ARTIFACT_TYPE_PYTHON
-        )
+        ]
+        overrides = [
+            "def show(x):",
+            "  global vizierdb",
+            "  vizierdb.show(x)",
+            "def export(x):", 
+            "  global vizierdb",
+            "  vizierdb.export_module(x)",
+            "def return_type(dt):",
+            "  def wrap(x):",
+            "    return x",
+            "  return wrap",
+            "pass"
+        ]
+
+        injected_source = "\n".join(exported_methods + overrides)
+        injected_lines = len([x for x in injected_source if x == '\n'])+1
+
         source = injected_source + '\n' + cell_src
 
         # Initialize the scope variables that are available to the executed
         # Python script. At this point this includes only the client to access
         # and manipulate datasets in the undelying datastore
-        client = VizierDBClient(
+        #
+        # Use "any" type, since there's a (probably unnecessary) hack down
+        # below that creates something that pretends to be a client.
+        client: Any = VizierDBClient(
             datastore=context.datastore,
             datasets=context.datasets,
             source=cell_src,
@@ -98,16 +126,16 @@ class PyCellTaskProcessor(TaskProcessor):
             project_id=context.project_id,
             output_format=args.get_value(cmd.OUTPUT_FORMAT, default_value = OUTPUT_TEXT)
         )
-        variables = {VARS_DBCLIENT: client}
+        variables = {VARS_DBCLIENT: client, VARS_OPEN: client.pycell_open}
         # Redirect standard output and standard error streams
         out = sys.stdout
         err = sys.stderr
-        stream = list()
-        sys.stdout = OutputStream(tag='out', stream=stream)
-        sys.stderr = OutputStream(tag='err', stream=stream)
+        stream: List[Tuple[str, str]] = list()
+        sys.stdout = cast(TextIO, OutputStream(tag='out', stream=stream))
+        sys.stderr = cast(TextIO, OutputStream(tag='err', stream=stream))
         # Keep track of exception that is thrown by the code
         exception = None
-        resdata = None
+        resdata: Dict[str, Any] = dict()
         # Run the Python code
         try:
             python_cell_preload(variables, client = client)
@@ -132,11 +160,12 @@ class PyCellTaskProcessor(TaskProcessor):
                 client.setattr('stdout',
                     [
                         OutputObject(type = item['type'], value = item['value'])
-                        for item in resdata.fetch('explicit_stdout', [])
+                        for item in resdata.get('explicit_stdout', [])
                     ])
                 
             else:
                 exec(source, variables, variables)
+
         except Exception as ex:
             exception = ex
         finally:
@@ -180,7 +209,7 @@ class PyCellTaskProcessor(TaskProcessor):
                     if not isinstance(read[name], str):
                         raise RuntimeError('invalid element in read mapping dictionary: {} (expecting str)'.format(read[name]))
                 else:
-                    read[name] = None
+                    raise RuntimeError('Unknown read artifact {}'.format(name))
             write = dict()
             for name in client.write:
                 if not isinstance(name, str):
@@ -201,7 +230,7 @@ class PyCellTaskProcessor(TaskProcessor):
                     else:
                         write[name] = write_descriptor
                 else:
-                    write[name] = None
+                    raise RuntimeError('Unknown write artifact {}'.format(name))
             print("Pycell Execution Finished")
             print("     read: {}".format(read))
             print("     write: {}".format(write))
@@ -212,7 +241,8 @@ class PyCellTaskProcessor(TaskProcessor):
             )
         else:
             print("ERROR: {}".format(exception))
-            outputs.error(exception)
+            assert(exception is not None)
+            outputs.error(exception, offset_lines = -injected_lines)
             provenance = ModuleProvenance()
         # Return execution result
         return ExecResult(
@@ -220,7 +250,8 @@ class PyCellTaskProcessor(TaskProcessor):
             outputs=outputs,
             provenance=provenance
         )
-
+        
+    
 class DotDict(dict):
     def __getattr__(self,val):
         return self[val]

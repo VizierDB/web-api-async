@@ -823,7 +823,8 @@ class VizierEngine(WorkflowController):
             )
             context = compute_context(workflow.modules[0:module_index])
             context = result.provenance.get_database_state(context)
-            print("Module {} finished at {} / Context: {} / Reads: [{}] / Writes: [{}]".format(
+            import sys
+            sys.stderr.write("Module {} finished at {} / Context: {} / Reads: [{}] / Writes: [{}]".format(
                 module.external_form, 
                 finished_at,
                 context,

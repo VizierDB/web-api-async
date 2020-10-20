@@ -51,7 +51,7 @@ class DatastoreClientUrlFactory(object):
         """
         return self.urls.create_dataset(self.project_id)
 
-    def get_dataset(self, dataset_id: str) -> str:
+    def get_dataset(self, dataset_id: str, force_profiler: Optional[bool] = None) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -63,7 +63,7 @@ class DatastoreClientUrlFactory(object):
         -------
         string
         """
-        url = self.urls.get_dataset(self.project_id, dataset_id)
+        url = self.urls.get_dataset(self.project_id, dataset_id, force_profiler = force_profiler)
         return url
 
     def get_dataset_caveats(self, 

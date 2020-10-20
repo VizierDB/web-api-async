@@ -105,7 +105,11 @@ class FileSystemDatasetHandle(DatasetHandle):
         return self
 
     @staticmethod
-    def from_file(descriptor_file, data_file, properties_filename=None):
+    def from_file(
+        descriptor_file: str, 
+        data_file: str, 
+        properties_filename: Optional[str] = None
+    ) -> "FileSystemDatasetHandle":
         """Read dataset descriptor from file and return a new instance of the
         dataset handle.
 
@@ -125,9 +129,10 @@ class FileSystemDatasetHandle(DatasetHandle):
         with open(descriptor_file, 'r') as f:
             doc = json.loads(f.read())
         properties = {}
-        if os.path.isfile(properties_filename):
-            with open(properties_filename, 'r') as f:
-                properties = json.loads(f.read())
+        if properties_filename is not None:
+            if os.path.isfile(properties_filename):
+                with open(properties_filename, 'r') as f:
+                    properties = json.loads(f.read())
         return FileSystemDatasetHandle(
             identifier=doc[KEY_IDENTIFIER],
             columns=[
@@ -178,7 +183,7 @@ class FileSystemDatasetHandle(DatasetHandle):
         """
         return dict()
 
-    def max_row_id(self):
+    def max_row_id(self) -> int:
         """Get maximum identifier for all rows in the dataset. If the dataset
         is empty the result is -1.
 

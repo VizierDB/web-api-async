@@ -17,7 +17,7 @@
 """Initialize the Python gateway to the JVM for access to Mimir datastore and
 lenses.
 """
-from typing import cast, Optional, List, Dict, Any, Tuple
+from typing import cast, Optional, List, Dict, Any, Tuple, Union
 
 import requests
 import os
@@ -103,19 +103,22 @@ def createLens(dataset, params, type, materialize, human_readable_name = None, p
     resp = readResponse(requests.post(_mimir_url + 'lens/create', json=req_json))
     return resp
 
-def createView(dataset, query, properties = {}):
-    depts = None
-    if isinstance(dataset, dict):
-        depts = dataset
-    else:
-        depts = {dataset:dataset}
+def createView(
+    datasets: Dict[str, str], 
+    query: str, 
+    properties: Optional[Dict[str, Any]] = None,
+    functions: Optional[Dict[str, str]] = None
+  ) -> Tuple[str, List[str], List[Dict[str, Any]], Dict[str, Any], List[str]]:
+    properties = {} if properties is None else properties
     req_json = {
-      "input": depts,
+      "input": datasets,
       "query": query,
       "properties" : properties
     }
+    if functions is not None:
+      req_json["functions"] = functions
     resp = readResponse(requests.post(_mimir_url + 'view/create', json=req_json))
-    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'])
+    return (resp['name'], resp['dependencies'], resp['schema'], resp['properties'], resp['functions'])
 
 def createAdaptiveSchema(dataset, params, type):
     req_json = {
@@ -181,7 +184,12 @@ def loadDataInline(
     return (resp['name'], resp['schema'])
 
     
-def unloadDataSource(dataset_name, abspath, format='csv', backend_options = []):
+def unloadDataSource(
+      dataset_name: str, 
+      abspath: str, 
+      format: str = 'csv', 
+      backend_options: List[Dict[str, Any]] = []
+    ) -> List[str]:
     req_json ={
       "input":dataset_name,
       "file":abspath,
@@ -244,19 +252,44 @@ def explainEverythingJson(query: str) -> List[DatasetCaveat]:
       for caveat in resp['reasons']
     ]
 
+def sqlQuery(
+      query: str, 
+      include_uncertainty: bool = True, 
+      views: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]: 
+    req_json = {
+      "query": query,
+      "includeUncertainty": include_uncertainty,
+    } 
+    if views is not None:
+      req_json['views'] = views
+    resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
+    return resp
+
 def vistrailsQueryMimirJson(
       query: str, 
       include_uncertainty: bool, 
       include_reasons: bool, 
-      input: str = ''
+      input: str = '',
+      views: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]: 
+  return sqlQuery(
+    query = query, 
+    include_uncertainty = include_uncertainty, 
+  )
+
+def getDataframe(
+      query: str, 
+      include_uncertainty: bool = True, 
+      views: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]: 
     req_json = {
-      "input": input,
       "query": query,
       "includeUncertainty": include_uncertainty,
-      "includeReasons": include_reasons
     } 
-    resp = readResponse(requests.post(_mimir_url + 'query/data', json=req_json))
+    if views is not None:
+      req_json['views'] = views
+    resp = readResponse(requests.post(_mimir_url + 'query/dataframe', json=req_json))
     return resp
 
 def getTable(
@@ -265,7 +298,9 @@ def getTable(
       offset: Optional[int] = None, 
       offset_to_rowid: Optional[str] = None, 
       limit: Optional[int] = None, 
-      include_uncertainty: Optional[bool] = None) -> Dict[str, Any]: 
+      include_uncertainty: Optional[bool] = None,
+      force_profiler: Optional[bool] = None
+    ) -> Dict[str, Any]: 
     req_json: Dict[str, Any] = { "table" : table }
     if columns is not None:
       req_json["columns"] = columns
@@ -281,6 +316,8 @@ def getTable(
       req_json["limit"] = limit
     if include_uncertainty is not None:
       req_json["includeUncertainty"] = include_uncertainty
+    if force_profiler is not None:
+      req_json["profile"] = force_profiler
 
     resp = readResponse(requests.post(_mimir_url + 'query/table', json=req_json))
     return resp
@@ -309,10 +346,12 @@ def evalR(inputs, source):
     resp = readResponse(requests.post(_mimir_url + 'eval/R', json=req_json))
     return resp
 
-def getTableInfo(table: str) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
-    req_json = {
+def getTableInfo(table: str, force_profiler: Optional[bool] = None) -> Tuple[List[Dict[str,str]], Dict[str, Any]]:
+    req_json: Dict[str, Any] = {
       "table": table
     }
+    if force_profiler is not None:
+      req_json["profile"] = force_profiler
     resp = readResponse(requests.post(_mimir_url + 'tableInfo', json=req_json))
     # print("TABLEINFO: {}".format(resp))
     return (
@@ -376,7 +415,12 @@ def createSample(
   resp = readResponse(requests.post(_mimir_url + 'view/sample', json=req_json))
   return (resp['name'], resp['schema'])
 
-def vizualScript(inputds, script, script_needs_compile = False, properties = {}):
+def vizualScript(
+  inputds: str, 
+  script: Union[List[Dict[str, Any]], Dict[str, Any]], 
+  script_needs_compile: bool = False, 
+  properties: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
   """
     Create a view that implements a sequence of vizual commands over a fixed input table
 
@@ -400,13 +444,17 @@ def vizualScript(inputds, script, script_needs_compile = False, properties = {})
       - "script": The compiled version of the script (or just script if 
                   script_needs_compile = False)
   """
+  properties = {} if properties is None else properties
 
-  if type(script) is not list:
-    script = [script]
+  script_list: List[Dict[str, Any]]
+  if type(script) is list:
+    script_list = cast(List[Dict[str, Any]], script)
+  else:
+    script_list = [cast(Dict[str, Any], script)]
 
   req_json = {
     "input" : inputds,
-    "script" : script,
+    "script" : script_list,
     # "resultName": Option[String],
     "compile": script_needs_compile, 
     "properties" : properties
@@ -449,4 +497,11 @@ def getAvailableLensTypes():
 def getAvailableAdaptiveSchemas():
     return requests.get(_mimir_url + 'adaptive').json()['adaptiveSchemaTypes']
 
-       
+def materialize(identifier, result_name = None) -> Dict[str, Any]: 
+  req_json = {
+    "table": identifier
+  }
+  if result_name is not None:
+    req_json["resultName"] = result_name
+  resp = readResponse(requests.post(_mimir_url + 'view/materialize', json=req_json))
+  return resp

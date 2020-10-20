@@ -81,7 +81,8 @@ setup(
         'bokeh',
         'shapely',
         'astor',
-        'minio'
+        'minio',
+        'pyarrow'
     ],
     include_package_data=True,
     data_files=data_files,

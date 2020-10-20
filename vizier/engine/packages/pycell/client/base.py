@@ -18,6 +18,8 @@
 a datastore from within a python script.
 """
 
+from typing import Callable, Tuple, Optional, Dict, Set, List, Any
+
 from vizier.core.util import is_valid_name
 from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_PYTHON
@@ -39,13 +41,22 @@ from bokeh.models.layouts import LayoutDOM as BokehLayout # type: ignore[import]
 from matplotlib.figure import Figure as MatplotlibFigure # type: ignore[import]
 from matplotlib.axes import Axes as MatplotlibAxes # type: ignore[import]
 from vizier.engine.packages.pycell.plugins import vizier_bokeh_render, vizier_matplotlib_render
+from vizier.datastore.base import Datastore
+from vizier.datastore.dataset import DatasetDescriptor
         
     
 class VizierDBClient(object):
     """The Vizier DB Client provides access to datasets that are identified by
     a unique name. The client is a wrapper around a given database state.
     """
-    def __init__(self, datastore, datasets, source, dataobjects, project_id, output_format = OUTPUT_TEXT):
+    def __init__(self, 
+            datastore: Datastore, 
+            datasets: Dict[str, DatasetDescriptor], 
+            source: str, 
+            dataobjects: Dict[str, ArtifactDescriptor], 
+            project_id: str, 
+            output_format: str = OUTPUT_TEXT
+        ):
         """Initialize the reference to the workflow context and the datastore.
 
         Parameters
@@ -69,11 +80,11 @@ class VizierDBClient(object):
         self.dataobjects = dict(dataobjects)
         self.source = source
         # Keep track of datasets that are read and written, deleted and renamed.
-        self.read = set()
-        self.write = set()
-        self.delete = set()
+        self.read: Set[str] = set()
+        self.write: Set[str] = set()
+        self.delete: Set[str] = set()
         self.output_format = output_format
-        self.stdout = list()
+        self.stdout: List[str] = list()
 
     def __getitem__(self, key):
         return self.get_dataset(key)
@@ -88,8 +99,8 @@ class VizierDBClient(object):
     def wrap_variable(self, original_variable, name):
         self.read.add(name)
         return original_variable
-
-    def export_module(self, exp):
+    
+    def export_module(self, exp: Any, return_type: Any = None):
         if inspect.isclass(exp):
             exp_name = exp.__name__
         elif callable(exp):
@@ -104,6 +115,19 @@ class VizierDBClient(object):
         analyzer = Analyzer(exp_name)
         analyzer.visit(src_ast)
         src = analyzer.get_Source()
+        if return_type is not None:
+            if type(return_type) is type:
+                if return_type is int:
+                    return_type = "pyspark_types.IntegerType()"
+                if return_type is str:
+                    return_type = "pyspark_types.StringType()"
+                if return_type is float:
+                    return_type = "pyspark_types.FloatType()"
+                if return_type is bool:
+                    return_type = "pyspark_types.BoolType()"
+            else:
+                return_type = str(return_type)
+            src = "@return_type({})\n{}".format(return_type, src)
         
         identifier = self.datastore.create_object(value=src,
                                                   obj_type=ARTIFACT_TYPE_PYTHON)
@@ -288,7 +312,7 @@ class VizierDBClient(object):
         # Dataset names are case insensitive
         return name.lower() in self.datasets
 
-    def new_dataset(self):
+    def new_dataset(self) -> DatasetClient:
         """Get a dataset client instance for a new dataset.
 
         Returns
@@ -397,7 +421,8 @@ class VizierDBClient(object):
                 raise RuntimeError('invalid read name')
             dept_id = self.get_dataset_identifier(dept_name)
             dept_dataset = self.datastore.get_dataset(dept_id)
-            read_dep.append(dept_dataset.identifier)
+            if dept_dataset is not None:
+                read_dep.append(dept_dataset.identifier)
         ds = self.datastore.create_dataset(
             columns=columns,
             rows=rows,
@@ -413,7 +438,43 @@ class VizierDBClient(object):
             existing_name = name.lower()
         )
         
-    def dataset_from_s3(self, bucket, folder, file, line_extracter = lambda rematch, line: ('col0', line), additional_col_gen = None, delimeter = ",", line_delimeter = "\n"):
+    def get_dataset_frame(self, name):
+        """Get dataset with given name as a pandas dataframe.
+
+        Raises ValueError if the specified dataset does not exist.
+
+        Parameters
+        ----------
+        name : string
+            Unique dataset name
+
+        Returns
+        -------
+        pandas.Dataframe
+        """
+        # Make sure to record access idependently of whether the dataset exists
+        # or not. Ignore read access to datasets that have been written.
+        if not name.lower() in self.write:
+            self.read.add(name.lower())
+        # Get identifier for the dataset with the given name. Will raise an
+        # exception if the name is unknown
+        identifier = self.get_dataset_identifier(name)
+        # Read dataset from datastore and return it.
+        dataset_frame = self.datastore.get_dataset_frame(identifier)
+        if dataset_frame is None:
+            raise ValueError('unknown dataset \'' + identifier + '\'')
+        return dataset_frame
+        
+    def dataset_from_s3(self, 
+        bucket: str, 
+        folder: str, 
+        file: str, 
+        line_extracter: Callable[[re.Match, str], Tuple[str, str]]
+          = lambda rematch, line: ('col0', line), 
+        additional_col_gen: Optional[Callable[[re.Match, str], Tuple[str, str]]] = None, 
+        delimeter: str = ",", 
+        line_delimeter: str = "\n"
+    ) -> Optional[DatasetClient]:
         client = Minio(os.environ.get('S3A_ENDPOINT', 's3.vizier.app'),
                access_key=os.environ.get('AWS_ACCESS_KEY_ID', "----------------------"),
                secret_key=os.environ.get('AWS_SECRET_ACCESS_KEY', "---------------------------"))
@@ -439,26 +500,42 @@ class VizierDBClient(object):
                         rdat.write(str(d.decode('utf-8')))
                     lines = rdat.getvalue().split(line_delimeter)
                     
-                    entry = {}
+                    entry: Dict[str,str] = {}
                     if additional_col_gen is not None:
                         entry = dict({ additional_col_gen(result, line) for line  in lines })
                     line_entries =  dict({ line_extracter(result,line) for line  in lines })
                     entry = {**entry , **line_entries}
-                    entry.pop(None, None)
+                    # The following line seems to be OK only because
+                    # the preceding line is a { ** } constructor.  
+                    # I have absolutely no clue why the following works,
+                    # otherwise.  Either way, let's shut mypy up for now
+                    # -OK
+                    entry.pop(None, None) # type: ignore
                     
-                    # Append the dictionary to the list
-                    if len(ds.columns) == 0:
-                        {ds.insert_column(attr) for attr in entry.keys()}
+                    # Append unknown dictionary keys to the list
+                    for attr in list(set(entry.keys())-set([col.name for col in ds.columns])):
+                        ds.insert_column(attr)
+                            
+                    # Make sure the record is in the right order
+                    row = [
+                        entry.get(col.name, None)
+                        for col in ds.columns
+                    ]
                     
-                    ds.insert_row(values=entry.values())
+                    ds.insert_row(values=row)
         
             return ds
                     
         except SelectCRCValidationError:
+            return None
             pass
         except ResponseError:
+            return None
             pass
-        
+    
+    def pycell_open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        print("***File access may not be reproducible because filesystem resources are transient***")
+        return open(file, mode, buffering, encoding, errors, newline, closefd, opener)    
       
     def set_output_format(self, mime_type):
         self.output_format = mime_type

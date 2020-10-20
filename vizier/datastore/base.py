@@ -26,19 +26,26 @@ import os
 from vizier.filestore.base import FileHandle
 from vizier.datastore.annotation.base import DatasetCaveat
 from vizier.datastore.dataset import DatasetRow, DatasetColumn, DatasetDescriptor, DatasetHandle
-
+from pandas import DataFrame
 
 """Metadata file name for datasets in the the default datastore."""
 METADATA_FILE = 'annotations.json'
 
 
 class Datastore(metaclass=ABCMeta):
+
+    def __init__(self):
+        self.base_path: Optional[str] = None
+
     """Abstract API to store and retireve datasets."""
     @abstractmethod
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {}
+            properties: Optional[Dict[str, Any]] = None,
+            human_readable_name: str = "Untitled Dataset", 
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -110,7 +117,10 @@ class Datastore(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod
-    def get_object(self, identifier, expected_type=None):
+    def get_object(self, 
+            identifier: str, 
+            expected_type: Optional[str] = None
+        ) -> bytes:
         """Get an object (artifact) from the datastore
 
         Parameters
@@ -127,7 +137,7 @@ class Datastore(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
+    def get_dataset(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DatasetHandle]:
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.
 
@@ -140,7 +150,23 @@ class Datastore(metaclass=ABCMeta):
         -------
         vizier.datastore.base.DatasetHandle
         """
-        raise NotImplementedError()
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
+        """Get a pandas DataFrame for the dataset with given identifier from the data
+        store. Returns None if no dataset with the given identifier exists.
+
+        Parameters
+        ----------
+        identifier : string
+            Unique dataset identifier
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def get_descriptor(self, identifier: str) -> DatasetDescriptor:
@@ -187,7 +213,13 @@ class Datastore(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod
-    def unload_dataset(self, f_handle):
+    def unload_dataset(self, 
+            filepath: str, 
+            dataset_name: str, 
+            format: str = 'csv', 
+            options: List[Dict[str, Any]]=[], 
+            filename=""
+        ):
         """Create a new dataset from a given file.
 
         Raises ValueError if the given file could not be loaded as a dataset.
@@ -242,30 +274,16 @@ class Datastore(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
+
     @abstractmethod
-    def unload_dataset(
-        self, filepath, dataset_name, format='csv', options=[], filename=''
-    ):
-        """Export a dataset from a given name.
-
-        Raises ValueError if the given dataset could not be exported.
-
-        Parameters
-        ----------
-        dataset_name: string
-            Name of the dataset to unload
-        format: string
-            Format for output (csv, json, ect.)
-        options: dict
-            Options for data unload
-        filename: string
-            The output filename - may be empty if outputting to a database
-
-        Returns
-        -------
-        vizier.filestore.base.FileHandle
+    def query(self, 
+        query: str,
+        datasets: Dict[str, DatasetDescriptor]
+    ) -> Dict[str, Any]:
+        """Pose a raw SQL query against the specified datasets.
+        Doesn't actually change the data, just queries it.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class DefaultDatastore(Datastore):
@@ -368,6 +386,7 @@ class DefaultDatastore(Datastore):
         -------
         string
         """
+        assert(self.base_path is not None)
         return os.path.join(self.base_path, identifier)
 
     def get_descriptor(self, identifier):
@@ -524,7 +543,7 @@ def get_column_index(columns, column_id):
             raise ValueError("duplicate column name '{}'".format(column_id))
 
 
-def get_index_for_column(dataset, col_id):
+def get_index_for_column(dataset: DatasetDescriptor, col_id: int):
     """Get index position for column with given id in dataset schema.
 
     Raises ValueError if no column with col_id exists.

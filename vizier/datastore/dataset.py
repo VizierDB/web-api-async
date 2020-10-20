@@ -249,7 +249,7 @@ class DatasetDescriptor(ArtifactDescriptor):
                 return col_name
             index += 1
 
-    def max_column_id(self):
+    def max_column_id(self) -> int:
         """Get maximum identifier for columns in the dataset schema. If the
         schema is empty the result is -1.
 

@@ -19,7 +19,7 @@ project wrapped inside an individual container.
 """
 from typing import Optional, TYPE_CHECKING
 
-from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, UrlFactory
+from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, UrlFactory, FORCE_PROFILER
 if TYPE_CHECKING:
     from vizier.engine.project.cache.container import ContainerProjectCache
 
@@ -102,7 +102,7 @@ class ContainerApiUrlFactory(UrlFactory):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, project_id: str, dataset_id: str) -> str:
+    def get_dataset(self, project_id: str, dataset_id: str, force_profiler: Optional[bool] = None) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -116,7 +116,10 @@ class ContainerApiUrlFactory(UrlFactory):
         -------
         string
         """
-        return self.base_url + '/datasets/' + dataset_id
+        url = self.base_url + '/datasets/' + dataset_id
+        if force_profiler is not None and force_profiler:
+            url += "?{}=true".format(FORCE_PROFILER)
+        return url
 
     def get_dataset_descriptor(self, project_id, dataset_id):
         """Url to retrieve dataset descriptor.
@@ -272,7 +275,7 @@ class ContainerEngineUrlFactory(UrlFactory):
     # --------------------------------------------------------------------------
     # Datasets
     # --------------------------------------------------------------------------
-    def get_dataset(self, project_id: str, dataset_id: str) -> str:
+    def get_dataset(self, project_id: str, dataset_id: str, force_profiler: Optional[bool] = None) -> str:
         """Url to retrieve dataset rows.
 
         Parameters
@@ -287,7 +290,7 @@ class ContainerEngineUrlFactory(UrlFactory):
         string
         """
         project = self.projects.get_project(project_id)
-        return project.urls.get_dataset(project_id, dataset_id)
+        return project.urls.get_dataset(project_id, dataset_id, force_profiler = force_profiler)
 
     # --------------------------------------------------------------------------
     # Files

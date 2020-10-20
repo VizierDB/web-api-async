@@ -16,6 +16,10 @@
 
 """Extensions to preload prior to executing a python cell (e.g., visualization tools)"""
 
+from typing import TYPE_CHECKING, Dict, Any, Optional
+
+if TYPE_CHECKING:
+    from vizier.engine.packages.pycell.client.base import VizierDBClient
 
 import json
 import re
@@ -24,9 +28,10 @@ from bokeh.io import output_notebook # type: ignore[import]
 from bokeh.io.notebook import install_notebook_hook # type: ignore[import]
 from bokeh.embed import json_item # type: ignore[import]
 
-target_client = None
 
-def python_cell_preload(variables, client):
+target_client: Optional["VizierDBClient"] = None
+
+def python_cell_preload(variables: Dict[str, Any], client: "VizierDBClient"):
     global target_client
     """Convenient place to hook extension code that needs to run before a python cell"""
 

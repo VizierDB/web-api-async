@@ -20,7 +20,7 @@ access to a shared file system, e.g., processors that are sandboxed in
 containers.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import json
 import requests
 
@@ -54,7 +54,10 @@ class DatastoreClient(Datastore):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Optional[Dict[str, Any]] =None
+            properties: Optional[Dict[str, Any]] = None,
+            human_readable_name: str = "Untitled Dataset", 
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the project datastore using the API. Expects
         a list of columns and the rows for the dataset. All columns and rows
@@ -93,7 +96,7 @@ class DatastoreClient(Datastore):
         obj = json.loads(r.text)
         return deserialize.DATASET_DESCRIPTOR(obj)
 
-    def get_dataset(self, identifier: str) -> Optional[DatasetHandle]:
+    def get_dataset(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DatasetHandle]:
         """Get the handle for the dataset with given identifier from the data
         store. Returns None if no dataset with the given identifier exists.
 
@@ -106,7 +109,7 @@ class DatastoreClient(Datastore):
         -------
         vizier.datastore.base.DatasetHandle
         """
-        url = self.urls.get_dataset(identifier)
+        url = self.urls.get_dataset(identifier, force_profiler = force_profiler)
         r = requests.get(url)
         if r.status_code == 404:
             return None
