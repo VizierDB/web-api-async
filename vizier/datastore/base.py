@@ -42,7 +42,10 @@ class Datastore(object):
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
-            properties: Dict[str, Any] = {}
+            properties: Optional[Dict[str, Any]] = None,
+            human_readable_name: str = "Untitled Dataset", 
+            backend_options: Optional[List[Tuple[str, str]]] = None, 
+            dependencies: Optional[List[str]] = None
         ) -> DatasetDescriptor:
         """Create a new dataset in the datastore. Expects at least the list of
         columns and the rows for the dataset.
@@ -110,7 +113,10 @@ class Datastore(object):
         raise NotImplementedError
     
     @abstractmethod
-    def get_object(self, identifier, expected_type=None):
+    def get_object(self, 
+            identifier: str, 
+            expected_type: Optional[str] = None
+        ) -> bytes:
         """Get an object (artifact) from the datastore
 
         Parameters
@@ -355,6 +361,7 @@ class DefaultDatastore(Datastore):
         -------
         string
         """
+        assert(self.base_path is not None)
         return os.path.join(self.base_path, identifier)
 
     def get_descriptor(self, identifier):

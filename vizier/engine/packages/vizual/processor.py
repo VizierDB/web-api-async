@@ -20,7 +20,7 @@ import re
 
 from vizier.core.loader import ClassLoader
 from vizier.core.util import is_valid_name
-from vizier.datastore.dataset import DatasetDescriptor, ArtifactDescriptor
+from vizier.datastore.dataset import DatasetDescriptor
 from vizier.engine.task.processor import ExecResult, TaskProcessor
 from vizier.viztrail.module.output import ModuleOutputs, TextOutput, HtmlOutput, DatasetOutput, OutputObject
 from vizier.viztrail.module.provenance import ModuleProvenance
@@ -213,7 +213,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 column deleted'],
-            database_state=context.datasets
         )
 
     def compute_delete_row(self, 
@@ -250,7 +249,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 row deleted'],
-            database_state=context.datasets
         )
 
     def compute_drop_dataset(self, 
@@ -339,7 +337,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=[str(len(columns)) + ' column(s) filtered'],
-            database_state=context.datasets
         )
 
     def compute_insert_column(self, 
@@ -378,7 +375,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 column inserted'],
-            database_state=context.datasets
         )
 
     def compute_insert_row(self, 
@@ -415,7 +411,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 row inserted'],
-            database_state=context.datasets
         )
 
     def compute_load_dataset(self, 
@@ -760,7 +755,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 column moved'],
-            database_state=context.datasets
         )
 
     def compute_move_row(self, 
@@ -799,7 +793,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 row moved'],
-            database_state=context.datasets
         )
 
     def compute_rename_column(self, 
@@ -838,7 +831,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['1 column renamed'],
-            database_state=context.datasets
         )
 
     def compute_rename_dataset(self, 
@@ -933,7 +925,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['dataset sorted'],
-            database_state=context.datasets
         )
 
     def compute_update_cell(self, 
@@ -977,7 +968,6 @@ class VizualTaskProcessor(TaskProcessor):
             input_dataset=ds,
             output_dataset=result.dataset,
             stdout=['row(s) updated'],
-            database_state=context.datasets
         )
 
     def create_exec_result(
@@ -985,7 +975,6 @@ class VizualTaskProcessor(TaskProcessor):
         dataset_name: str, 
         input_dataset: Optional[DatasetDescriptor]=None, 
         output_dataset: Optional[DatasetDescriptor]=None,
-        database_state: Optional[Dict[str, ArtifactDescriptor]]=None, 
         stdout: Optional[List[str]]=None, 
         resources: Optional[Dict[str, Any]]=None
     ):
@@ -1003,9 +992,6 @@ class VizualTaskProcessor(TaskProcessor):
             Descriptor for the input dataset
         output_dataset: vizier.datastore.dataset.DatasetDescriptor, optional
             Descriptor for the resulting dataset
-        database_state: dict, optional
-            Identifier for datasets in the database state agains which a task
-            was executed (keyed by user-provided name)
         stdout= list(string), optional
             Lines in the command output
         resources: dict, optional

@@ -699,7 +699,10 @@ class MimirVizualApi(VizualApi):
             order_by_clause.append(stmt)
         sql = 'SELECT * FROM '+dataset.identifier+' ORDER BY '
         sql += ','.join(order_by_clause) 
-        view_name, dependencies, schema, properties = mimir.createView(dataset.identifier, sql)
+        view_name, dependencies, schema, properties, functionDeps = mimir.createView(
+                datasets = { dataset.identifier : dataset.identifier }, 
+                query = sql
+            )
         ds = MimirDatasetHandle.from_mimir_result(view_name, schema, properties)
         return VizualApiResult(ds)
 

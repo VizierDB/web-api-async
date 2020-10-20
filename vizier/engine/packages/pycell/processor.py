@@ -100,6 +100,10 @@ class PyCellTaskProcessor(TaskProcessor):
             "def export(x):", 
             "  global vizierdb",
             "  vizierdb.export_module(x)",
+            "def return_type(dt):",
+            "  def wrap(x):",
+            "    return x",
+            "  return wrap",
             "pass"
         ]
 
