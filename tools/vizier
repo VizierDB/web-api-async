@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PYTHON_USER_BASE=$(python3 -m site --user-base)
+
 set -eu
 
 CWD="$(pwd)"
@@ -11,7 +13,7 @@ STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
 
 if [ ! -d "$STATIC_UI_FILES_DIR" ]
   then
-    APP_RESOURCES_DIR=$(python3 -m site --user-base)
+    APP_RESOURCES_DIR=$PYTHON_USER_BASE
     APP_RESOURCES_DIR=${APP_RESOURCES_DIR}/
     STATIC_UI_FILES_DIR=${APP_RESOURCES_DIR}web-ui/build/
 fi
