@@ -140,7 +140,7 @@ class SQLTaskProcessor(TaskProcessor):
                 dep_name.lower(): get_artifact_id(dep)
                 for dep_name, dep in [
                     (dep_name, context.dataobjects.get(dep_name.lower(), None))
-                    for dep_name in dependencies
+                    for dep_name in functionDeps
                 ]
                 if dep is not None
             }
