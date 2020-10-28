@@ -80,4 +80,4 @@ def run(df):
     -------
     dict
     """
-    return dmp.process_dataset(df, include_sample=False)
+    return dmp.process_dataset(df, include_sample=False, plots=True)
