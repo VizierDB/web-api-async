@@ -480,7 +480,7 @@ def getBlob(identifier, expected_type = None):
       )
   return resp.content
 
-def createBlob(identifier, blob_type, data):
+def createBlob(identifier: str, blob_type: str, data: bytes) -> str:
   route = "blob"
   if identifier is not None:
     route += "/{}".format(identifier)

@@ -129,7 +129,7 @@ class VizierDBClient(object):
                 return_type = str(return_type)
             src = "@return_type({})\n{}".format(return_type, src)
         
-        identifier = self.datastore.create_object(value=src,
+        identifier = self.datastore.create_object(value=src.encode(),
                                                   obj_type=ARTIFACT_TYPE_PYTHON)
         descriptor = ArtifactDescriptor(identifier, exp_name, ARTIFACT_TYPE_PYTHON)
         self.dataobjects[exp_name] = descriptor
@@ -576,7 +576,7 @@ class VizierDBClient(object):
         self.show(HtmlOutput(value))
     
 class Analyzer(ast.NodeVisitor):
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.source = ''
         # track context name and set of names marked as `global`
@@ -622,6 +622,6 @@ class Analyzer(ast.NodeVisitor):
         if node.id == self.name and (ctx == 'global' or node.id in g):
             print('exported {} at line {} of {}'.format(node.id, node.lineno, self.source))
             
-    def get_Source(self):
+    def get_Source(self) -> str:
         return self.source
     

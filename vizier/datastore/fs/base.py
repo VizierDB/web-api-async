@@ -321,8 +321,8 @@ class FileSystemDatastore(DefaultDatastore):
         return dataset
 
     def create_object(
-        self, value, obj_type="text/plain"
-    ):
+        self, value: bytes, obj_type : str = "text/plain"
+    ) -> str:
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
@@ -380,7 +380,7 @@ class FileSystemDatastore(DefaultDatastore):
         with open(data_object_filename, 'rb') as f:
             f.read()
 
-    def get_data_object_file(self, identifier):
+    def get_data_object_file(self, identifier: str) -> str:
         """Get the absolute path of the file that maintains the dataset metadata
         such as the order of row id's and column information.
         Parameters
@@ -392,7 +392,7 @@ class FileSystemDatastore(DefaultDatastore):
         string
         """
         from vizier.datastore.mimir.store import DATA_OBJECT_FILE
-        return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
+        return os.path.join(self.get_data_object_dir(identifier), DATA_OBJECT_FILE)
 
     def query(self, 
         query: str,
