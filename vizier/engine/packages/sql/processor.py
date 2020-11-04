@@ -128,6 +128,9 @@ class SQLTaskProcessor(TaskProcessor):
                 ds_output['name'] = ds_name
                 outputs.stdout.append(DatasetOutput(ds_output))
 
+            print("---SQL Cell Dependencies---")
+            print("Datasets: {}\nFunctions: {}".format(dependencies, functionDeps))
+
             dependenciesDict: Dict[str, str] = {
                 dep_name.lower(): get_artifact_id(dep)
                 for dep_name, dep in [
@@ -140,7 +143,7 @@ class SQLTaskProcessor(TaskProcessor):
                 dep_name.lower(): get_artifact_id(dep)
                 for dep_name, dep in [
                     (dep_name, context.dataobjects.get(dep_name.lower(), None))
-                    for dep_name in dependencies
+                    for dep_name in functionDeps
                 ]
                 if dep is not None
             }
@@ -169,8 +172,9 @@ class SQLTaskProcessor(TaskProcessor):
 
 def get_artifact_id(artifact: Union[str, ArtifactDescriptor, None]) -> str:
     assert(artifact is not None)
-    if type(artifact) is str:
+    if isinstance(artifact, str):
         return cast(str, artifact)
-    elif type(artifact) is ArtifactDescriptor:
+    elif isinstance(artifact, ArtifactDescriptor):
         return cast(ArtifactDescriptor, artifact).identifier
+    print("Getting artifact id from unknown type '{}'.  Bailing out!".format(type(artifact)))
     assert(False)
