@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Dict, Any, Optional
 if TYPE_CHECKING:
     from vizier.engine.project.base import ProjectHandle
     from vizier.viztrail.branch import BranchHandle
-    from vizier.viztrail.workflow import WorkflowHandle
+    from vizier.viztrail.workflow import WorkflowHandle, WorkflowDescriptor
 
 from vizier.api.routes.base import UrlFactory
 import vizier.api.serialize.base as serialize
@@ -31,7 +31,11 @@ import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.module as serialmd
 
 
-def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
+def EMPTY_WORKFLOW_HANDLE(
+        project: "ProjectHandle", 
+        branch: "BranchHandle", 
+        urls: Optional[UrlFactory]
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a an empty workflow. Sets most values to
     None or empty lists.
 
@@ -50,23 +54,30 @@ def EMPTY_WORKFLOW_HANDLE(project, branch, urls):
     """
     project_id = project.identifier
     branch_id = branch.identifier
-    return {
+    ret = {
         'id': None,
         'createdAt': None,
         'state': -1,
         'modules': list(),
         'datasets': list(),
         'charts': list(),
-        'readOnly': False,
-        labels.LINKS: WORKFLOW_HANDLE_LINKS(
+        'readOnly': False
+    }
+    if urls is not None:
+        ret[labels.LINKS] = WORKFLOW_HANDLE_LINKS(
             project_id=project_id,
             branch_id=branch_id,
             urls=urls
         )
-    }
+    return ret
 
 
-def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
+def WORKFLOW_DESCRIPTOR(
+        project: "ProjectHandle", 
+        branch: "BranchHandle", 
+        workflow: "WorkflowDescriptor", 
+        urls: Optional[UrlFactory]
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a workflow descriptor.
 
     Parameters
@@ -87,26 +98,28 @@ def WORKFLOW_DESCRIPTOR(project, branch, workflow, urls):
     project_id = project.identifier
     branch_id = branch.identifier
     workflow_id = workflow.identifier
-    return {
+    ret = {
         'id': workflow_id,
         'createdAt': workflow.created_at.isoformat(),
         'action': workflow.action,
         labels.COMMAND_PACKAGE: workflow.package_id,
         labels.COMMAND_ID: workflow.command_id,
-        labels.LINKS: WORKFLOW_HANDLE_LINKS(
+    }
+    if urls is not None:
+        ret[labels.LINKS] = WORKFLOW_HANDLE_LINKS(
             project_id=project_id,
             branch_id=branch_id,
             workflow_id=workflow_id,
             urls=urls
         )
-    }
+    return ret
 
 
 def WORKFLOW_HANDLE(
         project: "ProjectHandle", 
         branch: "BranchHandle", 
         workflow: "WorkflowHandle", 
-        urls: UrlFactory
+        urls: Optional[UrlFactory]
     ) -> Dict[str, Any]:
     """Dictionary serialization for a workflow handle.
 
@@ -179,13 +192,15 @@ def WORKFLOW_HANDLE(
                 branch_id=branch_id
             )
         }
-    links = WORKFLOW_HANDLE_LINKS(
-        project_id=project_id,
-        branch_id=branch_id,
-        workflow_id=workflow_id,
-        urls=urls,
-        links=handle_links
-    )
+    links = {}
+    if urls is not None:
+        links = { labels.LINKS : WORKFLOW_HANDLE_LINKS(
+                    project_id=project_id,
+                    branch_id=branch_id,
+                    workflow_id=workflow_id,
+                    urls=urls,
+                    links=handle_links
+                )}
     return {
         'id': workflow_id,
         'createdAt': descriptor.created_at.isoformat(),
@@ -197,7 +212,7 @@ def WORKFLOW_HANDLE(
         'datasets': list(datasets.values()),
         'dataobjects': list(dataobjects.values()),
         'readOnly': read_only,
-        labels.LINKS: links
+        **links
     }
 
 

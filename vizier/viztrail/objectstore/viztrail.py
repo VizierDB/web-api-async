@@ -109,7 +109,11 @@ class OSViztrailHandle(ViztrailHandle):
         self.branch_index = init_value(branch_index, self.object_store.join(self.branch_folder, OBJ_BRANCHINDEX))
         self.modules_folder =  init_value(modules_folder, self.object_store.join(base_path, FOLDER_MODULES))
 
-    def create_branch(self, provenance=None, properties={}, modules=None):
+    def create_branch(self, 
+            provenance: Optional[BranchProvenance] = None, 
+            properties: Optional[Dict[str, Any]] = None, 
+            modules: Optional[List[str]] = None
+        ) -> OSBranchHandle:
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
 
@@ -127,6 +131,7 @@ class OSViztrailHandle(ViztrailHandle):
         -------
         vizier.viztrail.objectstore.branch.OSBranchHandle
         """
+        properties = properties if properties is not None else {}
         branch = create_branch(
             provenance=provenance,
             properties=properties,
@@ -139,7 +144,7 @@ class OSViztrailHandle(ViztrailHandle):
         # information
         self.branches[branch.identifier] = branch
         write_branch_index(
-            branches=self.branches,
+            branches=cast(Dict[str, OSBranchHandle], self.branches),
             object_path=self.branch_index,
             object_store=self.object_store
         )
@@ -368,7 +373,7 @@ class OSViztrailHandle(ViztrailHandle):
 # ------------------------------------------------------------------------------
 
 def create_branch(
-    provenance: BranchProvenance, 
+    provenance: Optional[BranchProvenance], 
     properties: Dict[str, Any], 
     modules: Optional[List[str]], 
     branch_folder: str, 

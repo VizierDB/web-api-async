@@ -5,8 +5,10 @@ LAST_FAILURES_FILE=last_test_failure.txt
 EXTRACT_FAILING_UNIT_CLASSES='s/[^(]*(//;s/).*//;s/\.[^.]*$//'
 IS_TRAVIS=${TRAVIS:-false}
 
-./tools/lint
-./tools/typecheck
+if [ "$NO_LINT" != "true" ] ; then
+  ./tools/lint
+  ./tools/typecheck
+fi
 
 #start vizier and mimir
 if [ "$NO_VIZIER" != "true" ] ; then

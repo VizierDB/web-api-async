@@ -66,3 +66,5 @@ vizier_downloads/*
 /web-ui
 /last_test_*.txt
 /mimir
+/export_test.tgz
+/.tmp

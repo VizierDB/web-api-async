@@ -20,7 +20,7 @@ project handle and project cache.
 """
 
 from abc import abstractmethod
-from typing import Optional 
+from typing import Optional, Dict, Any
 
 from vizier.engine.project.base import ProjectHandle
 from vizier.viztrail.branch import BranchHandle
@@ -31,7 +31,7 @@ class ProjectCache(object):
     viztrails in a viztrails repository.
     """
     @abstractmethod
-    def create_project(self, properties=None):
+    def create_project(self, properties: Optional[Dict[str, Any]]=None) -> ProjectHandle:
         """Create a new project. Will create a viztrail in the underlying
         viztrail repository. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
@@ -52,7 +52,7 @@ class ProjectCache(object):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_project(self, project_id):
+    def delete_project(self, project_id: str):
         """Delete all resources that are associated with the given project.
         Returns True if the project existed and False otherwise.
 
