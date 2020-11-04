@@ -36,6 +36,7 @@ ANNOTATIONS_UPDATE = 'annotations.update'
 ANNOTATIONS_GET = 'annotations.get'
 DATASET_DOWNLOAD = 'dataset.download'
 DATASET_FETCH_ALL = 'dataset.fetch'
+PROFILING_GET = 'profiling:get'
 
 PAGE_FIRST = 'page.first'
 PAGE_LAST = 'page.last'

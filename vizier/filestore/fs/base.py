@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Default implementation of the file store. This implementation keeps all files
-and their metadata on disk.
+"""Default implementation of the file store. This implementation keeps all
+files and their metadata on disk.
 """
 
 import json
@@ -76,7 +76,7 @@ class FileSystemFilestore(Filestore):
         -------
         bool
         """
-        file_dir =self.get_file_dir(identifier)
+        file_dir = self.get_file_dir(identifier)
         if os.path.isdir(file_dir):
             shutil.rmtree(file_dir, ignore_errors=True)
             return True

@@ -55,7 +55,7 @@ class ObjectAnnotationSet(list):
         replace: bool, optional
             Replace all previously associated values for key if True
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete(self, 
@@ -79,7 +79,7 @@ class ObjectAnnotationSet(list):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def find_all(self, 
@@ -100,7 +100,7 @@ class ObjectAnnotationSet(list):
         -------
         list
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get(self, 
@@ -128,7 +128,7 @@ class ObjectAnnotationSet(list):
         -------
         scalar
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def replace(self, 
             key: str, 
@@ -159,7 +159,7 @@ class ObjectAnnotationSet(list):
         corresponding property will be replaced by the value or the values in a
         given list of values.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class AnnotationStore(object):
@@ -177,7 +177,7 @@ class AnnotationStore(object):
         annotations: dict, optional
             Dictionary of object annotations
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def values(self) -> Dict[str, Any]:
@@ -187,7 +187,7 @@ class AnnotationStore(object):
         -------
         dict()
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DefaultAnnotationSet(ObjectAnnotationSet):

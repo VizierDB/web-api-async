@@ -31,6 +31,7 @@ import vizier.viztrail.workflow as wf
 PACKAGES = {
     plot.PACKAGE_PLOT: plot.PLOT_COMMANDS,
     pycell.PACKAGE_PYTHON: pycell.PYTHON_COMMANDS,
+    vizual.PACKAGE_DATA: vizual.VIZUAL_COMMANDS,
     vizual.PACKAGE_VIZUAL: vizual.VIZUAL_COMMANDS
 }
 

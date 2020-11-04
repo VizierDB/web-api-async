@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 New York University,
+# Copyright (C) 2017-2020 New York University,
 #                         University at Buffalo,
 #                         Illinois Institute of Technology.
 #
@@ -34,9 +34,12 @@ from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn, DatasetDescriptor
 from vizier.datastore.dataset import DatasetRow
 from vizier.datastore.fs.dataset import FileSystemDatasetHandle
+from vizier.datastore.object.dataobject import DataObjectMetadata
 from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
+import vizier.datastore.profiling.datamart as datamart
+import vizier.datastore.util as util
 from pandas import DataFrame
 
 """Constants for data file names."""
@@ -46,13 +49,13 @@ DESCRIPTOR_FILE = 'descriptor.json'
 
 class FileSystemDatastore(DefaultDatastore):
     """Implementation of Vizier data store. Uses the file system to maintain
-    datasets. For each dataset a new subfolder is created. Within the folder the
-    dataset information is split across three files containing the descriptor,
-    annotation, and the dataset rows.
+    datasets. For each dataset a new subfolder is created. Within the folder
+    the dataset information is split across three files containing the
+    descriptor, annotation, and the dataset rows.
     """
     def __init__(self, base_path):
-        """Initialize the base directory that contains datasets. Each dataset is
-        maintained in a separate subfolder.
+        """Initialize the base directory that contains datasets. Each dataset
+        is maintained in a separate subfolder.
 
         Parameters
         ---------
@@ -87,6 +90,12 @@ class FileSystemDatastore(DefaultDatastore):
             List of dataset rows.
         properties: dict(string, ANY), optional
             Properties for dataset components
+        human_readable_name: string, ignored
+            TODO: Add description.
+        backend_options: list, ignored
+            TODO: Add description.
+        dependencies: string, ignored
+            TODO: Add description.
 
         Returns
         -------
@@ -199,7 +208,7 @@ class FileSystemDatastore(DefaultDatastore):
         vizier.datastore.fs.dataset.FileSystemDatasetHandle,
         vizier.filestore.base.FileHandle
         """
-        if not filestore is None:
+        if filestore is not None:
             # Upload the file to the filestore to get the file handle
             fh = filestore.download_file(
                 url=url,
@@ -250,6 +259,51 @@ class FileSystemDatastore(DefaultDatastore):
         dataset_dir = self.get_dataset_dir(identifier)
         if not os.path.isdir(dataset_dir):
             return None
+        
+        if force_profiler:
+            # Get dataset. Raise exception if dataset is unknown
+            dataset = FileSystemDatasetHandle.from_file(
+                descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                properties_filename=self.get_properties_filename(identifier)
+            )
+            if dataset is None:
+                raise ValueError('unknown dataset \'' + identifier + '\'')
+
+            column_ids = [col.identifier for col in dataset.columns]
+            column_names = [col.name for col in dataset.columns]
+            rows = dataset.fetch_rows()
+            rows_values = [el.values for el in rows]
+            df = DataFrame(rows_values, columns=column_names)
+            metadata = datamart.run(df)
+            properties_local = metadata
+            properties_local["is_profiled"] = [ "datamart_profiler"]
+            column_types = datamart.get_types(df, metadata)
+            # Update column and row objects.
+            columns = []
+            for col_name, col_type, col_id in zip(column_names, column_types, column_ids):
+                columns.append(
+                    DatasetColumn(
+                        identifier=col_id,
+                        name=col_name.strip(),
+                        data_type=col_type
+                    )
+                )
+            dataset = FileSystemDatasetHandle(
+                identifier=identifier,
+                columns=columns,
+                data_file=os.path.join(dataset_dir, DATA_FILE),
+                row_count=dataset.row_count,
+                max_row_id=dataset._max_row_id,
+                properties=properties_local
+            )
+            dataset.to_file(
+                descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
+            )
+            # Write metadata file if annotations are given
+            if properties_local != {}:
+                dataset.write_properties_to_file(self.get_properties_filename(identifier))
+
         # Load the dataset handle
         return FileSystemDatasetHandle.from_file(
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE),
@@ -260,19 +314,39 @@ class FileSystemDatastore(DefaultDatastore):
     def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
         return None
 
+    def get_objects(self, identifier=None, obj_type=None, key=None):
+        """Get list of data objects for a resources of a given dataset. If only
+        the column id is provided annotations for the identifier column will be
+        returned. If only the row identifier is given all annotations for the
+        specified row are returned. Otherwise, all annotations for the
+        specified cell are returned. If both identifier are None all
+        annotations for the dataset are returned.
+
+        Parameters
+        ----------
+        identifier: string, optional
+            Unique object identifier
+        obj_type: string, optional
+            object type
+        key: string, optional
+            object key
+
+        Returns
+        -------
+        vizier.datastore.object.dataobject.DataObjectMetadata
+        """
+        return DataObjectMetadata()
+
     def load_dataset(self, 
             f_handle: FileHandle, 
             proposed_schema: List[Tuple[str,str]] = []
         ) -> FileSystemDatasetHandle:
         """Create a new dataset from a given file.
-
         Raises ValueError if the given file could not be loaded as a dataset.
-
         Parameters
         ----------
         f_handle : vizier.filestore.base.FileHandle
             Handle for an uploaded file
-
         Returns
         -------
         vizier.datastore.fs.dataset.FileSystemDatasetHandle
@@ -319,6 +393,7 @@ class FileSystemDatastore(DefaultDatastore):
             descriptor_file=os.path.join(dataset_dir, DESCRIPTOR_FILE)
         )
         return dataset
+
 
     def create_object(
         self, value, obj_type="text/plain"
@@ -394,6 +469,28 @@ class FileSystemDatastore(DefaultDatastore):
         from vizier.datastore.mimir.store import DATA_OBJECT_FILE
         return os.path.join(self.get_dataobject_dir(identifier), DATA_OBJECT_FILE)
 
+    def unload_dataset(
+        self, filepath, dataset_name, format='csv', options=[], filename=''
+    ):
+        """Export a dataset from a given name.
+        Raises ValueError if the given dataset could not be exported.
+        Parameters
+        ----------
+        dataset_name: string
+            Name of the dataset to unload
+        format: string
+            Format for output (csv, json, ect.)
+        options: dict
+            Options for data unload
+        filename: string
+            The output filename - may be empty if outputting to a database
+        Returns
+        -------
+        vizier.filestore.base.FileHandle
+        """
+        # TODO: Implementation needed
+        raise NotImplementedError()
+
     def query(self, 
         query: str,
         datasets: Dict[str, DatasetDescriptor]
@@ -412,10 +509,8 @@ class FileSystemDatastore(DefaultDatastore):
 def validate_dataset(columns: List[DatasetColumn], rows: List[DatasetRow]) -> Tuple[int,int]:
     """Validate that (i) each column has a unique identifier, (ii) each row has
     a unique identifier, and (iii) each row has exactly one value per column.
-
     Returns the maximum column and row identifiers. Raises ValueError in case
     of a schema violation.
-
     Parameters
     ----------
     columns: list(vizier.datastore.dataset.DatasetColumn)
@@ -423,7 +518,6 @@ def validate_dataset(columns: List[DatasetColumn], rows: List[DatasetRow]) -> Tu
         identifier.
     rows: list(vizier.datastore.dataset.DatasetRow)
         List of dataset rows.
-
     Returns
     -------
     int, int

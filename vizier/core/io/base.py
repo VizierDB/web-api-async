@@ -66,7 +66,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def create_object(self, 
@@ -92,7 +92,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_folder(self, 
@@ -109,7 +109,7 @@ class ObjectStore(object):
         force_delete: bool, optional
             Force deletion of the resource
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_object(self, object_path, force_delete=False):
@@ -122,7 +122,7 @@ class ObjectStore(object):
         force_delete: bool, optional
             Force deletion of the resource
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def exists(self, resource_path: str) -> bool:
@@ -137,7 +137,7 @@ class ObjectStore(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def join(self, parent_folder: str, identifier: str) -> str:
@@ -154,7 +154,7 @@ class ObjectStore(object):
         -------
         string
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_folders(self, folder_path, create=True):
@@ -173,7 +173,7 @@ class ObjectStore(object):
         -------
         list(string)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_objects(self, folder_path: str) -> List[str]:
@@ -189,7 +189,7 @@ class ObjectStore(object):
         -------
         list(string)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def read_object(self, 
@@ -199,7 +199,7 @@ class ObjectStore(object):
 
         Raises ValueError if no object with given path exists.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def write_object(self, 
@@ -215,7 +215,7 @@ class ObjectStore(object):
         content: dict or list
             Json object or array
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DefaultObjectStore(ObjectStore):

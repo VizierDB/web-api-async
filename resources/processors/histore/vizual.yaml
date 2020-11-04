@@ -1,0 +1,10 @@
+packages:
+    - vizual
+    - data
+engine:
+    className: 'VizualTaskProcessor'
+    moduleName: 'vizier.engine.packages.vizual.processor'
+    properties:
+        api:
+            className: 'OpencleanVizualApi'
+            moduleName: 'vizier.engine.packages.vizual.api.openclean'

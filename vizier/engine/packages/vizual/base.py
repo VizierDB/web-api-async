@@ -22,6 +22,7 @@ from typing import Dict, Any
 """Global constants."""
 
 # Package name
+PACKAGE_DATA = 'data'
 PACKAGE_VIZUAL = 'vizual'
 
 # Package-specific identifier for VizUAL commands
@@ -268,14 +269,26 @@ VIZUAL_COMMANDS = pckg.package_declaration(
         #             parent=PARA_SCHEMA,
         #             required=False
         #         ),
-        #         pckg.parameter_declaration(
-        #             PARA_INFER_TYPES,
-        #             name='Infer Types',
-        #             data_type=pckg.DT_BOOL,
-        #             index=6,
-        #             default_value=True,
-        #             required=False
-        #         ),
+        # pckg.parameter_declaration(
+        #     PARA_INFER_TYPES,
+        #     name='Infer Types',
+        #     data_type=pckg.DT_STRING,
+        #     values=[
+        #         pckg.enum_value(value='none', text='Do not infer data types', is_default=True),
+        #         pckg.enum_value(value='datamartprofiler', text='Datamart Profiler'),
+        #         pckg.enum_value(value='mimirprofiler', text='Mimir Profiler')
+        #     ],
+        #     index=3,
+        #     required=True
+        # ),
+        # pckg.parameter_declaration(
+        #     PARA_INFER_TYPES,
+        #     name='Infer Types',
+        #     data_type=pckg.DT_BOOL,
+        #     index=3,
+        #     default_value=True,
+        #     required=False
+        # ),
         #         pckg.parameter_declaration(
         #             PARA_DETECT_HEADERS,
         #             name='File Has Headers',

@@ -148,6 +148,10 @@ def DATASET_DESCRIPTOR(
             ref.ANNOTATIONS_GET: urls.get_dataset_caveats(
                 project_id=project_id,
                 dataset_id=dataset_id
+            ),
+            ref.PROFILING_GET: urls.get_dataset_profiling(
+                project_id=project_id,
+                dataset_id=dataset_id
             )
         })
     return obj
@@ -301,7 +305,6 @@ def DATASET_ROW(row: DatasetRow) -> Dict[str, Any]:
     -------
     dict
     """
-  
     return {
         labels.ID: row.identifier,
         labels.ROWVALUES: row.values,
