@@ -162,9 +162,16 @@ class OSModuleHandle(ModuleHandle):
 
     @staticmethod
     def create_module(
-        command, external_form, state, timestamp, outputs, provenance,
-        module_folder, object_store=None
-    ):
+        command: ModuleCommand, 
+        external_form: str, 
+        state: int, 
+        timestamp: ModuleTimestamp, 
+        outputs: ModuleOutputs, 
+        provenance: ModuleProvenance,
+        module_folder: str, 
+        object_store: Optional[ObjectStore] = None,
+        identifier: Optional[str] = None
+    ) -> ModuleHandle:
         """Create a new materialized module instance for the given values.
 
         Parameters
@@ -208,7 +215,8 @@ class OSModuleHandle(ModuleHandle):
         )
         identifier = object_store.create_object(
             parent_folder=module_folder,
-            content=obj
+            content=obj,
+            identifier=identifier
         )
         # Return handle for created module
         return OSModuleHandle(

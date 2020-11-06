@@ -45,9 +45,9 @@ class ProjectHandle(object):
         filestore: vizier.filestore.base.Filestore, optional
             Associated filestore
         """
-        self.viztrail = viztrail
-        self.datastore = datastore
-        self.filestore = filestore
+        self.viztrail:ViztrailHandle = viztrail
+        self.datastore:Datastore = datastore
+        self.filestore:Filestore = filestore
 
     @property
     def created_at(self):

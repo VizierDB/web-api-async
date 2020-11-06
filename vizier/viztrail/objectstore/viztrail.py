@@ -25,10 +25,17 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
+from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.base import ViztrailHandle
 from vizier.viztrail.named_object import PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH, BranchHandle
 from vizier.core.io.base import ObjectStore
+from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
+
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
 FOLDER_MODULES = 'modules'
@@ -112,7 +119,8 @@ class OSViztrailHandle(ViztrailHandle):
     def create_branch(self, 
             provenance: Optional[BranchProvenance] = None, 
             properties: Optional[Dict[str, Any]] = None, 
-            modules: Optional[List[str]] = None
+            modules: Optional[List[str]] = None,
+            identifier: Optional[str] = None
         ) -> OSBranchHandle:
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
@@ -138,7 +146,8 @@ class OSViztrailHandle(ViztrailHandle):
             modules=modules,
             branch_folder=self.branch_folder,
             modules_folder=self.modules_folder,
-            object_store=self.object_store
+            object_store=self.object_store,
+            identifier=identifier
         )
         # Add the new branch to index and materialize the updated index
         # information
@@ -367,6 +376,32 @@ class OSViztrailHandle(ViztrailHandle):
         )
         return branch
 
+    def create_module(self, 
+        command: ModuleCommand,
+        external_form: str,
+        state: int = MODULE_PENDING,
+        timestamp: ModuleTimestamp = ModuleTimestamp(),
+        outputs: ModuleOutputs = ModuleOutputs(), 
+        provenance: ModuleProvenance = ModuleProvenance(),
+        identifier: Optional[str] = None,
+    ) -> ModuleHandle:
+        """
+        Create a module handle in a format native to this repository.  
+        If the repository is persisent, this should also persist the 
+        module.
+        """
+        return OSModuleHandle.create_module(
+            command = command,
+            external_form = external_form,
+            state = state, 
+            timestamp = timestamp, 
+            outputs = outputs, 
+            provenance = provenance,
+            module_folder = self.modules_folder, 
+            object_store = self.object_store,
+            identifier = identifier
+        )
+
 
 # ------------------------------------------------------------------------------
 # Helper Methods
@@ -380,7 +415,8 @@ def create_branch(
     modules_folder: str,
     object_store: ObjectStore, 
     is_default: bool = False, 
-    created_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None,
+    identifier: Optional[str] = None
 ) -> OSBranchHandle:
     """Create a new branch. If the list of workflow modules is given the list
     defines the branch head. Otherwise, the branch is empty.
@@ -409,7 +445,7 @@ def create_branch(
     """
     # Get unique identifier for new branch by creating the subfolder that
     # will contain branch resources
-    identifier = object_store.create_folder(branch_folder)
+    identifier = object_store.create_folder(branch_folder, identifier = identifier)
     branch_path = object_store.join(branch_folder, identifier)
     # Create materialized branch resource. This will raise an exception if
     # the list of modules contains an active module.

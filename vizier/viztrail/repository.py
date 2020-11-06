@@ -29,7 +29,7 @@ class ViztrailRepository(object):
     @abstractmethod
     def create_viztrail(self, 
             properties: Optional[Dict[str, Any]] = None
-        ):
+        ) -> ViztrailHandle:
         """Create a new viztrail. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either
         be scalar values or a list of scalar values.

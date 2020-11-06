@@ -50,7 +50,13 @@ class VizierWorkflowApi(object):
         self.engine = engine
         self.urls = urls
 
-    def append_workflow_module(self, project_id, branch_id, package_id, command_id, arguments):
+    def append_workflow_module(self, 
+            project_id: str, 
+            branch_id: str, 
+            package_id: str, 
+            command_id: str, 
+            arguments: List[Dict[str, Any]]
+        ) -> Dict[str, Any]:
         """Append a new module to the head of the identified project branch.
         The module command is identified by the package and command identifier.
         Arguments is a list of command arguments.

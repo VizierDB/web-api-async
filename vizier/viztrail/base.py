@@ -22,13 +22,18 @@ optional name. Each branch is a sequence of workflow versions.
 """
 
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.core.annotation.base import ObjectAnnotationSet
-from vizier.viztrail.branch import BranchHandle
+from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.named_object import NamedObject
+from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 
 # ------------------------------------------------------------------------------
@@ -96,7 +101,12 @@ class ViztrailHandle(NamedObject):
         self.created_at = created_at if not created_at is None else get_current_time()
 
     @abstractmethod
-    def create_branch(self, provenance=None, properties=None, modules=None):
+    def create_branch(self, 
+            provenance: Optional[BranchProvenance] = None, 
+            properties: Optional[Dict[str, Any]] = None, 
+            modules: Optional[List[str]] = None,
+            identifier: Optional[str] = None
+        ) -> BranchHandle:
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
 
@@ -222,5 +232,22 @@ class ViztrailHandle(NamedObject):
         Returns
         -------
         vizier.viztrail.branch.BranchHandle
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_module(self, 
+        command: ModuleCommand,
+        external_form: str,
+        state: int = MODULE_PENDING,
+        timestamp: ModuleTimestamp = ModuleTimestamp(),
+        outputs: ModuleOutputs = ModuleOutputs(), 
+        provenance: ModuleProvenance = ModuleProvenance(),
+        identifier: Optional[str] = None,
+    ) -> ModuleHandle:
+        """
+        Create a module handle in a format native to this repository.  
+        If the repository is persisent, this should also persist the 
+        module.
         """
         raise NotImplementedError

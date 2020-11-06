@@ -53,6 +53,9 @@ def BRANCH_DESCRIPTOR(
         'id': branch_id,
         'createdAt': branch.provenance.created_at.isoformat(),
         'lastModifiedAt': branch.last_modified_at.isoformat(),
+        'sourceBranch' : branch.provenance.source_branch,
+        'sourceWorkflow' : branch.provenance.workflow_id,
+        'sourceModule' : branch.provenance.module_id,
         'isDefault': project.viztrail.is_default_branch(branch_id),
         'properties': branch.properties
     }

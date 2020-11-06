@@ -27,10 +27,12 @@ from vizier.engine.base import VizierEngine
 from vizier.api.serialize.project import PROJECT_HANDLE
 from vizier.api.serialize.module import MODULE_HANDLE
 from vizier.api.serialize.files import FILE_HANDLE as FILE_HANDLE
+from vizier.viztrail.base import BranchProvenance
 from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.command import ModuleCommand
 import vizier.api.serialize.labels as labels
+
 
 EXPORT_VERSION = "1"
 VERSION_PATH = "version.txt"
@@ -132,30 +134,30 @@ def import_project(
       if int(v.read()) != 1:
         raise Exception("The export is too new")
     with read_or_fail(PROJECT_PATH) as p:
-      project_handle = json.load(p)
+      project_serialized = json.load(p)
     
     project = engine.projects.create_project(
-                properties = project_handle["properties"]
+                properties = project_serialized["properties"]
               )
-    for file_handle in project_handle['files']:
+    for file_serialized in project_serialized['files']:
       with project.filestore.replace_file(
-          identifier = file_handle["id"],
-          file_name  = file_handle["name"],
-          mimetype   = file_handle.get("mimetype", None),
-          encoding   = file_handle.get("encoding", None)
+          identifier = file_serialized["id"],
+          file_name  = file_serialized["name"],
+          mimetype   = file_serialized.get("mimetype", None),
+          encoding   = file_serialized.get("encoding", None)
         ) as out_f:
-        with read_or_fail(FILE_PATH.format(file_handle["id"])) as in_f:
+        with read_or_fail(FILE_PATH.format(file_serialized["id"])) as in_f:
           shutil.copyfileobj(in_f, out_f)
       
     project.viztrail.created_at = datetime.fromisoformat(
-                                    project_handle['createdAt']
+                                    project_serialized['createdAt']
                                   )
-    # project_handle['lastModifiedAt'] ## derived from branch properties
+    # project_serialized['lastModifiedAt'] ## derived from branch properties
       
-    modules = project_handle['modules']
+    modules = project_serialized['modules']
     for module_id in modules:
-      modules[module_id] = ModuleHandle(
-        ModuleCommand(
+      module = project.viztrail.create_module(
+        command = ModuleCommand(
             package_id = modules[module_id][labels.COMMAND][labels.COMMAND_PACKAGE],
             command_id = modules[module_id][labels.COMMAND][labels.COMMAND_ID],
             arguments  = modules[module_id][labels.COMMAND][labels.COMMAND_ARGS],
@@ -170,14 +172,50 @@ def import_project(
                       )
                     )
       )
+      # We need to transform the module handle into the native representation
+      # for the backend
+
+
+      modules[module_id] = module
     
+    for branch_serialized in project_serialized["branches"]:
+      branch = project.viztrail.create_branch(
+        provenance = BranchProvenance(
+          source_branch = branch_serialized["sourceBranch"],
+          workflow_id   = branch_serialized["sourceWorkflow"],
+          module_id     = branch_serialized["sourceModule"],
+          created_at    = datetime.fromisoformat(
+                              branch_serialized["createdAt"]
+                          )
+        ), 
+        properties = {
+          x["key"] : x["value"] 
+          for x in branch_serialized["properties"]
+        },
+        modules = None,
+        identifier = branch_serialized["id"]
+      )
+      for workflow_serialized in branch_serialized["workflows"]:
+        branch.append_workflow(
+          modules = [
+            modules[module_id]
+            for module_id in workflow_serialized['modules']
+          ],
+          action = workflow_serialized['action'],
+          command = ModuleCommand(
+            package_id = workflow_serialized['packageId'],
+            command_id = workflow_serialized['commandId'],
+            arguments = [],
+            packages = None
+          ),
+        )
 
-    project_handle['branches']
-    project.viztrail.default_branch = project_handle['defaultBranch']
-
-
-    print("\n----- import -----")      
-    print(project_handle)
-
+    # Replace the original "default" branch with the imported default
+    original_default = project.viztrail.default_branch.identifier
+    project.viztrail.set_default_branch(project_serialized['defaultBranch'])
+    if original_default not in [ b["id"] for b in project_serialized["branches"] ]:
+      # tiny bit of safety, avoid a case where the original default branch is 
+      # the same as one of the imported branches
+      project.viztrail.delete_branch(original_default)
 
     return project
