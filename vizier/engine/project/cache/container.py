@@ -312,7 +312,7 @@ class ContainerProjectCache(ProjectCache):
         """
         return list(self.projects.values())
 
-    def write_container_info(self):
+    def write_container_info(self) -> None:
         """Write the current mapping of project identifier to project containers
         to the object store container file.
         """

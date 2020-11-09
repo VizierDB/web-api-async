@@ -90,7 +90,7 @@ class ViztrailHandle(NamedObject):
             properties=properties
         )
         self.identifier = identifier
-        self.branches = dict()
+        self.branches:Dict[str,BranchHandle] = dict()
         # Initialize the branch index from the given list (if present)
         if not branches is None:
             for b in branches:
@@ -127,7 +127,7 @@ class ViztrailHandle(NamedObject):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_branch(self, branch_id):
+    def delete_branch(self, branch_id: str) -> bool:
         """Delete branch with the given identifier. Returns True if the branch
         existed and False otherwise.
 
@@ -183,14 +183,17 @@ class ViztrailHandle(NamedObject):
         """
         return branch_id in self.branches
 
-    def is_default_branch(self, branch_id):
+    def is_default_branch(self, branch_id: str) -> bool:
         """Test if a given branch is the default branch.
 
         Returns
         -------
         bool
         """
-        return self.default_branch.identifier == branch_id
+        if self.default_branch is None:
+            return False
+        else:
+            return self.default_branch.identifier == branch_id
 
     @property
     def last_modified_at(self):
@@ -208,7 +211,7 @@ class ViztrailHandle(NamedObject):
                 ts = branch_ts
         return ts
 
-    def list_branches(self):
+    def list_branches(self) -> List[BranchHandle]:
         """Get a list of branches that are currently defined for the viztrail.
 
         Returns
@@ -218,7 +221,7 @@ class ViztrailHandle(NamedObject):
         return list(self.branches.values())
 
     @abstractmethod
-    def set_default_branch(self, branch_id):
+    def set_default_branch(self, branch_id: str) -> BranchHandle:
         """Set the branch with the given identifier as the default branch.
         Raises ValueError if no branch with the given identifier exists.
 

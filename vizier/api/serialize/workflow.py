@@ -54,7 +54,7 @@ def EMPTY_WORKFLOW_HANDLE(
     """
     project_id = project.identifier
     branch_id = branch.identifier
-    ret = {
+    ret:Dict[str,Any] = {
         'id': None,
         'createdAt': None,
         'state': -1,
@@ -185,7 +185,7 @@ def WORKFLOW_HANDLE(
             )
         )
     handle_links: Optional[Dict[str,Optional[str]]] = None
-    if workflow.is_active:
+    if workflow.is_active and urls is not None:
         handle_links = {
             ref.WORKFLOW_CANCEL: urls.cancel_workflow(
                 project_id=project_id,

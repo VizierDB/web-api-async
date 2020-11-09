@@ -246,7 +246,7 @@ class OSViztrailHandle(ViztrailHandle):
         """
         self.object_store.delete_folder(self.base_path)
 
-    def delete_branch(self, branch_id):
+    def delete_branch(self, branch_id: str) -> bool:
         """Delete branch with the given identifier. Returns True if the branch
         existed and False otherwise.
 
@@ -262,14 +262,15 @@ class OSViztrailHandle(ViztrailHandle):
         bool
         """
         # Raise an exception is an attempt is made to delete the default branch
-        if self.default_branch.identifier == branch_id:
+        if self.default_branch is not None and self.default_branch.identifier == branch_id:
             raise ValueError('cannot delete default branch')
         if branch_id in self.branches:
             # Call the delete method of the branch and update the branch index
-            self.branches[branch_id].delete_branch()
+            branch_handle = cast( OSBranchHandle, self.branches[branch_id] )
+            branch_handle.delete_branch()
             del self.branches[branch_id]
             write_branch_index(
-                branches=self.branches,
+                branches=cast( Dict[str,OSBranchHandle], self.branches ),
                 object_path=self.branch_index,
                 object_store=self.object_store
             )
@@ -346,7 +347,7 @@ class OSViztrailHandle(ViztrailHandle):
             modules_folder=modules_folder
         )
 
-    def set_default_branch(self, branch_id):
+    def set_default_branch(self, branch_id: str) -> BranchHandle:
         """Set the branch with the given identifier as the default branch.
         Raises ValueError if no branch with the given identifier exists.
 
@@ -365,12 +366,13 @@ class OSViztrailHandle(ViztrailHandle):
             raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         branch = self.branches[branch_id]
         # Replace the current default branch
-        self.default_branch.is_default = False
-        branch.is_default = True
+        if self.default_branch is not None:
+            cast(OSBranchHandle, self.default_branch).is_default = False
+        cast(OSBranchHandle, branch).is_default = True
         self.default_branch = branch
         # Write modified branch index
         write_branch_index(
-            branches=self.branches,
+            branches=cast(Dict[str, OSBranchHandle], self.branches),
             object_path=self.branch_index,
             object_store=self.object_store
         )

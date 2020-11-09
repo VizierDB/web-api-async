@@ -17,13 +17,20 @@
 """Resource object representing a branch of a project that is available at a
 remote vizier instance."""
 
+from typing import Dict, Any, Optional, List
 from vizier.api.client.resources.workflow import WorkflowResource
 from vizier.core.timestamp import to_datetime
-
+from datetime import datetime
 
 class BranchResource(object):
     """A project branch in a remote vizier instance."""
-    def __init__(self, identifier, name, created_at, last_modified_at, workflows=None):
+    def __init__(self, 
+            identifier: str, 
+            name: Optional[str], 
+            created_at: datetime, 
+            last_modified_at: datetime, 
+            workflows: Optional[List[WorkflowResource]] = None
+        ):
         """Initialize the branch attributes."""
         self.identifier = identifier
         self.name = name
@@ -32,7 +39,7 @@ class BranchResource(object):
         self.workflows = workflows
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str,Any]) -> "BranchResource":
         """Get a branch resource instance from the dictionary representation
         returned by the vizier web service.
 

@@ -56,7 +56,7 @@ class VizierWorkflowApi(object):
             package_id: str, 
             command_id: str, 
             arguments: List[Dict[str, Any]]
-        ) -> Dict[str, Any]:
+        ) -> Optional[Dict[str, Any]]:
         """Append a new module to the head of the identified project branch.
         The module command is identified by the package and command identifier.
         Arguments is a list of command arguments.
@@ -107,7 +107,7 @@ class VizierWorkflowApi(object):
         return serialwf.WORKFLOW_HANDLE(
             project=project,
             branch=branch,
-            workflow=branch.head,
+            workflow=branch.get_head(),
             urls=self.urls
         )
 

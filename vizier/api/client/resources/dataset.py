@@ -52,7 +52,7 @@ class DatasetDescriptor(object):
         self.links = links
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str, Any]) -> "DatasetDescriptor":
         """Create the descriptor from a dictionary serialization.
 
         Parameters

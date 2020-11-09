@@ -17,7 +17,7 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
-from typing import cast, Optional, IO, Dict, Any, List, Tuple
+from typing import cast, Optional, IO, Dict, Any, List
 
 import gzip
 import mimetypes

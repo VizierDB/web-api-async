@@ -278,7 +278,7 @@ class AppConfig(object):
         )
 
     @property
-    def app_base_url(self):
+    def app_base_url(self) -> str:
         """Full Url (prefix) for all resources that are available on the Web
         Service. this is a concatenation of the service Url, port number and
         application path.
@@ -289,7 +289,7 @@ class AppConfig(object):
         """
         return self.get_url(self.webservice.server_port)
 
-    def get_url(self, port):
+    def get_url(self, port:int) -> str:
         """Full Url (prefix) for all resources that are available on a Web
         Service running on the given port.
 

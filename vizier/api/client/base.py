@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Client-size apit for a remote vizier instance."""
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import json
 import requests
 import urllib.request
@@ -335,7 +335,7 @@ class VizierApiClient(object):
         print('Version : ' + doc['environment']['version'])
         print('Started : ' + doc['startedAt'])
 
-    def list_branches(self, project_id):
+    def list_branches(self, project_id: str) -> List[BranchResource]:
         """Fetch list of project from remote web service API.
 
         Returns

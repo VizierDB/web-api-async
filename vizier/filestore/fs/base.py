@@ -18,7 +18,7 @@
 and their metadata on disk.
 """
 
-from typing import Optional, IO
+from typing import Optional, IO, Tuple
 import json
 import os
 import shutil
@@ -295,7 +295,7 @@ class FileSystemFilestore(Filestore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def read_metadata_file(file_dir):
+def read_metadata_file(file_dir: str) -> Tuple[str, str, str]:
     """Read metadata information for the specified file. Returns the original
     file name, the mime type and encoding (the last two values may be None).
 

@@ -211,11 +211,15 @@ def import_project(
         )
 
     # Replace the original "default" branch with the imported default
-    original_default = project.viztrail.default_branch.identifier
+    original_default = (
+      project.viztrail.default_branch.identifier 
+        if project.viztrail.default_branch is not None else None
+    )
     project.viztrail.set_default_branch(project_serialized['defaultBranch'])
     if original_default not in [ b["id"] for b in project_serialized["branches"] ]:
       # tiny bit of safety, avoid a case where the original default branch is 
       # the same as one of the imported branches
-      project.viztrail.delete_branch(original_default)
+      if original_default is not None:
+        project.viztrail.delete_branch(original_default)
 
     return project
