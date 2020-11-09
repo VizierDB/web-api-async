@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-from typing import Dict, List, IO
+from typing import Dict, List, IO, Optional
 import shutil
 from io import BytesIO
 import json
@@ -28,7 +28,7 @@ from vizier.api.serialize.project import PROJECT_HANDLE
 from vizier.api.serialize.module import MODULE_HANDLE
 from vizier.api.serialize.files import FILE_HANDLE as FILE_HANDLE
 from vizier.viztrail.base import BranchProvenance
-from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.module.base import ModuleHandle, MODULE_CANCELED
 from vizier.viztrail.module.timestamp import ModuleTimestamp
 from vizier.viztrail.command import ModuleCommand
 import vizier.api.serialize.labels as labels
@@ -40,10 +40,12 @@ PROJECT_PATH = "project.json"
 FILE_PATH    = "fs/{}"
 
 def export_project(
-    target_file: str, 
-    project: ProjectHandle
+    project: ProjectHandle,
+    target_file: Optional[str] = None, 
+    target_io: Optional[IO] = None
   ) -> None:
-  with taropen(target_file, mode = 'w:gz') as archive:
+  assert(target_file is not None or target_io is not None)
+  with taropen(name = target_file, fileobj = target_io, mode = 'w:gz') as archive:
 
     def add_buffer(data: bytes, path: str):
       info = TarInfo(path)
@@ -120,10 +122,12 @@ def export_project(
     add_buffer(json.dumps(project_handle).encode(), PROJECT_PATH)
 
 def import_project(
-    source_file: str,
-    engine: VizierEngine
+    engine: VizierEngine,
+    source_file: Optional[str] = None,
+    source_io: Optional[IO] = None,
   ) -> ProjectHandle:
-  with taropen(source_file, mode = 'r:gz') as archive:
+  assert(source_file is not None or source_io is not None)
+  with taropen(name = source_file, fileobj = source_io, mode = 'r:gz') as archive:
     def read_or_fail(path: str) -> IO:
       io = archive.extractfile(path)
       if io is None:
@@ -137,7 +141,10 @@ def import_project(
       project_serialized = json.load(p)
     
     project = engine.projects.create_project(
-                properties = project_serialized["properties"]
+                properties = {
+                  prop["key"] : prop["value"]
+                  for prop in project_serialized["properties"]
+                }
               )
     for file_serialized in project_serialized['files']:
       with project.filestore.replace_file(
@@ -165,7 +172,7 @@ def import_project(
         ),
         external_form = modules[module_id]['text'],
         identifier = modules[module_id][labels.ID],
-        state = MODULE_PENDING,
+        state = MODULE_CANCELED,
         timestamp = ModuleTimestamp(
                       created_at = datetime.fromisoformat(
                         modules[module_id][labels.TIMESTAMPS][labels.CREATED_AT]

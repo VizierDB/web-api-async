@@ -100,11 +100,11 @@ class TestExport(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        if os.path.isfile(ARCHIVE_FILE) and False:
+        if os.path.isfile(ARCHIVE_FILE):
             os.unlink(ARCHIVE_FILE)
 
     def test_export(self):
-        viz_export.export_project(ARCHIVE_FILE, TestExport.project)
+        viz_export.export_project(TestExport.project, target_file = ARCHIVE_FILE)
         # We'd better have exported the file
         self.assertTrue(os.path.isfile(ARCHIVE_FILE))
         
@@ -118,7 +118,7 @@ class TestExport(unittest.TestCase):
                 self.assertEqual(f.read().decode(), viz_export.EXPORT_VERSION)
 
     def test_import(self):
-        imported_project = viz_export.import_project(ARCHIVE_FILE, TestExport.engine)
+        imported_project = viz_export.import_project(TestExport.engine, source_file = ARCHIVE_FILE)
         print("Imported: {}".format(imported_project.identifier))
 
 

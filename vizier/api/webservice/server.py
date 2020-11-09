@@ -24,10 +24,9 @@ from typing import Optional
 import csv
 import os
 import io
-import tarfile
 import traceback
 
-from flask import Blueprint, jsonify, make_response, request, send_file, send_from_directory
+from flask import Blueprint, Response, jsonify, make_response, request, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 
 from vizier.api.routes.base import PAGE_LIMIT, PAGE_OFFSET, FORCE_PROFILER
@@ -36,9 +35,8 @@ from vizier.config.app import AppConfig
 
 import vizier.api.base as srv
 import vizier.api.serialize.deserialize as deserialize
+import vizier.api.serialize.project as serialpr
 import vizier.api.serialize.labels as labels
-import vizier.config.app as app
-import json
 
 # -----------------------------------------------------------------------------
 #
@@ -124,29 +122,33 @@ def static_files(path):
         return send_from_directory(webui_file_dir, 'index.html')
 
 @bp.route('/projects/<string:project_id>/export')
-def export_project(project_id):
+def export_project(project_id: str):
     """Export the project data files as tar.gz.
     """
     # Get the handle for the dataset with given identifier. The result is None
     # if no dataset with given identifier exists.
-    base_dir = config.engine.data_dir
-    vistrails_dir  = os.path.join(base_dir, app.DEFAULT_VIZTRAILS_DIR)
-    filestores_dir = os.path.join(base_dir, app.DEFAULT_FILESTORES_DIR)
-    datastores_dir = os.path.join(base_dir, app.DEFAULT_DATASTORES_DIR)
-    si = io.BytesIO()
-    with tarfile.open(fileobj=si, mode="w:gz") as tar:
-        tar.add(datastores_dir+os.path.sep+project_id, arcname=os.path.sep+"ds"+os.path.sep+project_id+os.path.sep)
-        tar.add(filestores_dir+os.path.sep+project_id, arcname=os.path.sep+"fs"+os.path.sep+project_id+os.path.sep)
-        tar.add(vistrails_dir+os.path.sep+project_id, arcname=os.path.sep+"vt"+os.path.sep+project_id+os.path.sep)
+    project = api.projects.projects.get_project(project_id)
+
+    import vizier.export as export
+    import tempfile
     
-    # Return the tar file 
-    output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename="+project_id+".tar.gz"
-    output.headers["Content-type"] = "application/x-gzip"
-    return output
+    f = tempfile.TemporaryFile(suffix = ".vizier")
+    export.export_project(
+        project = project,
+        target_io = f
+    )
+    f.seek(0, io.SEEK_SET)
+
+    name = project_id if project.name is None else project.name
+    return send_file(f,
+        mimetype = "application/octet-stream",
+        attachment_filename = "{}.vizier".format(name),
+        as_attachment = True
+    )
+
 
 @bp.route('/projects/import', methods=['POST'])
-def import_project():
+def import_project() -> "Response":
     """Upload file (POST) - Upload a data files for a project.
     """
     # The upload request may contain a file object or an Url from where to
@@ -158,51 +160,29 @@ def import_project():
             raise srv.InvalidRequest('empty file name')
         # Save uploaded file to temp directory
         try:
-            base_dir = config.engine.data_dir
-            si = io.BytesIO()
-            file.save(dst=si)
-            si.seek(0)
-            project_id = ""
-            with tarfile.open(fileobj=si, mode="r:gz") as tar:
-                for tarinfo in tar:
-                    if tarinfo.name.startswith("ds/"):
-                        project_id = tarinfo.name.split('/')[1]
-                        break
+            import vizier.export as export
+            project = export.import_project(api.engine, source_io = file)
 
-                vtfpath = base_dir+os.path.sep+"vt"+os.path.sep+"viztrails"
-                with open(vtfpath, "r") as vtf:
-                    vt_index_js = json.load(vtf)
-                if project_id in vt_index_js:
-                    raise srv.InvalidRequest("This project already exists.")
-            
-                def ds_files(members):
-                    for tarinfo in members:
-                        if tarinfo.name.startswith("ds/"):
-                            yield tarinfo
-                
-                def fs_files(members):
-                    for tarinfo in tar:
-                        if tarinfo.name.startswith("fs/"):
-                            yield tarinfo
-                
-                def vt_files(members):
-                    for tarinfo in tar:
-                        if tarinfo.name.startswith("vt/"):
-                            yield tarinfo
-                
-                
-                tar.extractall(path=base_dir,members=ds_files(tar))
-                tar.extractall(path=base_dir,members=fs_files(tar))
-                tar.extractall(path=base_dir,members=vt_files(tar))
+            # schedule the default workflow for re-execution
+            branch = project.get_default_branch()
+            if branch is not None:
+                if branch.head is not None:
+                    if len(branch.head.modules) > 0:
+                        first_module = branch.head.modules[0]
+                        api.engine.replace_workflow_module(
+                            project_id = project.identifier,
+                            branch_id = branch.identifier,
+                            module_id = first_module.identifier,
+                            command = first_module.command
+                        )
 
-            with open(vtfpath, "w") as vtf:
-                json.dump(vt_index_js + [project_id], vtf)
+            # import tempfile
+            # with tempfile.TemporaryFile() as tmp:
+            #     file.save(dst=tmp)
+            #     tmp.seek(0, io.SEEK_SET)
+            #     project = export.import_project(api.engine, source_io = tmp)
+            return jsonify(serialpr.PROJECT_HANDLE(project, api.projects.urls))
 
-            global api
-            api = VizierApi(config, init=True)
-            pj = api.projects.get_project(project_id)
-            if not pj is None:
-                return jsonify(pj)
         except ValueError as ex:
             raise srv.InvalidRequest(str(ex))
             print(ex)
@@ -216,7 +196,7 @@ def reload_api():
     api = VizierApi(config, init=True)
 
 @bp.route('/projects/<string:project_id>')
-def get_project(project_id):
+def get_project(project_id: str):
     """Retrieve information for project with given identifier."""
     # Retrieve project serialization. If project does not exist the result
     # will be none.
@@ -780,7 +760,7 @@ def download_dataset(project_id, dataset_id):
             cw.writerow(row.values)
     # Return the CSV file file
     output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-Disposition"] = "attachment; filename={}.csv".format(dataset_id)
     output.headers["Content-type"] = "text/csv"
     return output
 
