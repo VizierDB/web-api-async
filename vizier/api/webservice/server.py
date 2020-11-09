@@ -148,7 +148,7 @@ def export_project(project_id: str):
 
 
 @bp.route('/projects/import', methods=['POST'])
-def import_project() -> "Response":
+def import_project() -> Response:
     """Upload file (POST) - Upload a data files for a project.
     """
     # The upload request may contain a file object or an Url from where to
@@ -166,9 +166,11 @@ def import_project() -> "Response":
             # schedule the default workflow for re-execution
             branch = project.get_default_branch()
             if branch is not None:
-                if branch.head is not None:
-                    if len(branch.head.modules) > 0:
-                        first_module = branch.head.modules[0]
+                workflow = branch.get_head()
+                if workflow is not None:
+                    if len(workflow.modules) > 0:
+                        first_module = workflow.modules[0]
+                        assert(first_module.identifier is not None)
                         api.engine.replace_workflow_module(
                             project_id = project.identifier,
                             branch_id = branch.identifier,

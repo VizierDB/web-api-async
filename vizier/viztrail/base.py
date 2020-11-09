@@ -142,7 +142,7 @@ class ViztrailHandle(NamedObject):
         """
         raise NotImplementedError
 
-    def get_default_branch(self):
+    def get_default_branch(self) -> Optional[BranchHandle]:
         """Get the handle for the default branch of the viztrail.
 
         Returns

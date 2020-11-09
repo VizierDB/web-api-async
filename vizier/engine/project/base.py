@@ -18,7 +18,9 @@
 The project handle may also contain references to the datastore and filestore
 that are associated with a project.
 """
+from typing import Optional
 from vizier.viztrail.base import ViztrailHandle
+from vizier.viztrail.branch import BranchHandle
 from vizier.datastore.base import Datastore
 from vizier.filestore.base import Filestore
 
@@ -60,7 +62,7 @@ class ProjectHandle(object):
         """
         return self.viztrail.created_at
 
-    def get_default_branch(self):
+    def get_default_branch(self) -> Optional[BranchHandle]:
         """Shortcut to access the handle for the default branch of the viztrail.
 
         Returns
