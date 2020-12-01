@@ -13,7 +13,7 @@ from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.multiprocess import MultiProcessBackend
 from vizier.engine.controller import WorkflowController
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON
-from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
+from vizier.engine.packages.pycell.processor.base import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.mimir import MimirVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor

@@ -63,6 +63,10 @@ class MimirDatastore(DefaultDatastore):
         """
         super(MimirDatastore, self).__init__(base_path)
 
+    def get_properties(self, identifier):
+        schema, properties = mimir.getTableInfo(identifier)
+        return properties
+
     def create_dataset(self, 
             columns: List[DatasetColumn], 
             rows: List[DatasetRow], 
