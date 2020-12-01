@@ -249,8 +249,8 @@ class Datastore(metaclass=ABCMeta):
     
     @abstractmethod
     def create_object(
-        self, value, obj_type="untyped"
-    ):
+        self, value: bytes, obj_type: str = "untyped"
+    ) -> str:
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
@@ -330,8 +330,8 @@ class DefaultDatastore(Datastore):
         return []
 
     def create_object(
-        self, value, obj_type="text/plain"
-    ):
+        self, value: bytes, obj_type: str = "text/plain"
+    ) -> str:
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
@@ -388,6 +388,9 @@ class DefaultDatastore(Datastore):
         """
         assert(self.base_path is not None)
         return os.path.join(self.base_path, identifier)
+
+    def get_data_object_dir(self, identifier: str) -> str:
+        return self.get_dataset_dir(identifier)
 
     def get_descriptor(self, identifier):
         """Get the descriptor for the dataset with given identifier from the

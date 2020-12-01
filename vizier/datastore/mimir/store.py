@@ -208,8 +208,8 @@ class MimirDatastore(DefaultDatastore):
         return mimir.getBlob(identifier, expected_type = expected_type)#.encode
        
     def create_object(
-        self, value, obj_type="text/plain"
-    ):
+        self, value: bytes, obj_type: str = "text/plain"
+    ) -> str:
         """Update the annotations for a component of the datasets with the given
         identifier. Returns the updated annotations or None if the dataset
         does not exist.
