@@ -130,7 +130,7 @@ class MultiProcessBackend(VizierBackend):
             previous execution of the command
         """
         # Ensure there is a processor for the package that contains the command
-        if not command.package_id in self.processors:
+        if command.package_id not in self.processors:
             raise ValueError('unknown package \'' + str(command.package_id) + '\' not in: ' + str(self.processors))
         processor = self.processors[command.package_id]
         # Create a pool with a single process to execute the task. Maintain

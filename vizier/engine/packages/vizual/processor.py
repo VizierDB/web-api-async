@@ -177,7 +177,7 @@ class VizualTaskProcessor(TaskProcessor):
                 context=context
             )
         else:
-            raise ValueError('unknown vizual command \'' + str(command_id) + '\'')
+            raise ValueError("unknown vizual command '{}'".format(command_id))
 
     def compute_delete_column(self, 
         args: ModuleArguments, 
@@ -442,32 +442,27 @@ class VizualTaskProcessor(TaskProcessor):
         source_desc = args.get_value(cmd.PARA_FILE)
         file_id = None
         url = None
-        if pckg.FILE_ID in source_desc and source_desc[pckg.FILE_ID] is not None:
+        if source_desc.get(pckg.FILE_ID) is not None:
             file_id = source_desc[pckg.FILE_ID]
-        elif pckg.FILE_URL in source_desc and source_desc[pckg.FILE_URL] is not None:
+        elif source_desc.get(pckg.FILE_URL) is not None:
             url = source_desc[pckg.FILE_URL]
         else:
             raise ValueError('invalid source descriptor')
-        username = source_desc[pckg.FILE_USERNAME] if pckg.FILE_USERNAME in source_desc else None
-        password = source_desc[pckg.FILE_PASSWORD] if pckg.FILE_PASSWORD in source_desc else None
-        reload = source_desc[pckg.FILE_RELOAD] if pckg.FILE_RELOAD in source_desc else True
+        username = source_desc.get(pckg.FILE_USERNAME)
+        password = source_desc.get(pckg.FILE_PASSWORD)
+        reload = source_desc.get(pckg.FILE_RELOAD, False)
         load_format = args.get_value(cmd.PARA_LOAD_FORMAT)
         detect_headers = args.get_value(
             cmd.PARA_DETECT_HEADERS,
             raise_error=False,
             default_value=True
         )
-        infer_types = args.get_value(
-            cmd.PARA_INFER_TYPES,
-            raise_error=False,
-            default_value=True
-        )
+        infer_types = args.get_value(cmd.PARA_INFER_TYPES)
         options = args.get_value(cmd.PARA_LOAD_OPTIONS, raise_error=False)
         m_opts = []
-        print((args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False)))
         if args.get_value(cmd.PARA_LOAD_DSE, raise_error=False, default_value=False):
-            m_opts.append({'name':'datasourceErrors', 'value':'true'})
-        if not options is None:
+            m_opts.append({'name': 'datasourceErrors', 'value': 'true'})
+        if options is not None:
             for option in options:
                 load_opt_key = option.get_value(cmd.PARA_LOAD_OPTION_KEY)
                 load_opt_val = option.get_value(cmd.PARA_LOAD_OPTION_VALUE)
@@ -580,9 +575,11 @@ class VizualTaskProcessor(TaskProcessor):
                 write={
                     ds_name: result.dataset
                 },
-                read=dict() # Need to explicitly declare a lack of dependencies.
+                read=dict()  # explicitly declare a lack of dependencies.
             )
-            outputs.stdout.append(TextOutput("Empty dataset '{}' created".format(ds_name)))
+            outputs.stdout.append(
+                TextOutput("Empty dataset '{}' created".format(ds_name))
+            )
         except Exception as ex:
             provenance = ModuleProvenance()
             outputs.error(ex)
@@ -613,7 +610,7 @@ class VizualTaskProcessor(TaskProcessor):
         output_name = args.get_value(pckg.PARA_NAME).lower()
         if not is_valid_name(output_name):
             raise ValueError('invalid dataset name \'' + output_name + '\'')
-        
+
         input_ds = context.get_dataset(input_name)
         if input_ds is None:
             raise ValueError('invalid dataset \'' + input_name + '\'')
@@ -622,10 +619,12 @@ class VizualTaskProcessor(TaskProcessor):
 
         provenance = ModuleProvenance(
                 write={output_name: input_ds},
-                read ={input_name: input_ds.identifier}
+                read={input_name: input_ds.identifier}
             )
         outputs = ModuleOutputs()
-        outputs.stdout.append(TextOutput("Cloned `{}` as `{}`".format(input_name, output_name)))
+        outputs.stdout.append(
+            TextOutput("Cloned `{}` as `{}`".format(input_name, output_name))
+        )
         return ExecResult(
             is_success=True,
             outputs=outputs,
@@ -653,7 +652,7 @@ class VizualTaskProcessor(TaskProcessor):
         # Get the new dataset name. Raise exception if a dataset with the
         # specified name already exsists.
         ds_name = args.get_value(pckg.PARA_DATASET).lower()
-       
+
         if not is_valid_name(ds_name):
             raise ValueError('invalid dataset name \'' + ds_name + '\'')
         # Get components of the load source. Raise exception if the source
@@ -661,12 +660,15 @@ class VizualTaskProcessor(TaskProcessor):
         unload_format = args.get_value(cmd.PARA_UNLOAD_FORMAT)
         options = args.get_value(cmd.PARA_UNLOAD_OPTIONS, raise_error=False)
         m_opts = []
-        
-        if not options is None:
+
+        if options is not None:
             for option in options:
                 unload_opt_key = option.get_value(cmd.PARA_UNLOAD_OPTION_KEY)
                 unload_opt_val = option.get_value(cmd.PARA_UNLOAD_OPTION_VALUE)
-                m_opts.append({'name':unload_opt_key, 'value':unload_opt_val})
+                m_opts.append({
+                    'name': unload_opt_key,
+                    'value': unload_opt_val
+                })
         # Execute load command.
         dataset = context.get_dataset(ds_name)
 

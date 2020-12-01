@@ -8,7 +8,7 @@ from vizier.datastore.fs.factory import FileSystemDatastoreFactory
 from vizier.engine.backend.synchron import SynchronousTaskEngine
 from vizier.engine.base import compute_context
 from vizier.engine.packages.pycell.base import PACKAGE_PYTHON, PYTHON_CODE
-from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
+from vizier.engine.packages.pycell.processor.base import PyCellTaskProcessor
 from vizier.engine.packages.vizual.api.fs import DefaultVizualApi
 from vizier.engine.packages.vizual.base import PACKAGE_VIZUAL, VIZUAL_LOAD, VIZUAL_UPD_CELL
 from vizier.engine.packages.vizual.processor import VizualTaskProcessor

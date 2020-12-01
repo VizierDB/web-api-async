@@ -18,10 +18,13 @@
 
 from typing import Any, TypeVar, Optional, IO
 
+import errno
 import json
 import os
 import uuid
 from datetime import date, datetime
+
+from datetime import datetime, date, time
 
 
 """Name of logger used for monitoring workflow engine performance."""
@@ -56,6 +59,33 @@ def cast(value: str) -> Any:
             return value
 
 
+def createdir(directory, abs=False):
+    """Safely create the given directory path if it does not exist.
+
+    Parameters
+    ----------
+    directory: string
+        Path to directory that is being created.
+    abs: boolean, optional
+        Return absolute path if true
+
+    Returns
+    -------
+    string
+    """
+    # Based on https://stackoverflow.com/questions/273192/
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:  # pragma: no cover
+            if e.errno != errno.EEXIST:
+                raise
+    if abs:
+        return os.path.abspath(directory)
+    else:
+        return directory
+
+
 def delete_env(name):
     """Delete variable with the given name from the set of environment
     variables. This is primarily used for test purposes.
@@ -70,7 +100,11 @@ def delete_env(name):
 
 
 def default_serialize(obj):
-    """JSON serializer for objects not serializable by default json code"""
+    """JSON serializer for objects not serializable by default json code."""
+
+    if isinstance(obj, datetime):
+        serial = obj.isoformat()
+        return serial
 
     if isinstance(obj, date):
         serial = obj.isoformat()

@@ -10,7 +10,7 @@ from vizier.datastore.fs.base import FileSystemDatastore
 from vizier.datastore.mimir.store import MimirDatastore
 from vizier.engine.packages.pycell.command import python_cell
 from vizier.engine.task.base import TaskContext
-from vizier.engine.packages.pycell.processor import PyCellTaskProcessor
+from vizier.engine.packages.pycell.processor.base import PyCellTaskProcessor
 from vizier.filestore.fs.base import FileSystemFilestore
 
 

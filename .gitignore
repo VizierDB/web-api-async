@@ -66,3 +66,5 @@ vizier_downloads/*
 /web-ui
 /last_test_*.txt
 /mimir
+# Temporary data file directory for Jupyter examples.
+resources/examples/jupyter/.tmp

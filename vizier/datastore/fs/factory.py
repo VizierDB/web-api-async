@@ -49,7 +49,7 @@ class FileSystemDatastoreFactory(DatastoreFactory):
             Dictionary of configuration properties
         """
         self.base_path = base_path
-        if not properties is None:
+        if properties is not None:
             self.base_path = os.path.abspath(properties[PARA_DIRECTORY])
         if self.base_path is None:
             raise ValueError('no base path given')

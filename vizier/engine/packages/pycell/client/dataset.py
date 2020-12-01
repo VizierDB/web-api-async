@@ -21,7 +21,8 @@ from typing import Optional, TYPE_CHECKING, Dict, Any, List
 if TYPE_CHECKING:
     from vizier.engine.packages.pycell.client.base import VizierDBClient
 
-from vizier.datastore.dataset import DatasetColumn, DatasetRow, get_column_index, DatasetHandle
+from vizier.datastore.dataset import DatasetColumn, DatasetRow, DatasetHandle
+from vizier.datastore.base import get_column_index
 from bokeh.models.sources import ColumnDataSource # type: ignore[import]
 
 
@@ -307,19 +308,19 @@ class DatasetClient(object):
 
         Returns
         -------
-        bokeh.models.sources.ColumnDataSource  
+        bokeh.models.sources.ColumnDataSource
         """
 
         if columns is None:
             columns = self.columns
         return ColumnDataSource(dict([
             (
-                column.name, 
+                column.name,
                 [ row.get_value(column.identifier if column.identifier >= 0 else column.name) for row in self.rows ]
             )
             for column in self.columns
         ]))
-        
+
     def show_map(self, lat_col, lon_col, label_col=None, center_lat=None, center_lon=None, zoom=8, height="500", map_provider='OSM'):
         import numpy as np # type: ignore[import]
         width="100%"
@@ -327,8 +328,8 @@ class DatasetClient(object):
         lats = []
         lons = []
         for row in self.rows:
-            lon, lat = float(row.get_value(lon_col)), float(row.get_value(lat_col))  
-            lats.append(lat) 
+            lon, lat = float(row.get_value(lon_col)), float(row.get_value(lat_col))
+            lats.append(lat)
             lons.append(lon)
             if map_provider == 'Google':
                 addrpts.append({"lat":str(lat), "lng":str(lon)})
@@ -340,13 +341,13 @@ class DatasetClient(object):
                              str(lon) + ', \'' + \
                              label + '\']'
                 addrpts.append(rowstr)
-                
+
         if center_lat is None:
             center_lat = np.mean(lats)
-            
+
         if center_lon is None:
             center_lon = np.mean(lons)
-        
+
         if map_provider == 'Google':
             import json
             from vizier.engine.packages.pycell.packages.wrappers import GoogleMapClusterWrapper
@@ -368,13 +369,13 @@ class DatasetClient(object):
         if chart_type not in charttypes:
             print(("Please specify a valid chart type: one of: " + str(charttypes)))
             return
-        
+
         if not labels:
             labels = keys
-        
+
         if not labels_inner:
             labels_inner = value_cols
-               
+
         data = []
         for key_idx, label in enumerate(labels):
             entry = {}
@@ -387,11 +388,11 @@ class DatasetClient(object):
                     if len(keys) == 0 or (len(keys) >= key_idx and row.get_value(key_col) == keys[key_idx]):
                         if value_cols and len(value_cols) >= idx:
                             inner_entry['value'] = row.get_value(value_cols[idx])
-                        if x_cols and len(x_cols) >= idx: 
+                        if x_cols and len(x_cols) >= idx:
                             inner_entry['x'] = row.get_value(x_cols[idx])
-                        if y_cols and len(y_cols) >= idx: 
+                        if y_cols and len(y_cols) >= idx:
                             inner_entry['y'] = row.get_value(y_cols[idx])
-                        if date_cols and len(date_cols) >= idx: 
+                        if date_cols and len(date_cols) >= idx:
                             inner_entry['date'] = row.get_value(date_cols[idx])
                         if open_cols and len(open_cols) >= idx:
                             inner_entry['open'] = row.get_value(open_cols[idx])
@@ -404,8 +405,8 @@ class DatasetClient(object):
                         if volume_cols and len(volume_cols) >= idx:
                             inner_entry['volume'] = row.get_value(volume_cols[idx])
                 entry['values'].append(inner_entry)
-            data.append(entry)  
-            
+            data.append(entry)
+
         if key is not None:
             data=data[data.index(key)]    
             

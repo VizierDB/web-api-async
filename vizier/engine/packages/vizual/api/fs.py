@@ -346,7 +346,7 @@ class DefaultVizualApi(VizualApi):
         detect_headers: bool, optional
             Detect column names in loaded file if True
         infer_types: bool, optional
-            Infer column types for loaded dataset if True
+            infer_types: Infer column types for loaded dataset if True
         load_format: string, optional
             Format identifier
         options: list, optional
