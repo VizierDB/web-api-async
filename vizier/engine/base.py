@@ -546,7 +546,7 @@ class VizierEngine(WorkflowController):
             head = branch.get_head()
             if head is None or len(head.modules) == 0:
                 return None
-            
+
             # Get the index of the module at which the new module is inserted
             module_index = None
             modules = head.modules
@@ -556,7 +556,7 @@ class VizierEngine(WorkflowController):
                     break
             if module_index is None:
                 return None
-            
+
             # Get handle for the inserted module
             context = compute_context(modules[0:module_index])
             # Create handle for the inserted module. The state of the module

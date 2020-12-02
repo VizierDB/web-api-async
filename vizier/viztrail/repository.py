@@ -43,7 +43,7 @@ class ViztrailRepository(object):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def delete_viztrail(self, viztrail_id: str) -> bool:
@@ -59,7 +59,7 @@ class ViztrailRepository(object):
         -------
         bool
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_viztrail(self, viztrail_id: str) -> ViztrailHandle:
@@ -75,7 +75,7 @@ class ViztrailRepository(object):
         -------
         vizier.viztrail.base.ViztrailHandle
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def list_viztrails(self) -> List[ViztrailHandle]:
@@ -85,4 +85,4 @@ class ViztrailRepository(object):
         -------
         list(vizier.viztrail.base.ViztrailHandle)
         """
-        raise NotImplementedError
+        raise NotImplementedError()

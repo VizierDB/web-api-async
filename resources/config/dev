@@ -1,0 +1,5 @@
+export VIZIERSERVER_ENGINE=DEV
+export VIZIERSERVER_PACKAGE_PATH=./resources/packages/common
+export VIZIERSERVER_PROCESSOR_PATH=./resources/processors/common:./resources/processors/dev
+export FLASK_ENV=development
+export FLASK_APP=vizier.api.webservice

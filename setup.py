@@ -13,11 +13,11 @@ from wheel.bdist_wheel import bdist_wheel
 
 def custom_command(command_subclass):
     orig_run = command_subclass.run
-    
+
     def modified_run(self):
         print((str(command_subclass)))
         orig_run(self)
-        
+
     command_subclass.run = modified_run
     return command_subclass
 
@@ -45,13 +45,15 @@ def package_files(directory):
                 paths[path].append( os.path.join(path, filename))
             else:
                 paths[path] = [os.path.join(path, filename)]
-    return [(k.replace('../', ''), v) for k, v in list(paths.items())] 
+    return [(k.replace('../', ''), v) for k, v in list(paths.items())]
+
 
 packages_files = package_files('resources/packages/')
 processors_files = package_files('resources/processors/')
 webui_files = package_files('../web-ui/build/')
 mimir_jar = [('mimir',['../mimir-api/bin/mimir-api'])]
 data_files = packages_files + processors_files + webui_files + mimir_jar
+# data_files = packages_files + processors_files  # + webui_files + mimir_jar
 #print(str(data_files))
 
 setup(

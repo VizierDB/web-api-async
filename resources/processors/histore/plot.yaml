@@ -1,0 +1,5 @@
+packages:
+    - plot
+engine:
+    className: 'PlotProcessor'
+    moduleName: 'vizier.engine.packages.plot.processor'

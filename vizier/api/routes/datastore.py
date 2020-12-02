@@ -100,6 +100,22 @@ class DatastoreClientUrlFactory(object):
         """
         return self.urls.get_dataset_descriptor(self.project_id, dataset_id)
 
+    def get_dataset_profiling(self, project_id, dataset_id):
+        """Url to retrieve dataset profiling results.
+
+        Parameters
+        ----------
+        project_id: string
+            Unique project identifier
+        dataset_id: string
+            Unique dataset identifier
+
+        Returns
+        -------
+        string
+        """
+        return self.urls.get_dataset_profiling(self.project_id, dataset_id)
+
     def update_dataset_annotations(self, dataset_id):
         """Url to update dataset annotations.
 

@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from vizier.datastore.reader import DatasetReader
 
 from vizier.datastore.artifact import ArtifactDescriptor, ARTIFACT_TYPE_DATASET
+# from vizier.datastore.base import get_column_index
 
 
 """Identifier for column data types. By now the following data types are
@@ -39,6 +40,8 @@ DATATYPE_SHORT = 'short'
 DATATYPE_LONG = 'long'
 DATATYPE_REAL = 'real'
 DATATYPE_VARCHAR = 'varchar'
+DATATYPE_CATEGORICAL = 'categorical'
+DATATYPE_BOOLEAN = 'boolean'
 
 COLUMN_DATATYPES = [
     DATATYPE_DATE,
@@ -47,7 +50,9 @@ COLUMN_DATATYPES = [
     DATATYPE_SHORT,
     DATATYPE_LONG,
     DATATYPE_REAL,
-    DATATYPE_VARCHAR
+    DATATYPE_VARCHAR,
+    DATATYPE_CATEGORICAL,
+    DATATYPE_BOOLEAN
 ]
 
 
@@ -182,8 +187,8 @@ class DatasetDescriptor(ArtifactDescriptor):
     def column_index(self, column_id):
         """Get position of a given column in the dataset schema. The given
         column identifier could either be of type int (i.e., the index position
-        of the column), or a string (either the column name or column label). If
-        column_id is of type string it is first assumed to be a column name.
+        of the column), or a string (either the column name or column label).
+        If column_id is of type string it is first assumed to be a column name.
         Only if no column matches the column name or if multiple columns with
         the given name exist will the value of column_id be interpreted as a
         label.
@@ -345,14 +350,15 @@ class DatasetHandle(DatasetDescriptor):
 
         Parameters
         ----------
-        identifier: string, optional
+        identifier: string
             Unique dataset identifier.
-        columns: list(DatasetColumn), optional
+        columns: list(DatasetColumn), default=None
             List of columns. It is expected that each column has a unique
             identifier.
-        row_count: int, optional
+        row_count: int, default=None
             Number of rows in the dataset
-        annotations: vizier.datastore.annotation.dataset.DatasetMetadata, optional
+        annotations: vizier.datastore.annotation.dataset.DatasetMetadata,
+                default=None
             Annotations for dataset components
         """
         super(DatasetHandle, self).__init__(
@@ -419,7 +425,18 @@ class DatasetHandle(DatasetDescriptor):
         -------
         list(vizier.datastpre.annotation.base.DatasetAnnotation)
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_profiling(self):
+        """Get profiling information for the dataset. If no profiling
+        information is available the result shoud be an empty dictionary.
+
+        Returns
+        -------
+        dict
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def get_properties(self) -> Dict[str, Any]:
@@ -452,7 +469,7 @@ class DatasetHandle(DatasetDescriptor):
         -------
         vizier.datastore.reader.DatasetReader
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # ------------------------------------------------------------------------------
@@ -484,7 +501,6 @@ def collabel_2_index(label):
         else:
             return -1
     return num
-
 
 def get_column_index(columns, column_id):
     """Get position of a column in a given column list. The column identifier
@@ -542,6 +558,6 @@ def get_column_index(columns, column_id):
         if name_index >= 0:
             return name_index
         elif name_index == -1:
-            raise ValueError('unknown column \'' + str(column_id) + '\'')
+            raise ValueError("unknown column '{}'".format(column_id))
         else:
-            raise ValueError('not a unique column name \'' + str(column_id) + '\'')
+            raise ValueError("duplicate column name '{}'".format(column_id))

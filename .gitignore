@@ -68,3 +68,5 @@ vizier_downloads/*
 /mimir
 /export_test.tgz
 /.tmp
+# Temporary data file directory for Jupyter examples.
+resources/examples/jupyter/.tmp

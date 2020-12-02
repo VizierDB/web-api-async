@@ -137,6 +137,9 @@ class VizierContainerApi(object):
 #         datastore_factory: DatastoreFactory
 #         if config.engine.identifier == base.DEV_ENGINE:
 #             datastore_factory = FileSystemDatastoreFactory(datastores_dir)
+#         elif config.engine.identifier == base.HISTORE_ENGINE:
+#             import vizier.datastore.histore.factory as histore
+#             datastore_factory = histore.HistoreDatastoreFactory(datastores_dir)
 #         else:
 #             datastore_factory = MimirDatastoreFactory(datastores_dir)
 #     else:
