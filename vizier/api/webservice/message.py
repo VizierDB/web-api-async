@@ -124,4 +124,4 @@ def UNKNOWN_WORKFLOW(project_id, branch_id, workflow_id):
     string
     """
     msg = "unknown workflow '{}', branch '{}', or project '{}'"
-    return msg.format(module_id, branch_id, project_id)
+    return msg.format(workflow_id, branch_id, project_id)

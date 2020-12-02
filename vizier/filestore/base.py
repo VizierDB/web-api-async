@@ -19,7 +19,6 @@ and need to keep as a local copy because they are not accessible via an Url.
 """
 from typing import cast, Optional, IO, Dict, Any
 
-import csv
 import gzip
 import mimetypes
 import os
@@ -44,7 +43,7 @@ class FileHandle(object):
             file_name: str, 
             mimetype: Optional[str] = None, 
             encoding: Optional[str] = None):
-            # quotechar='"', quoting=csv.QUOTE_MINIMAL
+        # quotechar='"', quoting=csv.QUOTE_MINIMAL
         """Initialize the file identifier, the (full) file path, the file
         format, and the file encoding (for compressed files).
 

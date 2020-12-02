@@ -20,23 +20,17 @@ in a datastore from within a Python script.
 
 import numpy as np
 import pandas as pd
-import os
-import re
 import ast
 import astor
 import inspect
 
 from deprecated import deprecated
-from os.path import normpath, basename
-from os import path
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import (
-    DatasetColumn, DatasetDescriptor, DatasetRow
+    DatasetColumn, DatasetRow
 )
-from vizier.datastore.annotation.dataset import DatasetMetadata
 from vizier.datastore.object.base import PYTHON_EXPORT_TYPE
-from vizier.datastore.object.dataobject import DataObjectMetadata
 import vizier.datastore.dataset as ds
 
 
@@ -474,7 +468,7 @@ class Analyzer(ast.NodeVisitor):
     def visit_Name(self, node):
         ctx, g = self.context[-1]
         if node.id == self.name and (ctx == 'global' or node.id in g):
-            print('exported {} at line {}'.format(node.id, node.lineno, self.source))
+            print('exported {} at line {}'.format(node.id, node.lineno)) #, self.source))
 
     def get_Source(self):
         return self.source

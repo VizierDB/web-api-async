@@ -337,7 +337,7 @@ def deduplicate(elements):
     s = sorted(elements, key=lambda a: (a.identifier, a.obj_type, a.key, a.value))
     result = s[:1]
     for a in s[1:]:
-        l = result[-1]
-        if a.identifier != l.identifier or a.obj_type != l.obj_type or a.key != l.key or a.value != l.value:
+        elem_l = result[-1]
+        if a.identifier != elem_l.identifier or a.obj_type != elem_l.obj_type or a.key != elem_l.key or a.value != elem_l.value:
             result.append(a)
     return result

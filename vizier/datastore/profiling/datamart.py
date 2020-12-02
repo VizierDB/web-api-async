@@ -22,13 +22,13 @@ from queue import Queue
 
 """Mapping from Datamart data type names to Vizier data type names."""
 SWITCHER = {
-    'Enumeration':  'categorical',
-    'DateTime':  'datetime',
-    'Text':  'varchar',
-    'Real':  'real',
-    'Float':  'real',
-    'Integer':  'int',
-    'Boolean':  'boolean'
+    'Enumeration': 'categorical',
+    'DateTime': 'datetime',
+    'Text': 'varchar',
+    'Real': 'real',
+    'Float': 'real',
+    'Integer': 'int',
+    'Boolean': 'boolean'
 }
 
 

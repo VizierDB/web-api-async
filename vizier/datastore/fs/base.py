@@ -39,7 +39,6 @@ from vizier.datastore.reader import DefaultJsonDatasetReader
 from vizier.filestore.base import FileHandle, Filestore
 from vizier.filestore.base import get_download_filename
 import vizier.datastore.profiling.datamart as datamart
-import vizier.datastore.util as util
 from pandas import DataFrame
 
 """Constants for data file names."""

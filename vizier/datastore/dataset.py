@@ -19,7 +19,7 @@ manipulate different versions of datasets that are manipulated by data curation
 workflows.
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from typing import Optional, List, Any, Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     from vizier.datastore.annotation.base import DatasetCaveat

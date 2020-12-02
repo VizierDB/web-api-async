@@ -24,8 +24,6 @@ import os
 import uuid
 from datetime import date, datetime
 
-from datetime import datetime, date, time
-
 
 """Name of logger used for monitoring workflow engine performance."""
 LOGGER_ENGINE = 'LOGGER_ENGINE'
