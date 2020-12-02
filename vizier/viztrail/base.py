@@ -22,13 +22,18 @@ optional name. Each branch is a sequence of workflow versions.
 """
 
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.core.annotation.base import ObjectAnnotationSet
-from vizier.viztrail.branch import BranchHandle
+from vizier.viztrail.branch import BranchHandle, BranchProvenance
 from vizier.viztrail.named_object import NamedObject
+from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
 
 
 # ------------------------------------------------------------------------------
@@ -85,7 +90,7 @@ class ViztrailHandle(NamedObject):
             properties=properties
         )
         self.identifier = identifier
-        self.branches = dict()
+        self.branches:Dict[str,BranchHandle] = dict()
         # Initialize the branch index from the given list (if present)
         if not branches is None:
             for b in branches:
@@ -96,7 +101,12 @@ class ViztrailHandle(NamedObject):
         self.created_at = created_at if not created_at is None else get_current_time()
 
     @abstractmethod
-    def create_branch(self, provenance=None, properties=None, modules=None):
+    def create_branch(self, 
+            provenance: Optional[BranchProvenance] = None, 
+            properties: Optional[Dict[str, Any]] = None, 
+            modules: Optional[List[str]] = None,
+            identifier: Optional[str] = None
+        ) -> BranchHandle:
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
 
@@ -117,7 +127,7 @@ class ViztrailHandle(NamedObject):
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_branch(self, branch_id):
+    def delete_branch(self, branch_id: str) -> bool:
         """Delete branch with the given identifier. Returns True if the branch
         existed and False otherwise.
 
@@ -132,7 +142,7 @@ class ViztrailHandle(NamedObject):
         """
         raise NotImplementedError()
 
-    def get_default_branch(self):
+    def get_default_branch(self) -> Optional[BranchHandle]:
         """Get the handle for the default branch of the viztrail.
 
         Returns
@@ -173,14 +183,17 @@ class ViztrailHandle(NamedObject):
         """
         return branch_id in self.branches
 
-    def is_default_branch(self, branch_id):
+    def is_default_branch(self, branch_id: str) -> bool:
         """Test if a given branch is the default branch.
 
         Returns
         -------
         bool
         """
-        return self.default_branch.identifier == branch_id
+        if self.default_branch is None:
+            return False
+        else:
+            return self.default_branch.identifier == branch_id
 
     @property
     def last_modified_at(self):
@@ -198,7 +211,7 @@ class ViztrailHandle(NamedObject):
                 ts = branch_ts
         return ts
 
-    def list_branches(self):
+    def list_branches(self) -> List[BranchHandle]:
         """Get a list of branches that are currently defined for the viztrail.
 
         Returns
@@ -208,7 +221,7 @@ class ViztrailHandle(NamedObject):
         return list(self.branches.values())
 
     @abstractmethod
-    def set_default_branch(self, branch_id):
+    def set_default_branch(self, branch_id: str) -> BranchHandle:
         """Set the branch with the given identifier as the default branch.
         Raises ValueError if no branch with the given identifier exists.
 
@@ -224,3 +237,20 @@ class ViztrailHandle(NamedObject):
         vizier.viztrail.branch.BranchHandle
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def create_module(self, 
+        command: ModuleCommand,
+        external_form: str,
+        state: int = MODULE_PENDING,
+        timestamp: ModuleTimestamp = ModuleTimestamp(),
+        outputs: ModuleOutputs = ModuleOutputs(), 
+        provenance: ModuleProvenance = ModuleProvenance(),
+        identifier: Optional[str] = None,
+    ) -> ModuleHandle:
+        """
+        Create a module handle in a format native to this repository.  
+        If the repository is persisent, this should also persist the 
+        module.
+        """
+        raise NotImplementedError

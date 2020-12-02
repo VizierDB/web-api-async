@@ -17,13 +17,19 @@
 """This module contains helper methods for the webservice that are used to
 serialize file resources.
 """
-
+from typing import Dict, Any, Optional
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
+from vizier.filestore.base import FileHandle
+from vizier.engine.project.base import ProjectHandle
+from vizier.api.routes.base import UrlFactory
 
-
-def FILE_HANDLE(f_handle, project, urls):
+def FILE_HANDLE(
+        f_handle: FileHandle, 
+        project: Optional[ProjectHandle], 
+        urls: Optional[UrlFactory]
+    ) -> Dict[str, Any]:
     """Dictionary serialization for a file handle.
 
     Parameters
@@ -39,18 +45,19 @@ def FILE_HANDLE(f_handle, project, urls):
     -------
     dict
     """
-    project_id = project.identifier
     file_id = f_handle.identifier
     # At the moment the self reference and the download Url are identical
-    download_url = urls.download_file(project_id, file_id)
-    obj = {
+    obj:Dict[str, Any] = {
         'id': file_id,
         'name': f_handle.file_name,
-        labels.LINKS: serialize.HATEOAS({
+    }
+    if project is not None and urls is not None:
+        project_id = project.identifier
+        download_url = urls.download_file(project_id, file_id)
+        obj[labels.LINKS] = serialize.HATEOAS({
             ref.SELF: download_url,
             ref.FILE_DOWNLOAD: download_url
         })
-    }
     # Add mimetype and encoding if not None
     if not f_handle.mimetype is None:
         obj['mimetype'] = f_handle.mimetype

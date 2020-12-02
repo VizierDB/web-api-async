@@ -17,14 +17,21 @@
 """This module contains helper methods for the webservice that are used to
 serialize branches.
 """
-
+from typing import Optional, Dict, Any
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
 import vizier.api.serialize.workflow as workflow
+from vizier.engine.project.base import ProjectHandle
+from vizier.viztrail.branch import BranchHandle
+from vizier.api.routes.base import UrlFactory
 
 
-def BRANCH_DESCRIPTOR(project, branch, urls):
+def BRANCH_DESCRIPTOR(
+        project: ProjectHandle, 
+        branch: BranchHandle, 
+        urls: Optional[UrlFactory]
+    ) -> Dict[str, Any]:
     """Dictionary serialization for branch descriptor.
 
     Parameters
@@ -42,22 +49,31 @@ def BRANCH_DESCRIPTOR(project, branch, urls):
     """
     project_id = project.identifier
     branch_id = branch.identifier
-    return {
+    ret = {
         'id': branch_id,
         'createdAt': branch.provenance.created_at.isoformat(),
         'lastModifiedAt': branch.last_modified_at.isoformat(),
+        'sourceBranch' : branch.provenance.source_branch,
+        'sourceWorkflow' : branch.provenance.workflow_id,
+        'sourceModule' : branch.provenance.module_id,
         'isDefault': project.viztrail.is_default_branch(branch_id),
-        'properties': branch.properties,
-        labels.LINKS: serialize.HATEOAS({
+        'properties': branch.properties
+    }
+    if urls is not None:
+        ret[labels.LINKS] = serialize.HATEOAS({
             ref.SELF: urls.get_branch(project_id, branch_id),
             ref.BRANCH_DELETE: urls.delete_branch(project_id, branch_id),
             ref.BRANCH_HEAD: urls.get_branch_head(project_id, branch_id),
             ref.BRANCH_UPDATE: urls.update_branch(project_id, branch_id)
         })
-    }
+    return ret
 
-
-def BRANCH_HANDLE(project, branch, urls):
+def BRANCH_HANDLE(
+        project: ProjectHandle, 
+        branch: BranchHandle, 
+        urls: Optional[UrlFactory],
+        deep_workflow: bool = False
+    ) -> Dict[str, Any]:
     """Dictionary serialization for branch handle. Extends branch descriptor
     with timestamps and workflow descriptors from branch history.
 
@@ -77,12 +93,23 @@ def BRANCH_HANDLE(project, branch, urls):
     # Use the branch descriptor as basis
     obj = BRANCH_DESCRIPTOR(project=project, branch=branch, urls=urls)
     # Add descriptors for workflows in the branch history
-    obj['workflows'] = [
-        workflow.WORKFLOW_DESCRIPTOR(
-            project=project,
-            branch=branch,
-            workflow=wf,
-            urls=urls
-        ) for wf in branch.get_history()
-    ]
+    if deep_workflow:
+        obj['workflows'] = [
+            workflow.WORKFLOW_HANDLE(
+                project=project,
+                branch=branch,
+                workflow=branch.get_workflow(wf.identifier),
+                urls=urls
+            ) for wf in branch.get_history()
+        ]
+    else :
+        obj['workflows'] = [
+            workflow.WORKFLOW_DESCRIPTOR(
+                project=project,
+                branch=branch,
+                workflow=wf,
+                urls=urls
+            ) for wf in branch.get_history()
+        ]
+
     return obj

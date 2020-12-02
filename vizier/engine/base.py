@@ -600,7 +600,12 @@ class VizierEngine(WorkflowController):
                 )
             return workflow.modules[module_index:]
 
-    def replace_workflow_module(self, project_id, branch_id, module_id, command):
+    def replace_workflow_module(self, 
+            project_id: str, 
+            branch_id: str, 
+            module_id: str, 
+            command: ModuleCommand
+        ) -> Optional[List[ModuleHandle]]:
         """Replace an existing module in the workflow at the head of the
         specified viztrail branch. The modified workflow is executed and the
         result is the new head of the branch.
@@ -652,7 +657,7 @@ class VizierEngine(WorkflowController):
                 state=self.backend.next_task_state(),
                 external_form=command.to_external_form(
                     command=self.packages[command.package_id].get(command.command_id),
-                    datasets=[ context[name] for name in context if context[name].is_dataset ]
+                    datasets=cast(Dict[str, DatasetDescriptor], context)
                 ),
                 provenance=ModuleProvenance(
                     resources=modules[module_index].provenance.resources,

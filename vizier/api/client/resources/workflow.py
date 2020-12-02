@@ -17,6 +17,8 @@
 """Resource object representing a workflow from a project branch that is
 available at a remote vizier instance."""
 
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 from vizier.api.client.resources.dataset import DatasetDescriptor
 from vizier.api.client.resources.module import ModuleResource
 from vizier.core.timestamp import to_datetime
@@ -39,8 +41,14 @@ PACKAGES = {
 class WorkflowResource(object):
     """A workflow in a remote vizier instance."""
     def __init__(
-        self, identifier, action, command, created_at, modules=None,
-        datasets=None, links=None
+        self, 
+        identifier: str, 
+        action: Optional[str], 
+        command: Optional[str], 
+        created_at: Optional[datetime], 
+        modules: Optional[List[ModuleResource]] = None,
+        datasets: Optional[Dict[str,DatasetDescriptor]] =None, 
+        links: Optional[Dict[str, str]]=None
     ):
         """Initialize the branch attributes."""
         self.identifier = identifier
@@ -63,7 +71,7 @@ class WorkflowResource(object):
         return self.action is None or self.command is None or self.created_at is None
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str,Any]) -> "WorkflowResource":
         """Get a workflow resource instance from the dictionary representation
         returned by the vizier web service.
 
@@ -119,7 +127,7 @@ class WorkflowResource(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def to_external_form(action):
+def to_external_form(action: int) -> str:
     """Convert a given action identifier to its external form.
 
     Parameters

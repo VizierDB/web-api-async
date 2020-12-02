@@ -25,10 +25,17 @@ from vizier.core.timestamp import get_current_time, to_datetime
 from vizier.core.util import init_value
 from vizier.core.annotation.persistent import PersistentAnnotationSet
 from vizier.viztrail.objectstore.branch import OSBranchHandle
+from vizier.viztrail.objectstore.module import OSModuleHandle
 from vizier.viztrail.base import ViztrailHandle
 from vizier.viztrail.named_object import PROPERTY_NAME
 from vizier.viztrail.branch import BranchProvenance, DEFAULT_BRANCH, BranchHandle
 from vizier.core.io.base import ObjectStore
+from vizier.viztrail.module.base import ModuleHandle, MODULE_PENDING
+from vizier.viztrail.command import ModuleCommand
+from vizier.viztrail.module.output import ModuleOutputs
+from vizier.viztrail.module.provenance import ModuleProvenance
+from vizier.viztrail.module.timestamp import ModuleTimestamp
+
 """Resource identifier"""
 FOLDER_BRANCHES = 'branches'
 FOLDER_MODULES = 'modules'
@@ -109,7 +116,12 @@ class OSViztrailHandle(ViztrailHandle):
         self.branch_index = init_value(branch_index, self.object_store.join(self.branch_folder, OBJ_BRANCHINDEX))
         self.modules_folder =  init_value(modules_folder, self.object_store.join(base_path, FOLDER_MODULES))
 
-    def create_branch(self, provenance=None, properties={}, modules=None):
+    def create_branch(self, 
+            provenance: Optional[BranchProvenance] = None, 
+            properties: Optional[Dict[str, Any]] = None, 
+            modules: Optional[List[str]] = None,
+            identifier: Optional[str] = None
+        ) -> OSBranchHandle:
         """Create a new branch. If the list of workflow modules is given this
         defins the branch head. Otherwise, the branch is empty.
 
@@ -127,19 +139,21 @@ class OSViztrailHandle(ViztrailHandle):
         -------
         vizier.viztrail.objectstore.branch.OSBranchHandle
         """
+        properties = properties if properties is not None else {}
         branch = create_branch(
             provenance=provenance,
             properties=properties,
             modules=modules,
             branch_folder=self.branch_folder,
             modules_folder=self.modules_folder,
-            object_store=self.object_store
+            object_store=self.object_store,
+            identifier=identifier
         )
         # Add the new branch to index and materialize the updated index
         # information
         self.branches[branch.identifier] = branch
         write_branch_index(
-            branches=self.branches,
+            branches=cast(Dict[str, OSBranchHandle], self.branches),
             object_path=self.branch_index,
             object_store=self.object_store
         )
@@ -232,7 +246,7 @@ class OSViztrailHandle(ViztrailHandle):
         """
         self.object_store.delete_folder(self.base_path)
 
-    def delete_branch(self, branch_id):
+    def delete_branch(self, branch_id: str) -> bool:
         """Delete branch with the given identifier. Returns True if the branch
         existed and False otherwise.
 
@@ -248,14 +262,15 @@ class OSViztrailHandle(ViztrailHandle):
         bool
         """
         # Raise an exception is an attempt is made to delete the default branch
-        if self.default_branch.identifier == branch_id:
+        if self.default_branch is not None and self.default_branch.identifier == branch_id:
             raise ValueError('cannot delete default branch')
         if branch_id in self.branches:
             # Call the delete method of the branch and update the branch index
-            self.branches[branch_id].delete_branch()
+            branch_handle = cast( OSBranchHandle, self.branches[branch_id] )
+            branch_handle.delete_branch()
             del self.branches[branch_id]
             write_branch_index(
-                branches=self.branches,
+                branches=cast( Dict[str,OSBranchHandle], self.branches ),
                 object_path=self.branch_index,
                 object_store=self.object_store
             )
@@ -332,7 +347,7 @@ class OSViztrailHandle(ViztrailHandle):
             modules_folder=modules_folder
         )
 
-    def set_default_branch(self, branch_id):
+    def set_default_branch(self, branch_id: str) -> BranchHandle:
         """Set the branch with the given identifier as the default branch.
         Raises ValueError if no branch with the given identifier exists.
 
@@ -351,16 +366,43 @@ class OSViztrailHandle(ViztrailHandle):
             raise ValueError('unknown branch \'' + str(branch_id) + '\'')
         branch = self.branches[branch_id]
         # Replace the current default branch
-        self.default_branch.is_default = False
-        branch.is_default = True
+        if self.default_branch is not None:
+            cast(OSBranchHandle, self.default_branch).is_default = False
+        cast(OSBranchHandle, branch).is_default = True
         self.default_branch = branch
         # Write modified branch index
         write_branch_index(
-            branches=self.branches,
+            branches=cast(Dict[str, OSBranchHandle], self.branches),
             object_path=self.branch_index,
             object_store=self.object_store
         )
         return branch
+
+    def create_module(self, 
+        command: ModuleCommand,
+        external_form: str,
+        state: int = MODULE_PENDING,
+        timestamp: ModuleTimestamp = ModuleTimestamp(),
+        outputs: ModuleOutputs = ModuleOutputs(), 
+        provenance: ModuleProvenance = ModuleProvenance(),
+        identifier: Optional[str] = None,
+    ) -> ModuleHandle:
+        """
+        Create a module handle in a format native to this repository.  
+        If the repository is persisent, this should also persist the 
+        module.
+        """
+        return OSModuleHandle.create_module(
+            command = command,
+            external_form = external_form,
+            state = state, 
+            timestamp = timestamp, 
+            outputs = outputs, 
+            provenance = provenance,
+            module_folder = self.modules_folder, 
+            object_store = self.object_store,
+            identifier = identifier
+        )
 
 
 # ------------------------------------------------------------------------------
@@ -368,14 +410,15 @@ class OSViztrailHandle(ViztrailHandle):
 # ------------------------------------------------------------------------------
 
 def create_branch(
-    provenance: BranchProvenance, 
+    provenance: Optional[BranchProvenance], 
     properties: Dict[str, Any], 
     modules: Optional[List[str]], 
     branch_folder: str, 
     modules_folder: str,
     object_store: ObjectStore, 
     is_default: bool = False, 
-    created_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None,
+    identifier: Optional[str] = None
 ) -> OSBranchHandle:
     """Create a new branch. If the list of workflow modules is given the list
     defines the branch head. Otherwise, the branch is empty.
@@ -404,7 +447,7 @@ def create_branch(
     """
     # Get unique identifier for new branch by creating the subfolder that
     # will contain branch resources
-    identifier = object_store.create_folder(branch_folder)
+    identifier = object_store.create_folder(branch_folder, identifier = identifier)
     branch_path = object_store.join(branch_folder, identifier)
     # Create materialized branch resource. This will raise an exception if
     # the list of modules contains an active module.

@@ -17,7 +17,7 @@
 """Resource object representing a module in a workflow that is available at a
 remote vizier instance.
 """
-
+from typing import List, Dict, Any
 from vizier.api.client.resources.chart import ChartHandle
 from vizier.core.timestamp import to_datetime
 from vizier.viztrail.module.output import OUTPUT_HTML, OUTPUT_TEXT
@@ -30,8 +30,16 @@ import vizier.api.serialize.deserialize as deserialize
 class ModuleResource(object):
     """A workflow module in a remote vizier instance."""
     def __init__(
-        self, identifier, state, external_form, outputs, datasets, dataobjects, charts, timestamp,
-        links
+        self, 
+        identifier: str, 
+        state: str, 
+        external_form: str, 
+        outputs: List[str], 
+        datasets: Dict[str, str], 
+        dataobjects: Dict[str, str], 
+        charts: Dict[str, ChartHandle], 
+        timestamp: ModuleTimestamp,
+        links: Dict[str, str]
     ):
         """Initialize the branch attributes."""
         self.identifier = identifier
@@ -45,7 +53,7 @@ class ModuleResource(object):
         self.links = links
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str, Any]) -> "ModuleResource":
         """Get a workflow module resource instance from the dictionary
         representation returned by the vizier web service.
 
@@ -104,7 +112,7 @@ class ModuleResource(object):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def to_external_form(state):
+def to_external_form(state: int) -> str:
     """Convert a given state identifier to its external form.
 
     Parameters

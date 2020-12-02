@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """Objects representing descriptors dataset chart views."""
-
+from typing import Dict, Any
 import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.labels as labels
 
@@ -24,13 +24,13 @@ class ChartHandle(object):
     """Handle for chart in a workflow module. Contains the chart name and the
     HATEOAS links with the self reference to retrieve the chart data.
     """
-    def __init__(self, name, links):
+    def __init__(self, name: str, links: Dict[str, str]):
         """Initialize the handle components."""
         self.name = name
         self.links = links
 
     @staticmethod
-    def from_dict(obj):
+    def from_dict(obj: Dict[str, Any]) -> "ChartHandle":
         """Create chart handle instance from dictionary serialization returned
         by the web service API.
 

@@ -63,7 +63,7 @@ class CommonProjectCache(ProjectCache):
 
     def create_project(self, 
             properties: Optional[Dict[str, Any]] = None
-        ):
+        ) -> ProjectHandle:
         """Create a new project. Will create a viztrail in the underlying
         viztrail repository. The initial set of properties is an optional
         dictionary of (key,value)-pairs where all values are expected to either

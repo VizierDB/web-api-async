@@ -18,6 +18,7 @@
 files and their metadata on disk.
 """
 
+from typing import Optional, IO, Tuple
 import json
 import os
 import shutil
@@ -121,7 +122,7 @@ class FileSystemFilestore(Filestore):
         write_metadata_file(file_dir, f_handle)
         return f_handle
 
-    def get_file(self, identifier):
+    def get_file(self, identifier: str) -> Optional[FileHandle]:
         """Get handle for file with given identifier. Returns None if no file
         with given identifier exists.
 
@@ -145,6 +146,37 @@ class FileSystemFilestore(Filestore):
                 encoding=encoding
             )
         return None
+
+    def replace_file(self, 
+            identifier: str, 
+            file_name: Optional[str] = None, 
+            mimetype: Optional[str] = None,
+            encoding: Optional[str] = None
+        ) -> IO[bytes]:
+        file_dir = self.get_file_dir(identifier, create=True)
+        file_path = os.path.join(file_dir, DATA_FILENAME)
+        if os.path.exists(file_path):
+            orig_file_name, orig_mimetype, orig_encoding = read_metadata_file(file_dir)
+            if file_name is None:
+                file_name = orig_file_name
+            if mimetype is None:
+                mimetype = orig_mimetype
+            if encoding is None:
+                encoding = orig_encoding
+        if file_name is None:
+            file_name = identifier
+        fh = FileHandle(
+            identifier,
+            filepath=os.path.join(file_dir, DATA_FILENAME),
+            file_name=file_name,
+            mimetype=mimetype,
+            encoding=encoding
+        )
+        write_metadata_file(file_dir, fh)
+        return open(file_path, 'wb+')
+
+
+
 
     def get_file_dir(self, 
             identifier: str, 
@@ -263,7 +295,7 @@ class FileSystemFilestore(Filestore):
 # Helper Methods
 # ------------------------------------------------------------------------------
 
-def read_metadata_file(file_dir):
+def read_metadata_file(file_dir: str) -> Tuple[str, str, str]:
     """Read metadata information for the specified file. Returns the original
     file name, the mime type and encoding (the last two values may be None).
 

@@ -19,7 +19,7 @@ container.
 """
 
 import docker # type: ignore[import]
-from typing import cast, List, Dict, Any
+from typing import cast, List, Dict, Any, Optional
 import requests
 
 from vizier.api.routes.container import ContainerApiUrlFactory
@@ -183,7 +183,7 @@ class ContainerProjectCache(ProjectCache):
             )
             self.projects[viztrail.identifier] = project
 
-    def create_project(self, properties=None):
+    def create_project(self, properties: Optional[Dict[str, Any]] = None) -> ProjectHandle:
         """Create a new project. Will (i) create a viztrail in the underlying
         viztrail repository, and (ii) start a docker container for the project.
 
@@ -312,7 +312,7 @@ class ContainerProjectCache(ProjectCache):
         """
         return list(self.projects.values())
 
-    def write_container_info(self):
+    def write_container_info(self) -> None:
         """Write the current mapping of project identifier to project containers
         to the object store container file.
         """

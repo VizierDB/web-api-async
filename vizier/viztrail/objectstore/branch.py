@@ -324,7 +324,7 @@ class OSBranchHandle(BranchHandle):
             object_store=object_store
         )
 
-    def delete_branch(self) :
+    def delete_branch(self) -> None:
         """Deletes the directory that contains all resoures that are associated
         with this viztrail branch.
         """

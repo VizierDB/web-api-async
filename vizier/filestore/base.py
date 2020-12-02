@@ -17,11 +17,11 @@
 """Interface for file store to maintain files that are uploaded via the Web UI
 and need to keep as a local copy because they are not accessible via an Url.
 """
-from typing import cast, Optional, IO, Dict, Any
+from typing import cast, Optional, IO, Dict, Any, List
 
 import gzip
 import mimetypes
-import os
+import os.path
 
 from abc import ABCMeta, abstractmethod
 
@@ -124,7 +124,7 @@ class FileHandle(object):
         """
         return self.file_name
 
-    def open(self) -> IO:
+    def open(self, raw: bool = False) -> IO:
         """Get open file object for associated file.
 
         Returns
@@ -132,13 +132,28 @@ class FileHandle(object):
         FileObject
         """
         # The open method depends on the compressed flag
-        if self.compressed:
+        if self.compressed and not raw:
             return cast(IO, gzip.open(self.filepath, 'rb'))
         else:
-            return open(self.filepath, 'r')
+            return open(self.filepath, 'r'+('b' if raw else ''))
+
+    def size(self, raw: bool = False) -> int:
+        if self.compressed and not raw:
+            size = 0
+            with self.open() as f:
+                while True:
+                    c = f.read(1)
+                    if c:
+                        size += 1
+                    else:
+                        break
+            return size
+        else:
+            return os.path.getsize(self.filepath)
 
 
-class Filestore(metaclass=ABCMeta):
+
+class Filestore(object):
     """Abstract API to upload and retrieve files."""
 
     @abstractmethod
@@ -181,7 +196,7 @@ class Filestore(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_file(self, identifier: str) -> FileHandle:
+    def get_file(self, identifier: str) -> Optional[FileHandle]:
         """Get handle for file with given identifier. Returns None if no file
         with given identifier exists.
 
@@ -197,7 +212,18 @@ class Filestore(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def list_files(self):
+    def replace_file(self, 
+            identifier: str, 
+            file_name: Optional[str] = None, 
+            mimetype: Optional[str] = None,
+            encoding: Optional[str] = None
+        ) -> IO[bytes]:
+        """Open an IO pipe to replace the file with the given 
+           identifier"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_files(self) -> List[FileHandle]:
         """Get list of file handles for all uploaded files.
 
         Returns

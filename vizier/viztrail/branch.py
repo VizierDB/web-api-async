@@ -25,7 +25,7 @@ from datetime import datetime
 
 from vizier.core.timestamp import get_current_time
 from vizier.viztrail.named_object import NamedObject
-from vizier.viztrail.workflow import WorkflowHandle
+from vizier.viztrail.workflow import WorkflowHandle, WorkflowDescriptor
 from vizier.viztrail.module.base import ModuleHandle, ModuleCommand
 from vizier.core.annotation.base import ObjectAnnotationSet
 
@@ -180,7 +180,7 @@ class BranchHandle(NamedObject):
         return self.get_workflow(workflow_id=None)
 
     @abstractmethod
-    def get_history(self):
+    def get_history(self) -> List[WorkflowDescriptor]:
         """Get the list of descriptors for the workflows in the branch history.
 
         Returns

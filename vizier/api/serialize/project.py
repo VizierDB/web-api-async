@@ -17,14 +17,18 @@
 """This module contains helper methods for the webservice that are used to
 serialize projects.
 """
-
+from typing import Optional, Dict, Any
 import vizier.api.serialize.base as serialize
 import vizier.api.serialize.branch as br
 import vizier.api.serialize.hateoas as ref
 import vizier.api.serialize.labels as labels
+from vizier.engine.project.base import ProjectHandle
+from vizier.api.routes.base import UrlFactory
 
-
-def PROJECT_DESCRIPTOR(project, urls):
+def PROJECT_DESCRIPTOR(
+        project: ProjectHandle, 
+        urls: Optional[UrlFactory]
+    ) -> Dict[str, Any]:
     """Dictionary serialization for project fundamental project metadata.
 
     Parameters
@@ -39,13 +43,18 @@ def PROJECT_DESCRIPTOR(project, urls):
     dict
     """
     project_id = project.identifier
-    return {
+    ret = {
         'id': project_id,
         'createdAt': project.created_at.isoformat(),
         'lastModifiedAt': project.last_modified_at.isoformat(),
-        'defaultBranch': project.viztrail.default_branch.identifier,
         'properties': project.viztrail.properties,
-        labels.LINKS: serialize.HATEOAS({
+    }
+
+    if project.viztrail.default_branch is not None:
+        ret['defaultBranch'] = project.viztrail.default_branch.identifier
+    
+    if urls is not None:
+        ret[labels.LINKS] = serialize.HATEOAS({
             ref.SELF: urls.get_project(project_id),
             ref.API_HOME: urls.service_descriptor(),
             ref.API_DOC: urls.api_doc(),
@@ -54,10 +63,16 @@ def PROJECT_DESCRIPTOR(project, urls):
             ref.BRANCH_CREATE: urls.create_branch(project_id),
             ref.FILE_UPLOAD: urls.upload_file(project_id)
         })
-    }
+
+    return ret
 
 
-def PROJECT_HANDLE(project, urls):
+def PROJECT_HANDLE(
+        project: ProjectHandle, 
+        urls: Optional[UrlFactory], 
+        deep_branch: bool   = False,
+        deep_workflow: bool = False,
+    ) -> Dict[str, Any]:
     """Dictionary serialization for project handle.
 
     Parameters
@@ -76,12 +91,22 @@ def PROJECT_HANDLE(project, urls):
     # Add descriptors for project branches
     branches = list()
     for branch in project.viztrail.list_branches():
-        branches.append(
-            br.BRANCH_DESCRIPTOR(
-                branch=branch,
-                project=project,
-                urls=urls
+        if deep_branch:
+            branches.append(
+                br.BRANCH_HANDLE(
+                    branch=branch,
+                    project=project,
+                    urls=urls,
+                    deep_workflow = deep_workflow
+                )
             )
-        )
+        else:
+            branches.append(
+                br.BRANCH_DESCRIPTOR(
+                    branch=branch,
+                    project=project,
+                    urls=urls
+                )
+            )
     obj['branches'] = branches
     return obj

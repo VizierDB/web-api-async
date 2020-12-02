@@ -18,6 +18,7 @@
 vizier projects.
 """
 
+from typing import Dict, Any
 from vizier.api.base import validate_name
 
 import vizier.api.serialize.base as serialize
@@ -83,7 +84,7 @@ class VizierProjectApi(object):
         # existed or not.
         return self.projects.delete_project(project_id)
 
-    def get_project(self, project_id):
+    def get_project(self, project_id: str) -> Dict[str,Any]:
         """Get comprehensive information for the project with the given
         identifier.
 

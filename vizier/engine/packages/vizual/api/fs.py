@@ -399,8 +399,11 @@ class DefaultVizualApi(VizualApi):
             # If dataset is still None we need to create a new dataset from the
             # specified file
             if dataset is None:
+                filehandle = filestore.get_file(file_id)
+                if filehandle is None:
+                    raise ValueError("invalid filehandle (upload failed?)")
                 dataset = datastore.load_dataset(
-                    f_handle=filestore.get_file(file_id),
+                    f_handle=filehandle,
                     proposed_schema=proposed_schema
                 )
             result_resources[base.RESOURCE_FILEID] = file_id
