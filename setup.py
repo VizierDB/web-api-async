@@ -58,7 +58,7 @@ data_files = packages_files + processors_files + webui_files + mimir_jar
 
 setup(
     name='vizier-webapi',
-    version='0.7.3',
+    version='0.7.4',
     description='UI, Web API, and Backend for data curation projects and workflows',
     keywords='data curation ',
     license='apache-2.0',
@@ -82,7 +82,11 @@ setup(
         'shapely',
         'astor',
         'minio',
-        'pyarrow'
+        'pyarrow',
+        'histore==0.1.1',
+        'datamart-profiler',
+        'data-science-types',
+        'pyspark'
     ],
     include_package_data=True,
     data_files=data_files,
