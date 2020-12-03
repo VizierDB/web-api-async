@@ -18,6 +18,9 @@ import datamart_profiler as dmp
 
 from collections import defaultdict
 from queue import Queue
+from pandas import DataFrame
+
+from typing import Dict, List
 
 
 """Mapping from Datamart data type names to Vizier data type names."""
@@ -32,7 +35,7 @@ SWITCHER = {
 }
 
 
-def get_types(df, metadata):
+def get_types(df, metadata) -> List[str]:
     """Parse Datamart profiler result to return a list with data types. The
     returned list contains exactly one data type for each column in the data
     frame. The position in the list corresponds to the column at the respective
@@ -53,7 +56,7 @@ def get_types(df, metadata):
     # that the datamart profiler returns a list of profiling results for each
     # column with the order in the list corresponding the the order of columns
     # in the input data frame.
-    type_mapping = defaultdict(Queue)
+    type_mapping:Dict[str, Queue] = defaultdict(Queue)
     for column in metadata['columns']:
         name = column['name']
         semantic_types = column['semantic_types']
@@ -68,7 +71,7 @@ def get_types(df, metadata):
     return [type_mapping[name].get() for name in df.columns]
 
 
-def run(df):
+def run(df) -> DataFrame:
     """Execute the Datamart profiler on a given data frame.
 
     Parameters

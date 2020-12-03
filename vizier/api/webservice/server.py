@@ -38,8 +38,7 @@ import vizier.api.serialize.deserialize as deserialize
 import vizier.api.serialize.project as serialpr
 import vizier.api.serialize.labels as labels
 import vizier.api.webservice.message as msg
-import vizier.config.app as app
-import json
+
 
 # -----------------------------------------------------------------------------
 #
@@ -773,7 +772,7 @@ def get_dataset_caveats(project_id: str, dataset_id: str) -> str:
 
 
 @bp.route('/projects/<string:project_id>/datasets/<string:dataset_id>/profiling')  # noqa: E501
-def get_dataset_profiling(project_id, dataset_id):
+def get_dataset_profiling(project_id, dataset_id) -> str:
     """Get profiling results for a dataset."""
     # Get annotations for dataset with given identifier. The result is None if
     # no dataset with given identifier exists.

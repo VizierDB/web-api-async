@@ -271,8 +271,8 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEqual(len(module.outputs.stderr), 0)
         self.assertEqual(len(module.outputs.stdout), 0)
-        self.assertTrue(module.provenance.read == {})
-        self.assertTrue(module.provenance.write == {})
+        self.assertTrue(module.provenance.read is None)
+        self.assertTrue(module.provenance.write is None)
         # Read module from object store and ensure that tall changes have been
         # materialized properly
         module = OSModuleHandle.load_module(
@@ -284,8 +284,8 @@ class TestModuleState(unittest.TestCase):
         self.assertIsNotNone(module.timestamp.finished_at)
         self.assertEqual(len(module.outputs.stderr), 0)
         self.assertEqual(len(module.outputs.stdout), 0)
-        self.assertTrue(module.provenance.read == {})
-        self.assertTrue(module.provenance.write == {})
+        self.assertTrue(module.provenance.read is None)
+        self.assertTrue(module.provenance.write is None)
         # Set success with all optional parameters
         ts = get_current_time()
         module.set_success(

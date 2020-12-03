@@ -50,7 +50,8 @@ class ProjectResource(object):
         vizier.api.client.resources.project.ProjectResource
         """
         # Get the name from the properties list
-        name = obj.get('properties', {}).get("name", None)
+        name_properties = [property for property in obj.get('properties', []) if property['key'] == 'name']
+        name =  (name_properties[0] if name_properties else {}).get("value", None)
         default_branch = None
         if 'branches' in obj:
             for branch in obj['branches']:

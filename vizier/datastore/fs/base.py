@@ -313,7 +313,7 @@ class FileSystemDatastore(DefaultDatastore):
     def get_dataset_frame(self, identifier: str, force_profiler: Optional[bool] = None) -> Optional[DataFrame]:
         return None
 
-    def get_objects(self, identifier=None, obj_type=None, key=None):
+    def get_objects(self, identifier=None, obj_type=None, key=None) -> DataObjectMetadata:
         """Get list of data objects for a resources of a given dataset. If only
         the column id is provided annotations for the identifier column will be
         returned. If only the row identifier is given all annotations for the

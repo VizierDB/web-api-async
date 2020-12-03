@@ -160,7 +160,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.provenance.read), 1)
         self.assertEqual(m.provenance.read['DS1'], 'ID1')
         self.assertEqual(m.provenance.resources['fileId'], '0123456789')
-        self.assertTrue(m.provenance.write == {})
+        self.assertTrue(m.provenance.write is None)
         # Modules that only has write provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),
@@ -181,7 +181,7 @@ class TestOSModuleIO(unittest.TestCase):
         self.assertEqual(len(m.provenance.write), 2)
         self.assertEqual(m.provenance.write['DS1'].identifier, 'ID1')
         self.assertEqual(m.provenance.write['DS2'].identifier, 'ID2')
-        self.assertTrue(m.provenance.read == {})
+        self.assertTrue(m.provenance.read is None)
         # Module with read and write provenance
         mod0 = OSModuleHandle.create_module(
             command=python_cell(source='print 2+2'),

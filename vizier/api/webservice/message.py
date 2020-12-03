@@ -35,7 +35,7 @@ def UNKNOWN_BRANCH(project_id, branch_id):
     return msg.format(branch_id, project_id)
 
 
-def UNKNOWN_DATASET(project_id, dataset_id):
+def UNKNOWN_DATASET(project_id, dataset_id) -> str:
     """Error message for requests that access datasets.
 
     Parameters

@@ -30,8 +30,8 @@ class TestScalaProcessor(unittest.TestCase):
             )
         )
         self.assertTrue(result.is_success)
-        self.assertTrue(result.provenance.read == {})
-        self.assertTrue(result.provenance.write == {})
+        self.assertTrue(result.provenance.read is None)
+        self.assertTrue(result.provenance.write is None)
         self.assertEqual(result.outputs.stdout[0].value, 'Hello, world!')
 
 

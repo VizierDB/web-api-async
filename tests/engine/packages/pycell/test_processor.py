@@ -160,8 +160,8 @@ class TestDefaultPyCellProcessor(unittest.TestCase):
             )
         )
         self.assertFalse(result.is_success)
-        self.assertTrue(result.provenance.read == {})
-        self.assertTrue(result.provenance.write == {})
+        self.assertTrue(result.provenance.read is None)
+        self.assertTrue(result.provenance.write is None)
         self.assertEqual(len(result.outputs.stdout), 0)
         self.assertEqual(len(result.outputs.stderr), 1)
         # Running a similar script that catches the error schould be a success

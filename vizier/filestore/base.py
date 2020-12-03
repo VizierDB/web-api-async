@@ -23,7 +23,7 @@ import gzip
 import mimetypes
 import os.path
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 import vizier.core.util as util
 
