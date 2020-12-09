@@ -18,7 +18,7 @@
 and manipulation of datasets in a datastore from within a Python script.
 """
 
-from histore.document.schema import Column
+from histore.document.schema import Column # type: ignore[import]
 from vizier.filestore.base import CSV
 
 from vizier.core.util import is_valid_name

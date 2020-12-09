@@ -428,7 +428,7 @@ class DatasetHandle(DatasetDescriptor):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_profiling(self):
+    def get_profiling(self) -> Any:
         """Get profiling information for the dataset. If no profiling
         information is available the result shoud be an empty dictionary.
 

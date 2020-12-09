@@ -33,7 +33,6 @@ vizierdb.export_module(x)
 """
 
 TEST_PROJECT=None
-TEST_PROJECT="b7d4a799"
 
 class TestExport(unittest.TestCase):
 

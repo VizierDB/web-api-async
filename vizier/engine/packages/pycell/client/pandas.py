@@ -19,12 +19,12 @@ in a datastore from within a Python script.
 """
 
 import numpy as np
-import pandas as pd
+import pandas as pd 
 import ast
-import astor
+import astor # type: ignore[import]
 import inspect
 
-from deprecated import deprecated
+from deprecated import deprecated # type: ignore[import]
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.datastore.dataset import (

@@ -18,7 +18,7 @@
 as the storage backend.
 """
 
-from openclean import vizual
+from openclean import vizual # type: ignore[import]
 
 from vizier.core.util import is_valid_name, get_unique_identifier
 from vizier.engine.packages.vizual.api.base import VizualApi, VizualApiResult

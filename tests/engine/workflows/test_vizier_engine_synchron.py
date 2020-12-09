@@ -34,6 +34,7 @@ class TestVizierEngineSynchron(unittest.TestCase):
         os.environ[app.VIZIERSERVER_PACKAGE_PATH] = PACKAGES_DIR
         os.environ[app.VIZIERSERVER_PROCESSOR_PATH] = PROCESSORS_DIR
         os.environ[app.VIZIERENGINE_SYNCHRONOUS] = ':'.join([
+            vizual.PACKAGE_DATA   + '.' + vizual.VIZUAL_LOAD,
             vizual.PACKAGE_VIZUAL + '.' + vizual.VIZUAL_LOAD,
             vizual.PACKAGE_VIZUAL + '.' + vizual.VIZUAL_UPD_CELL
         ])

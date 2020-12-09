@@ -262,7 +262,7 @@ class VizierDatastoreApi(object):
                                     )
         return project, dataset
 
-    def get_profiling(self, project_id, dataset_id):
+    def get_profiling(self, project_id:str, dataset_id:str) -> Any:
         """Get data profiling results for a given dataset.
 
         Parameters

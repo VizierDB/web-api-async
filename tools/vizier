@@ -148,6 +148,12 @@ export MIMIR_HOST
 MIMIR_URL="${MIMIR_URL:-"http://127.0.0.1:8089/api/v2/"}"
 export MIMIR_URL
 
+OSM_SERVER="${OSM_SERVER:-"127.0.0.1"}"
+export OSM_SERVER
+
+GOOGLE_API_KEY="${GOOGLE_API_KEY:-"BJzbRyCywF6aLyl5avX137USzCEsGI5Sl9RJilh"}"
+export GOOGLE_API_KEY
+
 FLASK_APP="${FLASK_APP:-vizier.wsgi:app}"
 export FLASK_APP
 FLASK_ENV="${FLASK_ENV:-development}"
@@ -185,10 +191,10 @@ if [ "${NO_MIMIR:-false}" == "true" ]
   else
     if [ "$MIMIR_DEV" == "true" ]
       then
-        cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR" &
+        cd ../mimir-api; sbt "run --data-dir $USER_DATA_DIR --google-api-key $GOOGLE_API_KEY --osm-server $OSM_SERVER" &
         cd ../web-api-async
       else
-        ${APP_RESOURCES_DIR}mimir/mimir-api --data-dir "$USER_DATA_DIR" &
+        ${APP_RESOURCES_DIR}mimir/mimir-api --data-dir "$USER_DATA_DIR --google-api-key $GOOGLE_API_KEY --osm-server $OSM_SERVER" &
     fi
 fi
 if [ "$UI_DEV" == "true" ]

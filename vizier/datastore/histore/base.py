@@ -24,11 +24,11 @@ import csv
 import os
 import pandas as pd
 
-from histore.archive.base import PersistentArchive
-from histore.document.schema import Column
+from histore.archive.base import PersistentArchive # type: ignore[import]
+from histore.document.schema import Column # type: ignore[import]
 
 from vizier.core.util import cast, get_unique_identifier
-from vizier.datastore.annotation.dataset import DatasetMetadata
+from vizier.datastore.annotation.dataset import DatasetMetadata # type: ignore[import]
 from vizier.datastore.base import DefaultDatastore
 from vizier.datastore.dataset import DatasetColumn
 from vizier.datastore.histore.dataset import HistoreSnapshotHandle
@@ -433,11 +433,11 @@ class HistoreDatastore(DefaultDatastore):
         raise NotImplementedError()
 
 
-class DatasetArchive(PersistentArchive):
+class DatasetArchive(PersistentArchive): # type: ignore[no-any-unimported]
     """Archive that maintains dataset snapshots. Extends the persistent archive
     with a unique archive identifier.
     """
-    def __init__(self, identifier, basedir):
+    def __init__(self, identifier:str, basedir:str):
         """Initialize the base directory and the archive identifier.
 
         Parameters

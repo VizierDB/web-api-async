@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datamart_profiler as dmp
+import datamart_profiler as dmp # type: ignore[import]
 
 from collections import defaultdict
 from queue import Queue
 from pandas import DataFrame
 
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 """Mapping from Datamart data type names to Vizier data type names."""
@@ -71,7 +71,7 @@ def get_types(df, metadata) -> List[str]:
     return [type_mapping[name].get() for name in df.columns]
 
 
-def run(df) -> DataFrame:
+def run(df:DataFrame) -> Dict[str, Any]:
     """Execute the Datamart profiler on a given data frame.
 
     Parameters

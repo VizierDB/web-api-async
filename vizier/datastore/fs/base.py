@@ -337,8 +337,15 @@ class FileSystemDatastore(DefaultDatastore):
         return DataObjectMetadata()
 
     def load_dataset(self, 
-            f_handle: FileHandle, 
-            proposed_schema: List[Tuple[str,str]] = []
+            f_handle: Optional[FileHandle] = None, 
+            proposed_schema: List[Tuple[str,str]] = [],
+            url: Optional[str] = None, 
+            detect_headers: bool = True, 
+            infer_types: bool = True, 
+            properties: Dict[str,Any] = {},
+            load_format: str ='csv', 
+            options: List[Dict[str,str]] = [], 
+            human_readable_name: Optional[str] = None
         ) -> FileSystemDatasetHandle:
         """Create a new dataset from a given file.
         Raises ValueError if the given file could not be loaded as a dataset.

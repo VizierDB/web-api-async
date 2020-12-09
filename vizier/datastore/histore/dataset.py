@@ -19,6 +19,7 @@ maintained in HISTORE archive.
 """
 
 from vizier.datastore.dataset import DatasetDescriptor, DatasetHandle
+from typing import Any
 
 import vizier.datastore.profiling.base as profiling
 
@@ -98,7 +99,7 @@ class HistoreSnapshotHandle(DatasetHandle):
                 row_id=row_id
             )
 
-    def get_profiling(self):
+    def get_profiling(self) -> Any:
         """Get profiling results for the dataset.
 
         Returns

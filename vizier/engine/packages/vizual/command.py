@@ -157,7 +157,7 @@ def insert_row(dataset_name, position, validate=False):
 
 
 def load_dataset(
-    dataset_name, file, detect_headers=None, infer_types='none', load_format='csv',
+    dataset_name, file, detect_headers=None, infer_types=True, load_format='csv',
     options=None, validate=False
 ):
     """Create instance of load dataset command.
@@ -171,7 +171,7 @@ def load_dataset(
         'userName' and 'password'.
     detect_headers: bool, optional
         Detect column names in loaded file if True
-    infer_types: string, optional
+    infer_types: boolean, optional
         Infer column types for loaded dataset if selected a profiler.
     load_format: string, optional
         Format identifier

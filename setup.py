@@ -81,7 +81,7 @@ setup(
         'bokeh',
         'shapely',
         'astor',
-        'minio',
+        'minio==5.0.7',
         'pyarrow',
         'histore==0.1.1',
         'datamart-profiler',

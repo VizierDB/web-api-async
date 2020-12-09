@@ -20,6 +20,7 @@ This is the foundation to enable that.
 
 from vizier.core.util import is_scalar
 
+
 PYTHON_EXPORT_TYPE = 'py-export'
 
 class DataObjectDescriptor(object):
@@ -66,7 +67,7 @@ class DataObject(object):
     obj_type: string
         object type
     """
-    def __init__(self, key, value, identifier, obj_type):
+    def __init__(self, key:str, value:str, identifier:str, obj_type:str):
         """Initialize the object components. Raises ValueError if both
         identifier are None.
 

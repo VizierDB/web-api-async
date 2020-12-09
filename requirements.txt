@@ -14,7 +14,7 @@ geopandas
 bokeh==2.0.1
 shapely
 astor
-minio
+minio==5.0.7
 histore==0.1.1
 datamart-profiler
 pyarrow

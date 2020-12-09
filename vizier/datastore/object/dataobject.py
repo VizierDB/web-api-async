@@ -24,19 +24,19 @@ import json
 import os
 
 from vizier.datastore.object.base import DataObject
-
+from typing import List, Optional
 
 class DataObjectMetadata(object):
     """Collection of annotations for a dataset object. For each of the three
     resource types a list of annotations is maintained.
     """
-    def __init__(self, objects=None):
+    def __init__(self, objects:Optional[List[DataObject]]=None):
         """Initialize the metadata lists for the three different types of
         dataset resources that can be annotated.
 
         Parameters
         ----------
-        objects: list(vizier.datastpre.object.base.DataObject), optional
+        objects: list(vizier.datastore.object.base.DataObject), optional
             objects
         """
         self.objects = objects if not objects is None else list()

@@ -505,7 +505,7 @@ class UrlFactory(object):
         """
         return self.get_dataset(project_id, dataset_id) + '/descriptor'
 
-    def get_dataset_profiling(self, project_id, dataset_id):
+    def get_dataset_profiling(self, project_id:str, dataset_id:str) -> str:
         """Url to retrieve dataset profiling results.
 
         Parameters
