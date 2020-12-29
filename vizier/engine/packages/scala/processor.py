@@ -78,7 +78,7 @@ class ScalaTaskProcessor(TaskProcessor):
         outputs = ModuleOutputs()
         mimir_table_names = dict()
         for ds_name_o in context.datasets:
-            dataset_id = context.datasets[ds_name_o]
+            dataset_id = context.datasets[ds_name_o].identifier
             dataset = context.datastore.get_dataset(dataset_id)
             if dataset is None:
                 raise ValueError('unknown dataset \'' + ds_name_o + '\'')
