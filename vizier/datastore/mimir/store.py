@@ -393,10 +393,11 @@ class MimirDatastore(DefaultDatastore):
             if not os.path.isdir(file_dir):
                 os.makedirs(file_dir)
             fs_output_file = os.path.join(file_dir, DATA_FILENAME)
-            shutil.move(os.path.join(filepath, output_file),fs_output_file)
+            import sys
+            shutil.move(filepath,fs_output_file)
             f_handle = FileHandle(
                     identifier,
-                    output_file,
+                    filepath,
                     name
                 )
             file_handles.append(f_handle )

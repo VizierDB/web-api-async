@@ -691,6 +691,16 @@ class VizualTaskProcessor(TaskProcessor):
                 options=m_opts,
                 resources=context.resources
             )
+            extensions = {
+                "csv":".csv",
+                "json":".json",
+                "com.databricks.spark.xml":".xml",
+                "com.crealytics.spark.excel":".xlsx",
+                "text":".txt",
+                "parquet":".parquet",
+                "mimir.exec.spark.datasource.pdf":".pdf",
+                "orc":".orc"
+            }
             output = [HtmlOutput(
                 ''.join([
                     "<div><a href=\""+ 
@@ -700,7 +710,7 @@ class VizualTaskProcessor(TaskProcessor):
                         "/files/"+ 
                         out_file.identifier +
                         "\" download=\""+
-                        out_file.name+
+                        out_file.name+extensions.get(unload_format, "")+
                         "\">Download "+
                         out_file.name+
                         "</a></div>" 
