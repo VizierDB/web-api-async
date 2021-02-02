@@ -116,6 +116,11 @@
                                 "isDefault": false,
                                 "text": "Published Dataset",
                                 "value": "org.vizierdb.publish.source"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Binary File",
+                                "value": "binaryFile"
                             }
                         ]
                     },
@@ -443,6 +448,11 @@
                                 "isDefault": false,
                                 "text": "Publish Locally",
                                 "value": "info.vizierdb.publish.local"
+                            },
+                            {
+                                "isDefault": false,
+                                "text": "Binary File",
+                                "value": "binaryFile"
                             }
                         ]
                     },

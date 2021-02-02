@@ -66,7 +66,8 @@ DATA_COMMANDS = pckg.package_declaration(
                         pckg.enum_value(value='text', text='Text'),
                         pckg.enum_value(value='parquet', text='Parquet'),
                         pckg.enum_value(value='orc', text='ORC'),
-                        pckg.enum_value(value='org.vizierdb.publish.source', text='Published Dataset')
+                        pckg.enum_value(value='org.vizierdb.publish.source', text='Published Dataset'),
+                        pckg.enum_value(value='binaryFile', text='Binary File')
                     ],
                     index=2,
                     required=True
@@ -227,7 +228,8 @@ DATA_COMMANDS = pckg.package_declaration(
                         pckg.enum_value(value='text', text='Text'),
                         pckg.enum_value(value='parquet', text='Parquet'),
                         pckg.enum_value(value='orc', text='ORC'),
-                        pckg.enum_value(value='info.vizierdb.publish.local', text='Publish Locally')
+                        pckg.enum_value(value='info.vizierdb.publish.local', text='Publish Locally'),
+                        pckg.enum_value(value='binaryFile', text='binaryFile')
                     ],
                     index=1,
                     required=True
